@@ -5,7 +5,8 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://0.0.0.0:8080");
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -30,7 +31,7 @@ app.UseSwaggerUI();
 app.UseAuthorization();
 app.MapControllers();
 
-app.MapGet("/health", () => Results.Ok(new { ok = true }));
+app.MapGet("/health", () => Results.Ok("ok"));
 app.MapGet("/", () => Results.Ok(new { ok = true, service = "FritApi", status = "online" }));
 
 app.Run();
@@ -39,7 +40,7 @@ static string GetConnectionString(string? databaseUrl)
 {
     if (string.IsNullOrWhiteSpace(databaseUrl))
     {
-        throw new InvalidOperationException("DATABASE_URL no est� configurada.");
+        throw new InvalidOperationException("DATABASE_URL no está configurada.");
     }
 
     if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
@@ -63,4 +64,3 @@ static string GetConnectionString(string? databaseUrl)
 
     return databaseUrl;
 }
-
