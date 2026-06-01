@@ -29,10 +29,16 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseAuthorization();
+
+// Servir archivos estáticos desde wwwroot
+app.UseStaticFiles();
+
 app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok("ok"));
-app.MapGet("/", () => Results.Ok(new { ok = true, service = "FritApi", status = "online" }));
+
+// Configurar fallback a index.html para la SPA (rutas del frontend)
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

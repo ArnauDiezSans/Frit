@@ -1,11 +1,13 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule],
-  templateUrl: './app.component.html',
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet],
+  template: `<router-outlet></router-outlet>`,
+  styleUrls: [],
 })
-export class AppComponent {}
+export class AppComponent {
+  title = 'Frit';
+}
