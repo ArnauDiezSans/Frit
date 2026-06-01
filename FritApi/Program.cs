@@ -1,5 +1,4 @@
 using FritApi.Data;
-using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -15,7 +14,6 @@ builder.Services.AddSwaggerGen();
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddScoped<ProductService>();
 
 var app = builder.Build();
 
