@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<JuegoService>();
+builder.Services.AddScoped<PartidaService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
