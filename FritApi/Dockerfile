@@ -1,10 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["FritApi.csproj", "./"]
-RUN dotnet restore "FritApi.csproj"
-
 COPY . .
+RUN dotnet restore "FritApi.csproj"
 RUN dotnet publish "FritApi.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
