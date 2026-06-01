@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,15 +10,32 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionString = builder.Configuration["DATABASE_URL"];
+var databaseUrl = builder.Configuration["DATABASE_URL"];
 
-if (string.IsNullOrWhiteSpace(connectionString))
+if (string.IsNullOrWhiteSpace(databaseUrl))
 {
     throw new InvalidOperationException("DATABASE_URL no está configurada.");
 }
 
+var databaseUri = new Uri(databaseUrl);
+
+var userInfo = databaseUri.UserInfo.Split(':', 2);
+var username = Uri.UnescapeDataString(userInfo[0]);
+var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+
+var npgsqlBuilder = new NpgsqlConnectionStringBuilder
+{
+    Host = databaseUri.Host,
+    Port = databaseUri.Port,
+    Database = databaseUri.AbsolutePath.Trim('/'),
+    Username = username,
+    Password = password,
+    SslMode = SslMode.Require,
+    TrustServerCertificate = true
+};
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(npgsqlBuilder.ConnectionString));
 
 var app = builder.Build();
 
@@ -45,7 +63,6 @@ app.Run();
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
     public DbSet<Producto> Productos { get; set; }
 }
 
