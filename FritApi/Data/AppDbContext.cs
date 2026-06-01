@@ -5,15 +5,14 @@ namespace FritApi.Data;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options)
-        : base(options)
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
-    public DbSet<Usuario> Usuarios { get; set; } = null!;
-    public DbSet<Juego> Juegos { get; set; } = null!;
-    public DbSet<Partida> Partidas { get; set; } = null!;
-    public DbSet<PartidaJugador> PartidaJugadores { get; set; } = null!;
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Juego> Juegos => Set<Juego>();
+    public DbSet<Partida> Partidas => Set<Partida>();
+    public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,10 +33,10 @@ public class AppDbContext : DbContext
                 .HasMaxLength(800);
 
             entity.Property(e => e.PasswordHash)
-                .IsRequired()
-                .HasMaxLength(500);
+                .IsRequired();
 
-            entity.HasIndex(e => e.Nombre);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
         });
 
         modelBuilder.Entity<Juego>(entity =>
@@ -48,39 +47,37 @@ public class AppDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(200);
 
-            entity.Property(e => e.Pvp)
-                .HasColumnType("numeric(10,2)");
-
             entity.Property(e => e.DificultadBgg)
-                .HasColumnType("numeric(4,2)");
+                .HasPrecision(4, 2);
+
+            entity.Property(e => e.Pvp)
+                .HasPrecision(10, 2);
 
             entity.HasOne(e => e.Propietario)
-                .WithMany(u => u.JuegosPropiedad)
+                .WithMany()
                 .HasForeignKey(e => e.PropietarioId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.JuegoBase)
-                .WithMany(j => j.Expansiones)
+                .WithMany(e => e.Expansiones)
                 .HasForeignKey(e => e.JuegoBaseId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(e => e.BggId);
-            entity.HasIndex(e => e.PropietarioId);
         });
 
         modelBuilder.Entity<Partida>(entity =>
         {
             entity.HasKey(e => e.PartidaId);
 
-            entity.Property(e => e.Observaciones);
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(e => e.Juego)
-                .WithMany(j => j.Partidas)
+                .WithMany(e => e.Partidas)
                 .HasForeignKey(e => e.JuegoId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(e => e.Fecha);
-            entity.HasIndex(e => e.JuegoId);
         });
 
         modelBuilder.Entity<PartidaJugador>(entity =>
@@ -92,15 +89,15 @@ public class AppDbContext : DbContext
                 .HasMaxLength(200);
 
             entity.Property(e => e.Puntos)
-                .HasColumnType("numeric(10,2)");
+                .HasPrecision(10, 2);
 
             entity.HasOne(e => e.Partida)
-                .WithMany(p => p.Jugadores)
+                .WithMany(e => e.Jugadores)
                 .HasForeignKey(e => e.PartidaId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.Usuario)
-                .WithMany(u => u.PartidasJugadas)
+                .WithMany()
                 .HasForeignKey(e => e.UsuarioId)
                 .OnDelete(DeleteBehavior.SetNull);
 

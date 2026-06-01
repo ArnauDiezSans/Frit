@@ -17,11 +17,7 @@ public class Usuario
     public string? Observaciones { get; set; }
 
     [Required]
-    [MaxLength(500)]
     public string PasswordHash { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    public ICollection<Juego> JuegosPropiedad { get; set; } = new List<Juego>();
-    public ICollection<PartidaJugador> PartidasJugadas { get; set; } = new List<PartidaJugador>();
 }
