@@ -1,6 +1,7 @@
 using FritApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using FritApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<JuegoService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
