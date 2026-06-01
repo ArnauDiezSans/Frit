@@ -4,7 +4,7 @@
 FROM node:20-alpine AS frontend-build
 WORKDIR /src/FritWeb
 
-# Copiar primero los archivos de dependencias
+# Copiar primero dependencias
 COPY FritWeb/package*.json ./
 
 # Instalar dependencias
@@ -13,10 +13,11 @@ RUN npm install
 # Copiar el resto del frontend
 COPY FritWeb/ ./
 
-# Asegurar permisos de ejecución en binarios locales
+# Asegurar permisos de ejecución
 RUN chmod -R +x node_modules/.bin
 
-# Compilar Angular para producción sin depender del binario "ng"
+# Compilar Angular para producción
+# El outputPath ya apunta a ../FritApi/wwwroot
 RUN node ./node_modules/@angular/cli/bin/ng.js build --configuration production
 
 
@@ -26,8 +27,11 @@ RUN node ./node_modules/@angular/cli/bin/ng.js build --configuration production
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-build
 WORKDIR /src
 
-# Copiar todo el repositorio
-COPY . .
+# Copiar todo el backend
+COPY FritApi/ ./FritApi/
+
+# Copiar el frontend ya compilado dentro de wwwroot del backend
+COPY --from=frontend-build /src/FritApi/wwwroot/ /src/FritApi/wwwroot/
 
 WORKDIR /src/FritApi
 
@@ -39,26 +43,13 @@ RUN dotnet publish "FritApi.csproj" -c Release -o /app/publish
 
 
 # ============================================
-# Stage 3: Copy Frontend build to Backend publish
-# ============================================
-FROM backend-build AS backend-with-frontend
-RUN mkdir -p /app/publish/wwwroot
-
-# Angular moderno suele generar el build en dist/browser
-COPY --from=frontend-build /src/FritWeb/dist/browser/ /app/publish/wwwroot/
-
-
-# ============================================
-# Stage 4: Runtime (Final image)
+# Stage 3: Runtime (Final image)
 # ============================================
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Copiar backend + frontend ya publicados
-COPY --from=backend-with-frontend /app/publish .
+COPY --from=backend-build /app/publish .
 
-# Puerto por defecto
 EXPOSE 8080
 
-# Ejecutar la aplicación
 ENTRYPOINT ["dotnet", "FritApi.dll"]
