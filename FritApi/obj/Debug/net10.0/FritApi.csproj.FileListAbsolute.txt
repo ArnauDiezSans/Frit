@@ -123,3 +123,4 @@ C:\Repos\Frit\FritApi\obj\Debug\net10.0\refint\FritApi.dll
 C:\Repos\Frit\FritApi\obj\Debug\net10.0\FritApi.pdb
 C:\Repos\Frit\FritApi\obj\Debug\net10.0\FritApi.genruntimeconfig.cache
 C:\Repos\Frit\FritApi\obj\Debug\net10.0\ref\FritApi.dll
+C:\Repos\Frit\FritApi\obj\Debug\net10.0\FritApi.sourcelink.json

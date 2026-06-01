@@ -9,7 +9,23 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var connectionString = builder.Configuration["DATABASE_URL"];
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("DATABASE_URL no está configurada.");
+}
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -29,6 +45,7 @@ app.Run();
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
     public DbSet<Producto> Productos { get; set; }
 }
 
@@ -44,26 +61,24 @@ public class Producto
 [Route("api/[controller]")]
 public class ProductosController : ControllerBase
 {
-    [HttpGet]
-    public ActionResult<IEnumerable<Producto>> Get()
+    private readonly AppDbContext _db;
+
+    public ProductosController(AppDbContext db)
     {
-        return Ok(new List<Producto>
-        {
-            new Producto
-            {
-                Id = 1,
-                Nombre = "Producto de prueba",
-                Precio = 9.99m,
-                FechaCreacion = DateTime.UtcNow
-            }
-        });
+        _db = db;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Producto>>> Get()
+    {
+        return await _db.Productos.ToListAsync();
     }
 
     [HttpPost]
-    public ActionResult<Producto> Post([FromBody] Producto producto)
+    public async Task<ActionResult<Producto>> Post([FromBody] Producto producto)
     {
-        producto.Id = 1;
-        producto.FechaCreacion = DateTime.UtcNow;
-        return Ok(producto);
+        _db.Productos.Add(producto);
+        await _db.SaveChangesAsync();
+        return CreatedAtAction(nameof(Get), new { id = producto.Id }, producto);
     }
 }
