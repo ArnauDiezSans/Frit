@@ -10,32 +10,44 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var databaseUrl = builder.Configuration["DATABASE_URL"];
+var rawConnection = builder.Configuration["DATABASE_URL"];
 
-if (string.IsNullOrWhiteSpace(databaseUrl))
+if (string.IsNullOrWhiteSpace(rawConnection))
 {
     throw new InvalidOperationException("DATABASE_URL no está configurada.");
 }
 
-var databaseUri = new Uri(databaseUrl);
+string connectionString;
 
-var userInfo = databaseUri.UserInfo.Split(':', 2);
-var username = Uri.UnescapeDataString(userInfo[0]);
-var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-
-var npgsqlBuilder = new NpgsqlConnectionStringBuilder
+if (rawConnection.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+    rawConnection.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
 {
-    Host = databaseUri.Host,
-    Port = databaseUri.Port,
-    Database = databaseUri.AbsolutePath.Trim('/'),
-    Username = username,
-    Password = password,
-    SslMode = SslMode.Require,
-    TrustServerCertificate = true
-};
+    var uri = new Uri(rawConnection);
+    var userInfo = uri.UserInfo.Split(':', 2);
+
+    var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
+    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
+
+    var csb = new NpgsqlConnectionStringBuilder
+    {
+        Host = uri.Host,
+        Port = uri.Port,
+        Database = uri.AbsolutePath.Trim('/'),
+        Username = username,
+        Password = password,
+        SslMode = SslMode.Require,
+        TrustServerCertificate = true
+    };
+
+    connectionString = csb.ConnectionString;
+}
+else
+{
+    connectionString = rawConnection;
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(npgsqlBuilder.ConnectionString));
+    options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
@@ -63,6 +75,7 @@ app.Run();
 public class AppDbContext : DbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
     public DbSet<Producto> Productos { get; set; }
 }
 
