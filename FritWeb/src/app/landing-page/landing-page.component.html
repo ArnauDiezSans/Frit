@@ -1,0 +1,44 @@
+<main class="landing-page">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Plataforma Frit</p>
+      <h1>{{ heroTitle }}</h1>
+      <p class="hero-description">{{ heroSubtitle }}</p>
+      <a class="button button-primary" href="#features">{{ ctaLabel }}</a>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <span class="hero-card__label">Organización clara</span>
+        <p>Vista limpia para ver tus procesos y seguirlos sin ruido.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="features">
+    <h2>Qué ofrece Frit</h2>
+    <div class="feature-grid">
+      <article class="feature-card" *ngFor="let feature of features">
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="workflow">
+    <div class="section-header">
+      <p class="eyebrow">Cómo funciona</p>
+      <h2>Un flujo pensado para avanzar rápido</h2>
+    </div>
+    <div class="workflow-grid">
+      <article class="workflow-step" *ngFor="let step of steps">
+        <span class="step-index">0{{ steps.indexOf(step) + 1 }}</span>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p><strong>Frit</strong> — una base simple, moderna y lista para crecer.</p>
+  </footer>
+</main>
