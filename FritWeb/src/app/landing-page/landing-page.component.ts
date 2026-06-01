@@ -15,6 +15,7 @@ export class LandingPageComponent {
   heroSubtitle = 'Listo para crecer con tu equipo, manteniendo claridad y ritmo desde el primer día.';
   ctaLabel = 'Empezar ahora';
 
+  
   features = [
     {
       title: 'Trabajo colaborativo',
