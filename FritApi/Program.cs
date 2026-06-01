@@ -62,6 +62,7 @@ app.UseSwaggerUI();
 app.UseAuthorization();
 app.MapControllers();
 
+app.MapGet("/health", () => Results.Ok(new { ok = true }));
 app.MapGet("/", () => Results.Ok(new
 {
     ok = true,
