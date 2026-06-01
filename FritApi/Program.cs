@@ -10,6 +10,8 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<UsuarioService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
