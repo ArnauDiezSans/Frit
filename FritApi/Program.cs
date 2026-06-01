@@ -1,7 +1,7 @@
 using FritApi.Data;
+using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using FritApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +11,8 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks();
+
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<JuegoService>();
@@ -19,7 +21,8 @@ builder.Services.AddScoped<PartidaJugadorService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
@@ -38,9 +41,7 @@ app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapControllers();
-
-app.MapGet("/health", () => Results.Ok("ok"));
-
+app.MapHealthChecks("/health");
 app.MapFallbackToFile("index.html");
 
 app.Run();
