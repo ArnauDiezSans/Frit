@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FritApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8947552ec4505725858f914db6f6136efcc470dc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+09c9b8f210d259bfff6415b03add010fc06df5c3")]
 [assembly: System.Reflection.AssemblyProductAttribute("FritApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FritApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,4 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
+using FritApi.Data;
+using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -10,43 +11,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var databaseUrl = builder.Configuration["DATABASE_URL"];
+var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
-if (string.IsNullOrWhiteSpace(databaseUrl))
-{
-    throw new InvalidOperationException("DATABASE_URL no está configurada.");
-}
-
-string connectionString;
-
-if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
-    databaseUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
-{
-    var uri = new Uri(databaseUrl);
-    var userInfo = uri.UserInfo.Split(':', 2);
-
-    var username = Uri.UnescapeDataString(userInfo[0]);
-    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty;
-
-    var builderCs = new NpgsqlConnectionStringBuilder
-    {
-        Host = uri.Host,
-        Port = uri.Port,
-        Database = uri.AbsolutePath.Trim('/'),
-        Username = username,
-        Password = password,
-        SslMode = SslMode.Disable
-    };
-
-    connectionString = builderCs.ConnectionString;
-}
-else
-{
-    connectionString = databaseUrl;
-}
-
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddScoped<ProductService>();
 
 var app = builder.Build();
 
@@ -63,52 +31,36 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok(new { ok = true }));
-app.MapGet("/", () => Results.Ok(new
-{
-    ok = true,
-    service = "FritApi",
-    status = "online"
-}));
+app.MapGet("/", () => Results.Ok(new { ok = true, service = "FritApi", status = "online" }));
 
 app.Run();
 
-public class AppDbContext : DbContext
+static string GetConnectionString(string? databaseUrl)
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-    public DbSet<Producto> Productos { get; set; }
-}
-
-public class Producto
-{
-    public int Id { get; set; }
-    public string Nombre { get; set; } = "";
-    public decimal Precio { get; set; }
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
-}
-
-[ApiController]
-[Route("api/[controller]")]
-public class ProductosController : ControllerBase
-{
-    private readonly AppDbContext _db;
-
-    public ProductosController(AppDbContext db)
+    if (string.IsNullOrWhiteSpace(databaseUrl))
     {
-        _db = db;
+        throw new InvalidOperationException("DATABASE_URL no est� configurada.");
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Producto>>> Get()
+    if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+        databaseUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
     {
-        return await _db.Productos.ToListAsync();
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':', 2);
+
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = uri.Host,
+            Port = uri.Port > 0 ? uri.Port : 5432,
+            Database = uri.AbsolutePath.Trim('/'),
+            Username = Uri.UnescapeDataString(userInfo[0]),
+            Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
+            SslMode = SslMode.Disable
+        };
+
+        return builder.ConnectionString;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<Producto>> Post([FromBody] Producto producto)
-    {
-        _db.Productos.Add(producto);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(Get), new { id = producto.Id }, producto);
-    }
+    return databaseUrl;
 }
+
