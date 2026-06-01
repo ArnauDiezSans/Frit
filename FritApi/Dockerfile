@@ -4,17 +4,21 @@
 FROM node:20-alpine AS frontend-build
 WORKDIR /src/FritWeb
 
-# Copiar package.json y package-lock.json
+# Copiar primero los archivos de dependencias
 COPY FritWeb/package*.json ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm install
 
-# Copiar código fuente del frontend
-COPY FritWeb .
+# Copiar el resto del frontend
+COPY FritWeb/ ./
 
-# Compilar Angular para producción
-RUN npm run build:prod
+# Asegurar permisos de ejecución en binarios locales
+RUN chmod -R +x node_modules/.bin
+
+# Compilar Angular para producción sin depender del binario "ng"
+RUN node ./node_modules/@angular/cli/bin/ng.js build --configuration production
+
 
 # ============================================
 # Stage 2: Build Backend (.NET)
@@ -22,10 +26,7 @@ RUN npm run build:prod
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-build
 WORKDIR /src
 
-# Copiar archivos del proyecto
-COPY FritApi ./FritApi
-
-# Copiar archivos comunes (si existen)
+# Copiar todo el repositorio
 COPY . .
 
 WORKDIR /src/FritApi
@@ -36,12 +37,16 @@ RUN dotnet restore "FritApi.csproj"
 # Publicar en modo Release
 RUN dotnet publish "FritApi.csproj" -c Release -o /app/publish
 
+
 # ============================================
 # Stage 3: Copy Frontend build to Backend publish
 # ============================================
 FROM backend-build AS backend-with-frontend
 RUN mkdir -p /app/publish/wwwroot
-COPY --from=frontend-build /src/FritWeb/dist /app/publish/wwwroot
+
+# Angular moderno suele generar el build en dist/browser
+COPY --from=frontend-build /src/FritWeb/dist/browser/ /app/publish/wwwroot/
+
 
 # ============================================
 # Stage 4: Runtime (Final image)
@@ -49,10 +54,10 @@ COPY --from=frontend-build /src/FritWeb/dist /app/publish/wwwroot
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Copiar la carpeta publish con backend + frontend
+# Copiar backend + frontend ya publicados
 COPY --from=backend-with-frontend /app/publish .
 
-# Exponer puerto (Railway lo sobrescribe con env PORT)
+# Puerto por defecto
 EXPOSE 8080
 
 # Ejecutar la aplicación
