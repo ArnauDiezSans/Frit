@@ -30,14 +30,13 @@ app.UseSwaggerUI();
 
 app.UseAuthorization();
 
-// Servir archivos estáticos desde wwwroot
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok("ok"));
 
-// Configurar fallback a index.html para la SPA (rutas del frontend)
 app.MapFallbackToFile("index.html");
 
 app.Run();
