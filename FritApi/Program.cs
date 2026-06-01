@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,40 +9,11 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var rawConnection = builder.Configuration["DATABASE_URL"];
+var connectionString = builder.Configuration["DATABASE_URL"];
 
-if (string.IsNullOrWhiteSpace(rawConnection))
+if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("DATABASE_URL no está configurada.");
-}
-
-string connectionString;
-
-if (rawConnection.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
-    rawConnection.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
-{
-    var uri = new Uri(rawConnection);
-    var userInfo = uri.UserInfo.Split(':', 2);
-
-    var username = userInfo.Length > 0 ? Uri.UnescapeDataString(userInfo[0]) : "";
-    var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
-
-    var csb = new NpgsqlConnectionStringBuilder
-    {
-        Host = uri.Host,
-        Port = uri.Port,
-        Database = uri.AbsolutePath.Trim('/'),
-        Username = username,
-        Password = password,
-        SslMode = SslMode.Require,
-        TrustServerCertificate = true
-    };
-
-    connectionString = csb.ConnectionString;
-}
-else
-{
-    connectionString = rawConnection;
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
