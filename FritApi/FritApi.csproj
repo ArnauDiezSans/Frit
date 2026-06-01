@@ -1,14 +1,19 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
-WORKDIR /src
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
-COPY *.csproj ./
-RUN dotnet restore
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
 
-COPY . ./
-RUN dotnet publish -c Release -o /app/publish
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.0" />
+  </ItemGroup>
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
-WORKDIR /app
-COPY --from=build /app/publish .
-
-ENTRYPOINT ["dotnet", "FritApi.dll"]
+</Project>
