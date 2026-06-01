@@ -1,0 +1,6 @@
+@FritApi_HostAddress = http://localhost:5085
+
+GET {{FritApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
