@@ -55,7 +55,7 @@ public class JuegosController : ControllerBase
 
         if (!result.Success)
         {
-            if (result.Error == "Juego no encontrado.")
+            if (result.Error == "Joc no trobat.")
             {
                 return NotFound();
             }

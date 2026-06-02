@@ -53,23 +53,23 @@ export class RegisterComponent {
     }).subscribe({
       next: () => {
         this.loading = false;
-        this.success = 'Usuario creado correctamente.';
+        this.success = 'Usuari creat correctament.';
         this.router.navigateByUrl('/login');
       },
       error: err => {
         this.loading = false;
 
         if (err.status === 409) {
-          this.error = 'Ya existe un usuario con ese nombre.';
+          this.error = 'Ja existeix un usuari amb aquest nom.';
           return;
         }
 
         if (err.status === 400) {
-          this.error = err.error?.message ?? 'Datos de registro no válidos.';
+          this.error = err.error?.message ?? 'Les dades de registre no són vàlides.';
           return;
         }
 
-        this.error = 'No se pudo crear el usuario.';
+        this.error = 'No s ha pogut crear l"usuari.';
       }
     });
   }

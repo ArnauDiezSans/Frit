@@ -104,38 +104,38 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [AllowAnonymous]
-    public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
+[AllowAnonymous]
+public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
+{
+    var nombre = dto.Nombre.Trim();
+
+    if (dto.Grupo?.Trim() != "Frit14")
     {
-        var nombre = dto.Nombre.Trim();
-
-        if (dto.Grupo?.Trim() != "Frit14")
-        {
-            return BadRequest(new { message = "Código de grupo incorrecto." });
-        }
-
-        var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
-
-        if (exists)
-        {
-            return Conflict(new { message = "Ya existe un usuario con ese nombre." });
-        }
-
-        var usuario = new Models.Usuario
-        {
-            Nombre = nombre,
-            Grupo = dto.Grupo.Trim(),
-            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
-            PasswordHash = _passwordService.HashPassword(dto.Password)
-        };
-
-        _context.Usuarios.Add(usuario);
-        await _context.SaveChangesAsync();
-
-        return StatusCode(StatusCodes.Status201Created, new AuthUserDto
-        {
-            UsuarioId = usuario.UsuarioId,
-            Nombre = usuario.Nombre
-        });
+        return BadRequest(new { message = "Codi de grup incorrecte." });
     }
+
+    var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
+
+    if (exists)
+    {
+        return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
+    }
+
+    var usuario = new Models.Usuario
+    {
+        Nombre = nombre,
+        Grupo = dto.Grupo.Trim(),
+        Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
+        PasswordHash = _passwordService.HashPassword(dto.Password)
+    };
+
+    _context.Usuarios.Add(usuario);
+    await _context.SaveChangesAsync();
+
+    return StatusCode(StatusCodes.Status201Created, new AuthUserDto
+    {
+        UsuarioId = usuario.UsuarioId,
+        Nombre = usuario.Nombre
+    });
+}
 }

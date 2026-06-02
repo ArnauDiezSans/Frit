@@ -1,5 +1,13 @@
 // npx.cmd repomix 
 
+// cd FritWeb
+// npm install
+// npm start
+
+// cd C:\Repos\Frit\FritApi
+// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=yqPZlyoRSxxwMbutiGkSstmfkSSwoTXh;SSL Mode=Require;Trust Server Certificate=true"
+// dotnet run
+
 using FritApi.Data;
 using FritApi.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -68,7 +76,7 @@ static string GetConnectionString(string? databaseUrl)
 {
     if (string.IsNullOrWhiteSpace(databaseUrl))
     {
-        throw new InvalidOperationException("DATABASE_URL no está configurada.");
+        throw new InvalidOperationException("La variable DATABASE_URL no està configurada.");
     }
 
     if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||

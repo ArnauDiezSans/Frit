@@ -52,7 +52,7 @@ public class PartidaJugadorService
         var partidaExiste = await _context.Partidas.AnyAsync(p => p.PartidaId == dto.PartidaId);
         if (!partidaExiste)
         {
-            return (false, "El PartidaId indicado no existe.", null);
+            return (false, "L'identificador de partida indicat no existeix.", null);
         }
 
         if (dto.UsuarioId.HasValue)
@@ -60,7 +60,7 @@ public class PartidaJugadorService
             var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
             if (!usuarioExiste)
             {
-                return (false, "El UsuarioId indicado no existe.", null);
+                return (false, "L'identificador d'usuari indicat no existeix.", null);
             }
         }
 
@@ -69,7 +69,7 @@ public class PartidaJugadorService
 
         if (posicionDuplicada)
         {
-            return (false, "Ya existe un jugador con esa posición en la partida.", null);
+            return (false, "Ja existeix un jugador amb aquesta posició a la partida.", null);
         }
 
         var item = new PartidaJugador
@@ -99,19 +99,19 @@ public class PartidaJugadorService
     {
         if (id != dto.PartidaJugadorId)
         {
-            return (false, "El id de la ruta no coincide con el PartidaJugadorId del body.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el PartidaJugadorId del cos de la petició.", null);
         }
 
         var item = await _context.PartidaJugadores.FirstOrDefaultAsync(pj => pj.PartidaJugadorId == id);
         if (item is null)
         {
-            return (false, "PartidaJugador no encontrado.", null);
+            return (false, "Jugador de partida no trobat.", null);
         }
 
         var partidaExiste = await _context.Partidas.AnyAsync(p => p.PartidaId == dto.PartidaId);
         if (!partidaExiste)
         {
-            return (false, "El PartidaId indicado no existe.", null);
+            return (false, "L'identificador de partida indicat no existeix.", null);
         }
 
         if (dto.UsuarioId.HasValue)
@@ -119,7 +119,7 @@ public class PartidaJugadorService
             var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
             if (!usuarioExiste)
             {
-                return (false, "El UsuarioId indicado no existe.", null);
+                return (false, "L'identificador d'usuari indicat no existeix.", null);
             }
         }
 
@@ -130,7 +130,7 @@ public class PartidaJugadorService
 
         if (posicionDuplicada)
         {
-            return (false, "Ya existe un jugador con esa posición en la partida.", null);
+            return (false, "Ja existeix un jugador amb aquesta posició a la partida.", null);
         }
 
         item.PartidaId = dto.PartidaId;

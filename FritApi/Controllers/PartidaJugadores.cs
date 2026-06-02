@@ -55,7 +55,7 @@ public class PartidaJugadoresController : ControllerBase
 
         if (!result.Success)
         {
-            if (result.Error == "PartidaJugador no encontrado.")
+            if (result.Error == "Jugador de partida no trobat.")
             {
                 return NotFound();
             }

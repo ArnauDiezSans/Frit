@@ -54,7 +54,7 @@ public class PartidaService
         var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
         if (!juegoExiste)
         {
-            return (false, "El JuegoId indicado no existe.", null);
+            return (false, "L'identificador de joc indicat no existeix.", null);
         }
 
         var partida = new Partida
@@ -85,19 +85,19 @@ public class PartidaService
     {
         if (id != dto.PartidaId)
         {
-            return (false, "El id de la ruta no coincide con el PartidaId del body.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el PartidaId del cos de la petició.", null);
         }
 
         var partida = await _context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
         if (partida is null)
         {
-            return (false, "Partida no encontrada.", null);
+            return (false, "Partida no trobada.", null);
         }
 
         var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
         if (!juegoExiste)
         {
-            return (false, "El JuegoId indicado no existe.", null);
+            return (false, "L'identificador de joc indicat no existeix.", null);
         }
 
         partida.JuegoId = dto.JuegoId;

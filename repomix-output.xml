@@ -2943,21 +2943,20 @@ button {
 <section class="login-page">
   <div class="login-card">
     <h1>Frit</h1>
-    <p>Accede para ver y registrar partidas.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
-      <label for="nombre">Usuario</label>
+      <label for="nombre">Usuari</label>
       <input id="nombre" type="text" formControlName="nombre" />
 
-      <label for="password">Contraseña</label>
+      <label for="password">Contrasenya</label>
       <input id="password" type="password" formControlName="password" />
 
       <p class="error" *ngIf="error">{{ error }}</p>
 
       <button type="submit" [disabled]="loading">
-        {{ loading ? 'Entrando...' : 'Entrar' }}
+        {{ loading ? 'Entrant...' : 'Entrar' }}
       </button>
-      <a routerLink="/register" class="secondary-button">Crear usuario</a>
+      <a routerLink="/register" class="secondary-button">Crear usuari</a>
     </form>
   </div>
 </section>
@@ -3006,7 +3005,7 @@ export class LoginPageComponent {
       },
       error: () => {
         this.loading = false;
-        this.error = 'Usuario o contraseña incorrectos.';
+        this.error = 'Usuari o contrasenya incorrectes.';
       }
     });
   }
@@ -3092,29 +3091,29 @@ button:disabled {
 <file path="FritWeb/src/app/features/auth/register/register.component.html">
 <div class="auth-page">
   <div class="auth-card">
-    <h1>Crear usuario</h1>
-    <p class="subtitle">Registra un nuevo acceso para Frit.</p>
+    <h1>Crear usuari</h1>
+    <p class="subtitle">Registra un nou accés per a Frit.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
-      <label for="nombre">Usuario</label>
+      <label for="nombre">Usuari</label>
       <input id="nombre" type="text" formControlName="nombre" />
       @if (nombre.touched && nombre.invalid) {
-        <p class="field-error">El usuario es obligatorio.</p>
+        <p class="field-error">L'usuari és obligatori.</p>
       }
 
-      <label for="grupo">Grupo</label>
+      <label for="grupo">Grup</label>
       <input id="grupo" type="text" formControlName="grupo" />
        @if (grupo.touched && grupo.invalid) {
-       <p class="field-error">Debes escribir exactamente Frit14.</p>
+       <p class="field-error">Has d'escriure exactament Frit14.</p>
        }
 
-      <label for="observaciones">Observaciones</label>
+      <label for="observaciones">Observacions</label>
       <textarea id="observaciones" rows="3" formControlName="observaciones"></textarea>
 
-      <label for="password">Contraseña</label>
+      <label for="password">Contrasenya</label>
       <input id="password" type="password" formControlName="password" />
       @if (password.touched && password.invalid) {
-        <p class="field-error">La contraseña debe tener al menos 4 caracteres.</p>
+        <p class="field-error">La contrasenya ha de tenir almenys 4 caràcters.</p>
       }
 
       @if (error) {
@@ -3122,11 +3121,11 @@ button:disabled {
       }
 
       <button type="submit" [disabled]="loading">
-        {{ loading ? 'Creando...' : 'Crear usuario' }}
+        {{ loading ? 'Creant...' : 'Crear usuari' }}
       </button>
     </form>
 
-    <a routerLink="/login" class="secondary-link">Volver a iniciar sesión</a>
+    <a routerLink="/login" class="secondary-link">Tornar a iniciar sessió</a>
   </div>
 </div>
 </file>
@@ -3216,18 +3215,378 @@ export class RegisterComponent {
 </file>
 
 <file path="FritWeb/src/app/features/juegos/juegos-page.component.css">
+.dashboard-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f5f6f8;
+  color: #1f2937;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0 auto 24px;
+  max-width: 1100px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #0f766e;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: #667085;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .stats-grid {
   max-width: 1100px;
   margin: 0 auto 24px;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+}
+
+.stat-card,
+.content-card {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.stat-card {
+  padding: 20px;
+}
+
+.stat-card-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 10px;
+  color: #667085;
+  font-size: 0.95rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.stat-value.compact {
+  font-size: 1.4rem;
+}
+
+.stat-action-button {
+  margin-top: auto;
+}
+
+.content-card {
+  max-width: 1100px;
+  margin: 0 auto 24px;
+  padding: 24px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section-heading h2 {
+  margin: 0 0 6px;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #667085;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  min-height: 220px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e4e7ec;
+  vertical-align: top;
+}
+
+th {
+  color: #475467;
+  font-size: 0.92rem;
+}
+
+.empty-state {
+  padding: 20px 0 8px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #667085;
+}
+
+.game-form {
+  display: grid;
+  gap: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+label span {
+  color: #344054;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  font: inherit;
+  background: #ffffff;
+  color: #101828;
+}
+
+textarea {
+  min-height: 120px;
+  padding: 12px 14px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.secondary-button {
+  border: 1px solid #0f766e;
+  background: #ffffff;
+  color: #0f766e;
+}
+
+.ghost-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.ghost-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.error,
+.field-error {
+  margin: 0;
+  color: #b42318;
+}
+
+.success {
+  margin: 0;
+  color: #0f766e;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: min(920px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0 0 6px;
+}
+
+.modal-header p {
+  margin: 0;
+  color: #667085;
+}
+
+.ghost-icon-button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #344054;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.autocomplete-field {
+  position: relative;
+}
+
+.autocomplete-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  z-index: 20;
+}
+
+.autocomplete-option {
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  background: #ffffff;
+  color: #101828;
+  text-align: left;
+  cursor: pointer;
+}
+
+.autocomplete-option:hover {
+  background: #f9fafb;
+}
+
+.autocomplete-empty {
+  padding: 12px 14px;
+  color: #667085;
 }
 
 .required-mark {
   color: #b42318;
   font-weight: 700;
   margin-left: 4px;
+}
+
+@media (max-width: 820px) {
+  .dashboard-header,
+  .section-heading,
+  .error-card,
+  .modal-header,
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page {
+    padding: 16px;
+  }
+
+  .modal-card {
+    padding: 18px;
+  }
 }
 </file>
 
@@ -3236,73 +3595,71 @@ export class RegisterComponent {
   <header class="dashboard-header">
     <div>
       <p class="eyebrow">Frit</p>
-      <h1>Juegos</h1>
-      <p class="subtitle">Gestiona tu ludoteca y registra nuevos juegos antes de crear partidas.</p>
+      <h1>Jocs</h1>
+      <p class="subtitle">Gestiona la teva ludoteca i registra jocs nous abans de crear partides.</p>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="secondary-button" routerLink="/app/partidas">Ver partidas</button>
-      <button type="button" class="ghost-button" (click)="logout()">Salir</button>
+      <button type="button" class="secondary-button" routerLink="/app/partidas">Veure partides</button>
+      <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
 
   <section class="stats-grid" *ngIf="!loading() && !error()">
     <article class="stat-card">
-      <span class="stat-label">Total juegos</span>
+      <span class="stat-label">Total de jocs</span>
       <strong class="stat-value">{{ totalJuegos() }}</strong>
     </article>
 
     <article class="stat-card stat-card-action">
-      <span class="stat-label">Nuevo juego</span>
-      <strong class="stat-value compact">Añade un juego a tu ludoteca</strong>
-      <button type="button" class="primary-button stat-action-button" (click)="abrirModal()">
-        Nuevo juego
-      </button>
+      <span class="stat-label">Nou joc</span>
+      <strong class="stat-value compact">Afegeix un joc a la teva ludoteca</strong>
+      <button type="button" class="primary-button stat-action-button" (click)="abrirModal()">Nou joc</button>
     </article>
   </section>
 
   <section class="content-card" *ngIf="loading()">
-    <p>Cargando juegos y usuarios...</p>
+    <p>Carregant jocs i usuaris...</p>
   </section>
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarDatos()">Reintentar</button>
+    <button type="button" class="primary-button" (click)="cargarDatos()">Tornar-ho a provar</button>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
-        <h2>Listado de juegos</h2>
-        <p>Tu colección disponible para futuras partidas.</p>
+        <h2>Llista de jocs</h2>
+        <p>La teva col·lecció disponible per a futures partides.</p>
       </div>
 
-      <button type="button" class="primary-button" (click)="abrirModal()">Nuevo juego</button>
+      <button type="button" class="primary-button" (click)="abrirModal()">Nou joc</button>
     </div>
 
     <div class="empty-state" *ngIf="juegos().length === 0">
-      <h3>Aún no hay juegos registrados</h3>
-      <p>Empieza creando tu primer juego desde el botón Nuevo juego.</p>
+      <h3>Encara no hi ha jocs registrats</h3>
+      <p>Comença creant el teu primer joc des del botó Nou joc.</p>
     </div>
 
     <div class="table-wrapper" *ngIf="juegos().length > 0">
       <table>
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Jugadores</th>
-            <th>Propietario</th>
-            <th>Tipo</th>
+            <th>Nom</th>
+            <th>Jugadors</th>
+            <th>Propietari</th>
+            <th>Tipus</th>
             <th>PVP</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let juego of juegos(); trackBy: trackByJuegoId">
             <td>{{ juego.nombre }}</td>
-            <td>{{ juego.numeroJugadoresMin }}-{{ juego.numeroJugadoresMax }}</td>
+            <td>{{ juego.numeroJugadoresMin }} - {{ juego.numeroJugadoresMax }}</td>
             <td>{{ getNombrePropietario(juego.propietarioId) }}</td>
-            <td>{{ juego.tipo || '—' }}</td>
-            <td>{{ juego.pvp ?? '—' }}</td>
+            <td>{{ juego.tipo }}</td>
+            <td>{{ juego.pvp ?? '-' }}</td>
           </tr>
         </tbody>
       </table>
@@ -3319,14 +3676,14 @@ export class RegisterComponent {
     >
       <div class="modal-header">
         <div>
-          <h2 id="nuevo-juego-title">Nuevo juego</h2>
-          <p>Escribe el propietario y selecciona una opción de la lista filtrada.</p>
+          <h2 id="nuevo-juego-title">Nou joc</h2>
+          <p>Escriu el propietari i selecciona una opció de la llista filtrada.</p>
         </div>
 
         <button
           type="button"
           class="ghost-icon-button"
-          aria-label="Cerrar formulario"
+          aria-label="Tancar formulari"
           (click)="cerrarModal()"
         >
           ×
@@ -3336,93 +3693,94 @@ export class RegisterComponent {
       <form class="game-form" [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <label>
-            <span>Nombre <span class="required-mark">*</span></span>
+            <span>Nom <span class="required-mark">*</span></span>
             <input type="text" formControlName="nombre" />
             <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
-              El nombre es obligatorio.
+              El nom és obligatori.
             </small>
           </label>
 
           <label class="autocomplete-field">
-            <span>Propietario <span class="required-mark">*</span></span>
+            <span>Propietari <span class="required-mark">*</span></span>
             <input
               type="text"
               formControlName="propietarioSearch"
+              (focus)="showPropietarioOptions.set(true)"
               autocomplete="off"
-              placeholder="Escribe para buscar propietario"
-              (focus)="mostrarOpcionesPropietario()"
-              (blur)="ocultarOpcionesPropietario()"
             />
+
             <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
               <button
                 type="button"
                 class="autocomplete-option"
                 *ngFor="let usuario of filteredUsuarios()"
-                (mousedown)="seleccionarPropietario(usuario)"
+                (click)="seleccionarPropietario(usuario)"
               >
                 {{ usuario.nombre }}
               </button>
-              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
-                No hay usuarios que coincidan.
-              </div>
+
+              <p class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                No s'han trobat propietaris.
+              </p>
             </div>
+
             <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
-              Debes seleccionar un propietario válido.
+              Has de seleccionar un propietari vàlid.
             </small>
           </label>
 
           <label>
-            <span>Jugadores mín. <span class="required-mark">*</span></span>
-            <input type="number" min="1" formControlName="numeroJugadoresMin" />
+            <span>Jugadors mínims <span class="required-mark">*</span></span>
+            <input type="number" formControlName="numeroJugadoresMin" min="1" />
           </label>
 
           <label>
-            <span>Jugadores máx. <span class="required-mark">*</span></span>
-            <input type="number" min="1" formControlName="numeroJugadoresMax" />
+            <span>Jugadors màxims <span class="required-mark">*</span></span>
+            <input type="number" formControlName="numeroJugadoresMax" min="1" />
           </label>
 
           <label>
-            <span>Tipo</span>
+            <span>Tipus</span>
             <input type="text" formControlName="tipo" />
           </label>
 
           <label>
             <span>BGG ID</span>
-            <input type="number" min="1" formControlName="bggId" />
+            <input type="number" formControlName="bggId" min="1" />
           </label>
 
           <label>
-            <span>Dificultad BGG</span>
-            <input type="number" min="0" step="0.01" formControlName="dificultadBgg" />
+            <span>Dificultat BGG</span>
+            <input type="number" formControlName="dificultadBgg" step="0.01" min="0" />
           </label>
 
           <label>
             <span>PVP</span>
-            <input type="number" min="0" step="0.01" formControlName="pvp" />
+            <input type="number" formControlName="pvp" step="0.01" min="0" />
           </label>
 
           <label>
-            <span>Fecha adquisición</span>
+            <span>Data d'adquisició</span>
             <input type="date" formControlName="fechaAdquisicion" />
           </label>
 
           <label>
-            <span>Juego base ID</span>
-            <input type="number" min="1" formControlName="juegoBaseId" />
+            <span>ID joc base</span>
+            <input type="number" formControlName="juegoBaseId" min="1" />
           </label>
         </div>
 
-        <p class="field-error" *ngIf="form.errors?.['minGreaterThanMax']">
-          El mínimo de jugadores no puede ser mayor que el máximo.
-        </p>
+        <small class="field-error" *ngIf="form.errors?.['minGreaterThanMax']">
+          El mínim de jugadors no pot ser més gran que el màxim.
+        </small>
 
         <p class="error" *ngIf="formError()">{{ formError() }}</p>
         <p class="success" *ngIf="success()">{{ success() }}</p>
 
-        <div class="form-actions">
-          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button>
+        <div class="modal-actions">
+          <button type="button" class="secondary-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
-            {{ saving() ? 'Guardando...' : 'Crear juego' }}
+            {{ saving() ? 'Desant...' : 'Desar joc' }}
           </button>
         </div>
       </form>
@@ -3434,14 +3792,7 @@ export class RegisterComponent {
 <file path="FritWeb/src/app/features/juegos/juegos-page.component.ts">
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators
-} from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Juego, UsuarioOption } from './juegos.models';
@@ -3487,25 +3838,22 @@ export class JuegosPageComponent implements OnInit {
   filteredUsuarios = signal<UsuarioOption[]>([]);
   showPropietarioOptions = signal(false);
 
-  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
+  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
 
-  form = this.fb.nonNullable.group(
-    {
-      nombre: ['', [Validators.required, Validators.maxLength(200)]],
-      numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
-      numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
-      propietarioId: [0, [Validators.required, Validators.min(1)]],
-      propietarioSearch: [''],
-      tipo: ['', [Validators.maxLength(200)]],
-      bggId: [''],
-      dificultadBgg: [''],
-      pvp: [''],
-      fechaAdquisicion: [''],
-      juegoBaseId: ['']
-    },
-    { validators: minLessOrEqualMaxValidator() }
-  );
+  form = this.fb.nonNullable.group({
+    nombre: ['', [Validators.required, Validators.maxLength(200)]],
+    numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
+    numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
+    propietarioId: [0, [Validators.required, Validators.min(1)]],
+    propietarioSearch: [''],
+    tipo: ['', [Validators.maxLength(200)]],
+    bggId: [''],
+    dificultadBgg: [''],
+    pvp: [''],
+    fechaAdquisicion: [''],
+    juegoBaseId: ['']
+  }, { validators: minLessOrEqualMaxValidator() });
 
   ngOnInit(): void {
     this.precargarPropietarioActual();
@@ -3523,7 +3871,7 @@ export class JuegosPageComponent implements OnInit {
   abrirModal(): void {
     this.formError.set('');
     this.success.set('');
-    this.mostrarOpcionesPropietario();
+    this.showPropietarioOptions.set(false);
     this.modalOpen.set(true);
   }
 
@@ -3544,19 +3892,19 @@ export class JuegosPageComponent implements OnInit {
     let usuariosCargados = false;
 
     this.juegosService.getAll().subscribe({
-      next: (juegos) => {
+      next: juegos => {
         this.juegos.set(juegos);
         juegosCargados = true;
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No se pudieron cargar los juegos.');
+        this.error.set('No s\'han pogut carregar els jocs.');
         this.loading.set(false);
       }
     });
 
     this.usuariosService.getAll().subscribe({
-      next: (usuarios) => {
+      next: usuarios => {
         this.usuarios.set(usuarios);
         this.filteredUsuarios.set(usuarios);
         this.seleccionarPropietarioPorDefecto(usuarios);
@@ -3564,27 +3912,21 @@ export class JuegosPageComponent implements OnInit {
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No se pudieron cargar los usuarios.');
+        this.error.set('No s\'han pogut carregar els usuaris.');
         this.loading.set(false);
       }
     });
   }
 
   private inicializarFiltroPropietarios(): void {
-    this.form.controls.propietarioSearch.valueChanges.subscribe((value) => {
+    this.form.controls.propietarioSearch.valueChanges.subscribe(value => {
       const term = value.trim().toLowerCase();
-
-      const filtered = this.usuarios().filter((u) =>
-        u.nombre.toLowerCase().includes(term)
-      );
+      const filtered = this.usuarios().filter(u => u.nombre.toLowerCase().includes(term));
 
       this.filteredUsuarios.set(filtered);
       this.showPropietarioOptions.set(true);
 
-      const selected = this.usuarios().find(
-        (u) => u.nombre.toLowerCase() === term
-      );
-
+      const selected = this.usuarios().find(u => u.nombre.toLowerCase() === term);
       this.form.patchValue(
         { propietarioId: selected?.usuarioId ?? 0 },
         { emitEvent: false }
@@ -3600,18 +3942,23 @@ export class JuegosPageComponent implements OnInit {
 
   private precargarPropietarioActual(): void {
     const usuarioId = this.authService.currentUser?.usuarioId ?? 0;
+
     if (usuarioId > 0) {
-      this.form.patchValue({ propietarioId: usuarioId }, { emitEvent: false });
+      this.form.patchValue(
+        { propietarioId: usuarioId },
+        { emitEvent: false }
+      );
     }
   }
 
   private seleccionarPropietarioPorDefecto(usuarios: UsuarioOption[]): void {
     const currentUserId = this.authService.currentUser?.usuarioId ?? 0;
-    const existeUsuarioActual = usuarios.some((u) => u.usuarioId === currentUserId);
+    const existeUsuarioActual = usuarios.some(u => u.usuarioId === currentUserId);
     const propietarioActual = this.form.controls.propietarioId.value;
 
     if (propietarioActual > 0) {
-      const actual = usuarios.find((u) => u.usuarioId === propietarioActual);
+      const actual = usuarios.find(u => u.usuarioId === propietarioActual);
+
       if (actual) {
         this.form.patchValue(
           {
@@ -3626,7 +3973,7 @@ export class JuegosPageComponent implements OnInit {
     }
 
     if (existeUsuarioActual) {
-      const actual = usuarios.find((u) => u.usuarioId === currentUserId)!;
+      const actual = usuarios.find(u => u.usuarioId === currentUserId)!;
       this.form.patchValue(
         {
           propietarioId: actual.usuarioId,
@@ -3635,58 +3982,23 @@ export class JuegosPageComponent implements OnInit {
         { emitEvent: false }
       );
       this.filteredUsuarios.set(usuarios);
-      return;
-    }
-
-    if (usuarios.length > 0) {
-      this.form.patchValue(
-        {
-          propietarioId: usuarios[0].usuarioId,
-          propietarioSearch: usuarios[0].nombre
-        },
-        { emitEvent: false }
-      );
-      this.filteredUsuarios.set(usuarios);
     }
   }
 
   seleccionarPropietario(usuario: UsuarioOption): void {
-    this.form.patchValue(
-      {
-        propietarioId: usuario.usuarioId,
-        propietarioSearch: usuario.nombre
-      },
-      { emitEvent: false }
-    );
+    this.form.patchValue({
+      propietarioId: usuario.usuarioId,
+      propietarioSearch: usuario.nombre
+    });
 
-    this.filteredUsuarios.set(
-      this.usuarios().filter((u) =>
-        u.nombre.toLowerCase().includes(usuario.nombre.toLowerCase())
-      )
-    );
-
+    this.filteredUsuarios.set(this.usuarios());
     this.showPropietarioOptions.set(false);
-  }
-
-  mostrarOpcionesPropietario(): void {
-    const search = this.form.controls.propietarioSearch.value.trim().toLowerCase();
-
-    this.filteredUsuarios.set(
-      this.usuarios().filter((u) =>
-        u.nombre.toLowerCase().includes(search)
-      )
-    );
-
-    this.showPropietarioOptions.set(true);
-  }
-
-  ocultarOpcionesPropietario(): void {
-    setTimeout(() => this.showPropietarioOptions.set(false), 150);
   }
 
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.formError.set('Revisa els camps obligatoris del formulari.');
       return;
     }
 
@@ -3696,66 +4008,46 @@ export class JuegosPageComponent implements OnInit {
 
     const value = this.form.getRawValue();
 
-    const propietarioValido = this.usuarios().some(
-      (u) => u.usuarioId === Number(value.propietarioId)
-    );
-
-    if (!propietarioValido) {
-      this.saving.set(false);
-      this.formError.set('Debes seleccionar un propietario de la lista.');
-      return;
-    }
-
     this.juegosService.create({
       juegoId: 0,
       nombre: value.nombre.trim(),
-      numeroJugadoresMin: Number(value.numeroJugadoresMin),
-      numeroJugadoresMax: Number(value.numeroJugadoresMax),
-      propietarioId: Number(value.propietarioId),
-      tipo: value.tipo.trim(),
       bggId: this.toNullableNumber(value.bggId),
       dificultadBgg: this.toNullableNumber(value.dificultadBgg),
+      numeroJugadoresMin: Number(value.numeroJugadoresMin),
+      numeroJugadoresMax: Number(value.numeroJugadoresMax),
       pvp: this.toNullableNumber(value.pvp),
-      fechaAdquisicion: value.fechaAdquisicion.trim() ? value.fechaAdquisicion : null,
+      propietarioId: Number(value.propietarioId),
+      fechaAdquisicion: value.fechaAdquisicion || null,
+      tipo: value.tipo.trim(),
       juegoBaseId: this.toNullableNumber(value.juegoBaseId)
     }).subscribe({
-      next: (juego) => {
-        this.juegos.set([juego, ...this.juegos()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')));
+      next: juego => {
+        this.juegos.update(items => [juego, ...items]);
         this.saving.set(false);
-        this.success.set('Juego creado correctamente.');
-        this.resetFormManteniendoPropietario();
+        this.success.set('Joc creat correctament.');
+        this.form.reset({
+          nombre: '',
+          numeroJugadoresMin: 1,
+          numeroJugadoresMax: 4,
+          propietarioId: this.authService.currentUser?.usuarioId ?? 0,
+          propietarioSearch: this.authService.currentUser?.nombre ?? '',
+          tipo: '',
+          bggId: '',
+          dificultadBgg: '',
+          pvp: '',
+          fechaAdquisicion: '',
+          juegoBaseId: ''
+        });
         this.modalOpen.set(false);
-        this.showPropietarioOptions.set(false);
       },
-      error: (err) => {
+      error: err => {
         this.saving.set(false);
-        this.formError.set(err.error?.message ?? 'No se pudo crear el juego.');
+        this.formError.set(err.error?.message ?? 'No s\'ha pogut crear el joc.');
       }
     });
   }
 
-  private resetFormManteniendoPropietario(): void {
-    const propietarioId = this.form.controls.propietarioId.value || this.authService.currentUser?.usuarioId || 0;
-    const propietario = this.usuarios().find((u) => u.usuarioId === propietarioId);
-
-    this.form.reset({
-      nombre: '',
-      numeroJugadoresMin: 1,
-      numeroJugadoresMax: 4,
-      propietarioId,
-      propietarioSearch: propietario?.nombre ?? '',
-      tipo: '',
-      bggId: '',
-      dificultadBgg: '',
-      pvp: '',
-      fechaAdquisicion: '',
-      juegoBaseId: ''
-    });
-
-    this.filteredUsuarios.set(this.usuarios());
-  }
-
-  private toNullableNumber(value: string | number | null | undefined): number | null {
+  private toNullableNumber(value: unknown): number | null {
     if (value === null || value === undefined || value === '') {
       return null;
     }
@@ -3784,7 +4076,7 @@ export class JuegosPageComponent implements OnInit {
   }
 
   getNombrePropietario(propietarioId: number): string {
-    return this.usuarios().find((u) => u.usuarioId === propietarioId)?.nombre ?? `#${propietarioId}`;
+    return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? `${propietarioId}`;
   }
 }
 </file>
@@ -4067,74 +4359,70 @@ th {
     <div>
       <p class="eyebrow">Frit</p>
       <h1>Hola, {{ userName() }}</h1>
-      <p class="subtitle">Resumen rápido de partidas y actividad reciente.</p>
+      <p class="subtitle">Resum ràpid de partides i activitat recent.</p>
     </div>
 
     <div class="header-actions">
-    <button type="button" class="secondary-button" routerLink="/app/juegos">Ver juegos</button>
-    <button type="button" class="secondary-button" disabled>Nueva partida</button>
-    <button type="button" class="ghost-button" (click)="logout()">Salir</button>
+      <button type="button" class="secondary-button" routerLink="/app/juegos">Veure jocs</button>
+      <button type="button" class="secondary-button" disabled>Nova partida</button>
+      <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
 
   <section class="stats-grid" *ngIf="!loading() && !error()">
     <article class="stat-card">
-      <span class="stat-label">Total partidas</span>
+      <span class="stat-label">Total de partides</span>
       <strong class="stat-value">{{ totalPartidas() }}</strong>
     </article>
 
     <article class="stat-card">
-      <span class="stat-label">Este mes</span>
+      <span class="stat-label">Aquest mes</span>
       <strong class="stat-value">{{ partidasEsteMes() }}</strong>
     </article>
 
     <article class="stat-card">
-      <span class="stat-label">Duración media</span>
-      <strong class="stat-value">
-        {{ duracionMedia() !== null ? duracionMedia() + ' min' : '—' }}
-      </strong>
+      <span class="stat-label">Durada mitjana</span>
+      <strong class="stat-value">{{ duracionMedia() !== null ? duracionMedia() + ' min' : '—' }}</strong>
     </article>
   </section>
 
   <section class="content-card" *ngIf="loading()">
-    <p>Cargando partidas...</p>
+    <p>Carregant partides...</p>
   </section>
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarPartidas()">
-      Reintentar
-    </button>
+    <button type="button" class="primary-button" (click)="cargarPartidas()">Tornar-ho a provar</button>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
-        <h2>Últimas partidas</h2>
-        <p>Las 6 partidas más recientes registradas en la aplicación.</p>
+        <h2>Últimes partides</h2>
+        <p>Les 6 partides més recents registrades a l'aplicació.</p>
       </div>
     </div>
 
     <div class="empty-state" *ngIf="ultimasPartidas().length === 0">
-      <h3>Aún no hay partidas registradas</h3>
-      <p>Cuando empieces a cargar partidas, aparecerán aquí.</p>
+      <h3>Encara no hi ha partides registrades</h3>
+      <p>Quan comencis a registrar partides, apareixeran aquí.</p>
     </div>
 
     <div class="table-wrapper" *ngIf="ultimasPartidas().length > 0">
       <table>
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Juego</th>
-            <th>Jugadores</th>
-            <th>Duración</th>
-            <th>Observaciones</th>
+            <th>Data</th>
+            <th>Joc</th>
+            <th>Jugadors</th>
+            <th>Durada</th>
+            <th>Observacions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let partida of ultimasPartidas(); trackBy: trackByPartidaId">
             <td>{{ formatFecha(partida.fecha) }}</td>
-            <td>#{{ partida.juegoId }}</td>
+            <td>{{ partida.juegoId }}</td>
             <td>{{ partida.numeroJugadores }}</td>
             <td>{{ partida.duracionMinutos ? partida.duracionMinutos + ' min' : '—' }}</td>
             <td>{{ partida.observaciones || '—' }}</td>
@@ -4149,7 +4437,7 @@ th {
 <file path="FritWeb/src/app/features/partidas/partidas-page.component.ts">
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink  } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { PartidasService } from './partidas.service';
 import { Partida } from './partidas.models';
@@ -4170,8 +4458,7 @@ export class PartidasPageComponent implements OnInit {
   error = signal('');
   partidas = signal<Partida[]>([]);
 
-  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
-
+  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalPartidas = computed(() => this.partidas().length);
 
   partidasEsteMes = computed(() => {
@@ -4212,7 +4499,7 @@ export class PartidasPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('No se pudieron cargar las partidas.');
+        this.error.set('No s\'han pogut carregar les partides.');
         this.loading.set(false);
       }
     });
@@ -4220,17 +4507,13 @@ export class PartidasPageComponent implements OnInit {
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigateByUrl('/login');
-      },
-      error: () => {
-        this.router.navigateByUrl('/login');
-      }
+      next: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login')
     });
   }
 
   formatFecha(value: string): string {
-    return new Date(value).toLocaleDateString('es-ES');
+    return new Date(value).toLocaleDateString('ca-ES');
   }
 
   trackByPartidaId(_: number, partida: Partida): number {
@@ -4454,21 +4737,24 @@ export class PartidasService {
 <main class="landing-page">
   <section class="hero">
     <div class="hero-copy">
-      <p class="eyebrow">Plataforma Frit</p>
+      <p class="eyebrow">{{ productName }}</p>
       <h1>{{ heroTitle }}</h1>
       <p class="hero-description">{{ heroSubtitle }}</p>
-      <a class="button button-primary" href="#features">{{ ctaLabel }}</a>
+      <a class="button button-primary" href="/login">{{ ctaLabel }}</a>
     </div>
+
     <div class="hero-visual">
       <div class="hero-card">
-        <span class="hero-card__label">Organización clara</span>
-        <p>Vista limpia para ver tus procesos y seguirlos sin ruido.</p>
+        <span class="hero-card__label">Control de ludoteca</span>
+        <p>
+          Consulta jocs, propietaris i partides des d’una interfície clara i centrada en l’activitat real de l’app.
+        </p>
       </div>
     </div>
   </section>
 
   <section id="features" class="features">
-    <h2>Qué ofrece Frit</h2>
+    <h2>Què pots fer amb Frit</h2>
     <div class="feature-grid">
       <article class="feature-card" *ngFor="let feature of features">
         <h3>{{ feature.title }}</h3>
@@ -4479,12 +4765,13 @@ export class PartidasService {
 
   <section class="workflow">
     <div class="section-header">
-      <p class="eyebrow">Cómo funciona</p>
-      <h2>Un flujo pensado para avanzar rápido</h2>
+      <p class="eyebrow">Ús bàsic</p>
+      <h2>Una aplicació pensada per a jocs i partides</h2>
     </div>
+
     <div class="workflow-grid">
-      <article class="workflow-step" *ngFor="let step of steps">
-        <span class="step-index">0{{ steps.indexOf(step) + 1 }}</span>
+      <article class="workflow-step" *ngFor="let step of steps; let i = index">
+        <span class="step-index">{{ (i + 1).toString().padStart(2, '0') }}</span>
         <h3>{{ step.title }}</h3>
         <p>{{ step.description }}</p>
       </article>
@@ -4492,7 +4779,7 @@ export class PartidasService {
   </section>
 
   <footer class="footer">
-    <p><strong>Frit</strong> — una base simple, moderna y lista para crecer.</p>
+    <p><strong>Frit</strong>, la teva aplicació per gestionar jocs, usuaris i partides.</p>
   </footer>
 </main>
 </file>
@@ -4511,38 +4798,44 @@ import { CommonModule } from '@angular/common';
 })
 export class LandingPageComponent {
   productName = 'Frit';
-  heroTitle = 'Una plataforma moderna para gestionar información y flujos de trabajo';
-  heroSubtitle = 'Listo para crecer con tu equipo, manteniendo claridad y ritmo desde el primer día.';
-  ctaLabel = 'Empezar ahora';
+  heroTitle = 'Gestiona la teva ludoteca i registra les teves partides en un sol lloc';
+  heroSubtitle =
+    'Frit et permet desar jocs, controlar-ne el propietari i consultar ràpidament l’activitat recent de les partides.';
+  ctaLabel = 'Ves a l’accés';
 
-  
   features = [
     {
-      title: 'Trabajo colaborativo',
-      description: 'Organiza tareas, documentos y decisiones en una interfaz clara y accesible.',
+      title: 'Catàleg de jocs',
+      description:
+        'Afegeix jocs amb nom, tipus, rang de jugadors, preu, propietari i joc base.',
     },
     {
-      title: 'Flujos sencillos',
-      description: 'Diseña procesos prácticos que el equipo puede seguir sin fricción.',
+      title: 'Registre de partides',
+      description:
+        'Consulta les partides recents, la durada mitjana i el nombre total de partides registrades.',
     },
     {
-      title: 'Crecimiento ordenado',
-      description: 'Construye tu solución con una base preparada para evolucionar.',
+      title: 'Gestió senzilla',
+      description:
+        'Accedeix amb el teu usuari, crea nous registres i mantén la informació ordenada.',
     },
   ];
 
   steps = [
     {
-      title: 'Define tu espacio',
-      description: 'Configura tu tablero y agrega tus primeras secciones en minutos.',
+      title: 'Crea el teu usuari',
+      description:
+        'Registra un accés per entrar a Frit i començar a utilitzar l’aplicació.',
     },
     {
-      title: 'Organiza tu trabajo',
-      description: 'Clasifica actividades y prioridades con una vista clara.',
+      title: 'Afegeix jocs',
+      description:
+        'Desa els jocs de la ludoteca amb les seves dades principals i el propietari.',
     },
     {
-      title: 'Activa tu equipo',
-      description: 'Comparte el progreso y haz que todos avancen alineados.',
+      title: 'Consulta les partides',
+      description:
+        'Revisa l’activitat recent i utilitza l’aplicació com a base per registrar noves sessions.',
     },
   ];
 }
@@ -4550,10 +4843,10 @@ export class LandingPageComponent {
 
 <file path="FritWeb/src/index.html">
 <!doctype html>
-<html lang="es">
+<html lang="ca">
 <head>
   <meta charset="utf-8">
-  <title>Frit - Plataforma de gestión moderna</title>
+  <title>Frit - Gestor de jocs i partides</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">

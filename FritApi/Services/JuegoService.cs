@@ -60,13 +60,13 @@ public class JuegoService
     {
         if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
         {
-            return (false, "NumeroJugadoresMin no puede ser mayor que NumeroJugadoresMax.", null);
+            return (false, "El nombre mínim de jugadors no pot ser més gran que el màxim.", null);
         }
 
         var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
         if (!propietarioExiste)
         {
-            return (false, "El PropietarioId indicado no existe.", null);
+            return (false, "L'identificador del propietari indicat no existeix.", null);
         }
 
         if (dto.JuegoBaseId.HasValue)
@@ -74,7 +74,7 @@ public class JuegoService
             var juegoBaseExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoBaseId.Value);
             if (!juegoBaseExiste)
             {
-                return (false, "El JuegoBaseId indicado no existe.", null);
+                return (false, "L'identificador del joc base indicat no existeix.", null);
             }
         }
 
@@ -103,37 +103,37 @@ public class JuegoService
     {
         if (id != dto.JuegoId)
         {
-            return (false, "El id de la ruta no coincide con el JuegoId del body.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el JuegoId del cos de la petició.", null);
         }
 
         if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
         {
-            return (false, "NumeroJugadoresMin no puede ser mayor que NumeroJugadoresMax.", null);
+            return (false, "El nombre mínim de jugadors no pot ser més gran que el màxim.", null);
         }
 
         var juego = await _context.Juegos.FirstOrDefaultAsync(j => j.JuegoId == id);
         if (juego is null)
         {
-            return (false, "Juego no encontrado.", null);
+            return (false, "Joc no trobat.", null);
         }
 
         var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
         if (!propietarioExiste)
         {
-            return (false, "El PropietarioId indicado no existe.", null);
+            return (false, "L'identificador del propietari indicat no existeix.", null);
         }
 
         if (dto.JuegoBaseId.HasValue)
         {
             if (dto.JuegoBaseId.Value == id)
             {
-                return (false, "Un juego no puede ser su propio juego base.", null);
+                return (false, "Un joc no pot ser el seu propi joc base.", null);
             }
 
             var juegoBaseExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoBaseId.Value);
             if (!juegoBaseExiste)
             {
-                return (false, "El JuegoBaseId indicado no existe.", null);
+                return (false, "L'identificador del joc base indicat no existeix.", null);
             }
         }
 

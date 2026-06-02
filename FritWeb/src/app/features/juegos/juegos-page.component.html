@@ -2,73 +2,71 @@
   <header class="dashboard-header">
     <div>
       <p class="eyebrow">Frit</p>
-      <h1>Juegos</h1>
-      <p class="subtitle">Gestiona tu ludoteca y registra nuevos juegos antes de crear partidas.</p>
+      <h1>Jocs</h1>
+      <p class="subtitle">Gestiona la teva ludoteca i registra jocs nous abans de crear partides.</p>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="secondary-button" routerLink="/app/partidas">Ver partidas</button>
-      <button type="button" class="ghost-button" (click)="logout()">Salir</button>
+      <button type="button" class="secondary-button" routerLink="/app/partidas">Veure partides</button>
+      <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
 
   <section class="stats-grid" *ngIf="!loading() && !error()">
     <article class="stat-card">
-      <span class="stat-label">Total juegos</span>
+      <span class="stat-label">Total de jocs</span>
       <strong class="stat-value">{{ totalJuegos() }}</strong>
     </article>
 
     <article class="stat-card stat-card-action">
-      <span class="stat-label">Nuevo juego</span>
-      <strong class="stat-value compact">Añade un juego a tu ludoteca</strong>
-      <button type="button" class="primary-button stat-action-button" (click)="abrirModal()">
-        Nuevo juego
-      </button>
+      <span class="stat-label">Nou joc</span>
+      <strong class="stat-value compact">Afegeix un joc a la teva ludoteca</strong>
+      <button type="button" class="primary-button stat-action-button" (click)="abrirModal()">Nou joc</button>
     </article>
   </section>
 
   <section class="content-card" *ngIf="loading()">
-    <p>Cargando juegos y usuarios...</p>
+    <p>Carregant jocs i usuaris...</p>
   </section>
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarDatos()">Reintentar</button>
+    <button type="button" class="primary-button" (click)="cargarDatos()">Tornar-ho a provar</button>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
-        <h2>Listado de juegos</h2>
-        <p>Tu colección disponible para futuras partidas.</p>
+        <h2>Llista de jocs</h2>
+        <p>La teva col·lecció disponible per a futures partides.</p>
       </div>
 
-      <button type="button" class="primary-button" (click)="abrirModal()">Nuevo juego</button>
+      <button type="button" class="primary-button" (click)="abrirModal()">Nou joc</button>
     </div>
 
     <div class="empty-state" *ngIf="juegos().length === 0">
-      <h3>Aún no hay juegos registrados</h3>
-      <p>Empieza creando tu primer juego desde el botón Nuevo juego.</p>
+      <h3>Encara no hi ha jocs registrats</h3>
+      <p>Comença creant el teu primer joc des del botó Nou joc.</p>
     </div>
 
     <div class="table-wrapper" *ngIf="juegos().length > 0">
       <table>
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Jugadores</th>
-            <th>Propietario</th>
-            <th>Tipo</th>
+            <th>Nom</th>
+            <th>Jugadors</th>
+            <th>Propietari</th>
+            <th>Tipus</th>
             <th>PVP</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let juego of juegos(); trackBy: trackByJuegoId">
             <td>{{ juego.nombre }}</td>
-            <td>{{ juego.numeroJugadoresMin }}-{{ juego.numeroJugadoresMax }}</td>
+            <td>{{ juego.numeroJugadoresMin }} - {{ juego.numeroJugadoresMax }}</td>
             <td>{{ getNombrePropietario(juego.propietarioId) }}</td>
-            <td>{{ juego.tipo || '—' }}</td>
-            <td>{{ juego.pvp ?? '—' }}</td>
+            <td>{{ juego.tipo }}</td>
+            <td>{{ juego.pvp ?? '-' }}</td>
           </tr>
         </tbody>
       </table>
@@ -85,14 +83,14 @@
     >
       <div class="modal-header">
         <div>
-          <h2 id="nuevo-juego-title">Nuevo juego</h2>
-          <p>Escribe el propietario y selecciona una opción de la lista filtrada.</p>
+          <h2 id="nuevo-juego-title">Nou joc</h2>
+          <p>Escriu el propietari i selecciona una opció de la llista filtrada.</p>
         </div>
 
         <button
           type="button"
           class="ghost-icon-button"
-          aria-label="Cerrar formulario"
+          aria-label="Tancar formulari"
           (click)="cerrarModal()"
         >
           ×
@@ -102,93 +100,94 @@
       <form class="game-form" [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <label>
-            <span>Nombre <span class="required-mark">*</span></span>
+            <span>Nom <span class="required-mark">*</span></span>
             <input type="text" formControlName="nombre" />
             <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
-              El nombre es obligatorio.
+              El nom és obligatori.
             </small>
           </label>
 
           <label class="autocomplete-field">
-            <span>Propietario <span class="required-mark">*</span></span>
+            <span>Propietari <span class="required-mark">*</span></span>
             <input
               type="text"
               formControlName="propietarioSearch"
+              (focus)="showPropietarioOptions.set(true)"
               autocomplete="off"
-              placeholder="Escribe para buscar propietario"
-              (focus)="mostrarOpcionesPropietario()"
-              (blur)="ocultarOpcionesPropietario()"
             />
+
             <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
               <button
                 type="button"
                 class="autocomplete-option"
                 *ngFor="let usuario of filteredUsuarios()"
-                (mousedown)="seleccionarPropietario(usuario)"
+                (click)="seleccionarPropietario(usuario)"
               >
                 {{ usuario.nombre }}
               </button>
-              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
-                No hay usuarios que coincidan.
-              </div>
+
+              <p class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                No s'han trobat propietaris.
+              </p>
             </div>
+
             <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
-              Debes seleccionar un propietario válido.
+              Has de seleccionar un propietari vàlid.
             </small>
           </label>
 
           <label>
-            <span>Jugadores mín. <span class="required-mark">*</span></span>
-            <input type="number" min="1" formControlName="numeroJugadoresMin" />
+            <span>Jugadors mínims <span class="required-mark">*</span></span>
+            <input type="number" formControlName="numeroJugadoresMin" min="1" />
           </label>
 
           <label>
-            <span>Jugadores máx. <span class="required-mark">*</span></span>
-            <input type="number" min="1" formControlName="numeroJugadoresMax" />
+            <span>Jugadors màxims <span class="required-mark">*</span></span>
+            <input type="number" formControlName="numeroJugadoresMax" min="1" />
           </label>
 
           <label>
-            <span>Tipo</span>
+            <span>Tipus</span>
             <input type="text" formControlName="tipo" />
           </label>
 
           <label>
             <span>BGG ID</span>
-            <input type="number" min="1" formControlName="bggId" />
+            <input type="number" formControlName="bggId" min="1" />
           </label>
 
           <label>
-            <span>Dificultad BGG</span>
-            <input type="number" min="0" step="0.01" formControlName="dificultadBgg" />
+            <span>Dificultat BGG</span>
+            <input type="number" formControlName="dificultadBgg" step="0.01" min="0" />
           </label>
 
           <label>
             <span>PVP</span>
-            <input type="number" min="0" step="0.01" formControlName="pvp" />
+            <input type="number" formControlName="pvp" step="0.01" min="0" />
           </label>
 
           <label>
-            <span>Fecha adquisición</span>
+            <span>Data d'adquisició</span>
             <input type="date" formControlName="fechaAdquisicion" />
           </label>
 
           <label>
-            <span>Juego base ID</span>
-            <input type="number" min="1" formControlName="juegoBaseId" />
+            <span>ID joc base</span>
+            <input type="number" formControlName="juegoBaseId" min="1" />
           </label>
         </div>
 
-        <p class="field-error" *ngIf="form.errors?.['minGreaterThanMax']">
-          El mínimo de jugadores no puede ser mayor que el máximo.
-        </p>
+        <small class="field-error" *ngIf="form.errors?.['minGreaterThanMax']">
+          El mínim de jugadors no pot ser més gran que el màxim.
+        </small>
 
         <p class="error" *ngIf="formError()">{{ formError() }}</p>
         <p class="success" *ngIf="success()">{{ success() }}</p>
 
-        <div class="form-actions">
-          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancelar</button>
+        <div class="modal-actions">
+          <button type="button" class="secondary-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
-            {{ saving() ? 'Guardando...' : 'Crear juego' }}
+            {{ saving() ? 'Desant...' : 'Desar joc' }}
           </button>
         </div>
       </form>

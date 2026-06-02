@@ -1,13 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
-import {
-  AbstractControl,
-  FormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators
-} from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Juego, UsuarioOption } from './juegos.models';
@@ -53,27 +46,22 @@ export class JuegosPageComponent implements OnInit {
   filteredUsuarios = signal<UsuarioOption[]>([]);
   showPropietarioOptions = signal(false);
 
-  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
+  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
 
-  form = this.fb.nonNullable.group(
-    {
-      nombre: ['', [Validators.required, Validators.maxLength(200)]],
-      numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
-      numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
-      propietarioId: [0, [Validators.required, Validators.min(1)]],
-      propietarioSearch: [''],
-      tipo: ['', [Validators.maxLength(200)]],
-      bggId: [''],
-      dificultadBgg: [''],
-      pvp: [''],
-      fechaAdquisicion: [''],
-      juegoBaseId: ['']
-    },
-    {
-      validators: minLessOrEqualMaxValidator()
-    }
-  );
+  form = this.fb.nonNullable.group({
+    nombre: ['', [Validators.required, Validators.maxLength(200)]],
+    numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
+    numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
+    propietarioId: [0, [Validators.required, Validators.min(1)]],
+    propietarioSearch: [''],
+    tipo: ['', [Validators.maxLength(200)]],
+    bggId: [''],
+    dificultadBgg: [''],
+    pvp: [''],
+    fechaAdquisicion: [''],
+    juegoBaseId: ['']
+  }, { validators: minLessOrEqualMaxValidator() });
 
   ngOnInit(): void {
     this.precargarPropietarioActual();
@@ -91,7 +79,7 @@ export class JuegosPageComponent implements OnInit {
   abrirModal(): void {
     this.formError.set('');
     this.success.set('');
-    this.mostrarOpcionesPropietario();
+    this.showPropietarioOptions.set(false);
     this.modalOpen.set(true);
   }
 
@@ -118,7 +106,7 @@ export class JuegosPageComponent implements OnInit {
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No se pudieron cargar los juegos.');
+        this.error.set('No s\'han pogut carregar els jocs.');
         this.loading.set(false);
       }
     });
@@ -132,7 +120,7 @@ export class JuegosPageComponent implements OnInit {
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No se pudieron cargar los usuarios.');
+        this.error.set('No s\'han pogut carregar els usuaris.');
         this.loading.set(false);
       }
     });
@@ -142,11 +130,15 @@ export class JuegosPageComponent implements OnInit {
     this.form.controls.propietarioSearch.valueChanges.subscribe(value => {
       const term = value.trim().toLowerCase();
       const filtered = this.usuarios().filter(u => u.nombre.toLowerCase().includes(term));
+
       this.filteredUsuarios.set(filtered);
       this.showPropietarioOptions.set(true);
 
       const selected = this.usuarios().find(u => u.nombre.toLowerCase() === term);
-      this.form.patchValue({ propietarioId: selected?.usuarioId ?? 0 }, { emitEvent: false });
+      this.form.patchValue(
+        { propietarioId: selected?.usuarioId ?? 0 },
+        { emitEvent: false }
+      );
     });
   }
 
@@ -160,7 +152,10 @@ export class JuegosPageComponent implements OnInit {
     const usuarioId = this.authService.currentUser?.usuarioId ?? 0;
 
     if (usuarioId > 0) {
-      this.form.patchValue({ propietarioId: usuarioId }, { emitEvent: false });
+      this.form.patchValue(
+        { propietarioId: usuarioId },
+        { emitEvent: false }
+      );
     }
   }
 
@@ -195,50 +190,23 @@ export class JuegosPageComponent implements OnInit {
         { emitEvent: false }
       );
       this.filteredUsuarios.set(usuarios);
-      return;
-    }
-
-    if (usuarios.length > 0) {
-      this.form.patchValue(
-        {
-          propietarioId: usuarios[0].usuarioId,
-          propietarioSearch: usuarios[0].nombre
-        },
-        { emitEvent: false }
-      );
-      this.filteredUsuarios.set(usuarios);
     }
   }
 
   seleccionarPropietario(usuario: UsuarioOption): void {
-    this.form.patchValue(
-      {
-        propietarioId: usuario.usuarioId,
-        propietarioSearch: usuario.nombre
-      },
-      { emitEvent: false }
-    );
-    this.filteredUsuarios.set(
-      this.usuarios().filter(u => u.nombre.toLowerCase().includes(usuario.nombre.toLowerCase()))
-    );
+    this.form.patchValue({
+      propietarioId: usuario.usuarioId,
+      propietarioSearch: usuario.nombre
+    });
+
+    this.filteredUsuarios.set(this.usuarios());
     this.showPropietarioOptions.set(false);
-  }
-
-  mostrarOpcionesPropietario(): void {
-    const search = this.form.controls.propietarioSearch.value.trim().toLowerCase();
-    this.filteredUsuarios.set(
-      this.usuarios().filter(u => u.nombre.toLowerCase().includes(search))
-    );
-    this.showPropietarioOptions.set(true);
-  }
-
-  ocultarOpcionesPropietario(): void {
-    setTimeout(() => this.showPropietarioOptions.set(false), 150);
   }
 
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.formError.set('Revisa els camps obligatoris del formulari.');
       return;
     }
 
@@ -247,68 +215,47 @@ export class JuegosPageComponent implements OnInit {
     this.success.set('');
 
     const value = this.form.getRawValue();
-    const propietarioValido = this.usuarios().some(
-      u => u.usuarioId === Number(value.propietarioId)
-    );
 
-    if (!propietarioValido) {
-      this.saving.set(false);
-      this.formError.set('Debes seleccionar un propietario de la lista.');
-      return;
-    }
-
-    this.juegosService
-      .create({
-        juegoId: 0,
-        nombre: value.nombre.trim(),
-        numeroJugadoresMin: Number(value.numeroJugadoresMin),
-        numeroJugadoresMax: Number(value.numeroJugadoresMax),
-        propietarioId: Number(value.propietarioId),
-        tipo: value.tipo.trim(),
-        bggId: this.toNullableNumber(value.bggId),
-        dificultadBgg: this.toNullableNumber(value.dificultadBgg),
-        pvp: this.toNullableNumber(value.pvp),
-        fechaAdquisicion: value.fechaAdquisicion.trim() ? value.fechaAdquisicion : null,
-        juegoBaseId: this.toNullableNumber(value.juegoBaseId)
-      })
-      .subscribe({
-        next: juego => {
-          this.juegos.set([...this.juegos(), juego].sort((a, b) => a.nombre.localeCompare(b.nombre)));
-          this.saving.set(false);
-          this.success.set('Juego creado correctamente.');
-          this.resetFormManteniendoPropietario();
-          this.modalOpen.set(false);
-          this.showPropietarioOptions.set(false);
-        },
-        error: err => {
-          this.saving.set(false);
-          this.formError.set(err.error?.message ?? 'No se pudo crear el juego.');
-        }
-      });
-  }
-
-  private resetFormManteniendoPropietario(): void {
-    const propietarioId = this.form.controls.propietarioId.value || this.authService.currentUser?.usuarioId || 0;
-    const propietario = this.usuarios().find(u => u.usuarioId === propietarioId);
-
-    this.form.reset({
-      nombre: '',
-      numeroJugadoresMin: 1,
-      numeroJugadoresMax: 4,
-      propietarioId,
-      propietarioSearch: propietario?.nombre ?? '',
-      tipo: '',
-      bggId: '',
-      dificultadBgg: '',
-      pvp: '',
-      fechaAdquisicion: '',
-      juegoBaseId: ''
+    this.juegosService.create({
+      juegoId: 0,
+      nombre: value.nombre.trim(),
+      bggId: this.toNullableNumber(value.bggId),
+      dificultadBgg: this.toNullableNumber(value.dificultadBgg),
+      numeroJugadoresMin: Number(value.numeroJugadoresMin),
+      numeroJugadoresMax: Number(value.numeroJugadoresMax),
+      pvp: this.toNullableNumber(value.pvp),
+      propietarioId: Number(value.propietarioId),
+      fechaAdquisicion: value.fechaAdquisicion || null,
+      tipo: value.tipo.trim(),
+      juegoBaseId: this.toNullableNumber(value.juegoBaseId)
+    }).subscribe({
+      next: juego => {
+        this.juegos.update(items => [juego, ...items]);
+        this.saving.set(false);
+        this.success.set('Joc creat correctament.');
+        this.form.reset({
+          nombre: '',
+          numeroJugadoresMin: 1,
+          numeroJugadoresMax: 4,
+          propietarioId: this.authService.currentUser?.usuarioId ?? 0,
+          propietarioSearch: this.authService.currentUser?.nombre ?? '',
+          tipo: '',
+          bggId: '',
+          dificultadBgg: '',
+          pvp: '',
+          fechaAdquisicion: '',
+          juegoBaseId: ''
+        });
+        this.modalOpen.set(false);
+      },
+      error: err => {
+        this.saving.set(false);
+        this.formError.set(err.error?.message ?? 'No s\'ha pogut crear el joc.');
+      }
     });
-
-    this.filteredUsuarios.set(this.usuarios());
   }
 
-  private toNullableNumber(value: string | number | null | undefined): number | null {
+  private toNullableNumber(value: unknown): number | null {
     if (value === null || value === undefined || value === '') {
       return null;
     }
@@ -337,6 +284,6 @@ export class JuegosPageComponent implements OnInit {
   }
 
   getNombrePropietario(propietarioId: number): string {
-    return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? String(propietarioId);
+    return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? `${propietarioId}`;
   }
 }

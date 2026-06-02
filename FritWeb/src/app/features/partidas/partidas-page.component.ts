@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink  } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { PartidasService } from './partidas.service';
 import { Partida } from './partidas.models';
@@ -21,8 +21,7 @@ export class PartidasPageComponent implements OnInit {
   error = signal('');
   partidas = signal<Partida[]>([]);
 
-  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
-
+  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalPartidas = computed(() => this.partidas().length);
 
   partidasEsteMes = computed(() => {
@@ -63,7 +62,7 @@ export class PartidasPageComponent implements OnInit {
         this.loading.set(false);
       },
       error: () => {
-        this.error.set('No se pudieron cargar las partidas.');
+        this.error.set('No s\'han pogut carregar les partides.');
         this.loading.set(false);
       }
     });
@@ -71,17 +70,13 @@ export class PartidasPageComponent implements OnInit {
 
   logout(): void {
     this.authService.logout().subscribe({
-      next: () => {
-        this.router.navigateByUrl('/login');
-      },
-      error: () => {
-        this.router.navigateByUrl('/login');
-      }
+      next: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login')
     });
   }
 
   formatFecha(value: string): string {
-    return new Date(value).toLocaleDateString('es-ES');
+    return new Date(value).toLocaleDateString('ca-ES');
   }
 
   trackByPartidaId(_: number, partida: Partida): number {

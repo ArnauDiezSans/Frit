@@ -3,74 +3,70 @@
     <div>
       <p class="eyebrow">Frit</p>
       <h1>Hola, {{ userName() }}</h1>
-      <p class="subtitle">Resumen rápido de partidas y actividad reciente.</p>
+      <p class="subtitle">Resum ràpid de partides i activitat recent.</p>
     </div>
 
     <div class="header-actions">
-    <button type="button" class="secondary-button" routerLink="/app/juegos">Ver juegos</button>
-    <button type="button" class="secondary-button" disabled>Nueva partida</button>
-    <button type="button" class="ghost-button" (click)="logout()">Salir</button>
+      <button type="button" class="secondary-button" routerLink="/app/juegos">Veure jocs</button>
+      <button type="button" class="secondary-button" disabled>Nova partida</button>
+      <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
 
   <section class="stats-grid" *ngIf="!loading() && !error()">
     <article class="stat-card">
-      <span class="stat-label">Total partidas</span>
+      <span class="stat-label">Total de partides</span>
       <strong class="stat-value">{{ totalPartidas() }}</strong>
     </article>
 
     <article class="stat-card">
-      <span class="stat-label">Este mes</span>
+      <span class="stat-label">Aquest mes</span>
       <strong class="stat-value">{{ partidasEsteMes() }}</strong>
     </article>
 
     <article class="stat-card">
-      <span class="stat-label">Duración media</span>
-      <strong class="stat-value">
-        {{ duracionMedia() !== null ? duracionMedia() + ' min' : '—' }}
-      </strong>
+      <span class="stat-label">Durada mitjana</span>
+      <strong class="stat-value">{{ duracionMedia() !== null ? duracionMedia() + ' min' : '—' }}</strong>
     </article>
   </section>
 
   <section class="content-card" *ngIf="loading()">
-    <p>Cargando partidas...</p>
+    <p>Carregant partides...</p>
   </section>
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarPartidas()">
-      Reintentar
-    </button>
+    <button type="button" class="primary-button" (click)="cargarPartidas()">Tornar-ho a provar</button>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
-        <h2>Últimas partidas</h2>
-        <p>Las 6 partidas más recientes registradas en la aplicación.</p>
+        <h2>Últimes partides</h2>
+        <p>Les 6 partides més recents registrades a l'aplicació.</p>
       </div>
     </div>
 
     <div class="empty-state" *ngIf="ultimasPartidas().length === 0">
-      <h3>Aún no hay partidas registradas</h3>
-      <p>Cuando empieces a cargar partidas, aparecerán aquí.</p>
+      <h3>Encara no hi ha partides registrades</h3>
+      <p>Quan comencis a registrar partides, apareixeran aquí.</p>
     </div>
 
     <div class="table-wrapper" *ngIf="ultimasPartidas().length > 0">
       <table>
         <thead>
           <tr>
-            <th>Fecha</th>
-            <th>Juego</th>
-            <th>Jugadores</th>
-            <th>Duración</th>
-            <th>Observaciones</th>
+            <th>Data</th>
+            <th>Joc</th>
+            <th>Jugadors</th>
+            <th>Durada</th>
+            <th>Observacions</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let partida of ultimasPartidas(); trackBy: trackByPartidaId">
             <td>{{ formatFecha(partida.fecha) }}</td>
-            <td>#{{ partida.juegoId }}</td>
+            <td>{{ partida.juegoId }}</td>
             <td>{{ partida.numeroJugadores }}</td>
             <td>{{ partida.duracionMinutos ? partida.duracionMinutos + ' min' : '—' }}</td>
             <td>{{ partida.observaciones || '—' }}</td>

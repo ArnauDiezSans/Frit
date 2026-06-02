@@ -40,7 +40,7 @@ export class LoginPageComponent {
       },
       error: () => {
         this.loading = false;
-        this.error = 'Usuario o contraseña incorrectos.';
+        this.error = 'Usuari o contrasenya incorrectes.';
       }
     });
   }

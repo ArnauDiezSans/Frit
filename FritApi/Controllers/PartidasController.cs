@@ -55,7 +55,7 @@ public class PartidasController : ControllerBase
 
         if (!result.Success)
         {
-            if (result.Error == "Partida no encontrada.")
+            if (result.Error == "Partida no trobada.")
             {
                 return NotFound();
             }

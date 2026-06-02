@@ -1,21 +1,20 @@
 <section class="login-page">
   <div class="login-card">
     <h1>Frit</h1>
-    <p>Accede para ver y registrar partidas.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
-      <label for="nombre">Usuario</label>
+      <label for="nombre">Usuari</label>
       <input id="nombre" type="text" formControlName="nombre" />
 
-      <label for="password">Contraseña</label>
+      <label for="password">Contrasenya</label>
       <input id="password" type="password" formControlName="password" />
 
       <p class="error" *ngIf="error">{{ error }}</p>
 
       <button type="submit" [disabled]="loading">
-        {{ loading ? 'Entrando...' : 'Entrar' }}
+        {{ loading ? 'Entrant...' : 'Entrar' }}
       </button>
-      <a routerLink="/register" class="secondary-button">Crear usuario</a>
+      <a routerLink="/register" class="secondary-button">Crear usuari</a>
     </form>
   </div>
 </section>
