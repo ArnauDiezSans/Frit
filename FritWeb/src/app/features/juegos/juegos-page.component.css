@@ -43,7 +43,7 @@ h1 {
   max-width: 1100px;
   margin: 0 auto 24px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -71,9 +71,14 @@ h1 {
   line-height: 1;
 }
 
+.stat-value.compact {
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
 .content-card {
   max-width: 1100px;
-  margin: 0 auto;
+  margin: 0 auto 24px;
   padding: 24px;
 }
 
@@ -92,6 +97,39 @@ h1 {
 .section-heading p {
   margin: 0;
   color: #667085;
+}
+
+.game-form {
+  display: grid;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-weight: 600;
+}
+
+input,
+select {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  font: inherit;
+  background: #ffffff;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
 }
 
 .table-wrapper {
@@ -130,15 +168,19 @@ th {
 }
 
 .primary-button,
-.nav-link,
 .secondary-button,
-.ghost-button {
+.ghost-button,
+.nav-link {
   height: 44px;
   padding: 0 16px;
   border-radius: 12px;
   font-weight: 600;
   font: inherit;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .primary-button {
@@ -147,7 +189,8 @@ th {
   color: #ffffff;
 }
 
-.secondary-button {
+.secondary-button,
+.nav-link {
   border: 1px solid #0f766e;
   background: #ffffff;
   color: #0f766e;
@@ -159,8 +202,8 @@ th {
   color: #344054;
 }
 
-.secondary-button:disabled {
-  opacity: 0.6;
+.primary-button:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
@@ -171,6 +214,19 @@ th {
   gap: 16px;
 }
 
+.error,
+.field-error {
+  color: #b42318;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.success {
+  color: #027a48;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
 @media (max-width: 820px) {
   .dashboard-header,
   .section-heading,
@@ -179,7 +235,8 @@ th {
     align-items: stretch;
   }
 
-  .stats-grid {
+  .stats-grid,
+  .form-grid {
     grid-template-columns: 1fr;
   }
 

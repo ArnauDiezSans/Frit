@@ -74,14 +74,14 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "frit-web:build"
+            "buildTarget": "frit-web:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "frit-web:build:production"
+              "buildTarget": "frit-web:build:production"
             },
             "development": {
-              "browserTarget": "frit-web:build:development"
+              "buildTarget": "frit-web:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -89,7 +89,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "frit-web:build"
+            "buildTarget": "frit-web:build"
           }
         },
         "test": {
