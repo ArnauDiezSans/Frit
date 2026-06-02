@@ -1,3 +1,5 @@
+// npx.cmd repomix 
+
 using FritApi.Data;
 using FritApi.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
