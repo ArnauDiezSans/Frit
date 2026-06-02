@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Juego, UsuarioOption } from './juegos.models';
 import { JuegosService } from './juegos.service';
@@ -23,7 +23,7 @@ function minLessOrEqualMaxValidator(): ValidatorFn {
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './juegos-page.component.html',
   styleUrl: './juegos-page.component.css'
 })
@@ -39,6 +39,7 @@ export class JuegosPageComponent implements OnInit {
   error = signal('');
   formError = signal('');
   success = signal('');
+  modalOpen = signal(false);
 
   juegos = signal<Juego[]>([]);
   usuarios = signal<UsuarioOption[]>([]);
@@ -65,6 +66,27 @@ export class JuegosPageComponent implements OnInit {
   ngOnInit(): void {
     this.precargarPropietarioActual();
     this.cargarDatos();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.modalOpen()) {
+      this.cerrarModal();
+    }
+  }
+
+  abrirModal(): void {
+    this.formError.set('');
+    this.success.set('');
+    this.modalOpen.set(true);
+  }
+
+  cerrarModal(): void {
+    if (this.saving()) {
+      return;
+    }
+
+    this.modalOpen.set(false);
   }
 
   cargarDatos(): void {
@@ -162,6 +184,7 @@ export class JuegosPageComponent implements OnInit {
         this.saving.set(false);
         this.success.set('Juego creado correctamente.');
         this.resetFormManteniendoPropietario();
+        this.modalOpen.set(false);
       },
       error: (err) => {
         this.saving.set(false);
@@ -205,14 +228,6 @@ export class JuegosPageComponent implements OnInit {
 
   get nombre() {
     return this.form.controls.nombre;
-  }
-
-  get numeroJugadoresMin() {
-    return this.form.controls.numeroJugadoresMin;
-  }
-
-  get numeroJugadoresMax() {
-    return this.form.controls.numeroJugadoresMax;
   }
 
   get propietarioId() {
