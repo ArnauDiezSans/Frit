@@ -9,6 +9,8 @@ public class PartidaDto
     [Required]
     public int JuegoId { get; set; }
 
+    public string JuegoNombre { get; set; } = string.Empty;
+
     [Required]
     public DateOnly Fecha { get; set; }
 

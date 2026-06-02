@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FritApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260601173539_InitialDomainModel")]
-    partial class InitialDomainModel
+    [Migration("20260602123623_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,6 +37,7 @@ namespace FritApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("DificultadBgg")
+                        .HasPrecision(4, 2)
                         .HasColumnType("numeric(4,2)");
 
                     b.Property<DateOnly?>("FechaAdquisicion")
@@ -44,6 +45,11 @@ namespace FritApi.Migrations
 
                     b.Property<int?>("JuegoBaseId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<int>("NumeroJugadoresMax")
                         .HasColumnType("integer");
@@ -55,6 +61,7 @@ namespace FritApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("Pvp")
+                        .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
                     b.Property<string>("Tipo")
@@ -63,8 +70,6 @@ namespace FritApi.Migrations
                         .HasColumnType("character varying(200)");
 
                     b.HasKey("JuegoId");
-
-                    b.HasIndex("BggId");
 
                     b.HasIndex("JuegoBaseId");
 
@@ -82,7 +87,9 @@ namespace FritApi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartidaId"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<int?>("DuracionMinutos")
                         .HasColumnType("integer");
@@ -97,11 +104,10 @@ namespace FritApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Observaciones")
-                        .HasColumnType("text");
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.HasKey("PartidaId");
-
-                    b.HasIndex("Fecha");
 
                     b.HasIndex("JuegoId");
 
@@ -128,6 +134,7 @@ namespace FritApi.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal?>("Puntos")
+                        .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
                     b.Property<int?>("UsuarioId")
@@ -152,7 +159,9 @@ namespace FritApi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UsuarioId"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Grupo")
                         .HasMaxLength(200)
@@ -169,12 +178,9 @@ namespace FritApi.Migrations
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("text");
 
                     b.HasKey("UsuarioId");
-
-                    b.HasIndex("Nombre");
 
                     b.ToTable("Usuarios");
                 });
@@ -187,7 +193,7 @@ namespace FritApi.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FritApi.Models.Usuario", "Propietario")
-                        .WithMany("JuegosPropiedad")
+                        .WithMany()
                         .HasForeignKey("PropietarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -217,7 +223,7 @@ namespace FritApi.Migrations
                         .IsRequired();
 
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
-                        .WithMany("PartidasJugadas")
+                        .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.SetNull);
 
@@ -236,13 +242,6 @@ namespace FritApi.Migrations
             modelBuilder.Entity("FritApi.Models.Partida", b =>
                 {
                     b.Navigation("Jugadores");
-                });
-
-            modelBuilder.Entity("FritApi.Models.Usuario", b =>
-                {
-                    b.Navigation("JuegosPropiedad");
-
-                    b.Navigation("PartidasJugadas");
                 });
 #pragma warning restore 612, 618
         }

@@ -43,6 +43,11 @@ namespace FritApi.Migrations
                     b.Property<int?>("JuegoBaseId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<int>("NumeroJugadoresMax")
                         .HasColumnType("integer");
 

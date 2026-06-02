@@ -6,6 +6,10 @@ public class Juego
 {
     public int JuegoId { get; set; }
 
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
     public int? BggId { get; set; }
 
     public decimal? DificultadBgg { get; set; }
@@ -21,7 +25,6 @@ public class Juego
 
     public DateOnly? FechaAdquisicion { get; set; }
 
-    [Required]
     [MaxLength(200)]
     public string Tipo { get; set; } = string.Empty;
 

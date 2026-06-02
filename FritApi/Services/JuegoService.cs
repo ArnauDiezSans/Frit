@@ -17,10 +17,11 @@ public class JuegoService
     public async Task<List<JuegoDto>> GetAllAsync()
     {
         return await _context.Juegos
-            .OrderBy(j => j.Tipo)
+            .OrderBy(j => j.Nombre)
             .Select(j => new JuegoDto
             {
                 JuegoId = j.JuegoId,
+                Nombre = j.Nombre,
                 BggId = j.BggId,
                 DificultadBgg = j.DificultadBgg,
                 NumeroJugadoresMin = j.NumeroJugadoresMin,
@@ -41,6 +42,7 @@ public class JuegoService
             .Select(j => new JuegoDto
             {
                 JuegoId = j.JuegoId,
+                Nombre = j.Nombre,
                 BggId = j.BggId,
                 DificultadBgg = j.DificultadBgg,
                 NumeroJugadoresMin = j.NumeroJugadoresMin,
@@ -78,6 +80,7 @@ public class JuegoService
 
         var juego = new Juego
         {
+            Nombre = dto.Nombre.Trim(),
             BggId = dto.BggId,
             DificultadBgg = dto.DificultadBgg,
             NumeroJugadoresMin = dto.NumeroJugadoresMin,

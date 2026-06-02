@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FritApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialDomainModel : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,8 +21,8 @@ namespace FritApi.Migrations
                     Nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Grupo = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     Observaciones = table.Column<string>(type: "character varying(800)", maxLength: 800, nullable: true),
-                    PasswordHash = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
@@ -35,11 +35,12 @@ namespace FritApi.Migrations
                 {
                     JuegoId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     BggId = table.Column<int>(type: "integer", nullable: true),
-                    DificultadBgg = table.Column<decimal>(type: "numeric(4,2)", nullable: true),
+                    DificultadBgg = table.Column<decimal>(type: "numeric(4,2)", precision: 4, scale: 2, nullable: true),
                     NumeroJugadoresMin = table.Column<int>(type: "integer", nullable: false),
                     NumeroJugadoresMax = table.Column<int>(type: "integer", nullable: false),
-                    Pvp = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
+                    Pvp = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
                     PropietarioId = table.Column<int>(type: "integer", nullable: false),
                     FechaAdquisicion = table.Column<DateOnly>(type: "date", nullable: true),
                     Tipo = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
@@ -72,8 +73,8 @@ namespace FritApi.Migrations
                     Fecha = table.Column<DateOnly>(type: "date", nullable: false),
                     DuracionMinutos = table.Column<int>(type: "integer", nullable: true),
                     NumeroJugadores = table.Column<int>(type: "integer", nullable: false),
-                    Observaciones = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Observaciones = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
@@ -96,7 +97,7 @@ namespace FritApi.Migrations
                     UsuarioId = table.Column<int>(type: "integer", nullable: true),
                     NombreMostrado = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Posicion = table.Column<int>(type: "integer", nullable: false),
-                    Puntos = table.Column<decimal>(type: "numeric(10,2)", nullable: true)
+                    Puntos = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -114,11 +115,6 @@ namespace FritApi.Migrations
                         principalColumn: "UsuarioId",
                         onDelete: ReferentialAction.SetNull);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Juegos_BggId",
-                table: "Juegos",
-                column: "BggId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Juegos_JuegoBaseId",
@@ -142,19 +138,9 @@ namespace FritApi.Migrations
                 column: "UsuarioId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Partidas_Fecha",
-                table: "Partidas",
-                column: "Fecha");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Partidas_JuegoId",
                 table: "Partidas",
                 column: "JuegoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Usuarios_Nombre",
-                table: "Usuarios",
-                column: "Nombre");
         }
 
         /// <inheritdoc />

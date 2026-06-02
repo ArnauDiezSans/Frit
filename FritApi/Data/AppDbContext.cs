@@ -43,8 +43,11 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.JuegoId);
 
-            entity.Property(e => e.Tipo)
+            entity.Property(e => e.Nombre)
                 .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Tipo)
                 .HasMaxLength(200);
 
             entity.Property(e => e.DificultadBgg)
