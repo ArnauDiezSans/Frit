@@ -1,6 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Juego, UsuarioOption } from './juegos.models';
@@ -43,6 +50,8 @@ export class JuegosPageComponent implements OnInit {
 
   juegos = signal<Juego[]>([]);
   usuarios = signal<UsuarioOption[]>([]);
+  filteredUsuarios = signal<UsuarioOption[]>([]);
+  showPropietarioOptions = signal(false);
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
   totalJuegos = computed(() => this.juegos().length);
@@ -53,6 +62,7 @@ export class JuegosPageComponent implements OnInit {
       numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
       numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
       propietarioId: [0, [Validators.required, Validators.min(1)]],
+      propietarioSearch: [''],
       tipo: ['', [Validators.maxLength(200)]],
       bggId: [''],
       dificultadBgg: [''],
@@ -65,6 +75,7 @@ export class JuegosPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.precargarPropietarioActual();
+    this.inicializarFiltroPropietarios();
     this.cargarDatos();
   }
 
@@ -78,6 +89,7 @@ export class JuegosPageComponent implements OnInit {
   abrirModal(): void {
     this.formError.set('');
     this.success.set('');
+    this.mostrarOpcionesPropietario();
     this.modalOpen.set(true);
   }
 
@@ -87,6 +99,7 @@ export class JuegosPageComponent implements OnInit {
     }
 
     this.modalOpen.set(false);
+    this.showPropietarioOptions.set(false);
   }
 
   cargarDatos(): void {
@@ -111,6 +124,7 @@ export class JuegosPageComponent implements OnInit {
     this.usuariosService.getAll().subscribe({
       next: (usuarios) => {
         this.usuarios.set(usuarios);
+        this.filteredUsuarios.set(usuarios);
         this.seleccionarPropietarioPorDefecto(usuarios);
         usuariosCargados = true;
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
@@ -119,6 +133,28 @@ export class JuegosPageComponent implements OnInit {
         this.error.set('No se pudieron cargar los usuarios.');
         this.loading.set(false);
       }
+    });
+  }
+
+  private inicializarFiltroPropietarios(): void {
+    this.form.controls.propietarioSearch.valueChanges.subscribe((value) => {
+      const term = value.trim().toLowerCase();
+
+      const filtered = this.usuarios().filter((u) =>
+        u.nombre.toLowerCase().includes(term)
+      );
+
+      this.filteredUsuarios.set(filtered);
+      this.showPropietarioOptions.set(true);
+
+      const selected = this.usuarios().find(
+        (u) => u.nombre.toLowerCase() === term
+      );
+
+      this.form.patchValue(
+        { propietarioId: selected?.usuarioId ?? 0 },
+        { emitEvent: false }
+      );
     });
   }
 
@@ -131,7 +167,7 @@ export class JuegosPageComponent implements OnInit {
   private precargarPropietarioActual(): void {
     const usuarioId = this.authService.currentUser?.usuarioId ?? 0;
     if (usuarioId > 0) {
-      this.form.patchValue({ propietarioId: usuarioId });
+      this.form.patchValue({ propietarioId: usuarioId }, { emitEvent: false });
     }
   }
 
@@ -140,18 +176,78 @@ export class JuegosPageComponent implements OnInit {
     const existeUsuarioActual = usuarios.some((u) => u.usuarioId === currentUserId);
     const propietarioActual = this.form.controls.propietarioId.value;
 
-    if (propietarioActual > 0 && usuarios.some((u) => u.usuarioId === propietarioActual)) {
-      return;
+    if (propietarioActual > 0) {
+      const actual = usuarios.find((u) => u.usuarioId === propietarioActual);
+      if (actual) {
+        this.form.patchValue(
+          {
+            propietarioId: actual.usuarioId,
+            propietarioSearch: actual.nombre
+          },
+          { emitEvent: false }
+        );
+        this.filteredUsuarios.set(usuarios);
+        return;
+      }
     }
 
     if (existeUsuarioActual) {
-      this.form.patchValue({ propietarioId: currentUserId });
+      const actual = usuarios.find((u) => u.usuarioId === currentUserId)!;
+      this.form.patchValue(
+        {
+          propietarioId: actual.usuarioId,
+          propietarioSearch: actual.nombre
+        },
+        { emitEvent: false }
+      );
+      this.filteredUsuarios.set(usuarios);
       return;
     }
 
     if (usuarios.length > 0) {
-      this.form.patchValue({ propietarioId: usuarios[0].usuarioId });
+      this.form.patchValue(
+        {
+          propietarioId: usuarios[0].usuarioId,
+          propietarioSearch: usuarios[0].nombre
+        },
+        { emitEvent: false }
+      );
+      this.filteredUsuarios.set(usuarios);
     }
+  }
+
+  seleccionarPropietario(usuario: UsuarioOption): void {
+    this.form.patchValue(
+      {
+        propietarioId: usuario.usuarioId,
+        propietarioSearch: usuario.nombre
+      },
+      { emitEvent: false }
+    );
+
+    this.filteredUsuarios.set(
+      this.usuarios().filter((u) =>
+        u.nombre.toLowerCase().includes(usuario.nombre.toLowerCase())
+      )
+    );
+
+    this.showPropietarioOptions.set(false);
+  }
+
+  mostrarOpcionesPropietario(): void {
+    const search = this.form.controls.propietarioSearch.value.trim().toLowerCase();
+
+    this.filteredUsuarios.set(
+      this.usuarios().filter((u) =>
+        u.nombre.toLowerCase().includes(search)
+      )
+    );
+
+    this.showPropietarioOptions.set(true);
+  }
+
+  ocultarOpcionesPropietario(): void {
+    setTimeout(() => this.showPropietarioOptions.set(false), 150);
   }
 
   submit(): void {
@@ -166,6 +262,16 @@ export class JuegosPageComponent implements OnInit {
 
     const value = this.form.getRawValue();
 
+    const propietarioValido = this.usuarios().some(
+      (u) => u.usuarioId === Number(value.propietarioId)
+    );
+
+    if (!propietarioValido) {
+      this.saving.set(false);
+      this.formError.set('Debes seleccionar un propietario de la lista.');
+      return;
+    }
+
     this.juegosService.create({
       juegoId: 0,
       nombre: value.nombre.trim(),
@@ -176,7 +282,7 @@ export class JuegosPageComponent implements OnInit {
       bggId: this.toNullableNumber(value.bggId),
       dificultadBgg: this.toNullableNumber(value.dificultadBgg),
       pvp: this.toNullableNumber(value.pvp),
-      fechaAdquisicion: value.fechaAdquisicion?.trim() ? value.fechaAdquisicion : null,
+      fechaAdquisicion: value.fechaAdquisicion.trim() ? value.fechaAdquisicion : null,
       juegoBaseId: this.toNullableNumber(value.juegoBaseId)
     }).subscribe({
       next: (juego) => {
@@ -185,6 +291,7 @@ export class JuegosPageComponent implements OnInit {
         this.success.set('Juego creado correctamente.');
         this.resetFormManteniendoPropietario();
         this.modalOpen.set(false);
+        this.showPropietarioOptions.set(false);
       },
       error: (err) => {
         this.saving.set(false);
@@ -195,12 +302,14 @@ export class JuegosPageComponent implements OnInit {
 
   private resetFormManteniendoPropietario(): void {
     const propietarioId = this.form.controls.propietarioId.value || this.authService.currentUser?.usuarioId || 0;
+    const propietario = this.usuarios().find((u) => u.usuarioId === propietarioId);
 
     this.form.reset({
       nombre: '',
       numeroJugadoresMin: 1,
       numeroJugadoresMax: 4,
       propietarioId,
+      propietarioSearch: propietario?.nombre ?? '',
       tipo: '',
       bggId: '',
       dificultadBgg: '',
@@ -208,6 +317,8 @@ export class JuegosPageComponent implements OnInit {
       fechaAdquisicion: '',
       juegoBaseId: ''
     });
+
+    this.filteredUsuarios.set(this.usuarios());
   }
 
   private toNullableNumber(value: string | number | null | undefined): number | null {

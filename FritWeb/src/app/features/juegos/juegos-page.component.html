@@ -84,7 +84,7 @@
       <div class="modal-header">
         <div>
           <h2 id="nuevo-juego-title">Nuevo juego</h2>
-          <p>El propietario es obligatorio y se preselecciona con tu usuario actual.</p>
+          <p>Escribe el propietario y selecciona una opción de la lista filtrada.</p>
         </div>
 
         <button
@@ -104,15 +104,33 @@
             <small class="field-error" *ngIf="nombre.touched && nombre.invalid">El nombre es obligatorio.</small>
           </label>
 
-          <label>
+          <label class="autocomplete-field">
             <span>Propietario</span>
-            <select formControlName="propietarioId">
-              <option [value]="0" disabled>Selecciona un propietario</option>
-              <option *ngFor="let usuario of usuarios()" [value]="usuario.usuarioId">
+            <input
+              type="text"
+              formControlName="propietarioSearch"
+              autocomplete="off"
+              placeholder="Escribe para buscar propietario"
+              (focus)="mostrarOpcionesPropietario()"
+              (blur)="ocultarOpcionesPropietario()" />
+
+            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngFor="let usuario of filteredUsuarios()"
+                (mousedown)="seleccionarPropietario(usuario)">
                 {{ usuario.nombre }}
-              </option>
-            </select>
-            <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">Debes seleccionar un propietario.</small>
+              </button>
+
+              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                No hay usuarios que coincidan.
+              </div>
+            </div>
+
+            <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
+              Debes seleccionar un propietario válido.
+            </small>
           </label>
 
           <label>
