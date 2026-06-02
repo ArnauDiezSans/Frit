@@ -36,7 +36,7 @@ public class AppDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
         });
 
         modelBuilder.Entity<Juego>(entity =>
@@ -75,7 +75,7 @@ public class AppDbContext : DbContext
                 .HasMaxLength(1000);
 
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("NOW()");
 
             entity.HasOne(e => e.Juego)
                 .WithMany(e => e.Partidas)
