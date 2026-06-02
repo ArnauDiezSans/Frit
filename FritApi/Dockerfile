@@ -13,9 +13,6 @@ RUN npm ci
 # Copiar el resto del frontend
 COPY FritWeb/ ./
 
-# Desactivar analytics para evitar bloqueos del CLI en Docker
-RUN npx ng analytics disable || true
-
 # Compilar Angular para producción con más memoria
 RUN node --max_old_space_size=4096 ./node_modules/@angular/cli/bin/ng.js build --configuration production
 
@@ -30,7 +27,7 @@ WORKDIR /src
 COPY FritApi/ ./FritApi/
 
 # Copiar el frontend compilado a wwwroot del backend
-COPY --from=frontend-build /src/FritWeb/dist/frit-web/browser/ /src/FritApi/wwwroot/
+COPY --from=frontend-build /src/FritWeb/dist/frit-web/ /src/FritApi/wwwroot/
 
 WORKDIR /src/FritApi
 
