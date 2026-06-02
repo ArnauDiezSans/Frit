@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink  } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { PartidasService } from './partidas.service';
 import { Partida } from './partidas.models';
@@ -8,7 +8,7 @@ import { Partida } from './partidas.models';
 @Component({
   selector: 'app-partidas-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './partidas-page.component.html',
   styleUrl: './partidas-page.component.css'
 })
