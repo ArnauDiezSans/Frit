@@ -12,19 +12,6 @@
     </div>
   </header>
 
-  <section class="stats-grid" *ngIf="!loading() && !error()">
-    <article class="stat-card">
-      <span class="stat-label">Total de jocs</span>
-      <strong class="stat-value">{{ totalJuegos() }}</strong>
-    </article>
-
-    <article class="stat-card stat-card-action">
-      <span class="stat-label">Nou joc</span>
-      <strong class="stat-value compact">Afegeix un joc a la teva ludoteca</strong>
-      <button type="button" class="primary-button stat-action-button" (click)="abrirModal()">Nou joc</button>
-    </article>
-  </section>
-
   <section class="content-card" *ngIf="loading()">
     <p>Carregant jocs i usuaris...</p>
   </section>
@@ -113,10 +100,11 @@
               type="text"
               formControlName="propietarioSearch"
               (focus)="showPropietarioOptions.set(true)"
+              (click)="$event.stopPropagation()"
               autocomplete="off"
             />
 
-            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
+            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()" (click)="$event.stopPropagation()">
               <button
                 type="button"
                 class="autocomplete-option"
@@ -171,9 +159,40 @@
             <input type="date" formControlName="fechaAdquisicion" />
           </label>
 
-          <label>
-            <span>ID joc base</span>
-            <input type="number" formControlName="juegoBaseId" min="1" />
+          <label class="autocomplete-field">
+            <span>Joc base</span>
+            <input
+              type="text"
+              formControlName="juegoBaseSearch"
+              (focus)="showJuegoBaseOptions.set(true)"
+              (click)="$event.stopPropagation()"
+              autocomplete="off"
+              placeholder="Escriu per cercar un joc base"
+            />
+
+            <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()" (click)="$event.stopPropagation()">
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngFor="let juego of filteredJuegosBase(); trackBy: trackByJuegoId"
+                (click)="seleccionarJuegoBase(juego)"
+              >
+                {{ juego.nombre }} (#{{ juego.juegoId }})
+              </button>
+
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngIf="form.controls.juegoBaseId.value"
+                (click)="limpiarJuegoBase()"
+              >
+                Sense joc base
+              </button>
+
+              <p class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
+                No s'han trobat jocs base.
+              </p>
+            </div>
           </label>
         </div>
 

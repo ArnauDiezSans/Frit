@@ -101,9 +101,6 @@ FritWeb/src/app/features/partidas/partidas-page.component.html
 FritWeb/src/app/features/partidas/partidas-page.component.ts
 FritWeb/src/app/features/partidas/partidas.models.ts
 FritWeb/src/app/features/partidas/partidas.service.ts
-FritWeb/src/app/landing-page/landing-page.component.css
-FritWeb/src/app/landing-page/landing-page.component.html
-FritWeb/src/app/landing-page/landing-page.component.ts
 FritWeb/src/index.html
 FritWeb/src/main.ts
 FritWeb/src/styles.css
@@ -312,40 +309,40 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [AllowAnonymous]
-    public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
+[AllowAnonymous]
+public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
+{
+    var nombre = dto.Nombre.Trim();
+
+    if (dto.Grupo?.Trim() != "Frit14")
     {
-        var nombre = dto.Nombre.Trim();
-
-        if (dto.Grupo?.Trim() != "Frit14")
-        {
-            return BadRequest(new { message = "Código de grupo incorrecto." });
-        }
-
-        var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
-
-        if (exists)
-        {
-            return Conflict(new { message = "Ya existe un usuario con ese nombre." });
-        }
-
-        var usuario = new Models.Usuario
-        {
-            Nombre = nombre,
-            Grupo = dto.Grupo.Trim(),
-            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
-            PasswordHash = _passwordService.HashPassword(dto.Password)
-        };
-
-        _context.Usuarios.Add(usuario);
-        await _context.SaveChangesAsync();
-
-        return StatusCode(StatusCodes.Status201Created, new AuthUserDto
-        {
-            UsuarioId = usuario.UsuarioId,
-            Nombre = usuario.Nombre
-        });
+        return BadRequest(new { message = "Codi de grup incorrecte." });
     }
+
+    var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
+
+    if (exists)
+    {
+        return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
+    }
+
+    var usuario = new Models.Usuario
+    {
+        Nombre = nombre,
+        Grupo = dto.Grupo.Trim(),
+        Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
+        PasswordHash = _passwordService.HashPassword(dto.Password)
+    };
+
+    _context.Usuarios.Add(usuario);
+    await _context.SaveChangesAsync();
+
+    return StatusCode(StatusCodes.Status201Created, new AuthUserDto
+    {
+        UsuarioId = usuario.UsuarioId,
+        Nombre = usuario.Nombre
+    });
+}
 }
 </file>
 
@@ -407,7 +404,7 @@ public class JuegosController : ControllerBase
 
         if (!result.Success)
         {
-            if (result.Error == "Juego no encontrado.")
+            if (result.Error == "Joc no trobat.")
             {
                 return NotFound();
             }
@@ -491,7 +488,7 @@ public class PartidaJugadoresController : ControllerBase
 
         if (!result.Success)
         {
-            if (result.Error == "PartidaJugador no encontrado.")
+            if (result.Error == "Jugador de partida no trobat.")
             {
                 return NotFound();
             }
@@ -575,7 +572,7 @@ public class PartidasController : ControllerBase
 
         if (!result.Success)
         {
-            if (result.Error == "Partida no encontrada.")
+            if (result.Error == "Partida no trobada.")
             {
                 return NotFound();
             }
@@ -1810,6 +1807,14 @@ public class Usuario
 <file path="FritApi/Program.cs">
 // npx.cmd repomix 
 
+// cd FritWeb
+// npm install
+// npm start
+
+// cd C:\Repos\Frit\FritApi
+// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=yqPZlyoRSxxwMbutiGkSstmfkSSwoTXh;SSL Mode=Require;Trust Server Certificate=true"
+// dotnet run
+
 using FritApi.Data;
 using FritApi.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -1878,7 +1883,7 @@ static string GetConnectionString(string? databaseUrl)
 {
     if (string.IsNullOrWhiteSpace(databaseUrl))
     {
-        throw new InvalidOperationException("DATABASE_URL no está configurada.");
+        throw new InvalidOperationException("La variable DATABASE_URL no està configurada.");
     }
 
     if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
@@ -1985,13 +1990,13 @@ public class JuegoService
     {
         if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
         {
-            return (false, "NumeroJugadoresMin no puede ser mayor que NumeroJugadoresMax.", null);
+            return (false, "El nombre mínim de jugadors no pot ser més gran que el màxim.", null);
         }
 
         var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
         if (!propietarioExiste)
         {
-            return (false, "El PropietarioId indicado no existe.", null);
+            return (false, "L'identificador del propietari indicat no existeix.", null);
         }
 
         if (dto.JuegoBaseId.HasValue)
@@ -1999,7 +2004,7 @@ public class JuegoService
             var juegoBaseExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoBaseId.Value);
             if (!juegoBaseExiste)
             {
-                return (false, "El JuegoBaseId indicado no existe.", null);
+                return (false, "L'identificador del joc base indicat no existeix.", null);
             }
         }
 
@@ -2028,37 +2033,37 @@ public class JuegoService
     {
         if (id != dto.JuegoId)
         {
-            return (false, "El id de la ruta no coincide con el JuegoId del body.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el JuegoId del cos de la petició.", null);
         }
 
         if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
         {
-            return (false, "NumeroJugadoresMin no puede ser mayor que NumeroJugadoresMax.", null);
+            return (false, "El nombre mínim de jugadors no pot ser més gran que el màxim.", null);
         }
 
         var juego = await _context.Juegos.FirstOrDefaultAsync(j => j.JuegoId == id);
         if (juego is null)
         {
-            return (false, "Juego no encontrado.", null);
+            return (false, "Joc no trobat.", null);
         }
 
         var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
         if (!propietarioExiste)
         {
-            return (false, "El PropietarioId indicado no existe.", null);
+            return (false, "L'identificador del propietari indicat no existeix.", null);
         }
 
         if (dto.JuegoBaseId.HasValue)
         {
             if (dto.JuegoBaseId.Value == id)
             {
-                return (false, "Un juego no puede ser su propio juego base.", null);
+                return (false, "Un joc no pot ser el seu propi joc base.", null);
             }
 
             var juegoBaseExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoBaseId.Value);
             if (!juegoBaseExiste)
             {
-                return (false, "El JuegoBaseId indicado no existe.", null);
+                return (false, "L'identificador del joc base indicat no existeix.", null);
             }
         }
 
@@ -2149,7 +2154,7 @@ public class PartidaJugadorService
         var partidaExiste = await _context.Partidas.AnyAsync(p => p.PartidaId == dto.PartidaId);
         if (!partidaExiste)
         {
-            return (false, "El PartidaId indicado no existe.", null);
+            return (false, "L'identificador de partida indicat no existeix.", null);
         }
 
         if (dto.UsuarioId.HasValue)
@@ -2157,7 +2162,7 @@ public class PartidaJugadorService
             var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
             if (!usuarioExiste)
             {
-                return (false, "El UsuarioId indicado no existe.", null);
+                return (false, "L'identificador d'usuari indicat no existeix.", null);
             }
         }
 
@@ -2166,7 +2171,7 @@ public class PartidaJugadorService
 
         if (posicionDuplicada)
         {
-            return (false, "Ya existe un jugador con esa posición en la partida.", null);
+            return (false, "Ja existeix un jugador amb aquesta posició a la partida.", null);
         }
 
         var item = new PartidaJugador
@@ -2196,19 +2201,19 @@ public class PartidaJugadorService
     {
         if (id != dto.PartidaJugadorId)
         {
-            return (false, "El id de la ruta no coincide con el PartidaJugadorId del body.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el PartidaJugadorId del cos de la petició.", null);
         }
 
         var item = await _context.PartidaJugadores.FirstOrDefaultAsync(pj => pj.PartidaJugadorId == id);
         if (item is null)
         {
-            return (false, "PartidaJugador no encontrado.", null);
+            return (false, "Jugador de partida no trobat.", null);
         }
 
         var partidaExiste = await _context.Partidas.AnyAsync(p => p.PartidaId == dto.PartidaId);
         if (!partidaExiste)
         {
-            return (false, "El PartidaId indicado no existe.", null);
+            return (false, "L'identificador de partida indicat no existeix.", null);
         }
 
         if (dto.UsuarioId.HasValue)
@@ -2216,7 +2221,7 @@ public class PartidaJugadorService
             var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
             if (!usuarioExiste)
             {
-                return (false, "El UsuarioId indicado no existe.", null);
+                return (false, "L'identificador d'usuari indicat no existeix.", null);
             }
         }
 
@@ -2227,7 +2232,7 @@ public class PartidaJugadorService
 
         if (posicionDuplicada)
         {
-            return (false, "Ya existe un jugador con esa posición en la partida.", null);
+            return (false, "Ja existeix un jugador amb aquesta posició a la partida.", null);
         }
 
         item.PartidaId = dto.PartidaId;
@@ -2323,7 +2328,7 @@ public class PartidaService
         var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
         if (!juegoExiste)
         {
-            return (false, "El JuegoId indicado no existe.", null);
+            return (false, "L'identificador de joc indicat no existeix.", null);
         }
 
         var partida = new Partida
@@ -2354,19 +2359,19 @@ public class PartidaService
     {
         if (id != dto.PartidaId)
         {
-            return (false, "El id de la ruta no coincide con el PartidaId del body.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el PartidaId del cos de la petició.", null);
         }
 
         var partida = await _context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
         if (partida is null)
         {
-            return (false, "Partida no encontrada.", null);
+            return (false, "Partida no trobada.", null);
         }
 
         var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
         if (!juegoExiste)
         {
-            return (false, "El JuegoId indicado no existe.", null);
+            return (false, "L'identificador de joc indicat no existeix.", null);
         }
 
         partida.JuegoId = dto.JuegoId;
@@ -3186,23 +3191,23 @@ export class RegisterComponent {
     }).subscribe({
       next: () => {
         this.loading = false;
-        this.success = 'Usuario creado correctamente.';
+        this.success = 'Usuari creat correctament.';
         this.router.navigateByUrl('/login');
       },
       error: err => {
         this.loading = false;
 
         if (err.status === 409) {
-          this.error = 'Ya existe un usuario con ese nombre.';
+          this.error = 'Ja existeix un usuari amb aquest nom.';
           return;
         }
 
         if (err.status === 400) {
-          this.error = err.error?.message ?? 'Datos de registro no válidos.';
+          this.error = err.error?.message ?? 'Les dades de registre no són vàlides.';
           return;
         }
 
-        this.error = 'No se pudo crear el usuario.';
+        this.error = 'No s ha pogut crear l"usuari.';
       }
     });
   }
@@ -3604,19 +3609,6 @@ textarea:focus {
       <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
-
-  <section class="stats-grid" *ngIf="!loading() && !error()">
-    <article class="stat-card">
-      <span class="stat-label">Total de jocs</span>
-      <strong class="stat-value">{{ totalJuegos() }}</strong>
-    </article>
-
-    <article class="stat-card stat-card-action">
-      <span class="stat-label">Nou joc</span>
-      <strong class="stat-value compact">Afegeix un joc a la teva ludoteca</strong>
-      <button type="button" class="primary-button stat-action-button" (click)="abrirModal()">Nou joc</button>
-    </article>
-  </section>
 
   <section class="content-card" *ngIf="loading()">
     <p>Carregant jocs i usuaris...</p>
@@ -4551,293 +4543,6 @@ export class PartidasService {
       withCredentials: true
     });
   }
-}
-</file>
-
-<file path="FritWeb/src/app/landing-page/landing-page.component.css">
-:root {
-  color-scheme: light;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #111827;
-  background: #f8fafc;
-}
-
-.landing-page {
-  max-width: 1160px;
-  margin: 0 auto;
-  padding: 32px 24px 64px;
-}
-
-.hero {
-  display: grid;
-  gap: 32px;
-  align-items: center;
-  padding: 48px 0;
-}
-
-.hero-copy {
-  max-width: 640px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #6366f1;
-}
-
-.hero h1 {
-  font-size: clamp(2.5rem, 4vw, 4rem);
-  line-height: 1.02;
-  margin: 0 0 24px;
-}
-
-.hero-description {
-  max-width: 520px;
-  margin-bottom: 28px;
-  color: #475569;
-  line-height: 1.8;
-}
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.95rem 1.8rem;
-  border-radius: 9999px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.button:hover {
-  transform: translateY(-1px);
-}
-
-.button-primary {
-  background: #4f46e5;
-  color: white;
-  box-shadow: 0 18px 50px rgba(79, 70, 229, 0.12);
-}
-
-.hero-visual {
-  position: relative;
-  min-height: 260px;
-}
-
-.hero-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), #eff6ff);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 28px;
-  padding: 28px;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
-}
-
-.hero-card__label {
-  display: inline-block;
-  margin-bottom: 16px;
-  color: #4338ca;
-  font-weight: 700;
-}
-
-.hero-card p {
-  margin: 0;
-  color: #1e293b;
-  line-height: 1.75;
-}
-
-.features,
-.workflow {
-  margin-top: 64px;
-}
-
-.features h2,
-.section-header h2 {
-  font-size: 2rem;
-  margin-bottom: 24px;
-}
-
-.feature-grid,
-.workflow-grid {
-  display: grid;
-  gap: 20px;
-}
-
-.feature-card,
-.workflow-step {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 22px;
-  padding: 28px;
-}
-
-.feature-card h3,
-.workflow-step h3 {
-  margin-top: 0;
-  margin-bottom: 16px;
-  font-size: 1.2rem;
-}
-
-.feature-card p,
-.workflow-step p {
-  margin: 0;
-  color: #475569;
-  line-height: 1.8;
-}
-
-.workflow-grid {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-.step-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: #eef2ff;
-  color: #4338ca;
-  font-weight: 700;
-  margin-bottom: 18px;
-}
-
-.footer {
-  margin-top: 72px;
-  padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
-  color: #64748b;
-}
-
-@media (min-width: 900px) {
-  .hero {
-    grid-template-columns: 1.1fr 0.9fr;
-  }
-
-  .feature-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .landing-page {
-    padding: 24px 16px 48px;
-  }
-
-  .hero h1 {
-    font-size: 2.5rem;
-  }
-}
-</file>
-
-<file path="FritWeb/src/app/landing-page/landing-page.component.html">
-<main class="landing-page">
-  <section class="hero">
-    <div class="hero-copy">
-      <p class="eyebrow">{{ productName }}</p>
-      <h1>{{ heroTitle }}</h1>
-      <p class="hero-description">{{ heroSubtitle }}</p>
-      <a class="button button-primary" href="/login">{{ ctaLabel }}</a>
-    </div>
-
-    <div class="hero-visual">
-      <div class="hero-card">
-        <span class="hero-card__label">Control de ludoteca</span>
-        <p>
-          Consulta jocs, propietaris i partides des d’una interfície clara i centrada en l’activitat real de l’app.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <section id="features" class="features">
-    <h2>Què pots fer amb Frit</h2>
-    <div class="feature-grid">
-      <article class="feature-card" *ngFor="let feature of features">
-        <h3>{{ feature.title }}</h3>
-        <p>{{ feature.description }}</p>
-      </article>
-    </div>
-  </section>
-
-  <section class="workflow">
-    <div class="section-header">
-      <p class="eyebrow">Ús bàsic</p>
-      <h2>Una aplicació pensada per a jocs i partides</h2>
-    </div>
-
-    <div class="workflow-grid">
-      <article class="workflow-step" *ngFor="let step of steps; let i = index">
-        <span class="step-index">{{ (i + 1).toString().padStart(2, '0') }}</span>
-        <h3>{{ step.title }}</h3>
-        <p>{{ step.description }}</p>
-      </article>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <p><strong>Frit</strong>, la teva aplicació per gestionar jocs, usuaris i partides.</p>
-  </footer>
-</main>
-</file>
-
-<file path="FritWeb/src/app/landing-page/landing-page.component.ts">
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-@Component({
-  selector: 'app-landing-page',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './landing-page.component.html',
-  styleUrls: ['./landing-page.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class LandingPageComponent {
-  productName = 'Frit';
-  heroTitle = 'Gestiona la teva ludoteca i registra les teves partides en un sol lloc';
-  heroSubtitle =
-    'Frit et permet desar jocs, controlar-ne el propietari i consultar ràpidament l’activitat recent de les partides.';
-  ctaLabel = 'Ves a l’accés';
-
-  features = [
-    {
-      title: 'Catàleg de jocs',
-      description:
-        'Afegeix jocs amb nom, tipus, rang de jugadors, preu, propietari i joc base.',
-    },
-    {
-      title: 'Registre de partides',
-      description:
-        'Consulta les partides recents, la durada mitjana i el nombre total de partides registrades.',
-    },
-    {
-      title: 'Gestió senzilla',
-      description:
-        'Accedeix amb el teu usuari, crea nous registres i mantén la informació ordenada.',
-    },
-  ];
-
-  steps = [
-    {
-      title: 'Crea el teu usuari',
-      description:
-        'Registra un accés per entrar a Frit i començar a utilitzar l’aplicació.',
-    },
-    {
-      title: 'Afegeix jocs',
-      description:
-        'Desa els jocs de la ludoteca amb les seves dades principals i el propietari.',
-    },
-    {
-      title: 'Consulta les partides',
-      description:
-        'Revisa l’activitat recent i utilitza l’aplicació com a base per registrar noves sessions.',
-    },
-  ];
 }
 </file>
 
