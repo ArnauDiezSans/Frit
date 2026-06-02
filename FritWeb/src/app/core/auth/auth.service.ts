@@ -26,7 +26,12 @@ export class AuthService {
   register(data: RegisterRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.baseUrl}/register`, data, {
       withCredentials: true
-    });
+    }).pipe(
+      tap(user => {
+        this.currentUser = user;
+        this.initialized = true;
+      })
+    );
   }
 
   logout(): Observable<void> {
