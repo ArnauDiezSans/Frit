@@ -1,0 +1,4047 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.gitignore
+FritApi/AppDbContextFactory.cs
+FritApi/appsettings.Development.json
+FritApi/appsettings.json
+FritApi/Controllers/AuthController.cs
+FritApi/Controllers/JuegosController.cs
+FritApi/Controllers/PartidaJugadores.cs
+FritApi/Controllers/PartidasController.cs
+FritApi/Controllers/UsuariosController.cs
+FritApi/Data/AppDbContext.cs
+FritApi/Dockerfile
+FritApi/Dtos/AuthUserDto.cs
+FritApi/Dtos/JuegoDto.cs
+FritApi/Dtos/LoginRequestDto.cs
+FritApi/Dtos/PartidaDto.cs
+FritApi/Dtos/PartidaJugadorDto.cs
+FritApi/Dtos/UsuarioDto.cs
+FritApi/Dtos/UsuarioWriteDto.cs
+FritApi/FritApi.csproj
+FritApi/FritApi.http
+FritApi/Migrations/20260602123623_InitialCreate.cs
+FritApi/Migrations/20260602123623_InitialCreate.Designer.cs
+FritApi/Migrations/AppDbContextModelSnapshot.cs
+FritApi/Models/Juego.cs
+FritApi/Models/Partida.cs
+FritApi/Models/PartidaJugador.cs
+FritApi/Models/Usuario.cs
+FritApi/Program.cs
+FritApi/Properties/launchSettings.json
+FritApi/Services/JuegoService.cs
+FritApi/Services/PartidaJugador.cs
+FritApi/Services/PartidaService.cs
+FritApi/Services/PasswordService.cs
+FritApi/Services/UsuarioService.cs
+FritWeb/angular.json
+FritWeb/package.json
+FritWeb/src/app/app.component.html
+FritWeb/src/app/app.component.ts
+FritWeb/src/app/app.config.ts
+FritWeb/src/app/app.routes.ts
+FritWeb/src/app/core/api/api.config.ts
+FritWeb/src/app/core/auth/auth.guard.ts
+FritWeb/src/app/core/auth/auth.models.ts
+FritWeb/src/app/core/auth/auth.service.ts
+FritWeb/src/app/features/auth/login-page.component.css
+FritWeb/src/app/features/auth/login-page.component.html
+FritWeb/src/app/features/auth/login-page.component.ts
+FritWeb/src/app/features/auth/register/register.component.css
+FritWeb/src/app/features/auth/register/register.component.html
+FritWeb/src/app/features/auth/register/register.component.ts
+FritWeb/src/app/features/partidas/partidas-page.component.css
+FritWeb/src/app/features/partidas/partidas-page.component.html
+FritWeb/src/app/features/partidas/partidas-page.component.ts
+FritWeb/src/app/features/partidas/partidas.models.ts
+FritWeb/src/app/features/partidas/partidas.service.ts
+FritWeb/src/app/landing-page/landing-page.component.css
+FritWeb/src/app/landing-page/landing-page.component.html
+FritWeb/src/app/landing-page/landing-page.component.ts
+FritWeb/src/index.html
+FritWeb/src/main.ts
+FritWeb/src/styles.css
+FritWeb/tsconfig.app.json
+FritWeb/tsconfig.json
+FritWeb/tsconfig.spec.json
+package.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".gitignore">
+# Visual Studio / IDE
+.vscode/
+*.code-workspace
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vs/
+
+# Node / Angular
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Angular cache and build output
+FritWeb/.angular/
+FritWeb/dist/
+FritWeb/build/
+
+# .NET build artifacts
+**/bin/
+**/obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.log
+*.vspscc
+*.vssscc
+
+# ASP.NET Core generated static assets
+FritApi/wwwroot/
+
+# OS files
+.DS_Store
+Thumbs.db
+</file>
+
+<file path="FritApi/AppDbContextFactory.cs">
+using FritApi.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+
+public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+{
+    public AppDbContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
+
+        var connectionString =
+            Environment.GetEnvironmentVariable("DATABASE_URL")
+            ?? "Host=localhost;Port=5432;Database=fritdb;Username=postgres;Password=postgres";
+
+        optionsBuilder.UseNpgsql(connectionString);
+
+        return new AppDbContext(optionsBuilder.Options);
+    }
+}
+</file>
+
+<file path="FritApi/appsettings.Development.json">
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  }
+}
+</file>
+
+<file path="FritApi/appsettings.json">
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=FritDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
+</file>
+
+<file path="FritApi/Controllers/AuthController.cs">
+using System.Security.Claims;
+using FritApi.Data;
+using FritApi.Dtos;
+using FritApi.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace FritApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class AuthController : ControllerBase
+{
+    private readonly AppDbContext _context;
+    private readonly PasswordService _passwordService;
+
+    public AuthController(AppDbContext context, PasswordService passwordService)
+    {
+        _context = context;
+        _passwordService = passwordService;
+    }
+
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AuthUserDto>> Login([FromBody] LoginRequestDto dto)
+    {
+        var nombre = dto.Nombre.Trim();
+
+        var usuario = await _context.Usuarios
+            .FirstOrDefaultAsync(u => u.Nombre == nombre);
+
+        if (usuario is null)
+        {
+            return Unauthorized();
+        }
+
+        var validPassword = _passwordService.VerifyPassword(usuario.PasswordHash, dto.Password);
+
+        if (!validPassword)
+        {
+            return Unauthorized();
+        }
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+            new Claim(ClaimTypes.Name, usuario.Nombre)
+        };
+
+        var identity = new ClaimsIdentity(
+            claims,
+            CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var principal = new ClaimsPrincipal(identity);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal);
+
+        return Ok(new AuthUserDto
+        {
+            UsuarioId = usuario.UsuarioId,
+            Nombre = usuario.Nombre
+        });
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return NoContent();
+    }
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<ActionResult<AuthUserDto>> Me()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var usuario = await _context.Usuarios
+            .Where(u => u.UsuarioId == userId)
+            .Select(u => new AuthUserDto
+            {
+                UsuarioId = u.UsuarioId,
+                Nombre = u.Nombre
+            })
+            .FirstOrDefaultAsync();
+
+        if (usuario is null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(usuario);
+    }
+
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
+    {
+        var nombre = dto.Nombre.Trim();
+
+        if (dto.Grupo?.Trim() != "Frit14")
+        {
+            return BadRequest(new { message = "Código de grupo incorrecto." });
+        }
+
+        var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
+
+        if (exists)
+        {
+            return Conflict(new { message = "Ya existe un usuario con ese nombre." });
+        }
+
+        var usuario = new Models.Usuario
+        {
+            Nombre = nombre,
+            Grupo = dto.Grupo.Trim(),
+            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
+            PasswordHash = _passwordService.HashPassword(dto.Password)
+        };
+
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
+
+        return StatusCode(StatusCodes.Status201Created, new AuthUserDto
+        {
+            UsuarioId = usuario.UsuarioId,
+            Nombre = usuario.Nombre
+        });
+    }
+}
+</file>
+
+<file path="FritApi/Controllers/JuegosController.cs">
+using FritApi.Dtos;
+using FritApi.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FritApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class JuegosController : ControllerBase
+{
+    private readonly JuegoService _juegoService;
+
+    public JuegosController(JuegoService juegoService)
+    {
+        _juegoService = juegoService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<JuegoDto>>> GetAll()
+    {
+        var juegos = await _juegoService.GetAllAsync();
+        return Ok(juegos);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<JuegoDto>> GetById(int id)
+    {
+        var juego = await _juegoService.GetByIdAsync(id);
+
+        if (juego is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(juego);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<JuegoDto>> Create([FromBody] JuegoDto dto)
+    {
+        var result = await _juegoService.CreateAsync(dto);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Juego!.JuegoId }, result.Juego);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<JuegoDto>> Update(int id, [FromBody] JuegoDto dto)
+    {
+        var result = await _juegoService.UpdateAsync(id, dto);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Juego no encontrado.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Juego);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _juegoService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+}
+</file>
+
+<file path="FritApi/Controllers/PartidaJugadores.cs">
+using FritApi.Dtos;
+using FritApi.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FritApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class PartidaJugadoresController : ControllerBase
+{
+    private readonly PartidaJugadorService _service;
+
+    public PartidaJugadoresController(PartidaJugadorService service)
+    {
+        _service = service;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<PartidaJugadorDto>>> GetAll()
+    {
+        var items = await _service.GetAllAsync();
+        return Ok(items);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<PartidaJugadorDto>> GetById(int id)
+    {
+        var item = await _service.GetByIdAsync(id);
+
+        if (item is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(item);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<PartidaJugadorDto>> Create([FromBody] PartidaJugadorDto dto)
+    {
+        var result = await _service.CreateAsync(dto);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Item!.PartidaJugadorId }, result.Item);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<PartidaJugadorDto>> Update(int id, [FromBody] PartidaJugadorDto dto)
+    {
+        var result = await _service.UpdateAsync(id, dto);
+
+        if (!result.Success)
+        {
+            if (result.Error == "PartidaJugador no encontrado.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Item);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _service.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+}
+</file>
+
+<file path="FritApi/Controllers/PartidasController.cs">
+using FritApi.Dtos;
+using FritApi.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FritApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class PartidasController : ControllerBase
+{
+    private readonly PartidaService _partidaService;
+
+    public PartidasController(PartidaService partidaService)
+    {
+        _partidaService = partidaService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<PartidaDto>>> GetAll()
+    {
+        var partidas = await _partidaService.GetAllAsync();
+        return Ok(partidas);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<PartidaDto>> GetById(int id)
+    {
+        var partida = await _partidaService.GetByIdAsync(id);
+
+        if (partida is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(partida);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<PartidaDto>> Create([FromBody] PartidaDto dto)
+    {
+        var result = await _partidaService.CreateAsync(dto);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Partida!.PartidaId }, result.Partida);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<PartidaDto>> Update(int id, [FromBody] PartidaDto dto)
+    {
+        var result = await _partidaService.UpdateAsync(id, dto);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Partida no encontrada.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Partida);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _partidaService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+}
+</file>
+
+<file path="FritApi/Controllers/UsuariosController.cs">
+using FritApi.Dtos;
+using FritApi.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FritApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UsuariosController : ControllerBase
+{
+    private readonly UsuarioService _usuarioService;
+
+    public UsuariosController(UsuarioService usuarioService)
+    {
+        _usuarioService = usuarioService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<UsuarioDto>>> GetAll()
+    {
+        var usuarios = await _usuarioService.GetAllAsync();
+        return Ok(usuarios);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<UsuarioDto>> GetById(int id)
+    {
+        var usuario = await _usuarioService.GetByIdAsync(id);
+
+        if (usuario is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(usuario);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<UsuarioDto>> Create([FromBody] UsuarioWriteDto dto)
+    {
+        var usuario = await _usuarioService.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = usuario.UsuarioId }, usuario);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<UsuarioDto>> Update(int id, [FromBody] UsuarioWriteDto dto)
+    {
+        var usuario = await _usuarioService.UpdateAsync(id, dto);
+
+        if (usuario is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(usuario);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _usuarioService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+}
+</file>
+
+<file path="FritApi/Data/AppDbContext.cs">
+using FritApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace FritApi.Data;
+
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    {
+    }
+
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Juego> Juegos => Set<Juego>();
+    public DbSet<Partida> Partidas => Set<Partida>();
+    public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Usuario>(entity =>
+        {
+            entity.HasKey(e => e.UsuarioId);
+
+            entity.Property(e => e.Nombre)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Grupo)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(800);
+
+            entity.Property(e => e.PasswordHash)
+                .IsRequired();
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+        });
+
+        modelBuilder.Entity<Juego>(entity =>
+        {
+            entity.HasKey(e => e.JuegoId);
+
+            entity.Property(e => e.Nombre)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Tipo)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.DificultadBgg)
+                .HasPrecision(4, 2);
+
+            entity.Property(e => e.Pvp)
+                .HasPrecision(10, 2);
+
+            entity.HasOne(e => e.Propietario)
+                .WithMany()
+                .HasForeignKey(e => e.PropietarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.JuegoBase)
+                .WithMany(e => e.Expansiones)
+                .HasForeignKey(e => e.JuegoBaseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Partida>(entity =>
+        {
+            entity.HasKey(e => e.PartidaId);
+
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.Juego)
+                .WithMany(e => e.Partidas)
+                .HasForeignKey(e => e.JuegoId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PartidaJugador>(entity =>
+        {
+            entity.HasKey(e => e.PartidaJugadorId);
+
+            entity.Property(e => e.NombreMostrado)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Puntos)
+                .HasPrecision(10, 2);
+
+            entity.HasOne(e => e.Partida)
+                .WithMany(e => e.Jugadores)
+                .HasForeignKey(e => e.PartidaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.PartidaId, e.Posicion })
+                .IsUnique();
+        });
+    }
+}
+</file>
+
+<file path="FritApi/Dockerfile">
+# ============================================
+# Stage 1: Build Frontend (Angular)
+# ============================================
+FROM node:20-alpine AS frontend-build
+WORKDIR /src/FritWeb
+
+# Copiar primero dependencias
+COPY FritWeb/package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar el resto del frontend
+COPY FritWeb/ ./
+
+# Asegurar permisos de ejecución
+RUN chmod -R +x node_modules/.bin
+
+# Compilar Angular para producción
+# El outputPath ya apunta a ../FritApi/wwwroot
+RUN node ./node_modules/@angular/cli/bin/ng.js build --configuration production
+
+
+# ============================================
+# Stage 2: Build Backend (.NET)
+# ============================================
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend-build
+WORKDIR /src
+
+# Copiar todo el backend
+COPY FritApi/ ./FritApi/
+
+# Copiar el frontend ya compilado dentro de wwwroot del backend
+COPY --from=frontend-build /src/FritApi/wwwroot/ /src/FritApi/wwwroot/
+
+WORKDIR /src/FritApi
+
+# Restaurar dependencias
+RUN dotnet restore "FritApi.csproj"
+
+# Publicar en modo Release
+RUN dotnet publish "FritApi.csproj" -c Release -o /app/publish
+
+
+# ============================================
+# Stage 3: Runtime (Final image)
+# ============================================
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+
+COPY --from=backend-build /app/publish .
+
+EXPOSE 8080
+
+ENTRYPOINT ["dotnet", "FritApi.dll"]
+</file>
+
+<file path="FritApi/Dtos/AuthUserDto.cs">
+namespace FritApi.Dtos;
+
+public class AuthUserDto
+{
+    public int UsuarioId { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+}
+</file>
+
+<file path="FritApi/Dtos/JuegoDto.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Dtos;
+
+public class JuegoDto
+{
+    public int JuegoId { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
+    public int? BggId { get; set; }
+
+    public decimal? DificultadBgg { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int NumeroJugadoresMin { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int NumeroJugadoresMax { get; set; }
+
+    public decimal? Pvp { get; set; }
+
+    [Required]
+    public int PropietarioId { get; set; }
+
+    public DateOnly? FechaAdquisicion { get; set; }
+
+    [MaxLength(200)]
+    public string Tipo { get; set; } = string.Empty;
+
+    public int? JuegoBaseId { get; set; }
+}
+</file>
+
+<file path="FritApi/Dtos/LoginRequestDto.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Dtos;
+
+public class LoginRequestDto
+{
+    [Required]
+    public string Nombre { get; set; } = string.Empty;
+
+    [Required]
+    public string Password { get; set; } = string.Empty;
+}
+</file>
+
+<file path="FritApi/Dtos/PartidaDto.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Dtos;
+
+public class PartidaDto
+{
+    public int PartidaId { get; set; }
+
+    [Required]
+    public int JuegoId { get; set; }
+
+    public string JuegoNombre { get; set; } = string.Empty;
+
+    [Required]
+    public DateOnly Fecha { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int? DuracionMinutos { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int NumeroJugadores { get; set; }
+
+    [MaxLength(1000)]
+    public string? Observaciones { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+}
+</file>
+
+<file path="FritApi/Dtos/PartidaJugadorDto.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Dtos;
+
+public class PartidaJugadorDto
+{
+    public int PartidaJugadorId { get; set; }
+
+    [Required]
+    public int PartidaId { get; set; }
+
+    public int? UsuarioId { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string NombreMostrado { get; set; } = string.Empty;
+
+    [Range(1, int.MaxValue)]
+    public int Posicion { get; set; }
+
+    public decimal? Puntos { get; set; }
+}
+</file>
+
+<file path="FritApi/Dtos/UsuarioDto.cs">
+namespace FritApi.Dtos;
+
+public class UsuarioDto
+{
+    public int UsuarioId { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public string? Grupo { get; set; }
+    public string? Observaciones { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+</file>
+
+<file path="FritApi/Dtos/UsuarioWriteDto.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Dtos;
+
+public class UsuarioWriteDto
+{
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    public string? Grupo { get; set; }
+
+    [MaxLength(800)]
+    public string? Observaciones { get; set; }
+
+    [Required]
+    [MinLength(4)]
+    [MaxLength(100)]
+    public string Password { get; set; } = string.Empty;
+}
+</file>
+
+<file path="FritApi/FritApi.csproj">
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.0" />
+  </ItemGroup>
+
+</Project>
+</file>
+
+<file path="FritApi/FritApi.http">
+@FritApi_HostAddress = http://localhost:5085
+
+GET {{FritApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+</file>
+
+<file path="FritApi/Migrations/20260602123623_InitialCreate.cs">
+using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace FritApi.Migrations
+{
+    /// <inheritdoc />
+    public partial class InitialCreate : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "Usuarios",
+                columns: table => new
+                {
+                    UsuarioId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Grupo = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
+                    Observaciones = table.Column<string>(type: "character varying(800)", maxLength: 800, nullable: true),
+                    PasswordHash = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Usuarios", x => x.UsuarioId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Juegos",
+                columns: table => new
+                {
+                    JuegoId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Nombre = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    BggId = table.Column<int>(type: "integer", nullable: true),
+                    DificultadBgg = table.Column<decimal>(type: "numeric(4,2)", precision: 4, scale: 2, nullable: true),
+                    NumeroJugadoresMin = table.Column<int>(type: "integer", nullable: false),
+                    NumeroJugadoresMax = table.Column<int>(type: "integer", nullable: false),
+                    Pvp = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true),
+                    PropietarioId = table.Column<int>(type: "integer", nullable: false),
+                    FechaAdquisicion = table.Column<DateOnly>(type: "date", nullable: true),
+                    Tipo = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    JuegoBaseId = table.Column<int>(type: "integer", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Juegos", x => x.JuegoId);
+                    table.ForeignKey(
+                        name: "FK_Juegos_Juegos_JuegoBaseId",
+                        column: x => x.JuegoBaseId,
+                        principalTable: "Juegos",
+                        principalColumn: "JuegoId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Juegos_Usuarios_PropietarioId",
+                        column: x => x.PropietarioId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Partidas",
+                columns: table => new
+                {
+                    PartidaId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    JuegoId = table.Column<int>(type: "integer", nullable: false),
+                    Fecha = table.Column<DateOnly>(type: "date", nullable: false),
+                    DuracionMinutos = table.Column<int>(type: "integer", nullable: true),
+                    NumeroJugadores = table.Column<int>(type: "integer", nullable: false),
+                    Observaciones = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Partidas", x => x.PartidaId);
+                    table.ForeignKey(
+                        name: "FK_Partidas_Juegos_JuegoId",
+                        column: x => x.JuegoId,
+                        principalTable: "Juegos",
+                        principalColumn: "JuegoId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PartidaJugadores",
+                columns: table => new
+                {
+                    PartidaJugadorId = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    PartidaId = table.Column<int>(type: "integer", nullable: false),
+                    UsuarioId = table.Column<int>(type: "integer", nullable: true),
+                    NombreMostrado = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Posicion = table.Column<int>(type: "integer", nullable: false),
+                    Puntos = table.Column<decimal>(type: "numeric(10,2)", precision: 10, scale: 2, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PartidaJugadores", x => x.PartidaJugadorId);
+                    table.ForeignKey(
+                        name: "FK_PartidaJugadores_Partidas_PartidaId",
+                        column: x => x.PartidaId,
+                        principalTable: "Partidas",
+                        principalColumn: "PartidaId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PartidaJugadores_Usuarios_UsuarioId",
+                        column: x => x.UsuarioId,
+                        principalTable: "Usuarios",
+                        principalColumn: "UsuarioId",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Juegos_JuegoBaseId",
+                table: "Juegos",
+                column: "JuegoBaseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Juegos_PropietarioId",
+                table: "Juegos",
+                column: "PropietarioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartidaJugadores_PartidaId_Posicion",
+                table: "PartidaJugadores",
+                columns: new[] { "PartidaId", "Posicion" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PartidaJugadores_UsuarioId",
+                table: "PartidaJugadores",
+                column: "UsuarioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Partidas_JuegoId",
+                table: "Partidas",
+                column: "JuegoId");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "PartidaJugadores");
+
+            migrationBuilder.DropTable(
+                name: "Partidas");
+
+            migrationBuilder.DropTable(
+                name: "Juegos");
+
+            migrationBuilder.DropTable(
+                name: "Usuarios");
+        }
+    }
+}
+</file>
+
+<file path="FritApi/Migrations/20260602123623_InitialCreate.Designer.cs">
+// <auto-generated />
+using System;
+using FritApi.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace FritApi.Migrations
+{
+    [DbContext(typeof(AppDbContext))]
+    [Migration("20260602123623_InitialCreate")]
+    partial class InitialCreate
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("FritApi.Models.Juego", b =>
+                {
+                    b.Property<int>("JuegoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JuegoId"));
+
+                    b.Property<int?>("BggId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("DificultadBgg")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
+
+                    b.Property<DateOnly?>("FechaAdquisicion")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("JuegoBaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("NumeroJugadoresMax")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NumeroJugadoresMin")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PropietarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Pvp")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("JuegoId");
+
+                    b.HasIndex("JuegoBaseId");
+
+                    b.HasIndex("PropietarioId");
+
+                    b.ToTable("Juegos");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Partida", b =>
+                {
+                    b.Property<int>("PartidaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartidaId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DuracionMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<int>("JuegoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NumeroJugadores")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("PartidaId");
+
+                    b.HasIndex("JuegoId");
+
+                    b.ToTable("Partidas");
+                });
+
+            modelBuilder.Entity("FritApi.Models.PartidaJugador", b =>
+                {
+                    b.Property<int>("PartidaJugadorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartidaJugadorId"));
+
+                    b.Property<string>("NombreMostrado")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PartidaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Posicion")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Puntos")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PartidaJugadorId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("PartidaId", "Posicion")
+                        .IsUnique();
+
+                    b.ToTable("PartidaJugadores");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Usuario", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UsuarioId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Grupo")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(800)
+                        .HasColumnType("character varying(800)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UsuarioId");
+
+                    b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Juego", b =>
+                {
+                    b.HasOne("FritApi.Models.Juego", "JuegoBase")
+                        .WithMany("Expansiones")
+                        .HasForeignKey("JuegoBaseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FritApi.Models.Usuario", "Propietario")
+                        .WithMany()
+                        .HasForeignKey("PropietarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("JuegoBase");
+
+                    b.Navigation("Propietario");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Partida", b =>
+                {
+                    b.HasOne("FritApi.Models.Juego", "Juego")
+                        .WithMany("Partidas")
+                        .HasForeignKey("JuegoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Juego");
+                });
+
+            modelBuilder.Entity("FritApi.Models.PartidaJugador", b =>
+                {
+                    b.HasOne("FritApi.Models.Partida", "Partida")
+                        .WithMany("Jugadores")
+                        .HasForeignKey("PartidaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FritApi.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Partida");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Juego", b =>
+                {
+                    b.Navigation("Expansiones");
+
+                    b.Navigation("Partidas");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Partida", b =>
+                {
+                    b.Navigation("Jugadores");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+</file>
+
+<file path="FritApi/Migrations/AppDbContextModelSnapshot.cs">
+// <auto-generated />
+using System;
+using FritApi.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace FritApi.Migrations
+{
+    [DbContext(typeof(AppDbContext))]
+    partial class AppDbContextModelSnapshot : ModelSnapshot
+    {
+        protected override void BuildModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("FritApi.Models.Juego", b =>
+                {
+                    b.Property<int>("JuegoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("JuegoId"));
+
+                    b.Property<int?>("BggId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("DificultadBgg")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("numeric(4,2)");
+
+                    b.Property<DateOnly?>("FechaAdquisicion")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("JuegoBaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("NumeroJugadoresMax")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NumeroJugadoresMin")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PropietarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Pvp")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("JuegoId");
+
+                    b.HasIndex("JuegoBaseId");
+
+                    b.HasIndex("PropietarioId");
+
+                    b.ToTable("Juegos");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Partida", b =>
+                {
+                    b.Property<int>("PartidaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartidaId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int?>("DuracionMinutos")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Fecha")
+                        .HasColumnType("date");
+
+                    b.Property<int>("JuegoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NumeroJugadores")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("PartidaId");
+
+                    b.HasIndex("JuegoId");
+
+                    b.ToTable("Partidas");
+                });
+
+            modelBuilder.Entity("FritApi.Models.PartidaJugador", b =>
+                {
+                    b.Property<int>("PartidaJugadorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartidaJugadorId"));
+
+                    b.Property<string>("NombreMostrado")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("PartidaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Posicion")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Puntos")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PartidaJugadorId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.HasIndex("PartidaId", "Posicion")
+                        .IsUnique();
+
+                    b.ToTable("PartidaJugadores");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Usuario", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UsuarioId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Grupo")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Observaciones")
+                        .HasMaxLength(800)
+                        .HasColumnType("character varying(800)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("UsuarioId");
+
+                    b.ToTable("Usuarios");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Juego", b =>
+                {
+                    b.HasOne("FritApi.Models.Juego", "JuegoBase")
+                        .WithMany("Expansiones")
+                        .HasForeignKey("JuegoBaseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FritApi.Models.Usuario", "Propietario")
+                        .WithMany()
+                        .HasForeignKey("PropietarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("JuegoBase");
+
+                    b.Navigation("Propietario");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Partida", b =>
+                {
+                    b.HasOne("FritApi.Models.Juego", "Juego")
+                        .WithMany("Partidas")
+                        .HasForeignKey("JuegoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Juego");
+                });
+
+            modelBuilder.Entity("FritApi.Models.PartidaJugador", b =>
+                {
+                    b.HasOne("FritApi.Models.Partida", "Partida")
+                        .WithMany("Jugadores")
+                        .HasForeignKey("PartidaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FritApi.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Partida");
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Juego", b =>
+                {
+                    b.Navigation("Expansiones");
+
+                    b.Navigation("Partidas");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Partida", b =>
+                {
+                    b.Navigation("Jugadores");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+</file>
+
+<file path="FritApi/Models/Juego.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Models;
+
+public class Juego
+{
+    public int JuegoId { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
+    public int? BggId { get; set; }
+
+    public decimal? DificultadBgg { get; set; }
+
+    public int NumeroJugadoresMin { get; set; }
+
+    public int NumeroJugadoresMax { get; set; }
+
+    public decimal? Pvp { get; set; }
+
+    public int PropietarioId { get; set; }
+    public Usuario Propietario { get; set; } = null!;
+
+    public DateOnly? FechaAdquisicion { get; set; }
+
+    [MaxLength(200)]
+    public string Tipo { get; set; } = string.Empty;
+
+    public int? JuegoBaseId { get; set; }
+    public Juego? JuegoBase { get; set; }
+
+    public ICollection<Juego> Expansiones { get; set; } = new List<Juego>();
+    public ICollection<Partida> Partidas { get; set; } = new List<Partida>();
+}
+</file>
+
+<file path="FritApi/Models/Partida.cs">
+namespace FritApi.Models;
+
+public class Partida
+{
+    public int PartidaId { get; set; }
+
+    public int JuegoId { get; set; }
+    public Juego Juego { get; set; } = null!;
+
+    public DateOnly Fecha { get; set; }
+
+    public int? DuracionMinutos { get; set; }
+
+    public int NumeroJugadores { get; set; }
+
+    public string? Observaciones { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<PartidaJugador> Jugadores { get; set; } = new List<PartidaJugador>();
+}
+</file>
+
+<file path="FritApi/Models/PartidaJugador.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Models;
+
+public class PartidaJugador
+{
+    public int PartidaJugadorId { get; set; }
+
+    public int PartidaId { get; set; }
+    public Partida Partida { get; set; } = null!;
+
+    public int? UsuarioId { get; set; }
+    public Usuario? Usuario { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string NombreMostrado { get; set; } = string.Empty;
+
+    public int Posicion { get; set; }
+
+    public decimal? Puntos { get; set; }
+}
+</file>
+
+<file path="FritApi/Models/Usuario.cs">
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Models;
+
+public class Usuario
+{
+    public int UsuarioId { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    public string? Grupo { get; set; }
+
+    [MaxLength(800)]
+    public string? Observaciones { get; set; }
+
+    [Required]
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+</file>
+
+<file path="FritApi/Program.cs">
+// npx.cmd repomix 
+
+using FritApi.Data;
+using FritApi.Services;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks();
+
+builder.Services
+    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "frit_auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<JuegoService>();
+builder.Services.AddScoped<PartidaService>();
+builder.Services.AddScoped<PartidaJugadorService>();
+
+var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
+
+var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+app.MapControllers();
+app.MapHealthChecks("/health");
+app.MapFallbackToFile("index.html");
+
+app.Run();
+
+static string GetConnectionString(string? databaseUrl)
+{
+    if (string.IsNullOrWhiteSpace(databaseUrl))
+    {
+        throw new InvalidOperationException("DATABASE_URL no está configurada.");
+    }
+
+    if (databaseUrl.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+        databaseUrl.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        var uri = new Uri(databaseUrl);
+        var userInfo = uri.UserInfo.Split(':', 2);
+
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = uri.Host,
+            Port = uri.Port > 0 ? uri.Port : 5432,
+            Database = uri.AbsolutePath.Trim('/'),
+            Username = Uri.UnescapeDataString(userInfo[0]),
+            Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
+            SslMode = SslMode.Disable
+        };
+
+        return builder.ConnectionString;
+    }
+
+    return databaseUrl;
+}
+</file>
+
+<file path="FritApi/Properties/launchSettings.json">
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:5085",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+</file>
+
+<file path="FritApi/Services/JuegoService.cs">
+using FritApi.Data;
+using FritApi.Dtos;
+using FritApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace FritApi.Services;
+
+public class JuegoService
+{
+    private readonly AppDbContext _context;
+
+    public JuegoService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<JuegoDto>> GetAllAsync()
+    {
+        return await _context.Juegos
+            .OrderBy(j => j.Nombre)
+            .Select(j => new JuegoDto
+            {
+                JuegoId = j.JuegoId,
+                Nombre = j.Nombre,
+                BggId = j.BggId,
+                DificultadBgg = j.DificultadBgg,
+                NumeroJugadoresMin = j.NumeroJugadoresMin,
+                NumeroJugadoresMax = j.NumeroJugadoresMax,
+                Pvp = j.Pvp,
+                PropietarioId = j.PropietarioId,
+                FechaAdquisicion = j.FechaAdquisicion,
+                Tipo = j.Tipo,
+                JuegoBaseId = j.JuegoBaseId
+            })
+            .ToListAsync();
+    }
+
+    public async Task<JuegoDto?> GetByIdAsync(int id)
+    {
+        return await _context.Juegos
+            .Where(j => j.JuegoId == id)
+            .Select(j => new JuegoDto
+            {
+                JuegoId = j.JuegoId,
+                Nombre = j.Nombre,
+                BggId = j.BggId,
+                DificultadBgg = j.DificultadBgg,
+                NumeroJugadoresMin = j.NumeroJugadoresMin,
+                NumeroJugadoresMax = j.NumeroJugadoresMax,
+                Pvp = j.Pvp,
+                PropietarioId = j.PropietarioId,
+                FechaAdquisicion = j.FechaAdquisicion,
+                Tipo = j.Tipo,
+                JuegoBaseId = j.JuegoBaseId
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<(bool Success, string? Error, JuegoDto? Juego)> CreateAsync(JuegoDto dto)
+    {
+        if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
+        {
+            return (false, "NumeroJugadoresMin no puede ser mayor que NumeroJugadoresMax.", null);
+        }
+
+        var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
+        if (!propietarioExiste)
+        {
+            return (false, "El PropietarioId indicado no existe.", null);
+        }
+
+        if (dto.JuegoBaseId.HasValue)
+        {
+            var juegoBaseExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoBaseId.Value);
+            if (!juegoBaseExiste)
+            {
+                return (false, "El JuegoBaseId indicado no existe.", null);
+            }
+        }
+
+        var juego = new Juego
+        {
+            Nombre = dto.Nombre.Trim(),
+            BggId = dto.BggId,
+            DificultadBgg = dto.DificultadBgg,
+            NumeroJugadoresMin = dto.NumeroJugadoresMin,
+            NumeroJugadoresMax = dto.NumeroJugadoresMax,
+            Pvp = dto.Pvp,
+            PropietarioId = dto.PropietarioId,
+            FechaAdquisicion = dto.FechaAdquisicion,
+            Tipo = dto.Tipo.Trim(),
+            JuegoBaseId = dto.JuegoBaseId
+        };
+
+        _context.Juegos.Add(juego);
+        await _context.SaveChangesAsync();
+
+        dto.JuegoId = juego.JuegoId;
+        return (true, null, dto);
+    }
+
+    public async Task<(bool Success, string? Error, JuegoDto? Juego)> UpdateAsync(int id, JuegoDto dto)
+    {
+        if (id != dto.JuegoId)
+        {
+            return (false, "El id de la ruta no coincide con el JuegoId del body.", null);
+        }
+
+        if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
+        {
+            return (false, "NumeroJugadoresMin no puede ser mayor que NumeroJugadoresMax.", null);
+        }
+
+        var juego = await _context.Juegos.FirstOrDefaultAsync(j => j.JuegoId == id);
+        if (juego is null)
+        {
+            return (false, "Juego no encontrado.", null);
+        }
+
+        var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
+        if (!propietarioExiste)
+        {
+            return (false, "El PropietarioId indicado no existe.", null);
+        }
+
+        if (dto.JuegoBaseId.HasValue)
+        {
+            if (dto.JuegoBaseId.Value == id)
+            {
+                return (false, "Un juego no puede ser su propio juego base.", null);
+            }
+
+            var juegoBaseExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoBaseId.Value);
+            if (!juegoBaseExiste)
+            {
+                return (false, "El JuegoBaseId indicado no existe.", null);
+            }
+        }
+
+        juego.BggId = dto.BggId;
+        juego.DificultadBgg = dto.DificultadBgg;
+        juego.NumeroJugadoresMin = dto.NumeroJugadoresMin;
+        juego.NumeroJugadoresMax = dto.NumeroJugadoresMax;
+        juego.Pvp = dto.Pvp;
+        juego.PropietarioId = dto.PropietarioId;
+        juego.FechaAdquisicion = dto.FechaAdquisicion;
+        juego.Tipo = dto.Tipo.Trim();
+        juego.JuegoBaseId = dto.JuegoBaseId;
+
+        await _context.SaveChangesAsync();
+
+        return (true, null, dto);
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var juego = await _context.Juegos.FirstOrDefaultAsync(j => j.JuegoId == id);
+
+        if (juego is null)
+        {
+            return false;
+        }
+
+        _context.Juegos.Remove(juego);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+}
+</file>
+
+<file path="FritApi/Services/PartidaJugador.cs">
+using FritApi.Data;
+using FritApi.Dtos;
+using FritApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace FritApi.Services;
+
+public class PartidaJugadorService
+{
+    private readonly AppDbContext _context;
+
+    public PartidaJugadorService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<PartidaJugadorDto>> GetAllAsync()
+    {
+        return await _context.PartidaJugadores
+            .OrderBy(pj => pj.PartidaId)
+            .ThenBy(pj => pj.Posicion)
+            .Select(pj => new PartidaJugadorDto
+            {
+                PartidaJugadorId = pj.PartidaJugadorId,
+                PartidaId = pj.PartidaId,
+                UsuarioId = pj.UsuarioId,
+                NombreMostrado = pj.NombreMostrado,
+                Posicion = pj.Posicion,
+                Puntos = pj.Puntos
+            })
+            .ToListAsync();
+    }
+
+    public async Task<PartidaJugadorDto?> GetByIdAsync(int id)
+    {
+        return await _context.PartidaJugadores
+            .Where(pj => pj.PartidaJugadorId == id)
+            .Select(pj => new PartidaJugadorDto
+            {
+                PartidaJugadorId = pj.PartidaJugadorId,
+                PartidaId = pj.PartidaId,
+                UsuarioId = pj.UsuarioId,
+                NombreMostrado = pj.NombreMostrado,
+                Posicion = pj.Posicion,
+                Puntos = pj.Puntos
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<(bool Success, string? Error, PartidaJugadorDto? Item)> CreateAsync(PartidaJugadorDto dto)
+    {
+        var partidaExiste = await _context.Partidas.AnyAsync(p => p.PartidaId == dto.PartidaId);
+        if (!partidaExiste)
+        {
+            return (false, "El PartidaId indicado no existe.", null);
+        }
+
+        if (dto.UsuarioId.HasValue)
+        {
+            var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
+            if (!usuarioExiste)
+            {
+                return (false, "El UsuarioId indicado no existe.", null);
+            }
+        }
+
+        var posicionDuplicada = await _context.PartidaJugadores
+            .AnyAsync(pj => pj.PartidaId == dto.PartidaId && pj.Posicion == dto.Posicion);
+
+        if (posicionDuplicada)
+        {
+            return (false, "Ya existe un jugador con esa posición en la partida.", null);
+        }
+
+        var item = new PartidaJugador
+        {
+            PartidaId = dto.PartidaId,
+            UsuarioId = dto.UsuarioId,
+            NombreMostrado = dto.NombreMostrado.Trim(),
+            Posicion = dto.Posicion,
+            Puntos = dto.Puntos
+        };
+
+        _context.PartidaJugadores.Add(item);
+        await _context.SaveChangesAsync();
+
+        return (true, null, new PartidaJugadorDto
+        {
+            PartidaJugadorId = item.PartidaJugadorId,
+            PartidaId = item.PartidaId,
+            UsuarioId = item.UsuarioId,
+            NombreMostrado = item.NombreMostrado,
+            Posicion = item.Posicion,
+            Puntos = item.Puntos
+        });
+    }
+
+    public async Task<(bool Success, string? Error, PartidaJugadorDto? Item)> UpdateAsync(int id, PartidaJugadorDto dto)
+    {
+        if (id != dto.PartidaJugadorId)
+        {
+            return (false, "El id de la ruta no coincide con el PartidaJugadorId del body.", null);
+        }
+
+        var item = await _context.PartidaJugadores.FirstOrDefaultAsync(pj => pj.PartidaJugadorId == id);
+        if (item is null)
+        {
+            return (false, "PartidaJugador no encontrado.", null);
+        }
+
+        var partidaExiste = await _context.Partidas.AnyAsync(p => p.PartidaId == dto.PartidaId);
+        if (!partidaExiste)
+        {
+            return (false, "El PartidaId indicado no existe.", null);
+        }
+
+        if (dto.UsuarioId.HasValue)
+        {
+            var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
+            if (!usuarioExiste)
+            {
+                return (false, "El UsuarioId indicado no existe.", null);
+            }
+        }
+
+        var posicionDuplicada = await _context.PartidaJugadores.AnyAsync(pj =>
+            pj.PartidaId == dto.PartidaId &&
+            pj.Posicion == dto.Posicion &&
+            pj.PartidaJugadorId != id);
+
+        if (posicionDuplicada)
+        {
+            return (false, "Ya existe un jugador con esa posición en la partida.", null);
+        }
+
+        item.PartidaId = dto.PartidaId;
+        item.UsuarioId = dto.UsuarioId;
+        item.NombreMostrado = dto.NombreMostrado.Trim();
+        item.Posicion = dto.Posicion;
+        item.Puntos = dto.Puntos;
+
+        await _context.SaveChangesAsync();
+
+        return (true, null, new PartidaJugadorDto
+        {
+            PartidaJugadorId = item.PartidaJugadorId,
+            PartidaId = item.PartidaId,
+            UsuarioId = item.UsuarioId,
+            NombreMostrado = item.NombreMostrado,
+            Posicion = item.Posicion,
+            Puntos = item.Puntos
+        });
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var item = await _context.PartidaJugadores.FirstOrDefaultAsync(pj => pj.PartidaJugadorId == id);
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        _context.PartidaJugadores.Remove(item);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+}
+</file>
+
+<file path="FritApi/Services/PartidaService.cs">
+using FritApi.Data;
+using FritApi.Dtos;
+using FritApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace FritApi.Services;
+
+public class PartidaService
+{
+    private readonly AppDbContext _context;
+
+    public PartidaService(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<PartidaDto>> GetAllAsync()
+    {
+        return await _context.Partidas
+            .OrderByDescending(p => p.Fecha)
+            .ThenByDescending(p => p.PartidaId)
+            .Select(p => new PartidaDto
+            {
+                PartidaId = p.PartidaId,
+                JuegoId = p.JuegoId,
+                Fecha = p.Fecha,
+                DuracionMinutos = p.DuracionMinutos,
+                NumeroJugadores = p.NumeroJugadores,
+                Observaciones = p.Observaciones,
+                CreatedAt = p.CreatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<PartidaDto?> GetByIdAsync(int id)
+    {
+        return await _context.Partidas
+            .Where(p => p.PartidaId == id)
+            .Select(p => new PartidaDto
+            {
+                PartidaId = p.PartidaId,
+                JuegoId = p.JuegoId,
+                Fecha = p.Fecha,
+                DuracionMinutos = p.DuracionMinutos,
+                NumeroJugadores = p.NumeroJugadores,
+                Observaciones = p.Observaciones,
+                CreatedAt = p.CreatedAt
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<(bool Success, string? Error, PartidaDto? Partida)> CreateAsync(PartidaDto dto)
+    {
+        var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
+        if (!juegoExiste)
+        {
+            return (false, "El JuegoId indicado no existe.", null);
+        }
+
+        var partida = new Partida
+        {
+            JuegoId = dto.JuegoId,
+            Fecha = dto.Fecha,
+            DuracionMinutos = dto.DuracionMinutos,
+            NumeroJugadores = dto.NumeroJugadores,
+            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim()
+        };
+
+        _context.Partidas.Add(partida);
+        await _context.SaveChangesAsync();
+
+        return (true, null, new PartidaDto
+        {
+            PartidaId = partida.PartidaId,
+            JuegoId = partida.JuegoId,
+            Fecha = partida.Fecha,
+            DuracionMinutos = partida.DuracionMinutos,
+            NumeroJugadores = partida.NumeroJugadores,
+            Observaciones = partida.Observaciones,
+            CreatedAt = partida.CreatedAt
+        });
+    }
+
+    public async Task<(bool Success, string? Error, PartidaDto? Partida)> UpdateAsync(int id, PartidaDto dto)
+    {
+        if (id != dto.PartidaId)
+        {
+            return (false, "El id de la ruta no coincide con el PartidaId del body.", null);
+        }
+
+        var partida = await _context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
+        if (partida is null)
+        {
+            return (false, "Partida no encontrada.", null);
+        }
+
+        var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
+        if (!juegoExiste)
+        {
+            return (false, "El JuegoId indicado no existe.", null);
+        }
+
+        partida.JuegoId = dto.JuegoId;
+        partida.Fecha = dto.Fecha;
+        partida.DuracionMinutos = dto.DuracionMinutos;
+        partida.NumeroJugadores = dto.NumeroJugadores;
+        partida.Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return (true, null, new PartidaDto
+        {
+            PartidaId = partida.PartidaId,
+            JuegoId = partida.JuegoId,
+            Fecha = partida.Fecha,
+            DuracionMinutos = partida.DuracionMinutos,
+            NumeroJugadores = partida.NumeroJugadores,
+            Observaciones = partida.Observaciones,
+            CreatedAt = partida.CreatedAt
+        });
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var partida = await _context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
+
+        if (partida is null)
+        {
+            return false;
+        }
+
+        _context.Partidas.Remove(partida);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+}
+</file>
+
+<file path="FritApi/Services/PasswordService.cs">
+using Microsoft.AspNetCore.Identity;
+
+namespace FritApi.Services;
+
+public class PasswordService
+{
+    private readonly PasswordHasher<object> _hasher = new();
+
+    public string HashPassword(string password)
+    {
+        return _hasher.HashPassword(new object(), password);
+    }
+
+    public bool VerifyPassword(string hashedPassword, string providedPassword)
+    {
+        var result = _hasher.VerifyHashedPassword(new object(), hashedPassword, providedPassword);
+        return result == PasswordVerificationResult.Success
+            || result == PasswordVerificationResult.SuccessRehashNeeded;
+    }
+}
+</file>
+
+<file path="FritApi/Services/UsuarioService.cs">
+using FritApi.Data;
+using FritApi.Dtos;
+using FritApi.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace FritApi.Services;
+
+public class UsuarioService
+{
+    private readonly AppDbContext _context;
+    private readonly PasswordService _passwordService;
+
+    public UsuarioService(AppDbContext context, PasswordService passwordService)
+    {
+        _context = context;
+        _passwordService = passwordService;
+    }
+
+    public async Task<List<UsuarioDto>> GetAllAsync()
+    {
+        return await _context.Usuarios
+            .OrderBy(u => u.Nombre)
+            .Select(u => new UsuarioDto
+            {
+                UsuarioId = u.UsuarioId,
+                Nombre = u.Nombre,
+                Grupo = u.Grupo,
+                Observaciones = u.Observaciones,
+                CreatedAt = u.CreatedAt
+            })
+            .ToListAsync();
+    }
+
+    public async Task<UsuarioDto?> GetByIdAsync(int id)
+    {
+        return await _context.Usuarios
+            .Where(u => u.UsuarioId == id)
+            .Select(u => new UsuarioDto
+            {
+                UsuarioId = u.UsuarioId,
+                Nombre = u.Nombre,
+                Grupo = u.Grupo,
+                Observaciones = u.Observaciones,
+                CreatedAt = u.CreatedAt
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<UsuarioDto> CreateAsync(UsuarioWriteDto dto)
+    {
+        var usuario = new Usuario
+        {
+            Nombre = dto.Nombre.Trim(),
+            Grupo = string.IsNullOrWhiteSpace(dto.Grupo) ? null : dto.Grupo.Trim(),
+            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
+            PasswordHash = _passwordService.HashPassword(dto.Password)
+        };
+
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
+
+        return new UsuarioDto
+        {
+            UsuarioId = usuario.UsuarioId,
+            Nombre = usuario.Nombre,
+            Grupo = usuario.Grupo,
+            Observaciones = usuario.Observaciones,
+            CreatedAt = usuario.CreatedAt
+        };
+    }
+
+    public async Task<UsuarioDto?> UpdateAsync(int id, UsuarioWriteDto dto)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+        if (usuario is null)
+        {
+            return null;
+        }
+
+        usuario.Nombre = dto.Nombre.Trim();
+        usuario.Grupo = string.IsNullOrWhiteSpace(dto.Grupo) ? null : dto.Grupo.Trim();
+        usuario.Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim();
+        usuario.PasswordHash = _passwordService.HashPassword(dto.Password);
+
+        await _context.SaveChangesAsync();
+
+        return new UsuarioDto
+        {
+            UsuarioId = usuario.UsuarioId,
+            Nombre = usuario.Nombre,
+            Grupo = usuario.Grupo,
+            Observaciones = usuario.Observaciones,
+            CreatedAt = usuario.CreatedAt
+        };
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+        if (usuario is null)
+        {
+            return false;
+        }
+
+        _context.Usuarios.Remove(usuario);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+}
+</file>
+
+<file path="FritWeb/angular.json">
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "frit-web": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "css",
+          "standalone": true
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "../FritApi/wwwroot",
+            "index": "src/index.html",
+            "main": "src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "tsconfig.app.json",
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.css"
+            ],
+            "scripts": [],
+            "vendorChunk": true,
+            "extractLicenses": false,
+            "sourceMap": true,
+            "optimization": false,
+            "namedChunks": true
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": true,
+              "sourceMap": false,
+              "namedChunks": false,
+              "vendorChunk": false,
+              "extractLicenses": true
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "frit-web:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "frit-web:build:production"
+            },
+            "development": {
+              "browserTarget": "frit-web:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "frit-web:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "tsConfig": "tsconfig.spec.json",
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
+            "styles": [
+              "src/styles.css"
+            ],
+            "scripts": []
+          }
+        }
+      }
+    }
+  }
+}
+</file>
+
+<file path="FritWeb/package.json">
+{
+  "name": "frit-web",
+  "version": "1.0.0",
+"scripts": {
+  "ng": "node ./node_modules/@angular/cli/bin/ng.js",
+  "start": "node ./node_modules/@angular/cli/bin/ng.js serve",
+  "build": "node ./node_modules/@angular/cli/bin/ng.js build",
+  "build:prod": "node ./node_modules/@angular/cli/bin/ng.js build --configuration production",
+  "watch": "node ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development",
+  "test": "node ./node_modules/@angular/cli/bin/ng.js test",
+  "lint": "node ./node_modules/@angular/cli/bin/ng.js lint"
+},
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^19.0.0",
+    "@angular/common": "^19.0.0",
+    "@angular/compiler": "^19.0.0",
+    "@angular/core": "^19.0.0",
+    "@angular/forms": "^19.0.0",
+    "@angular/platform-browser": "^19.0.0",
+    "@angular/platform-browser-dynamic": "^19.0.0",
+    "@angular/router": "^19.0.0",
+    "rxjs": "^7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "^0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^19.0.0",
+    "@angular/cli": "^19.0.0",
+    "@angular/compiler-cli": "^19.0.0",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.6.0"
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/app.component.html">
+<router-outlet></router-outlet>
+</file>
+
+<file path="FritWeb/src/app/app.component.ts">
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet],
+  templateUrl: './app.component.html'
+})
+export class AppComponent {}
+</file>
+
+<file path="FritWeb/src/app/app.config.ts">
+import { ApplicationConfig, provideAppInitializer, inject, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { routes } from './app.routes';
+import { AuthService } from './core/auth/auth.service';
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAppInitializer(() => firstValueFrom(inject(AuthService).initializeAuth()))
+  ]
+};
+</file>
+
+<file path="FritWeb/src/app/app.routes.ts">
+import { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
+import { LoginPageComponent } from './features/auth/login-page.component';
+import { RegisterComponent } from './features/auth/register/register.component';
+import { PartidasPageComponent } from './features/partidas/partidas-page.component';
+
+export const routes: Routes = [
+  { path: 'login', component: LoginPageComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'app/partidas', component: PartidasPageComponent, canActivate: [authGuard] },
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '**', redirectTo: 'login' }
+];
+</file>
+
+<file path="FritWeb/src/app/core/api/api.config.ts">
+export const API_BASE_URL = '/api';
+</file>
+
+<file path="FritWeb/src/app/core/auth/auth.guard.ts">
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+
+export const authGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  return authService.isAuthenticated()
+    ? true
+    : router.createUrlTree(['/login']);
+};
+</file>
+
+<file path="FritWeb/src/app/core/auth/auth.models.ts">
+export interface LoginRequest {
+  nombre: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  nombre: string;
+  grupo?: string | null;
+  observaciones?: string | null;
+  password: string;
+}
+
+export interface AuthUser {
+  usuarioId: number;
+  nombre: string;
+}
+</file>
+
+<file path="FritWeb/src/app/core/auth/auth.service.ts">
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of, tap, catchError, map } from 'rxjs';
+import { API_BASE_URL } from '../api/api.config';
+import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private http = inject(HttpClient);
+  private baseUrl = `${API_BASE_URL}/auth`;
+
+  currentUser: AuthUser | null = null;
+  initialized = false;
+
+  login(data: LoginRequest): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${this.baseUrl}/login`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(user => {
+        this.currentUser = user;
+        this.initialized = true;
+      })
+    );
+  }
+
+  register(data: RegisterRequest): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${this.baseUrl}/register`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(user => {
+        this.currentUser = user;
+        this.initialized = true;
+      })
+    );
+  }
+
+  logout(): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/logout`, {}, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.currentUser = null;
+        this.initialized = true;
+      })
+    );
+  }
+
+  me(): Observable<AuthUser> {
+    return this.http.get<AuthUser>(`${this.baseUrl}/me`, {
+      withCredentials: true
+    }).pipe(
+      tap(user => {
+        this.currentUser = user;
+        this.initialized = true;
+      })
+    );
+  }
+
+  initializeAuth(): Observable<boolean> {
+    return this.me().pipe(
+      map(() => true),
+      catchError(() => {
+        this.currentUser = null;
+        this.initialized = true;
+        return of(true);
+      })
+    );
+  }
+
+  isAuthenticated(): boolean {
+    return this.currentUser !== null;
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/features/auth/login-page.component.css">
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f5f6f8;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: #ffffff;
+  border: 1px solid #dddddd;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+input {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cfcfcf;
+  border-radius: 10px;
+}
+
+button {
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.error {
+  color: #b42318;
+  margin: 0;
+}
+
+.secondary-button {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid #4d8781;
+  border-radius: 14px;
+  background: white;
+  color: #4d8781;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #f2f8f7;
+}
+
+.secondary-button:active {
+  background: #e7f1ef;
+}
+</file>
+
+<file path="FritWeb/src/app/features/auth/login-page.component.html">
+<section class="login-page">
+  <div class="login-card">
+    <h1>Frit</h1>
+    <p>Accede para ver y registrar partidas.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label for="nombre">Usuario</label>
+      <input id="nombre" type="text" formControlName="nombre" />
+
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" formControlName="password" />
+
+      <p class="error" *ngIf="error">{{ error }}</p>
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Entrando...' : 'Entrar' }}
+      </button>
+      <a routerLink="/register" class="secondary-button">Crear usuario</a>
+    </form>
+  </div>
+</section>
+</file>
+
+<file path="FritWeb/src/app/features/auth/login-page.component.ts">
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+
+@Component({
+  selector: 'app-login-page',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './login-page.component.html',
+  styleUrl: './login-page.component.css'
+})
+export class LoginPageComponent {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  loading = false;
+  error = '';
+
+  form = this.fb.nonNullable.group({
+    nombre: ['', [Validators.required]],
+    password: ['', [Validators.required]]
+  });
+
+  submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+
+    this.authService.login(this.form.getRawValue()).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigateByUrl('/app/partidas');
+      },
+      error: () => {
+        this.loading = false;
+        this.error = 'Usuario o contraseña incorrectos.';
+      }
+    });
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/features/auth/register/register.component.css">
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f6f7f9;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: #555;
+}
+
+form {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #d7dbe0;
+  border-radius: 14px;
+  font: inherit;
+}
+
+button {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: #4d8781;
+  color: white;
+  font-weight: 700;
+}
+
+button:disabled {
+  opacity: 0.7;
+}
+
+.error,
+.field-error {
+  color: #8a4b3b;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.secondary-link {
+  display: inline-block;
+  margin-top: 18px;
+  color: #4d8781;
+  text-decoration: none;
+}
+</file>
+
+<file path="FritWeb/src/app/features/auth/register/register.component.html">
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Crear usuario</h1>
+    <p class="subtitle">Registra un nuevo acceso para Frit.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label for="nombre">Usuario</label>
+      <input id="nombre" type="text" formControlName="nombre" />
+      @if (nombre.touched && nombre.invalid) {
+        <p class="field-error">El usuario es obligatorio.</p>
+      }
+
+      <label for="grupo">Grupo</label>
+      <input id="grupo" type="text" formControlName="grupo" />
+       @if (grupo.touched && grupo.invalid) {
+       <p class="field-error">Debes escribir exactamente Frit14.</p>
+       }
+
+      <label for="observaciones">Observaciones</label>
+      <textarea id="observaciones" rows="3" formControlName="observaciones"></textarea>
+
+      <label for="password">Contraseña</label>
+      <input id="password" type="password" formControlName="password" />
+      @if (password.touched && password.invalid) {
+        <p class="field-error">La contraseña debe tener al menos 4 caracteres.</p>
+      }
+
+      @if (error) {
+        <p class="error">{{ error }}</p>
+      }
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Creando...' : 'Crear usuario' }}
+      </button>
+    </form>
+
+    <a routerLink="/login" class="secondary-link">Volver a iniciar sesión</a>
+  </div>
+</div>
+</file>
+
+<file path="FritWeb/src/app/features/auth/register/register.component.ts">
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth/auth.service';
+
+function exactValueValidator(expected: string): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    return control.value?.trim() === expected ? null : { exactValue: true };
+  };
+}
+
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './register.component.html',
+  styleUrl: './register.component.css'
+})
+export class RegisterComponent {
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  loading = false;
+  error = '';
+  success = '';
+
+  form = this.fb.nonNullable.group({
+    nombre: ['', [Validators.required, Validators.maxLength(200)]],
+    grupo: ['', [Validators.required, Validators.maxLength(200), exactValueValidator('Frit14')]],
+    observaciones: ['', [Validators.maxLength(800)]],
+    password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
+  });
+
+  submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.loading = true;
+    this.error = '';
+    this.success = '';
+
+    const value = this.form.getRawValue();
+
+    this.authService.register({
+      nombre: value.nombre,
+      grupo: value.grupo || null,
+      observaciones: value.observaciones || null,
+      password: value.password
+    }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.success = 'Usuario creado correctamente.';
+        this.router.navigateByUrl('/login');
+      },
+      error: err => {
+        this.loading = false;
+
+        if (err.status === 409) {
+          this.error = 'Ya existe un usuario con ese nombre.';
+          return;
+        }
+
+        if (err.status === 400) {
+          this.error = err.error?.message ?? 'Datos de registro no válidos.';
+          return;
+        }
+
+        this.error = 'No se pudo crear el usuario.';
+      }
+    });
+  }
+
+  get nombre() { return this.form.controls.nombre; }
+  get grupo() { return this.form.controls.grupo; }
+  get observaciones() { return this.form.controls.observaciones; }
+  get password() { return this.form.controls.password; }
+}
+</file>
+
+<file path="FritWeb/src/app/features/partidas/partidas-page.component.css">
+.dashboard-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f5f6f8;
+  color: #1f2937;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 0 auto 24px;
+  max-width: 1100px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #0f766e;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: #667085;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stats-grid {
+  max-width: 1100px;
+  margin: 0 auto 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-card,
+.content-card {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.stat-card {
+  padding: 20px;
+}
+
+.stat-label {
+  display: block;
+  margin-bottom: 10px;
+  color: #667085;
+  font-size: 0.95rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.content-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section-heading h2 {
+  margin: 0 0 6px;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #667085;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e4e7ec;
+  vertical-align: top;
+}
+
+th {
+  color: #475467;
+  font-size: 0.92rem;
+}
+
+.empty-state {
+  padding: 20px 0 8px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #667085;
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.secondary-button {
+  border: 1px solid #0f766e;
+  background: #ffffff;
+  color: #0f766e;
+}
+
+.ghost-button {
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
+}
+
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 820px) {
+  .dashboard-header,
+  .section-heading,
+  .error-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-page {
+    padding: 16px;
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/features/partidas/partidas-page.component.html">
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Hola, {{ userName() }}</h1>
+      <p class="subtitle">Resumen rápido de partidas y actividad reciente.</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="secondary-button" disabled>
+        Nueva partida
+      </button>
+
+      <button type="button" class="ghost-button" (click)="logout()">
+        Salir
+      </button>
+    </div>
+  </header>
+
+  <section class="stats-grid" *ngIf="!loading() && !error()">
+    <article class="stat-card">
+      <span class="stat-label">Total partidas</span>
+      <strong class="stat-value">{{ totalPartidas() }}</strong>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-label">Este mes</span>
+      <strong class="stat-value">{{ partidasEsteMes() }}</strong>
+    </article>
+
+    <article class="stat-card">
+      <span class="stat-label">Duración media</span>
+      <strong class="stat-value">
+        {{ duracionMedia() !== null ? duracionMedia() + ' min' : '—' }}
+      </strong>
+    </article>
+  </section>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Cargando partidas...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarPartidas()">
+      Reintentar
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="section-heading">
+      <div>
+        <h2>Últimas partidas</h2>
+        <p>Las 6 partidas más recientes registradas en la aplicación.</p>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="ultimasPartidas().length === 0">
+      <h3>Aún no hay partidas registradas</h3>
+      <p>Cuando empieces a cargar partidas, aparecerán aquí.</p>
+    </div>
+
+    <div class="table-wrapper" *ngIf="ultimasPartidas().length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Juego</th>
+            <th>Jugadores</th>
+            <th>Duración</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let partida of ultimasPartidas(); trackBy: trackByPartidaId">
+            <td>{{ formatFecha(partida.fecha) }}</td>
+            <td>#{{ partida.juegoId }}</td>
+            <td>{{ partida.numeroJugadores }}</td>
+            <td>{{ partida.duracionMinutos ? partida.duracionMinutos + ' min' : '—' }}</td>
+            <td>{{ partida.observaciones || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>
+</file>
+
+<file path="FritWeb/src/app/features/partidas/partidas-page.component.ts">
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+import { PartidasService } from './partidas.service';
+import { Partida } from './partidas.models';
+
+@Component({
+  selector: 'app-partidas-page',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './partidas-page.component.html',
+  styleUrl: './partidas-page.component.css'
+})
+export class PartidasPageComponent implements OnInit {
+  private authService = inject(AuthService);
+  private partidasService = inject(PartidasService);
+  private router = inject(Router);
+
+  loading = signal(true);
+  error = signal('');
+  partidas = signal<Partida[]>([]);
+
+  userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
+
+  totalPartidas = computed(() => this.partidas().length);
+
+  partidasEsteMes = computed(() => {
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
+
+    return this.partidas().filter(partida => {
+      const fecha = new Date(partida.fecha);
+      return fecha.getMonth() === month && fecha.getFullYear() === year;
+    }).length;
+  });
+
+  duracionMedia = computed(() => {
+    const conDuracion = this.partidas().filter(p => !!p.duracionMinutos);
+
+    if (conDuracion.length === 0) {
+      return null;
+    }
+
+    const total = conDuracion.reduce((sum, p) => sum + (p.duracionMinutos ?? 0), 0);
+    return Math.round(total / conDuracion.length);
+  });
+
+  ultimasPartidas = computed(() => this.partidas().slice(0, 6));
+
+  ngOnInit(): void {
+    this.cargarPartidas();
+  }
+
+  cargarPartidas(): void {
+    this.loading.set(true);
+    this.error.set('');
+
+    this.partidasService.getAll().subscribe({
+      next: partidas => {
+        this.partidas.set(partidas);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.error.set('No se pudieron cargar las partidas.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  logout(): void {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.router.navigateByUrl('/login');
+      },
+      error: () => {
+        this.router.navigateByUrl('/login');
+      }
+    });
+  }
+
+  formatFecha(value: string): string {
+    return new Date(value).toLocaleDateString('es-ES');
+  }
+
+  trackByPartidaId(_: number, partida: Partida): number {
+    return partida.partidaId;
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/features/partidas/partidas.models.ts">
+export interface Partida {
+  partidaId: number;
+  juegoId: number;
+  fecha: string;
+  duracionMinutos?: number | null;
+  numeroJugadores: number;
+  observaciones?: string | null;
+  createdAt: string;
+}
+</file>
+
+<file path="FritWeb/src/app/features/partidas/partidas.service.ts">
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { API_BASE_URL } from '../../core/api/api.config';
+import { Partida } from './partidas.models';
+
+@Injectable({ providedIn: 'root' })
+export class PartidasService {
+  private http = inject(HttpClient);
+  private baseUrl = `${API_BASE_URL}/partidas`;
+
+  getAll(): Observable<Partida[]> {
+    return this.http.get<Partida[]>(this.baseUrl, {
+      withCredentials: true
+    });
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/landing-page/landing-page.component.css">
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111827;
+  background: #f8fafc;
+}
+
+.landing-page {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.hero {
+  display: grid;
+  gap: 32px;
+  align-items: center;
+  padding: 48px 0;
+}
+
+.hero-copy {
+  max-width: 640px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 4vw, 4rem);
+  line-height: 1.02;
+  margin: 0 0 24px;
+}
+
+.hero-description {
+  max-width: 520px;
+  margin-bottom: 28px;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.95rem 1.8rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button-primary {
+  background: #4f46e5;
+  color: white;
+  box-shadow: 0 18px 50px rgba(79, 70, 229, 0.12);
+}
+
+.hero-visual {
+  position: relative;
+  min-height: 260px;
+}
+
+.hero-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), #eff6ff);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+}
+
+.hero-card__label {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #4338ca;
+  font-weight: 700;
+}
+
+.hero-card p {
+  margin: 0;
+  color: #1e293b;
+  line-height: 1.75;
+}
+
+.features,
+.workflow {
+  margin-top: 64px;
+}
+
+.features h2,
+.section-header h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+}
+
+.feature-grid,
+.workflow-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.feature-card,
+.workflow-step {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 28px;
+}
+
+.feature-card h3,
+.workflow-step h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.2rem;
+}
+
+.feature-card p,
+.workflow-step p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.workflow-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.footer {
+  margin-top: 72px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: 1.1fr 0.9fr;
+  }
+
+  .feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .landing-page {
+    padding: 24px 16px 48px;
+  }
+
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+}
+</file>
+
+<file path="FritWeb/src/app/landing-page/landing-page.component.html">
+<main class="landing-page">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Plataforma Frit</p>
+      <h1>{{ heroTitle }}</h1>
+      <p class="hero-description">{{ heroSubtitle }}</p>
+      <a class="button button-primary" href="#features">{{ ctaLabel }}</a>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <span class="hero-card__label">Organización clara</span>
+        <p>Vista limpia para ver tus procesos y seguirlos sin ruido.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="features">
+    <h2>Qué ofrece Frit</h2>
+    <div class="feature-grid">
+      <article class="feature-card" *ngFor="let feature of features">
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="workflow">
+    <div class="section-header">
+      <p class="eyebrow">Cómo funciona</p>
+      <h2>Un flujo pensado para avanzar rápido</h2>
+    </div>
+    <div class="workflow-grid">
+      <article class="workflow-step" *ngFor="let step of steps">
+        <span class="step-index">0{{ steps.indexOf(step) + 1 }}</span>
+        <h3>{{ step.title }}</h3>
+        <p>{{ step.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p><strong>Frit</strong> — una base simple, moderna y lista para crecer.</p>
+  </footer>
+</main>
+</file>
+
+<file path="FritWeb/src/app/landing-page/landing-page.component.ts">
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-landing-page',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './landing-page.component.html',
+  styleUrls: ['./landing-page.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class LandingPageComponent {
+  productName = 'Frit';
+  heroTitle = 'Una plataforma moderna para gestionar información y flujos de trabajo';
+  heroSubtitle = 'Listo para crecer con tu equipo, manteniendo claridad y ritmo desde el primer día.';
+  ctaLabel = 'Empezar ahora';
+
+  
+  features = [
+    {
+      title: 'Trabajo colaborativo',
+      description: 'Organiza tareas, documentos y decisiones en una interfaz clara y accesible.',
+    },
+    {
+      title: 'Flujos sencillos',
+      description: 'Diseña procesos prácticos que el equipo puede seguir sin fricción.',
+    },
+    {
+      title: 'Crecimiento ordenado',
+      description: 'Construye tu solución con una base preparada para evolucionar.',
+    },
+  ];
+
+  steps = [
+    {
+      title: 'Define tu espacio',
+      description: 'Configura tu tablero y agrega tus primeras secciones en minutos.',
+    },
+    {
+      title: 'Organiza tu trabajo',
+      description: 'Clasifica actividades y prioridades con una vista clara.',
+    },
+    {
+      title: 'Activa tu equipo',
+      description: 'Comparte el progreso y haz que todos avancen alineados.',
+    },
+  ];
+}
+</file>
+
+<file path="FritWeb/src/index.html">
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Frit - Plataforma de gestión moderna</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>
+</file>
+
+<file path="FritWeb/src/main.ts">
+import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
+</file>
+
+<file path="FritWeb/src/styles.css">
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #fff;
+  color: #333;
+}
+</file>
+
+<file path="FritWeb/tsconfig.app.json">
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "files": [
+    "src/main.ts"
+  ],
+  "include": [
+    "src/**/*.d.ts"
+  ]
+}
+</file>
+
+<file path="FritWeb/tsconfig.json">
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "rootDir": "./src",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler"
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}
+</file>
+
+<file path="FritWeb/tsconfig.spec.json">
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/spec",
+    "types": [
+      "jasmine"
+    ]
+  },
+  "include": [
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "frit-web",
+  "version": "1.0.0",
+"scripts": {
+  "ng": "node ./node_modules/@angular/cli/bin/ng.js",
+  "start": "node ./node_modules/@angular/cli/bin/ng.js serve",
+  "build": "node ./node_modules/@angular/cli/bin/ng.js build",
+  "build:prod": "node ./node_modules/@angular/cli/bin/ng.js build --configuration production",
+  "watch": "node ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development",
+  "test": "node ./node_modules/@angular/cli/bin/ng.js test",
+  "lint": "node ./node_modules/@angular/cli/bin/ng.js lint"
+},
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^19.0.0",
+    "@angular/common": "^19.0.0",
+    "@angular/compiler": "^19.0.0",
+    "@angular/core": "^19.0.0",
+    "@angular/forms": "^19.0.0",
+    "@angular/platform-browser": "^19.0.0",
+    "@angular/platform-browser-dynamic": "^19.0.0",
+    "@angular/router": "^19.0.0",
+    "rxjs": "^7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "^0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^19.0.0",
+    "@angular/cli": "^19.0.0",
+    "@angular/compiler-cli": "^19.0.0",
+    "@types/jasmine": "~5.1.0",
+    "jasmine-core": "~5.1.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "typescript": "~5.6.0"
+  }
+}
+</file>
+
+</files>

@@ -22,7 +22,7 @@ namespace FritApi.Migrations
                     Grupo = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     Observaciones = table.Column<string>(type: "character varying(800)", maxLength: 800, nullable: true),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
                 constraints: table =>
                 {
@@ -74,7 +74,7 @@ namespace FritApi.Migrations
                     DuracionMinutos = table.Column<int>(type: "integer", nullable: true),
                     NumeroJugadores = table.Column<int>(type: "integer", nullable: false),
                     Observaciones = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "NOW()")
                 },
                 constraints: table =>
                 {
