@@ -147,102 +147,72 @@ export class JuegosPageComponent implements OnInit {
       this.filteredUsuarios.set(filtered);
       this.showPropietarioOptions.set(true);
 
-      const selected = this.usuarios().find(u => u.nombre.toLowerCase() === term);
-      this.form.patchValue(
-        { propietarioId: selected?.usuarioId ?? 0 },
-        { emitEvent: false }
-      );
+      const selected = this.usuarios().find(u => u.usuarioId === this.propietarioId.value);
+      if (!selected || selected.nombre !== value) {
+        this.form.patchValue({ propietarioId: 0 }, { emitEvent: false });
+      }
     });
   }
 
   private inicializarFiltroJuegosBase(): void {
     this.form.controls.juegoBaseSearch.valueChanges.subscribe(value => {
-      const filtered = this.obtenerJuegosBaseFiltrados(value);
-      this.filteredJuegosBase.set(filtered);
+      const term = value.trim().toLowerCase();
+      this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(term));
       this.showJuegoBaseOptions.set(true);
 
-      const term = value.trim().toLowerCase();
-      const selected = this.juegos().find(j => j.nombre.toLowerCase() === term);
-
-      this.form.patchValue(
-        { juegoBaseId: selected?.juegoId ?? '' },
-        { emitEvent: false }
-      );
+      const selected = this.juegos().find(j => j.juegoId === this.parseJuegoBaseId(this.form.controls.juegoBaseId.value));
+      if (!selected || selected.nombre !== value) {
+        this.form.patchValue({ juegoBaseId: '' }, { emitEvent: false });
+      }
     });
   }
 
-  private obtenerJuegosBaseFiltrados(value: string): Juego[] {
-    const term = value.trim().toLowerCase();
-    const nombreActual = this.form.controls.nombre.value.trim().toLowerCase();
-
-    return this.juegos().filter(juego => {
-      const coincideBusqueda = juego.nombre.toLowerCase().includes(term);
-      const noEsElMismoNombre = !nombreActual || juego.nombre.toLowerCase() !== nombreActual;
-      return coincideBusqueda && noEsElMismoNombre;
-    });
-  }
-
-  private intentarFinalizarCarga(juegosCargados: boolean, usuariosCargados: boolean): void {
-    if (!juegosCargados || !usuariosCargados) {
-      return;
-    }
-
-    this.loading.set(false);
-  }
-
-  private precargarPropietarioActual(): void {
-    const currentUser = this.authService.currentUser;
-
-    if (!currentUser) {
-      return;
-    }
-
-    this.form.patchValue({
-      propietarioId: currentUser.usuarioId,
-      propietarioSearch: currentUser.nombre
-    }, { emitEvent: false });
-  }
-
-  private seleccionarPropietarioPorDefecto(usuarios: UsuarioOption[]): void {
-    const currentUser = this.authService.currentUser;
-
-    if (!currentUser) {
-      return;
-    }
-
-    const usuario = usuarios.find(u => u.usuarioId === currentUser.usuarioId);
-
-    if (!usuario) {
-      return;
-    }
-
-    this.seleccionarPropietario(usuario);
+  private obtenerJuegosBaseFiltrados(term: string): Juego[] {
+    return this.juegos()
+      .filter(j => j.nombre.toLowerCase().includes(term.toLowerCase()))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   seleccionarPropietario(usuario: UsuarioOption): void {
-    this.form.patchValue({
-      propietarioId: usuario.usuarioId,
-      propietarioSearch: usuario.nombre
-    }, { emitEvent: false });
+    this.form.patchValue(
+      {
+        propietarioId: usuario.usuarioId,
+        propietarioSearch: usuario.nombre
+      },
+      { emitEvent: false }
+    );
 
+    this.filteredUsuarios.set(
+      this.usuarios().filter(u => u.nombre.toLowerCase().includes(usuario.nombre.toLowerCase()))
+    );
     this.showPropietarioOptions.set(false);
+    this.propietarioId.markAsTouched();
+    this.propietarioId.updateValueAndValidity();
   }
 
   seleccionarJuegoBase(juego: Juego): void {
-    this.form.patchValue({
-      juegoBaseId: juego.juegoId,
-      juegoBaseSearch: juego.nombre
-    }, { emitEvent: false });
+    this.form.patchValue(
+      {
+        juegoBaseId: String(juego.juegoId),
+        juegoBaseSearch: juego.nombre
+      },
+      { emitEvent: false }
+    );
 
-    this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(juego.nombre));
+    this.filteredJuegosBase.set(
+      this.obtenerJuegosBaseFiltrados(juego.nombre)
+    );
     this.showJuegoBaseOptions.set(false);
   }
 
   limpiarJuegoBase(): void {
-    this.form.patchValue({
-      juegoBaseId: '',
-      juegoBaseSearch: ''
-    }, { emitEvent: false });
+    this.form.patchValue(
+      {
+        juegoBaseId: '',
+        juegoBaseSearch: ''
+      },
+      { emitEvent: false }
+    );
 
     this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
     this.showJuegoBaseOptions.set(false);
@@ -254,55 +224,120 @@ export class JuegosPageComponent implements OnInit {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.formError.set('Revisa els camps obligatoris del formulari.');
       return;
     }
 
-    this.saving.set(true);
-
     const value = this.form.getRawValue();
+    this.saving.set(true);
 
     this.juegosService.create({
       juegoId: 0,
       nombre: value.nombre.trim(),
-      numeroJugadoresMin: value.numeroJugadoresMin,
-      numeroJugadoresMax: value.numeroJugadoresMax,
-      propietarioId: value.propietarioId,
+      numeroJugadoresMin: Number(value.numeroJugadoresMin),
+      numeroJugadoresMax: Number(value.numeroJugadoresMax),
+      propietarioId: Number(value.propietarioId),
       tipo: value.tipo.trim(),
-      bggId: this.toNullableNumber(value.bggId),
-      dificultadBgg: this.toNullableNumber(value.dificultadBgg),
-      pvp: this.toNullableNumber(value.pvp),
+      bggId: value.bggId === '' ? null : Number(value.bggId),
+      dificultadBgg: value.dificultadBgg === '' ? null : Number(value.dificultadBgg),
+      pvp: value.pvp === '' ? null : Number(value.pvp),
       fechaAdquisicion: value.fechaAdquisicion || null,
-      juegoBaseId: this.toNullableNumber(value.juegoBaseId)
+      juegoBaseId: value.juegoBaseId === '' ? null : Number(value.juegoBaseId)
     }).subscribe({
       next: juego => {
-        this.juegos.update(items => [...items, juego].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        this.juegos.update(current =>
+          [...current, juego].sort((a, b) => a.nombre.localeCompare(b.nombre))
+        );
         this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
         this.success.set('Joc desat correctament.');
         this.saving.set(false);
-
-        this.form.reset({
-          nombre: '',
-          numeroJugadoresMin: 1,
-          numeroJugadoresMax: 4,
-          propietarioId: this.authService.currentUser?.usuarioId ?? 0,
-          propietarioSearch: this.authService.currentUser?.nombre ?? '',
-          tipo: '',
-          bggId: '',
-          dificultadBgg: '',
-          pvp: '',
-          fechaAdquisicion: '',
-          juegoBaseId: '',
-          juegoBaseSearch: ''
-        });
-
-        this.showPropietarioOptions.set(false);
-        this.showJuegoBaseOptions.set(false);
+        this.resetFormAfterSave();
+        this.cerrarModal();
       },
       error: err => {
-        this.formError.set(err.error?.message ?? 'No s\'ha pogut desar el joc.');
+        this.formError.set(err?.error?.message ?? 'No s\'ha pogut desar el joc.');
         this.saving.set(false);
       }
     });
+  }
+
+  private resetFormAfterSave(): void {
+    const propietarioActual = this.usuarios().find(u => u.usuarioId === this.propietarioId.value);
+    this.form.reset({
+      nombre: '',
+      numeroJugadoresMin: 1,
+      numeroJugadoresMax: 4,
+      propietarioId: propietarioActual?.usuarioId ?? 0,
+      propietarioSearch: propietarioActual?.nombre ?? '',
+      tipo: '',
+      bggId: '',
+      dificultadBgg: '',
+      pvp: '',
+      fechaAdquisicion: '',
+      juegoBaseId: '',
+      juegoBaseSearch: ''
+    });
+
+    this.filteredUsuarios.set(this.usuarios());
+    this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
+  }
+
+  private seleccionarPropietarioPorDefecto(usuarios: UsuarioOption[]): void {
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) {
+      return;
+    }
+
+    const usuario = usuarios.find(u => u.usuarioId === currentUser.usuarioId);
+    if (!usuario) {
+      return;
+    }
+
+    this.form.patchValue(
+      {
+        propietarioId: usuario.usuarioId,
+        propietarioSearch: usuario.nombre
+      },
+      { emitEvent: false }
+    );
+  }
+
+  private precargarPropietarioActual(): void {
+    const currentUser = this.authService.currentUser;
+    if (!currentUser) {
+      return;
+    }
+
+    this.form.patchValue(
+      {
+        propietarioId: currentUser.usuarioId,
+        propietarioSearch: currentUser.nombre
+      },
+      { emitEvent: false }
+    );
+  }
+
+  private intentarFinalizarCarga(juegosCargados: boolean, usuariosCargados: boolean): void {
+    if (juegosCargados && usuariosCargados) {
+      this.loading.set(false);
+    }
+  }
+
+  getNombrePropietario(propietarioId: number): string {
+    return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? `#${propietarioId}`;
+  }
+
+  private parseJuegoBaseId(value: string): number | null {
+    if (!value) {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+
+  trackByJuegoId(_: number, juego: Juego): number {
+    return juego.juegoId;
   }
 
   logout(): void {
@@ -312,28 +347,11 @@ export class JuegosPageComponent implements OnInit {
     });
   }
 
-  getNombrePropietario(usuarioId: number): string {
-    return this.usuarios().find(u => u.usuarioId === usuarioId)?.nombre ?? `#${usuarioId}`;
-  }
-
   get nombre() {
     return this.form.controls.nombre;
   }
 
   get propietarioId() {
     return this.form.controls.propietarioId;
-  }
-
-  trackByJuegoId(_: number, juego: Juego): number {
-    return juego.juegoId;
-  }
-
-  private toNullableNumber(value: string | number): number | null {
-    if (value === '' || value === null || value === undefined) {
-      return null;
-    }
-
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 }

@@ -45,6 +45,7 @@
             <th>Propietari</th>
             <th>Tipus</th>
             <th>PVP</th>
+            <th>Joc base</th>
           </tr>
         </thead>
         <tbody>
@@ -52,8 +53,9 @@
             <td>{{ juego.nombre }}</td>
             <td>{{ juego.numeroJugadoresMin }} - {{ juego.numeroJugadoresMax }}</td>
             <td>{{ getNombrePropietario(juego.propietarioId) }}</td>
-            <td>{{ juego.tipo }}</td>
+            <td>{{ juego.tipo || '-' }}</td>
             <td>{{ juego.pvp ?? '-' }}</td>
+            <td>{{ juego.juegoBaseId ?? '-' }}</td>
           </tr>
         </tbody>
       </table>
@@ -167,17 +169,16 @@
               (focus)="showJuegoBaseOptions.set(true)"
               (click)="$event.stopPropagation()"
               autocomplete="off"
-              placeholder="Escriu per cercar un joc base"
             />
 
             <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()" (click)="$event.stopPropagation()">
               <button
                 type="button"
                 class="autocomplete-option"
-                *ngFor="let juego of filteredJuegosBase(); trackBy: trackByJuegoId"
+                *ngFor="let juego of filteredJuegosBase()"
                 (click)="seleccionarJuegoBase(juego)"
               >
-                {{ juego.nombre }} (#{{ juego.juegoId }})
+                {{ juego.nombre }}
               </button>
 
               <button
@@ -189,7 +190,7 @@
                 Sense joc base
               </button>
 
-              <p class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
+              <p class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0 && !form.controls.juegoBaseId.value">
                 No s'han trobat jocs base.
               </p>
             </div>
