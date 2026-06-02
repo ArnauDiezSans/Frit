@@ -42,12 +42,13 @@
         <h2>Listado de juegos</h2>
         <p>Tu colección disponible para futuras partidas.</p>
       </div>
+
       <button type="button" class="primary-button" (click)="abrirModal()">Nuevo juego</button>
     </div>
 
     <div class="empty-state" *ngIf="juegos().length === 0">
       <h3>Aún no hay juegos registrados</h3>
-      <p>Empieza creando tu primer juego desde el botón “Nuevo juego”.</p>
+      <p>Empieza creando tu primer juego desde el botón Nuevo juego.</p>
     </div>
 
     <div class="table-wrapper" *ngIf="juegos().length > 0">
@@ -80,7 +81,8 @@
       role="dialog"
       aria-modal="true"
       aria-labelledby="nuevo-juego-title"
-      (click)="$event.stopPropagation()">
+      (click)="$event.stopPropagation()"
+    >
       <div class="modal-header">
         <div>
           <h2 id="nuevo-juego-title">Nuevo juego</h2>
@@ -91,7 +93,8 @@
           type="button"
           class="ghost-icon-button"
           aria-label="Cerrar formulario"
-          (click)="cerrarModal()">
+          (click)="cerrarModal()"
+        >
           ×
         </button>
       </div>
@@ -99,47 +102,48 @@
       <form class="game-form" [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <label>
-            <span>Nombre</span>
+            <span>Nombre <span class="required-mark">*</span></span>
             <input type="text" formControlName="nombre" />
-            <small class="field-error" *ngIf="nombre.touched && nombre.invalid">El nombre es obligatorio.</small>
+            <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
+              El nombre es obligatorio.
+            </small>
           </label>
 
           <label class="autocomplete-field">
-            <span>Propietario</span>
+            <span>Propietario <span class="required-mark">*</span></span>
             <input
               type="text"
               formControlName="propietarioSearch"
               autocomplete="off"
               placeholder="Escribe para buscar propietario"
               (focus)="mostrarOpcionesPropietario()"
-              (blur)="ocultarOpcionesPropietario()" />
-
+              (blur)="ocultarOpcionesPropietario()"
+            />
             <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
               <button
                 type="button"
                 class="autocomplete-option"
                 *ngFor="let usuario of filteredUsuarios()"
-                (mousedown)="seleccionarPropietario(usuario)">
+                (mousedown)="seleccionarPropietario(usuario)"
+              >
                 {{ usuario.nombre }}
               </button>
-
               <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
                 No hay usuarios que coincidan.
               </div>
             </div>
-
             <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
               Debes seleccionar un propietario válido.
             </small>
           </label>
 
           <label>
-            <span>Jugadores mín.</span>
+            <span>Jugadores mín. <span class="required-mark">*</span></span>
             <input type="number" min="1" formControlName="numeroJugadoresMin" />
           </label>
 
           <label>
-            <span>Jugadores máx.</span>
+            <span>Jugadores máx. <span class="required-mark">*</span></span>
             <input type="number" min="1" formControlName="numeroJugadoresMax" />
           </label>
 
