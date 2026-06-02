@@ -42,3 +42,26 @@ button {
   color: #b42318;
   margin: 0;
 }
+
+.secondary-button {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid #4d8781;
+  border-radius: 14px;
+  background: white;
+  color: #4d8781;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #f2f8f7;
+}
+
+.secondary-button:active {
+  background: #e7f1ef;
+}
