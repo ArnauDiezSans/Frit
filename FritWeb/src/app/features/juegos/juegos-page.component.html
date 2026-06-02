@@ -204,6 +204,7 @@
         <p class="error" *ngIf="formError()">{{ formError() }}</p>
         <p class="success" *ngIf="success()">{{ success() }}</p>
 
+        
         <div class="modal-actions">
           <button type="button" class="secondary-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
