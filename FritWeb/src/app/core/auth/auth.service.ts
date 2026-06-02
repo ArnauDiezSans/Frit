@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { API_BASE_URL } from '../api/api.config';
-import { AuthUser, LoginRequest } from './auth.models';
+import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -21,6 +21,12 @@ export class AuthService {
         this.initialized = true;
       })
     );
+  }
+
+  register(data: RegisterRequest): Observable<AuthUser> {
+    return this.http.post<AuthUser>(`${this.baseUrl}/register`, data, {
+      withCredentials: true
+    });
   }
 
   logout(): Observable<void> {
