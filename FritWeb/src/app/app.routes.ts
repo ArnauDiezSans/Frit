@@ -1,13 +1,15 @@
 import { Routes } from '@angular/router';
-import { LandingPageComponent } from './landing-page/landing-page.component';
+import { authGuard } from './core/auth/auth.guard';
+import { LoginPageComponent } from './features/auth/login-page.component';
+import { PartidasPageComponent } from './features/partidas/partidas-page.component';
 
 export const routes: Routes = [
+  { path: 'login', component: LoginPageComponent },
   {
-    path: '',
-    component: LandingPageComponent,
+    path: 'app/partidas',
+    component: PartidasPageComponent,
+    canActivate: [authGuard]
   },
-  {
-    path: '**',
-    redirectTo: '',
-  },
+  { path: '', pathMatch: 'full', redirectTo: 'login' },
+  { path: '**', redirectTo: 'login' }
 ];
