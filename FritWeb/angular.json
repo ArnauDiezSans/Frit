@@ -18,10 +18,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": {
-              "base": "../FritApi/wwwroot",
-              "browser": ""
-            },
+            "outputPath": "../FritApi/wwwroot",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
