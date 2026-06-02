@@ -799,17 +799,13 @@ WORKDIR /src/FritWeb
 COPY FritWeb/package*.json ./
 
 # Instalar dependencias
-RUN npm install
+RUN npm ci
 
 # Copiar el resto del frontend
 COPY FritWeb/ ./
 
-# Asegurar permisos de ejecución
-RUN chmod -R +x node_modules/.bin
-
-# Compilar Angular para producción
-# El outputPath ya apunta a ../FritApi/wwwroot
-RUN node ./node_modules/@angular/cli/bin/ng.js build --configuration production
+# Compilar Angular para producción con más memoria
+RUN node --max_old_space_size=4096 ./node_modules/@angular/cli/bin/ng.js build --configuration production
 
 
 # ============================================
@@ -821,8 +817,8 @@ WORKDIR /src
 # Copiar todo el backend
 COPY FritApi/ ./FritApi/
 
-# Copiar el frontend ya compilado dentro de wwwroot del backend
-COPY --from=frontend-build /src/FritApi/wwwroot/ /src/FritApi/wwwroot/
+# Copiar el frontend compilado a wwwroot del backend
+COPY --from=frontend-build /src/FritWeb/dist/frit-web/ /src/FritApi/wwwroot/
 
 WORKDIR /src/FritApi
 
@@ -2569,7 +2565,7 @@ public class UsuarioService
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "../FritApi/wwwroot",
+            "outputPath": "dist/frit-web",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -2600,8 +2596,8 @@ public class UsuarioService
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "6kb",
+                  "maximumError": "8kb"
                 }
               ],
               "outputHashing": "all",
@@ -2613,11 +2609,7 @@ public class UsuarioService
             },
             "development": {
               "buildOptimizer": false,
-              "optimization": false,
-              "vendorChunk": true,
-              "extractLicenses": false,
-              "sourceMap": true,
-              "namedChunks": true
+              "optimization": false
             }
           },
           "defaultConfiguration": "production"
@@ -3228,109 +3220,14 @@ export class RegisterComponent {
   max-width: 1100px;
   margin: 0 auto 24px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
-.stat-card {
-  padding: 20px;
-}
-
-.stat-card-action {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.stat-action-button {
-  margin-top: auto;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  z-index: 1000;
-}
-
-.modal-card {
-  width: min(920px, 100%);
-  max-height: calc(100vh - 48px);
-  overflow: auto;
-  background: #ffffff;
-  border: 1px solid #e4e7ec;
-  border-radius: 20px;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
-  padding: 24px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.modal-header h2 {
-  margin: 0 0 6px;
-}
-
-.modal-header p {
-  margin: 0;
-  color: #667085;
-}
-
-.ghost-icon-button {
-  width: 44px;
-  height: 44px;
-  border: 1px solid #d0d5dd;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #344054;
-  font-size: 1.5rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  min-height: 220px;
-}
-
-@media (max-width: 820px) {
-  .stats-grid,
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-backdrop {
-    padding: 12px;
-    align-items: flex-end;
-  }
-
-  .modal-card {
-    max-height: 90vh;
-    padding: 20px;
-  }
-
-  .modal-header,
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.required-mark {
+  color: #b42318;
+  font-weight: 700;
+  margin-left: 4px;
 }
 </file>
 
@@ -3379,12 +3276,13 @@ export class RegisterComponent {
         <h2>Listado de juegos</h2>
         <p>Tu colección disponible para futuras partidas.</p>
       </div>
+
       <button type="button" class="primary-button" (click)="abrirModal()">Nuevo juego</button>
     </div>
 
     <div class="empty-state" *ngIf="juegos().length === 0">
       <h3>Aún no hay juegos registrados</h3>
-      <p>Empieza creando tu primer juego desde el botón “Nuevo juego”.</p>
+      <p>Empieza creando tu primer juego desde el botón Nuevo juego.</p>
     </div>
 
     <div class="table-wrapper" *ngIf="juegos().length > 0">
@@ -3417,18 +3315,20 @@ export class RegisterComponent {
       role="dialog"
       aria-modal="true"
       aria-labelledby="nuevo-juego-title"
-      (click)="$event.stopPropagation()">
+      (click)="$event.stopPropagation()"
+    >
       <div class="modal-header">
         <div>
           <h2 id="nuevo-juego-title">Nuevo juego</h2>
-          <p>El propietario es obligatorio y se preselecciona con tu usuario actual.</p>
+          <p>Escribe el propietario y selecciona una opción de la lista filtrada.</p>
         </div>
 
         <button
           type="button"
           class="ghost-icon-button"
           aria-label="Cerrar formulario"
-          (click)="cerrarModal()">
+          (click)="cerrarModal()"
+        >
           ×
         </button>
       </div>
@@ -3436,29 +3336,48 @@ export class RegisterComponent {
       <form class="game-form" [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <label>
-            <span>Nombre</span>
+            <span>Nombre <span class="required-mark">*</span></span>
             <input type="text" formControlName="nombre" />
-            <small class="field-error" *ngIf="nombre.touched && nombre.invalid">El nombre es obligatorio.</small>
+            <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
+              El nombre es obligatorio.
+            </small>
           </label>
 
-          <label>
-            <span>Propietario</span>
-            <select formControlName="propietarioId">
-              <option [value]="0" disabled>Selecciona un propietario</option>
-              <option *ngFor="let usuario of usuarios()" [value]="usuario.usuarioId">
+          <label class="autocomplete-field">
+            <span>Propietario <span class="required-mark">*</span></span>
+            <input
+              type="text"
+              formControlName="propietarioSearch"
+              autocomplete="off"
+              placeholder="Escribe para buscar propietario"
+              (focus)="mostrarOpcionesPropietario()"
+              (blur)="ocultarOpcionesPropietario()"
+            />
+            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngFor="let usuario of filteredUsuarios()"
+                (mousedown)="seleccionarPropietario(usuario)"
+              >
                 {{ usuario.nombre }}
-              </option>
-            </select>
-            <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">Debes seleccionar un propietario.</small>
+              </button>
+              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                No hay usuarios que coincidan.
+              </div>
+            </div>
+            <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
+              Debes seleccionar un propietario válido.
+            </small>
           </label>
 
           <label>
-            <span>Jugadores mín.</span>
+            <span>Jugadores mín. <span class="required-mark">*</span></span>
             <input type="number" min="1" formControlName="numeroJugadoresMin" />
           </label>
 
           <label>
-            <span>Jugadores máx.</span>
+            <span>Jugadores máx. <span class="required-mark">*</span></span>
             <input type="number" min="1" formControlName="numeroJugadoresMax" />
           </label>
 
@@ -3515,7 +3434,14 @@ export class RegisterComponent {
 <file path="FritWeb/src/app/features/juegos/juegos-page.component.ts">
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { Juego, UsuarioOption } from './juegos.models';
@@ -3558,6 +3484,8 @@ export class JuegosPageComponent implements OnInit {
 
   juegos = signal<Juego[]>([]);
   usuarios = signal<UsuarioOption[]>([]);
+  filteredUsuarios = signal<UsuarioOption[]>([]);
+  showPropietarioOptions = signal(false);
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuario');
   totalJuegos = computed(() => this.juegos().length);
@@ -3568,6 +3496,7 @@ export class JuegosPageComponent implements OnInit {
       numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
       numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
       propietarioId: [0, [Validators.required, Validators.min(1)]],
+      propietarioSearch: [''],
       tipo: ['', [Validators.maxLength(200)]],
       bggId: [''],
       dificultadBgg: [''],
@@ -3580,6 +3509,7 @@ export class JuegosPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.precargarPropietarioActual();
+    this.inicializarFiltroPropietarios();
     this.cargarDatos();
   }
 
@@ -3593,6 +3523,7 @@ export class JuegosPageComponent implements OnInit {
   abrirModal(): void {
     this.formError.set('');
     this.success.set('');
+    this.mostrarOpcionesPropietario();
     this.modalOpen.set(true);
   }
 
@@ -3602,6 +3533,7 @@ export class JuegosPageComponent implements OnInit {
     }
 
     this.modalOpen.set(false);
+    this.showPropietarioOptions.set(false);
   }
 
   cargarDatos(): void {
@@ -3626,6 +3558,7 @@ export class JuegosPageComponent implements OnInit {
     this.usuariosService.getAll().subscribe({
       next: (usuarios) => {
         this.usuarios.set(usuarios);
+        this.filteredUsuarios.set(usuarios);
         this.seleccionarPropietarioPorDefecto(usuarios);
         usuariosCargados = true;
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
@@ -3634,6 +3567,28 @@ export class JuegosPageComponent implements OnInit {
         this.error.set('No se pudieron cargar los usuarios.');
         this.loading.set(false);
       }
+    });
+  }
+
+  private inicializarFiltroPropietarios(): void {
+    this.form.controls.propietarioSearch.valueChanges.subscribe((value) => {
+      const term = value.trim().toLowerCase();
+
+      const filtered = this.usuarios().filter((u) =>
+        u.nombre.toLowerCase().includes(term)
+      );
+
+      this.filteredUsuarios.set(filtered);
+      this.showPropietarioOptions.set(true);
+
+      const selected = this.usuarios().find(
+        (u) => u.nombre.toLowerCase() === term
+      );
+
+      this.form.patchValue(
+        { propietarioId: selected?.usuarioId ?? 0 },
+        { emitEvent: false }
+      );
     });
   }
 
@@ -3646,7 +3601,7 @@ export class JuegosPageComponent implements OnInit {
   private precargarPropietarioActual(): void {
     const usuarioId = this.authService.currentUser?.usuarioId ?? 0;
     if (usuarioId > 0) {
-      this.form.patchValue({ propietarioId: usuarioId });
+      this.form.patchValue({ propietarioId: usuarioId }, { emitEvent: false });
     }
   }
 
@@ -3655,18 +3610,78 @@ export class JuegosPageComponent implements OnInit {
     const existeUsuarioActual = usuarios.some((u) => u.usuarioId === currentUserId);
     const propietarioActual = this.form.controls.propietarioId.value;
 
-    if (propietarioActual > 0 && usuarios.some((u) => u.usuarioId === propietarioActual)) {
-      return;
+    if (propietarioActual > 0) {
+      const actual = usuarios.find((u) => u.usuarioId === propietarioActual);
+      if (actual) {
+        this.form.patchValue(
+          {
+            propietarioId: actual.usuarioId,
+            propietarioSearch: actual.nombre
+          },
+          { emitEvent: false }
+        );
+        this.filteredUsuarios.set(usuarios);
+        return;
+      }
     }
 
     if (existeUsuarioActual) {
-      this.form.patchValue({ propietarioId: currentUserId });
+      const actual = usuarios.find((u) => u.usuarioId === currentUserId)!;
+      this.form.patchValue(
+        {
+          propietarioId: actual.usuarioId,
+          propietarioSearch: actual.nombre
+        },
+        { emitEvent: false }
+      );
+      this.filteredUsuarios.set(usuarios);
       return;
     }
 
     if (usuarios.length > 0) {
-      this.form.patchValue({ propietarioId: usuarios[0].usuarioId });
+      this.form.patchValue(
+        {
+          propietarioId: usuarios[0].usuarioId,
+          propietarioSearch: usuarios[0].nombre
+        },
+        { emitEvent: false }
+      );
+      this.filteredUsuarios.set(usuarios);
     }
+  }
+
+  seleccionarPropietario(usuario: UsuarioOption): void {
+    this.form.patchValue(
+      {
+        propietarioId: usuario.usuarioId,
+        propietarioSearch: usuario.nombre
+      },
+      { emitEvent: false }
+    );
+
+    this.filteredUsuarios.set(
+      this.usuarios().filter((u) =>
+        u.nombre.toLowerCase().includes(usuario.nombre.toLowerCase())
+      )
+    );
+
+    this.showPropietarioOptions.set(false);
+  }
+
+  mostrarOpcionesPropietario(): void {
+    const search = this.form.controls.propietarioSearch.value.trim().toLowerCase();
+
+    this.filteredUsuarios.set(
+      this.usuarios().filter((u) =>
+        u.nombre.toLowerCase().includes(search)
+      )
+    );
+
+    this.showPropietarioOptions.set(true);
+  }
+
+  ocultarOpcionesPropietario(): void {
+    setTimeout(() => this.showPropietarioOptions.set(false), 150);
   }
 
   submit(): void {
@@ -3681,6 +3696,16 @@ export class JuegosPageComponent implements OnInit {
 
     const value = this.form.getRawValue();
 
+    const propietarioValido = this.usuarios().some(
+      (u) => u.usuarioId === Number(value.propietarioId)
+    );
+
+    if (!propietarioValido) {
+      this.saving.set(false);
+      this.formError.set('Debes seleccionar un propietario de la lista.');
+      return;
+    }
+
     this.juegosService.create({
       juegoId: 0,
       nombre: value.nombre.trim(),
@@ -3691,7 +3716,7 @@ export class JuegosPageComponent implements OnInit {
       bggId: this.toNullableNumber(value.bggId),
       dificultadBgg: this.toNullableNumber(value.dificultadBgg),
       pvp: this.toNullableNumber(value.pvp),
-      fechaAdquisicion: value.fechaAdquisicion?.trim() ? value.fechaAdquisicion : null,
+      fechaAdquisicion: value.fechaAdquisicion.trim() ? value.fechaAdquisicion : null,
       juegoBaseId: this.toNullableNumber(value.juegoBaseId)
     }).subscribe({
       next: (juego) => {
@@ -3700,6 +3725,7 @@ export class JuegosPageComponent implements OnInit {
         this.success.set('Juego creado correctamente.');
         this.resetFormManteniendoPropietario();
         this.modalOpen.set(false);
+        this.showPropietarioOptions.set(false);
       },
       error: (err) => {
         this.saving.set(false);
@@ -3710,12 +3736,14 @@ export class JuegosPageComponent implements OnInit {
 
   private resetFormManteniendoPropietario(): void {
     const propietarioId = this.form.controls.propietarioId.value || this.authService.currentUser?.usuarioId || 0;
+    const propietario = this.usuarios().find((u) => u.usuarioId === propietarioId);
 
     this.form.reset({
       nombre: '',
       numeroJugadoresMin: 1,
       numeroJugadoresMax: 4,
       propietarioId,
+      propietarioSearch: propietario?.nombre ?? '',
       tipo: '',
       bggId: '',
       dificultadBgg: '',
@@ -3723,6 +3751,8 @@ export class JuegosPageComponent implements OnInit {
       fechaAdquisicion: '',
       juegoBaseId: ''
     });
+
+    this.filteredUsuarios.set(this.usuarios());
   }
 
   private toNullableNumber(value: string | number | null | undefined): number | null {
