@@ -18,7 +18,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "../FritApi/wwwroot",
+            "outputPath": "dist/frit-web",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": [
@@ -62,11 +62,7 @@
             },
             "development": {
               "buildOptimizer": false,
-              "optimization": false,
-              "vendorChunk": true,
-              "extractLicenses": false,
-              "sourceMap": true,
-              "namedChunks": true
+              "optimization": false
             }
           },
           "defaultConfiguration": "production"
