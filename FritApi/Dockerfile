@@ -8,13 +8,10 @@ WORKDIR /src/FritWeb
 COPY FritWeb/package*.json ./
 
 # Instalar dependencias
-RUN npm install
+RUN npm ci
 
 # Copiar el resto del frontend
 COPY FritWeb/ ./
-
-# Asegurar permisos de ejecución
-RUN chmod -R +x node_modules/.bin
 
 # Compilar Angular para producción
 # El outputPath ya apunta a ../FritApi/wwwroot
