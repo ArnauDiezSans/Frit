@@ -1,14 +1,17 @@
 # ============================================
 # Stage 1: Build Frontend (Angular)
 # ============================================
-FROM node:20-alpine AS frontend-build
+FROM node:20-slim AS frontend-build
 WORKDIR /src/FritWeb
 
 # Copiar primero dependencias
 COPY FritWeb/package*.json ./
 
 # Instalar dependencias
-RUN npm ci
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm ci
 
 # Copiar el resto del frontend
 COPY FritWeb/ ./
