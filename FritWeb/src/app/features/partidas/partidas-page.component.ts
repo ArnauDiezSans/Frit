@@ -533,6 +533,10 @@ const partidaPayload: Partida = {
     return this.juegos().find(j => j.juegoId === juegoId)?.nombre ?? `Joc #${juegoId}`;
   }
 
+  trackByJuegoId(_: number, juego: Juego): number {
+    return juego.juegoId;
+  }
+
   trackByPartidaId(_: number, partida: PartidaGridRow): number {
     return partida.partidaId;
   }

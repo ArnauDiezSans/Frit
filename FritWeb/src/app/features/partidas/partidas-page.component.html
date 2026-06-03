@@ -13,8 +13,8 @@
         Ludoteca
       </button>
       <button type="button" class="primary-button" (click)="abrirModal()">
-  Nova partida
-</button>
+        Nova partida
+      </button>
       <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
@@ -55,63 +55,65 @@
         <h2>Grid de partides</h2>
         <p>Data, joc, duració, jugadors, punts i observacions.</p>
       </div>
-
-      <div class="table-actions">
-        <button type="button" class="ghost-button" (click)="clearAllFilters()">
-          Neteja filtres
-        </button>
-      </div>
     </div>
 
     <div class="table-wrapper" *ngIf="partidasFiltradasOrdenadas().length > 0">
       <table class="games-table">
         <thead>
           <tr>
-            <th class="sortable" (click)="setSort('fecha')">Data</th>
-            <th class="sortable" (click)="setSort('juegoNombre')">Nom joc</th>
-            <th class="sortable" (click)="setSort('duracionMinutos')">Duració</th>
-            <th class="sortable" (click)="setSort('numeroJugadores')">Num jugadors</th>
-            <th class="sortable" (click)="setSort('resultadoJugadores')">Jugadors / punts</th>
-            <th class="sortable" (click)="setSort('observaciones')">Observacions</th>
+            <th (click)="setSort('fecha')" class="sortable">
+              Data
+            </th>
+            <th (click)="setSort('juegoNombre')" class="sortable">
+              Nom joc
+            </th>
+            <th (click)="setSort('duracionMinutos')" class="sortable">
+              Duració
+            </th>
+            <th (click)="setSort('numeroJugadores')" class="sortable">
+              Núm. jugadors
+            </th>
+            <th (click)="setSort('resultadoJugadores')" class="sortable">
+              Jugadors i punts
+            </th>
+            <th (click)="setSort('observaciones')" class="sortable">
+              Observacions
+            </th>
           </tr>
 
-          <tr class="filters-row">
+          <tr>
             <th>
               <input
                 type="text"
                 class="filter-input"
-                placeholder="Filtra..."
+                placeholder="Filtra per data..."
                 [value]="filters().fecha"
                 (input)="updateFilter('fecha', $any($event.target).value)" />
             </th>
-
             <th>
               <input
                 type="text"
                 class="filter-input"
-                placeholder="Filtra..."
+                placeholder="Filtra per joc..."
                 [value]="filters().juegoNombre"
                 (input)="updateFilter('juegoNombre', $any($event.target).value)" />
             </th>
-
             <th>
               <input
                 type="text"
                 class="filter-input"
-                placeholder="Ex. 60"
+                placeholder="Minuts..."
                 [value]="filters().duracionMinutos"
                 (input)="updateFilter('duracionMinutos', $any($event.target).value)" />
             </th>
-
             <th>
               <input
                 type="text"
                 class="filter-input"
-                placeholder="Ex. 4"
+                placeholder="Jugadors..."
                 [value]="filters().numeroJugadores"
                 (input)="updateFilter('numeroJugadores', $any($event.target).value)" />
             </th>
-
             <th>
               <input
                 type="text"
@@ -120,7 +122,6 @@
                 [value]="filters().resultadoJugadores"
                 (input)="updateFilter('resultadoJugadores', $any($event.target).value)" />
             </th>
-
             <th>
               <input
                 type="text"
@@ -133,30 +134,24 @@
         </thead>
 
         <tbody>
-          <tr
-            *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId">
+          <tr *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId">
             <td data-label="Data">
               <span class="cell-value cell-title">{{ formatFecha(partida.fecha) }}</span>
             </td>
-
             <td data-label="Nom joc">
               <span class="cell-value">{{ partida.juegoNombre }}</span>
             </td>
-
             <td data-label="Duració">
               <span class="cell-value">
                 {{ partida.duracionMinutos !== null ? partida.duracionMinutos + ' min' : '-' }}
               </span>
             </td>
-
-            <td data-label="Num jugadors">
+            <td data-label="Núm. jugadors">
               <span class="cell-value">{{ partida.numeroJugadores }}</span>
             </td>
-
-            <td data-label="Jugadors / punts">
+            <td data-label="Jugadors i punts">
               <span class="cell-value">{{ partida.resultadoJugadores }}</span>
             </td>
-
             <td data-label="Observacions">
               <span class="cell-value">{{ partida.observaciones || '-' }}</span>
             </td>
@@ -166,8 +161,122 @@
     </div>
 
     <div class="empty-state" *ngIf="partidasFiltradasOrdenadas().length === 0">
-      <h3>No hi ha partides que compleixin els filtres</h3>
-      <p>Revisa els filtres o registra noves partides quan activis aquesta funcionalitat.</p>
+      <h3>No hi ha partides registrades</h3>
+      <p>Crea la primera partida per començar a registrar resultats.</p>
     </div>
   </section>
+
+  <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
+    <section class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>Nova partida</h2>
+          <p>Selecciona el joc, la data i afegeix els jugadors de la partida.</p>
+        </div>
+
+        <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardarPartida()">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Joc</span>
+            <select formControlName="juegoId">
+              <option [ngValue]="null">Selecciona un joc</option>
+              <option *ngFor="let juego of juegos(); trackBy: trackByJuegoId" [ngValue]="juego.juegoId">
+                {{ juego.nombre }}
+              </option>
+            </select>
+          </label>
+
+          <label class="form-field">
+            <span>Data</span>
+            <input type="date" formControlName="fecha" />
+          </label>
+
+          <label class="form-field">
+            <span>Duració (minuts)</span>
+            <input type="number" formControlName="duracionMinutos" />
+          </label>
+
+          <label class="form-field">
+            <span>Nombre de jugadors</span>
+            <input
+              type="number"
+              formControlName="numeroJugadores"
+              min="1"
+              (input)="onNumeroJugadoresChange($event)" />
+          </label>
+
+          <label class="form-field form-field-full">
+            <span>Observacions</span>
+            <textarea rows="3" formControlName="observaciones"></textarea>
+          </label>
+        </div>
+
+        <div class="players-section">
+          <div class="players-header">
+            <h3>Jugadors</h3>
+            <button type="button" class="secondary-button add-player-button" (click)="addJugador()">
+              Afegir jugador
+            </button>
+          </div>
+
+          <div class="players-list" formArrayName="jugadores">
+            <div
+              class="player-card"
+              *ngFor="let jugador of jugadoresArray.controls; let i = index"
+              [formGroupName]="i">
+              <div class="player-grid">
+                <label class="form-field">
+                  <span>Usuari</span>
+                  <select (change)="onJugadorUsuarioChange(i, $event)" [value]="jugador.get('usuarioId')?.value ?? ''">
+                    <option value="">Sense usuari</option>
+                    <option *ngFor="let usuario of usuarios(); trackBy: trackByUsuarioId" [value]="usuario.usuarioId">
+                      {{ usuario.nombre }}
+                    </option>
+                  </select>
+                </label>
+
+                <label class="form-field">
+                  <span>Nom mostrat</span>
+                  <input type="text" formControlName="nombreMostrado" />
+                </label>
+
+                <label class="form-field">
+                  <span>Posició</span>
+                  <input type="number" formControlName="posicion" />
+                </label>
+
+                <label class="form-field">
+                  <span>Punts</span>
+                  <input type="number" step="0.01" formControlName="puntos" />
+                </label>
+              </div>
+
+              <div class="player-actions">
+                <button
+                  type="button"
+                  class="ghost-button remove-player-button"
+                  (click)="removeJugador(i)"
+                  [disabled]="jugadoresArray.length <= 1">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+        <p class="success-message" *ngIf="success()">{{ success() }}</p>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
+          <button type="submit" class="primary-button" [disabled]="saving()">
+            {{ saving() ? 'Desant...' : 'Desar partida' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 </section>
