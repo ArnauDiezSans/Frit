@@ -176,13 +176,23 @@
         </label>
 
         <label class="filter-field">
-          <span>PVP</span>
+          <span>PVP mín.</span>
           <input
             type="text"
             class="filter-input"
-            placeholder="Ex. 30"
-            [value]="filters().pvp"
-            (input)="updateFilter('pvp', $any($event.target).value)" />
+            placeholder="Ex. 10"
+            [value]="filters().pvpMin"
+            (input)="updateFilter('pvpMin', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>PVP màx.</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Ex. 50"
+            [value]="filters().pvpMax"
+            (input)="updateFilter('pvpMax', $any($event.target).value)" />
         </label>
 
         <label class="filter-field">
@@ -197,7 +207,7 @@
       </div>
 
       <div class="filters-actions">
-        <button type="button" class="ghost-button" (click)="clearAllFilters()">
+        <button type="button" class="ghost-button" (click)="limpiarFiltros()">
           Neteja filtres
         </button>
       </div>
@@ -210,49 +220,49 @@
             <th
               *ngIf="visibleColumns().nombre"
               class="sortable"
-              (click)="setSort('nombre')">
+              (click)="ordenarPor('nombre')">
               <span>Nom</span>
             </th>
 
             <th
               *ngIf="visibleColumns().numeroJugadoresMin"
               class="sortable"
-              (click)="setSort('numeroJugadoresMin')">
+              (click)="ordenarPor('numeroJugadoresMin')">
               <span>Jugadors mín.</span>
             </th>
 
             <th
               *ngIf="visibleColumns().numeroJugadoresMax"
               class="sortable"
-              (click)="setSort('numeroJugadoresMax')">
+              (click)="ordenarPor('numeroJugadoresMax')">
               <span>Jugadors màx.</span>
             </th>
 
             <th
               *ngIf="visibleColumns().propietario"
               class="sortable"
-              (click)="setSort('propietario')">
+              (click)="ordenarPor('propietario')">
               <span>Propietari</span>
             </th>
 
             <th
               *ngIf="visibleColumns().tipo"
               class="sortable"
-              (click)="setSort('tipo')">
+              (click)="ordenarPor('tipo')">
               <span>Tipus</span>
             </th>
 
             <th
               *ngIf="visibleColumns().pvp"
               class="sortable"
-              (click)="setSort('pvp')">
+              (click)="ordenarPor('pvp')">
               <span>PVP</span>
             </th>
 
             <th
               *ngIf="visibleColumns().juegoBase"
               class="sortable"
-              (click)="setSort('juegoBase')">
+              (click)="ordenarPor('juegoBase')">
               <span>Joc base</span>
             </th>
           </tr>
@@ -304,12 +314,20 @@
             </th>
 
             <th *ngIf="visibleColumns().pvp">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Filtra..."
-                [value]="filters().pvp"
-                (input)="updateFilter('pvp', $any($event.target).value)" />
+              <div class="inline-table-filters">
+                <input
+                  type="text"
+                  class="filter-input"
+                  placeholder="Mín."
+                  [value]="filters().pvpMin"
+                  (input)="updateFilter('pvpMin', $any($event.target).value)" />
+                <input
+                  type="text"
+                  class="filter-input"
+                  placeholder="Màx."
+                  [value]="filters().pvpMax"
+                  (input)="updateFilter('pvpMax', $any($event.target).value)" />
+              </div>
             </th>
 
             <th *ngIf="visibleColumns().juegoBase">
@@ -374,7 +392,7 @@
         <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="submit()">
+      <form [formGroup]="form" (ngSubmit)="guardarJuego()">
         <div class="form-grid">
           <label class="form-field">
             <span>Nom</span>
@@ -388,7 +406,7 @@
               <button
                 type="button"
                 class="secondary-button small-button"
-                (click)="buscarBgg()"
+                (click)="loadFromBgg()"
                 [disabled]="bggLoading()">
                 {{ bggLoading() ? 'Carregant...' : 'Carrega BGG' }}
               </button>
@@ -421,14 +439,15 @@
               <input
                 type="text"
                 formControlName="propietarioSearch"
-                (focus)="showPropietarioOptions.set(true)"
-                placeholder="Cerca un usuari..." />
+                placeholder="Cerca un usuari..."
+                (input)="onPropietarioInput($event)"
+                (focus)="onPropietarioFocus()" />
 
               <button
                 *ngIf="form.controls.propietarioId.value"
                 type="button"
                 class="clear-autocomplete"
-                (click)="limpiarPropietario()">
+                (click)="limpiarPropietarioSeleccionado()">
                 ×
               </button>
 
@@ -464,8 +483,9 @@
               <input
                 type="text"
                 formControlName="juegoBaseSearch"
-                (focus)="showJuegoBaseOptions.set(true)"
-                placeholder="Cerca un joc base..." />
+                placeholder="Cerca un joc base..."
+                (input)="onJuegoBaseInput($event)"
+                (focus)="onJuegoBaseFocus()" />
 
               <button
                 *ngIf="form.controls.juegoBaseId.value"
