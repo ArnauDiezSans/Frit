@@ -20,6 +20,27 @@ function minLessOrEqualMaxValidator(): ValidatorFn {
   };
 }
 
+type SortColumn =
+  | 'nombre'
+  | 'numeroJugadoresMin'
+  | 'numeroJugadoresMax'
+  | 'propietario'
+  | 'tipo'
+  | 'pvp'
+  | 'juegoBase';
+
+type SortDirection = 'asc' | 'desc' | null;
+
+interface JuegosFilters {
+  nombre: string;
+  numeroJugadoresMin: string;
+  numeroJugadoresMax: string;
+  propietario: string;
+  tipo: string;
+  pvp: string;
+  juegoBase: string;
+}
+
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
@@ -48,23 +69,146 @@ export class JuegosPageComponent implements OnInit {
   filteredJuegosBase = signal<Juego[]>([]);
   showJuegoBaseOptions = signal(false);
 
+  sortColumn = signal<SortColumn | null>(null);
+  sortDirection = signal<SortDirection>(null);
+
+  filters = signal<JuegosFilters>({
+    nombre: '',
+    numeroJugadoresMin: '',
+    numeroJugadoresMax: '',
+    propietario: '',
+    tipo: '',
+    pvp: '',
+    juegoBase: ''
+  });
+
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
 
-  form = this.fb.nonNullable.group({
-    nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
-    numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
-    propietarioId: [0, [Validators.required, Validators.min(1)]],
-    propietarioSearch: [''],
-    tipo: ['', [Validators.maxLength(200)]],
-    bggId: [''],
-    dificultadBgg: [''],
-    pvp: [''],
-    fechaAdquisicion: [''],
-    juegoBaseId: [''],
-    juegoBaseSearch: ['']
-  }, { validators: minLessOrEqualMaxValidator() });
+  juegosFiltradosOrdenados = computed(() => {
+    const juegos = this.juegos();
+    const filters = this.filters();
+    const sortColumn = this.sortColumn();
+    const sortDirection = this.sortDirection();
+
+    const filtered = juegos.filter(juego => {
+      if (filters.nombre.trim()) {
+        if (!juego.nombre.toLowerCase().includes(filters.nombre.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (filters.numeroJugadoresMin.trim()) {
+        const minFilter = Number(filters.numeroJugadoresMin);
+        if (Number.isFinite(minFilter) && juego.numeroJugadoresMin < minFilter) {
+          return false;
+        }
+      }
+
+      if (filters.numeroJugadoresMax.trim()) {
+        const maxFilter = Number(filters.numeroJugadoresMax);
+        if (Number.isFinite(maxFilter) && juego.numeroJugadoresMax > maxFilter) {
+          return false;
+        }
+      }
+
+      if (filters.propietario.trim()) {
+        const propietarioNombre = this.getNombrePropietario(juego.propietarioId);
+        if (!propietarioNombre.toLowerCase().includes(filters.propietario.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (filters.tipo.trim()) {
+        const tipo = juego.tipo ?? '';
+        if (!tipo.toLowerCase().includes(filters.tipo.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (filters.pvp.trim()) {
+        const pvpFilter = Number(filters.pvp);
+        if (Number.isFinite(pvpFilter)) {
+          const pvp = juego.pvp ?? 0;
+          if (pvp < pvpFilter) {
+            return false;
+          }
+        }
+      }
+
+      if (filters.juegoBase.trim()) {
+        const baseName = this.getNombreJuegoBase(juego.juegoBaseId);
+        if (!baseName.toLowerCase().includes(filters.juegoBase.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    if (!sortColumn || !sortDirection) {
+      return filtered.slice().sort((a, b) => a.nombre.localeCompare(b.nombre));
+    }
+
+    const compare = (a: Juego, b: Juego): number => {
+      switch (sortColumn) {
+        case 'nombre':
+          return a.nombre.localeCompare(b.nombre);
+        case 'numeroJugadoresMin':
+          return a.numeroJugadoresMin - b.numeroJugadoresMin;
+        case 'numeroJugadoresMax':
+          return a.numeroJugadoresMax - b.numeroJugadoresMax;
+        case 'propietario': {
+          const aNombre = this.getNombrePropietario(a.propietarioId);
+          const bNombre = this.getNombrePropietario(b.propietarioId);
+          return aNombre.localeCompare(bNombre);
+        }
+        case 'tipo': {
+          const aTipo = a.tipo ?? '';
+          const bTipo = b.tipo ?? '';
+          return aTipo.localeCompare(bTipo);
+        }
+        case 'pvp': {
+          const aPvp = a.pvp ?? 0;
+          const bPvp = b.pvp ?? 0;
+          return aPvp === bPvp ? 0 : aPvp < bPvp ? -1 : 1;
+        }
+        case 'juegoBase': {
+          const aBase = this.getNombreJuegoBase(a.juegoBaseId);
+          const bBase = this.getNombreJuegoBase(b.juegoBaseId);
+          return aBase.localeCompare(bBase);
+        }
+        default:
+          return 0;
+      }
+    };
+
+    const sorted = filtered.slice().sort(compare);
+
+    if (sortDirection === 'desc') {
+      sorted.reverse();
+    }
+
+    return sorted;
+  });
+
+  form = this.fb.nonNullable.group(
+    {
+      nombre: ['', [Validators.required, Validators.maxLength(200)]],
+      numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
+      numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
+      propietarioId: [0, [Validators.required, Validators.min(1)]],
+      propietarioSearch: [''],
+      tipo: ['', [Validators.maxLength(200)]],
+      bggId: [''],
+      dificultadBgg: [''],
+      pvp: [''],
+      fechaAdquisicion: [''],
+      juegoBaseId: [''],
+      juegoBaseSearch: ['']
+    },
+    { validators: minLessOrEqualMaxValidator() }
+  );
 
   ngOnInit(): void {
     this.precargarPropietarioActual();
@@ -119,7 +263,7 @@ export class JuegosPageComponent implements OnInit {
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No s\'han pogut carregar els jocs.');
+        this.error.set("No s'han pogut carregar els jocs.");
         this.loading.set(false);
       }
     });
@@ -133,7 +277,7 @@ export class JuegosPageComponent implements OnInit {
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No s\'han pogut carregar els usuaris.');
+        this.error.set("No s'han pogut carregar els usuaris.");
         this.loading.set(false);
       }
     });
@@ -199,9 +343,7 @@ export class JuegosPageComponent implements OnInit {
       { emitEvent: false }
     );
 
-    this.filteredJuegosBase.set(
-      this.obtenerJuegosBaseFiltrados(juego.nombre)
-    );
+    this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(juego.nombre));
     this.showJuegoBaseOptions.set(false);
   }
 
@@ -231,34 +373,34 @@ export class JuegosPageComponent implements OnInit {
     const value = this.form.getRawValue();
     this.saving.set(true);
 
-    this.juegosService.create({
-      juegoId: 0,
-      nombre: value.nombre.trim(),
-      numeroJugadoresMin: Number(value.numeroJugadoresMin),
-      numeroJugadoresMax: Number(value.numeroJugadoresMax),
-      propietarioId: Number(value.propietarioId),
-      tipo: value.tipo.trim(),
-      bggId: value.bggId === '' ? null : Number(value.bggId),
-      dificultadBgg: value.dificultadBgg === '' ? null : Number(value.dificultadBgg),
-      pvp: value.pvp === '' ? null : Number(value.pvp),
-      fechaAdquisicion: value.fechaAdquisicion || null,
-      juegoBaseId: value.juegoBaseId === '' ? null : Number(value.juegoBaseId)
-    }).subscribe({
-      next: juego => {
-        this.juegos.update(current =>
-          [...current, juego].sort((a, b) => a.nombre.localeCompare(b.nombre))
-        );
-        this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
-        this.success.set('Joc desat correctament.');
-        this.saving.set(false);
-        this.resetFormAfterSave();
-        this.cerrarModal();
-      },
-      error: err => {
-        this.formError.set(err?.error?.message ?? 'No s\'ha pogut desar el joc.');
-        this.saving.set(false);
-      }
-    });
+    this.juegosService
+      .create({
+        juegoId: 0,
+        nombre: value.nombre.trim(),
+        numeroJugadoresMin: Number(value.numeroJugadoresMin),
+        numeroJugadoresMax: Number(value.numeroJugadoresMax),
+        propietarioId: Number(value.propietarioId),
+        tipo: value.tipo.trim(),
+        bggId: value.bggId === '' ? null : Number(value.bggId),
+        dificultadBgg: value.dificultadBgg === '' ? null : Number(value.dificultadBgg),
+        pvp: value.pvp === '' ? null : Number(value.pvp),
+        fechaAdquisicion: value.fechaAdquisicion || null,
+        juegoBaseId: value.juegoBaseId === '' ? null : Number(value.juegoBaseId)
+      })
+      .subscribe({
+        next: juego => {
+          this.juegos.update(current => [...current, juego]);
+          this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
+          this.success.set('Joc desat correctament.');
+          this.saving.set(false);
+          this.resetFormAfterSave();
+          this.cerrarModal();
+        },
+        error: err => {
+          this.formError.set(err?.error?.message ?? "No s'ha pogut desar el joc.");
+          this.saving.set(false);
+        }
+      });
   }
 
   private resetFormAfterSave(): void {
@@ -327,6 +469,15 @@ export class JuegosPageComponent implements OnInit {
     return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? `#${propietarioId}`;
   }
 
+  getNombreJuegoBase(juegoBaseId: number | null | undefined): string {
+    if (!juegoBaseId) {
+      return '-';
+    }
+
+    const juegoBase = this.juegos().find(j => j.juegoId === juegoBaseId);
+    return juegoBase?.nombre ?? `#${juegoBaseId}`;
+  }
+
   private parseJuegoBaseId(value: string): number | null {
     if (!value) {
       return null;
@@ -338,6 +489,49 @@ export class JuegosPageComponent implements OnInit {
 
   trackByJuegoId(_: number, juego: Juego): number {
     return juego.juegoId;
+  }
+
+  toggleSort(column: SortColumn): void {
+    const currentColumn = this.sortColumn();
+    const currentDirection = this.sortDirection();
+
+    if (currentColumn !== column) {
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+      return;
+    }
+
+    if (currentDirection === 'asc') {
+      this.sortDirection.set('desc');
+      return;
+    }
+
+    if (currentDirection === 'desc') {
+      this.sortColumn.set(null);
+      this.sortDirection.set(null);
+      return;
+    }
+
+    this.sortColumn.set(column);
+    this.sortDirection.set('asc');
+  }
+
+  updateFilter<K extends keyof JuegosFilters>(key: K, value: string): void {
+    this.filters.update(current => ({
+      ...current,
+      [key]: value
+    }));
+  }
+
+  getSortIndicator(column: SortColumn): string {
+    const col = this.sortColumn();
+    const dir = this.sortDirection();
+
+    if (col !== column || !dir) {
+      return '';
+    }
+
+    return dir === 'asc' ? '▲' : '▼';
   }
 
   logout(): void {

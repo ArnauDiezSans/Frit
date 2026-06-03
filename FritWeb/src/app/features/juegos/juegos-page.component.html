@@ -2,8 +2,10 @@
   <header class="dashboard-header">
     <div>
       <p class="eyebrow">Frit</p>
-      <h1>Jocs</h1>
-      <p class="subtitle">Gestiona la teva ludoteca i registra jocs nous abans de crear partides.</p>
+      <h1>Ludoteca</h1>
+      <p class="subtitle">
+        Registra jocs nous abans de crear partides.
+      </p>
     </div>
 
     <div class="header-actions">
@@ -18,7 +20,9 @@
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarDatos()">Tornar-ho a provar</button>
+    <button type="button" class="primary-button" (click)="cargarDatos()">
+      Tornar-ho a provar
+    </button>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
@@ -31,7 +35,7 @@
       <button type="button" class="primary-button" (click)="abrirModal()">Nou joc</button>
     </div>
 
-    <div class="empty-state" *ngIf="juegos().length === 0">
+    <div class="empty-state" *ngIf="juegosFiltradosOrdenados().length === 0 && juegos().length === 0">
       <h3>Encara no hi ha jocs registrats</h3>
       <p>Comença creant el teu primer joc des del botó Nou joc.</p>
     </div>
@@ -40,25 +44,112 @@
       <table>
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Jugadors</th>
-            <th>Propietari</th>
-            <th>Tipus</th>
-            <th>PVP</th>
-            <th>Joc base</th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('nombre')">
+                <span>Nom</span>
+                <span class="sort-indicator">{{ getSortIndicator('nombre') }}</span>
+              </button>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                (input)="updateFilter('nombre', $any($event.target).value)"
+              />
+            </th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('numeroJugadoresMin')">
+                <span>Jugadors mín.</span>
+                <span class="sort-indicator">{{ getSortIndicator('numeroJugadoresMin') }}</span>
+              </button>
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="≥"
+                (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)"
+              />
+            </th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('numeroJugadoresMax')">
+                <span>Jugadors màx.</span>
+                <span class="sort-indicator">{{ getSortIndicator('numeroJugadoresMax') }}</span>
+              </button>
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="≤"
+                (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)"
+              />
+            </th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('propietario')">
+                <span>Propietari</span>
+                <span class="sort-indicator">{{ getSortIndicator('propietario') }}</span>
+              </button>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                (input)="updateFilter('propietario', $any($event.target).value)"
+              />
+            </th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('tipo')">
+                <span>Tipus</span>
+                <span class="sort-indicator">{{ getSortIndicator('tipo') }}</span>
+              </button>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                (input)="updateFilter('tipo', $any($event.target).value)"
+              />
+            </th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('pvp')">
+                <span>PVP</span>
+                <span class="sort-indicator">{{ getSortIndicator('pvp') }}</span>
+              </button>
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="≥"
+                (input)="updateFilter('pvp', $any($event.target).value)"
+              />
+            </th>
+            <th>
+              <button type="button" class="header-button" (click)="toggleSort('juegoBase')">
+                <span>Joc base</span>
+                <span class="sort-indicator">{{ getSortIndicator('juegoBase') }}</span>
+              </button>
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                (input)="updateFilter('juegoBase', $any($event.target).value)"
+              />
+            </th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let juego of juegos(); trackBy: trackByJuegoId">
+          <tr *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId">
             <td>{{ juego.nombre }}</td>
-            <td>{{ juego.numeroJugadoresMin }} - {{ juego.numeroJugadoresMax }}</td>
+            <td>{{ juego.numeroJugadoresMin }}</td>
+            <td>{{ juego.numeroJugadoresMax }}</td>
             <td>{{ getNombrePropietario(juego.propietarioId) }}</td>
             <td>{{ juego.tipo || '-' }}</td>
             <td>{{ juego.pvp ?? '-' }}</td>
-            <td>{{ juego.juegoBaseId ?? '-' }}</td>
+            <td>{{ getNombreJuegoBase(juego.juegoBaseId) }}</td>
           </tr>
         </tbody>
       </table>
+
+      <div
+        class="empty-state"
+        *ngIf="juegos().length > 0 && juegosFiltradosOrdenados().length === 0"
+      >
+        <h3>Cap joc coincideix amb els filtres</h3>
+        <p>Prova d’ajustar o esborrar algun filtre de les columnes.</p>
+      </div>
     </div>
   </section>
 
@@ -106,7 +197,11 @@
               autocomplete="off"
             />
 
-            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()" (click)="$event.stopPropagation()">
+            <div
+              class="autocomplete-panel"
+              *ngIf="showPropietarioOptions()"
+              (click)="$event.stopPropagation()"
+            >
               <button
                 type="button"
                 class="autocomplete-option"
@@ -171,7 +266,11 @@
               autocomplete="off"
             />
 
-            <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()" (click)="$event.stopPropagation()">
+            <div
+              class="autocomplete-panel"
+              *ngIf="showJuegoBaseOptions()"
+              (click)="$event.stopPropagation()"
+            >
               <button
                 type="button"
                 class="autocomplete-option"
@@ -190,7 +289,10 @@
                 Sense joc base
               </button>
 
-              <p class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0 && !form.controls.juegoBaseId.value">
+              <p
+                class="autocomplete-empty"
+                *ngIf="filteredJuegosBase().length === 0 && !form.controls.juegoBaseId.value"
+              >
                 No s'han trobat jocs base.
               </p>
             </div>
@@ -204,7 +306,6 @@
         <p class="error" *ngIf="formError()">{{ formError() }}</p>
         <p class="success" *ngIf="success()">{{ success() }}</p>
 
-        
         <div class="modal-actions">
           <button type="button" class="secondary-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
