@@ -110,8 +110,6 @@ h1 {
   font-size: 0.9rem;
 }
 
-/* TOOLBAR */
-
 .toolbar {
   display: flex;
   align-items: center;
@@ -145,8 +143,6 @@ h1 {
 .columns-wrapper {
   position: relative;
 }
-
-/* popup de columnes */
 
 .columns-panel {
   position: absolute;
@@ -198,8 +194,6 @@ h1 {
   margin: 6px 0 8px;
 }
 
-/* TAULA */
-
 .table-wrapper {
   margin-top: 8px;
   border-radius: 12px;
@@ -235,8 +229,6 @@ tbody tr:hover {
   background: #f9fafb;
 }
 
-/* capçalera ordenable */
-
 .th-label {
   display: inline-flex;
   align-items: center;
@@ -254,8 +246,6 @@ th.sort-active {
   border-bottom-color: #c7d2fe;
 }
 
-/* fila de filtres */
-
 .filter-input {
   width: 100%;
   padding: 6px 8px;
@@ -269,8 +259,6 @@ th.sort-active {
   border-color: #0f766e;
   box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.3);
 }
-
-/* ESTATS BUITS */
 
 .empty-state {
   padding: 16px 18px;
@@ -288,8 +276,6 @@ th.sort-active {
   margin: 0;
   font-size: 0.85rem;
 }
-
-/* MODAL */
 
 .modal-backdrop {
   position: fixed;
@@ -357,6 +343,13 @@ label span {
   margin-bottom: 4px;
 }
 
+.label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
 label input {
   width: 100%;
   padding: 7px 9px;
@@ -373,6 +366,8 @@ label input:focus {
 
 .required-mark {
   color: #b91c1c;
+  font-size: 0.9em;
+  margin: 0;
 }
 
 .field-error {
@@ -400,8 +395,6 @@ label input:focus {
   gap: 8px;
   margin-top: 4px;
 }
-
-/* autocomplete propietari / joc base */
 
 .autocomplete-field {
   position: relative;
@@ -440,8 +433,6 @@ label input:focus {
   font-size: 0.8rem;
   color: #6b7280;
 }
-
-/* RESPONSIVE */
 
 @media (max-width: 768px) {
   .dashboard-page {

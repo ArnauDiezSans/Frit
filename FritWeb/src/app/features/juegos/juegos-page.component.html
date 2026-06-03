@@ -245,6 +245,7 @@
                 type="text"
                 class="filter-input"
                 placeholder="Filtra..."
+                [value]="filters().nombre"
                 (input)="updateFilter('nombre', $any($event.target).value)"
               />
             </th>
@@ -253,6 +254,7 @@
                 type="number"
                 class="filter-input"
                 placeholder="≥"
+                [value]="filters().numeroJugadoresMin"
                 (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)"
               />
             </th>
@@ -261,6 +263,7 @@
                 type="number"
                 class="filter-input"
                 placeholder="≤"
+                [value]="filters().numeroJugadoresMax"
                 (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)"
               />
             </th>
@@ -269,6 +272,7 @@
                 type="text"
                 class="filter-input"
                 placeholder="Filtra..."
+                [value]="filters().propietario"
                 (input)="updateFilter('propietario', $any($event.target).value)"
               />
             </th>
@@ -277,6 +281,7 @@
                 type="text"
                 class="filter-input"
                 placeholder="Filtra..."
+                [value]="filters().tipo"
                 (input)="updateFilter('tipo', $any($event.target).value)"
               />
             </th>
@@ -285,6 +290,7 @@
                 type="number"
                 class="filter-input"
                 placeholder="≥"
+                [value]="filters().pvp"
                 (input)="updateFilter('pvp', $any($event.target).value)"
               />
             </th>
@@ -293,6 +299,7 @@
                 type="text"
                 class="filter-input"
                 placeholder="Filtra..."
+                [value]="filters().juegoBase"
                 (input)="updateFilter('juegoBase', $any($event.target).value)"
               />
             </th>
@@ -357,7 +364,10 @@
       <form class="game-form" [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <label>
-            <span>Nom <span class="required-mark">*</span></span>
+            <span class="label-row">
+              <span>Nom</span>
+              <span class="required-mark">*</span>
+            </span>
             <input type="text" formControlName="nombre" />
             <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
               El nom és obligatori.
@@ -365,7 +375,10 @@
           </label>
 
           <label class="autocomplete-field">
-            <span>Propietari <span class="required-mark">*</span></span>
+            <span class="label-row">
+              <span>Propietari</span>
+              <span class="required-mark">*</span>
+            </span>
             <input
               type="text"
               formControlName="propietarioSearch"
@@ -399,12 +412,18 @@
           </label>
 
           <label>
-            <span>Jugadors mínims <span class="required-mark">*</span></span>
+            <span class="label-row">
+              <span>Jugadors mínims</span>
+              <span class="required-mark">*</span>
+            </span>
             <input type="number" formControlName="numeroJugadoresMin" min="1" />
           </label>
 
           <label>
-            <span>Jugadors màxims <span class="required-mark">*</span></span>
+            <span class="label-row">
+              <span>Jugadors màxims</span>
+              <span class="required-mark">*</span>
+            </span>
             <input type="number" formControlName="numeroJugadoresMax" min="1" />
           </label>
 
