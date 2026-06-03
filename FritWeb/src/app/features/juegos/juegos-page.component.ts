@@ -41,6 +41,16 @@ interface JuegosFilters {
   juegoBase: string;
 }
 
+interface VisibleColumns {
+  nombre: boolean;
+  numeroJugadoresMin: boolean;
+  numeroJugadoresMax: boolean;
+  propietario: boolean;
+  tipo: boolean;
+  pvp: boolean;
+  juegoBase: boolean;
+}
+
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
@@ -81,6 +91,19 @@ export class JuegosPageComponent implements OnInit {
     pvp: '',
     juegoBase: ''
   });
+
+  visibleColumns = signal<VisibleColumns>({
+    nombre: true,
+    numeroJugadoresMin: true,
+    numeroJugadoresMax: true,
+    propietario: true,
+    tipo: true,
+    pvp: true,
+    juegoBase: true
+  });
+
+  showFilters = signal(false);
+  showColumnsPanel = signal(false);
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
@@ -222,12 +245,16 @@ export class JuegosPageComponent implements OnInit {
     if (this.modalOpen()) {
       this.cerrarModal();
     }
+    if (this.showColumnsPanel()) {
+      this.showColumnsPanel.set(false);
+    }
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showPropietarioOptions.set(false);
     this.showJuegoBaseOptions.set(false);
+    this.showColumnsPanel.set(false);
   }
 
   abrirModal(): void {
@@ -523,6 +550,13 @@ export class JuegosPageComponent implements OnInit {
     }));
   }
 
+  clearFilter<K extends keyof JuegosFilters>(key: K): void {
+    this.filters.update(current => ({
+      ...current,
+      [key]: ''
+    }));
+  }
+
   getSortIndicator(column: SortColumn): string {
     const col = this.sortColumn();
     const dir = this.sortDirection();
@@ -531,7 +565,60 @@ export class JuegosPageComponent implements OnInit {
       return '';
     }
 
-    return dir === 'asc' ? '▲' : '▼';
+    return dir === 'asc' ? '↑' : '↓';
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update(v => !v);
+  }
+
+  toggleColumnsPanel(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showColumnsPanel.update(v => !v);
+  }
+
+  toggleColumn(key: keyof VisibleColumns): void {
+    this.visibleColumns.update(current => {
+      const nextValue = !current[key];
+      const updated: VisibleColumns = {
+        ...current,
+        [key]: nextValue
+      };
+
+      if (!nextValue) {
+        if (key === 'nombre') this.clearFilter('nombre');
+        if (key === 'numeroJugadoresMin') this.clearFilter('numeroJugadoresMin');
+        if (key === 'numeroJugadoresMax') this.clearFilter('numeroJugadoresMax');
+        if (key === 'propietario') this.clearFilter('propietario');
+        if (key === 'tipo') this.clearFilter('tipo');
+        if (key === 'pvp') this.clearFilter('pvp');
+        if (key === 'juegoBase') this.clearFilter('juegoBase');
+
+        if (this.sortColumn() === key) {
+          this.sortColumn.set(null);
+          this.sortDirection.set(null);
+        }
+      }
+
+      return updated;
+    });
+  }
+
+  allColumnsSelected(): boolean {
+    const v = this.visibleColumns();
+    return v.nombre && v.numeroJugadoresMin && v.numeroJugadoresMax && v.propietario && v.tipo && v.pvp && v.juegoBase;
+  }
+
+  selectAllColumns(): void {
+    this.visibleColumns.set({
+      nombre: true,
+      numeroJugadoresMin: true,
+      numeroJugadoresMax: true,
+      propietario: true,
+      tipo: true,
+      pvp: true,
+      juegoBase: true
+    });
   }
 
   logout(): void {

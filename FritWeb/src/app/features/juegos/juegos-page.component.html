@@ -2,14 +2,16 @@
   <header class="dashboard-header">
     <div>
       <p class="eyebrow">Frit</p>
-      <h1>Ludoteca</h1>
+      <h1>Jocs</h1>
       <p class="subtitle">
-        Registra jocs nous abans de crear partides.
+        Gestiona la teva ludoteca i registra jocs nous abans de crear partides.
       </p>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="secondary-button" routerLink="/app/partidas">Veure partides</button>
+      <button type="button" class="secondary-button" routerLink="/app/partidas">
+        Veure partides
+      </button>
       <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
@@ -32,7 +34,116 @@
         <p>La teva col·lecció disponible per a futures partides.</p>
       </div>
 
-      <button type="button" class="primary-button" (click)="abrirModal()">Nou joc</button>
+      <div class="toolbar">
+        <button
+          type="button"
+          class="toolbar-button"
+          [class.toolbar-button-active]="showFilters()"
+          (click)="toggleFilters()"
+        >
+          🔍
+          <span>Filtres</span>
+        </button>
+
+        <div class="columns-wrapper" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="toolbar-button"
+            [class.toolbar-button-active]="showColumnsPanel()"
+            (click)="toggleColumnsPanel($event)"
+          >
+            ☰
+            <span>Columnes</span>
+          </button>
+
+          <div class="columns-panel" *ngIf="showColumnsPanel()">
+            <div class="columns-panel-header">
+              <span>Columnes visibles</span>
+              <button type="button" class="columns-close" (click)="showColumnsPanel.set(false)">
+                ×
+              </button>
+            </div>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="allColumnsSelected()"
+                (change)="selectAllColumns()"
+              />
+              <span>Seleccionar totes</span>
+            </label>
+
+            <hr />
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().nombre"
+                (change)="toggleColumn('nombre')"
+              />
+              <span>Nom</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().numeroJugadoresMin"
+                (change)="toggleColumn('numeroJugadoresMin')"
+              />
+              <span>Jugadors mín.</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().numeroJugadoresMax"
+                (change)="toggleColumn('numeroJugadoresMax')"
+              />
+              <span>Jugadors màx.</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().propietario"
+                (change)="toggleColumn('propietario')"
+              />
+              <span>Propietari</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().tipo"
+                (change)="toggleColumn('tipo')"
+              />
+              <span>Tipus</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().pvp"
+                (change)="toggleColumn('pvp')"
+              />
+              <span>PVP</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().juegoBase"
+                (change)="toggleColumn('juegoBase')"
+              />
+              <span>Joc base</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="button" class="primary-button" (click)="abrirModal()">
+          Nou joc
+        </button>
+      </div>
     </div>
 
     <div class="empty-state" *ngIf="juegosFiltradosOrdenados().length === 0 && juegos().length === 0">
@@ -44,11 +155,84 @@
       <table>
         <thead>
           <tr>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('nombre')">
-                <span>Nom</span>
+            <th
+              *ngIf="visibleColumns().nombre"
+              (click)="toggleSort('nombre')"
+              [class.sort-active]="sortColumn() === 'nombre' && sortDirection()"
+            >
+              <span class="th-label">
+                Nom
                 <span class="sort-indicator">{{ getSortIndicator('nombre') }}</span>
-              </button>
+              </span>
+            </th>
+            <th
+              *ngIf="visibleColumns().numeroJugadoresMin"
+              (click)="toggleSort('numeroJugadoresMin')"
+              [class.sort-active]="sortColumn() === 'numeroJugadoresMin' && sortDirection()"
+            >
+              <span class="th-label">
+                Jugadors mín.
+                <span class="sort-indicator">
+                  {{ getSortIndicator('numeroJugadoresMin') }}
+                </span>
+              </span>
+            </th>
+            <th
+              *ngIf="visibleColumns().numeroJugadoresMax"
+              (click)="toggleSort('numeroJugadoresMax')"
+              [class.sort-active]="sortColumn() === 'numeroJugadoresMax' && sortDirection()"
+            >
+              <span class="th-label">
+                Jugadors màx.
+                <span class="sort-indicator">
+                  {{ getSortIndicator('numeroJugadoresMax') }}
+                </span>
+              </span>
+            </th>
+            <th
+              *ngIf="visibleColumns().propietario"
+              (click)="toggleSort('propietario')"
+              [class.sort-active]="sortColumn() === 'propietario' && sortDirection()"
+            >
+              <span class="th-label">
+                Propietari
+                <span class="sort-indicator">{{ getSortIndicator('propietario') }}</span>
+              </span>
+            </th>
+            <th
+              *ngIf="visibleColumns().tipo"
+              (click)="toggleSort('tipo')"
+              [class.sort-active]="sortColumn() === 'tipo' && sortDirection()"
+            >
+              <span class="th-label">
+                Tipus
+                <span class="sort-indicator">{{ getSortIndicator('tipo') }}</span>
+              </span>
+            </th>
+            <th
+              *ngIf="visibleColumns().pvp"
+              (click)="toggleSort('pvp')"
+              [class.sort-active]="sortColumn() === 'pvp' && sortDirection()"
+            >
+              <span class="th-label">
+                PVP
+                <span class="sort-indicator">{{ getSortIndicator('pvp') }}</span>
+              </span>
+            </th>
+            <th
+              *ngIf="visibleColumns().juegoBase"
+              (click)="toggleSort('juegoBase')"
+              [class.sort-active]="sortColumn() === 'juegoBase' && sortDirection()"
+            >
+              <span class="th-label">
+                Joc base
+                <span class="sort-indicator">{{ getSortIndicator('juegoBase') }}</span>
+              </span>
+            </th>
+          </tr>
+
+          <tr *ngIf="showFilters()">
+            <th *ngIf="visibleColumns().nombre">
               <input
                 type="text"
                 class="filter-input"
@@ -56,11 +240,7 @@
                 (input)="updateFilter('nombre', $any($event.target).value)"
               />
             </th>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('numeroJugadoresMin')">
-                <span>Jugadors mín.</span>
-                <span class="sort-indicator">{{ getSortIndicator('numeroJugadoresMin') }}</span>
-              </button>
+            <th *ngIf="visibleColumns().numeroJugadoresMin">
               <input
                 type="number"
                 class="filter-input"
@@ -68,11 +248,7 @@
                 (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)"
               />
             </th>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('numeroJugadoresMax')">
-                <span>Jugadors màx.</span>
-                <span class="sort-indicator">{{ getSortIndicator('numeroJugadoresMax') }}</span>
-              </button>
+            <th *ngIf="visibleColumns().numeroJugadoresMax">
               <input
                 type="number"
                 class="filter-input"
@@ -80,11 +256,7 @@
                 (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)"
               />
             </th>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('propietario')">
-                <span>Propietari</span>
-                <span class="sort-indicator">{{ getSortIndicator('propietario') }}</span>
-              </button>
+            <th *ngIf="visibleColumns().propietario">
               <input
                 type="text"
                 class="filter-input"
@@ -92,11 +264,7 @@
                 (input)="updateFilter('propietario', $any($event.target).value)"
               />
             </th>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('tipo')">
-                <span>Tipus</span>
-                <span class="sort-indicator">{{ getSortIndicator('tipo') }}</span>
-              </button>
+            <th *ngIf="visibleColumns().tipo">
               <input
                 type="text"
                 class="filter-input"
@@ -104,11 +272,7 @@
                 (input)="updateFilter('tipo', $any($event.target).value)"
               />
             </th>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('pvp')">
-                <span>PVP</span>
-                <span class="sort-indicator">{{ getSortIndicator('pvp') }}</span>
-              </button>
+            <th *ngIf="visibleColumns().pvp">
               <input
                 type="number"
                 class="filter-input"
@@ -116,11 +280,7 @@
                 (input)="updateFilter('pvp', $any($event.target).value)"
               />
             </th>
-            <th>
-              <button type="button" class="header-button" (click)="toggleSort('juegoBase')">
-                <span>Joc base</span>
-                <span class="sort-indicator">{{ getSortIndicator('juegoBase') }}</span>
-              </button>
+            <th *ngIf="visibleColumns().juegoBase">
               <input
                 type="text"
                 class="filter-input"
@@ -130,15 +290,24 @@
             </th>
           </tr>
         </thead>
+
         <tbody>
           <tr *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId">
-            <td>{{ juego.nombre }}</td>
-            <td>{{ juego.numeroJugadoresMin }}</td>
-            <td>{{ juego.numeroJugadoresMax }}</td>
-            <td>{{ getNombrePropietario(juego.propietarioId) }}</td>
-            <td>{{ juego.tipo || '-' }}</td>
-            <td>{{ juego.pvp ?? '-' }}</td>
-            <td>{{ getNombreJuegoBase(juego.juegoBaseId) }}</td>
+            <td *ngIf="visibleColumns().nombre">{{ juego.nombre }}</td>
+            <td *ngIf="visibleColumns().numeroJugadoresMin">
+              {{ juego.numeroJugadoresMin }}
+            </td>
+            <td *ngIf="visibleColumns().numeroJugadoresMax">
+              {{ juego.numeroJugadoresMax }}
+            </td>
+            <td *ngIf="visibleColumns().propietario">
+              {{ getNombrePropietario(juego.propietarioId) }}
+            </td>
+            <td *ngIf="visibleColumns().tipo">{{ juego.tipo || '-' }}</td>
+            <td *ngIf="visibleColumns().pvp">{{ juego.pvp ?? '-' }}</td>
+            <td *ngIf="visibleColumns().juegoBase">
+              {{ getNombreJuegoBase(juego.juegoBaseId) }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -307,7 +476,9 @@
         <p class="success" *ngIf="success()">{{ success() }}</p>
 
         <div class="modal-actions">
-          <button type="button" class="secondary-button" (click)="cerrarModal()">Cancel·lar</button>
+          <button type="button" class="secondary-button" (click)="cerrarModal()">
+            Cancel·lar
+          </button>
           <button type="submit" class="primary-button" [disabled]="saving()">
             {{ saving() ? 'Desant...' : 'Desar joc' }}
           </button>
