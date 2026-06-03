@@ -39,41 +39,38 @@ h1 {
   flex-wrap: wrap;
 }
 
-.primary-button {
-  border-radius: 999px;
-  padding: 8px 16px;
-  border: none;
-  background: #0f766e;
-  color: white;
-  font-weight: 500;
-  font-size: 0.875rem;
+.primary-button,
+.secondary-button,
+.ghost-button {
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font: inherit;
   cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: #0f766e;
+  color: #ffffff;
 }
 
 .primary-button:disabled {
-  opacity: 0.7;
-  cursor: default;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .secondary-button {
-  border-radius: 999px;
-  padding: 8px 16px;
-  border: 1px solid #cbd5e1;
-  background: white;
-  color: #111827;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
+  border: 1px solid #0f766e;
+  background: #ffffff;
+  color: #0f766e;
 }
 
 .ghost-button {
-  border-radius: 999px;
-  padding: 8px 14px;
-  border: none;
-  background: transparent;
-  color: #6b7280;
-  font-size: 0.875rem;
-  cursor: pointer;
+  border: 1px solid #d0d5dd;
+  background: #ffffff;
+  color: #344054;
 }
 
 .content-card {
@@ -109,8 +106,6 @@ h1 {
   color: #6b7280;
   font-size: 0.9rem;
 }
-
-/* Toolbar */
 
 .toolbar {
   display: flex;
@@ -196,8 +191,6 @@ h1 {
   margin: 6px 0 8px;
 }
 
-/* Taula */
-
 .table-wrapper {
   margin-top: 8px;
   border-radius: 12px;
@@ -264,8 +257,6 @@ th.sort-active {
   box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.3);
 }
 
-/* Empty states */
-
 .empty-state {
   padding: 16px 18px;
   text-align: left;
@@ -282,8 +273,6 @@ th.sort-active {
   margin: 0;
   font-size: 0.85rem;
 }
-
-/* Modal */
 
 .modal-backdrop {
   position: fixed;
@@ -344,8 +333,6 @@ th.sort-active {
   gap: 12px 16px;
 }
 
-/* Labels i asterisc */
-
 label span {
   font-size: 0.8rem;
   font-weight: 500;
@@ -404,8 +391,6 @@ label input:focus {
   margin-top: 4px;
 }
 
-/* Autocomplete */
-
 .autocomplete-field {
   position: relative;
 }
@@ -443,8 +428,6 @@ label input:focus {
   font-size: 0.8rem;
   color: #6b7280;
 }
-
-/* Responsive */
 
 @media (max-width: 768px) {
   .dashboard-page {
