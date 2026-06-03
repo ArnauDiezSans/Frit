@@ -51,6 +51,16 @@ interface VisibleColumns {
   juegoBase: boolean;
 }
 
+const EMPTY_FILTERS: JuegosFilters = {
+  nombre: '',
+  numeroJugadoresMin: '',
+  numeroJugadoresMax: '',
+  propietario: '',
+  tipo: '',
+  pvp: '',
+  juegoBase: ''
+};
+
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
@@ -82,15 +92,7 @@ export class JuegosPageComponent implements OnInit {
   sortColumn = signal<SortColumn | null>(null);
   sortDirection = signal<SortDirection>(null);
 
-  filters = signal<JuegosFilters>({
-    nombre: '',
-    numeroJugadoresMin: '',
-    numeroJugadoresMax: '',
-    propietario: '',
-    tipo: '',
-    pvp: '',
-    juegoBase: ''
-  });
+  filters = signal<JuegosFilters>({ ...EMPTY_FILTERS });
 
   visibleColumns = signal<VisibleColumns>({
     nombre: true,
@@ -550,11 +552,8 @@ export class JuegosPageComponent implements OnInit {
     }));
   }
 
-  clearFilter<K extends keyof JuegosFilters>(key: K): void {
-    this.filters.update(current => ({
-      ...current,
-      [key]: ''
-    }));
+  clearAllFilters(): void {
+    this.filters.set({ ...EMPTY_FILTERS });
   }
 
   getSortIndicator(column: SortColumn): string {
@@ -578,35 +577,27 @@ export class JuegosPageComponent implements OnInit {
   }
 
   toggleColumn(key: keyof VisibleColumns): void {
-    this.visibleColumns.update(current => {
-      const nextValue = !current[key];
-      const updated: VisibleColumns = {
-        ...current,
-        [key]: nextValue
-      };
+    this.visibleColumns.update(current => ({
+      ...current,
+      [key]: !current[key]
+    }));
 
-      if (!nextValue) {
-        if (key === 'nombre') this.clearFilter('nombre');
-        if (key === 'numeroJugadoresMin') this.clearFilter('numeroJugadoresMin');
-        if (key === 'numeroJugadoresMax') this.clearFilter('numeroJugadoresMax');
-        if (key === 'propietario') this.clearFilter('propietario');
-        if (key === 'tipo') this.clearFilter('tipo');
-        if (key === 'pvp') this.clearFilter('pvp');
-        if (key === 'juegoBase') this.clearFilter('juegoBase');
-
-        if (this.sortColumn() === key) {
-          this.sortColumn.set(null);
-          this.sortDirection.set(null);
-        }
-      }
-
-      return updated;
-    });
+    this.clearAllFilters();
+    this.sortColumn.set(null);
+    this.sortDirection.set(null);
   }
 
   allColumnsSelected(): boolean {
     const v = this.visibleColumns();
-    return v.nombre && v.numeroJugadoresMin && v.numeroJugadoresMax && v.propietario && v.tipo && v.pvp && v.juegoBase;
+    return (
+      v.nombre &&
+      v.numeroJugadoresMin &&
+      v.numeroJugadoresMax &&
+      v.propietario &&
+      v.tipo &&
+      v.pvp &&
+      v.juegoBase
+    );
   }
 
   selectAllColumns(): void {
@@ -619,6 +610,10 @@ export class JuegosPageComponent implements OnInit {
       pvp: true,
       juegoBase: true
     });
+
+    this.clearAllFilters();
+    this.sortColumn.set(null);
+    this.sortDirection.set(null);
   }
 
   logout(): void {
