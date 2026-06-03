@@ -37,8 +37,8 @@
       <div class="toolbar">
         <button
           type="button"
-          class="toolbar-button"
-          [class.toolbar-button-active]="showFilters()"
+          class="toolbar-chip"
+          [class.toolbar-chip-active]="showFilters()"
           (click)="toggleFilters()"
         >
           🔍
@@ -48,8 +48,8 @@
         <div class="columns-wrapper" (click)="$event.stopPropagation()">
           <button
             type="button"
-            class="toolbar-button"
-            [class.toolbar-button-active]="showColumnsPanel()"
+            class="toolbar-chip"
+            [class.toolbar-chip-active]="showColumnsPanel()"
             (click)="toggleColumnsPanel($event)"
           >
             ☰
@@ -59,7 +59,11 @@
           <div class="columns-panel" *ngIf="showColumnsPanel()">
             <div class="columns-panel-header">
               <span>Columnes visibles</span>
-              <button type="button" class="columns-close" (click)="showColumnsPanel.set(false)">
+              <button
+                type="button"
+                class="columns-close"
+                (click)="showColumnsPanel.set(false)"
+              >
                 ×
               </button>
             </div>
@@ -196,7 +200,9 @@
             >
               <span class="th-label">
                 Propietari
-                <span class="sort-indicator">{{ getSortIndicator('propietario') }}</span>
+                <span class="sort-indicator">
+                  {{ getSortIndicator('propietario') }}
+                </span>
               </span>
             </th>
             <th
@@ -226,7 +232,9 @@
             >
               <span class="th-label">
                 Joc base
-                <span class="sort-indicator">{{ getSortIndicator('juegoBase') }}</span>
+                <span class="sort-indicator">
+                  {{ getSortIndicator('juegoBase') }}
+                </span>
               </span>
             </th>
           </tr>
