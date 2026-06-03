@@ -148,7 +148,10 @@ export class JuegosPageComponent implements OnInit {
       }
 
       if (filters.propietario.trim()) {
-        const propietarioNombre = this.getNombrePropietario(juego.propietarioId, usuarios);
+        const propietarioNombre = this.getNombrePropietario(
+          juego.propietarioId,
+          usuarios
+        );
         if (
           !propietarioNombre
             .toLowerCase()
@@ -158,11 +161,14 @@ export class JuegosPageComponent implements OnInit {
         }
       }
 
-      if (
-        filters.tipo.trim() &&
-        !(juego.tipo ?? '').toLowerCase().includes(filters.tipo.trim().toLowerCase())
-      ) {
-        return false;
+      if (filters.tipo.trim()) {
+        if (
+          !juego.tipo
+            .toLowerCase()
+            .includes(filters.tipo.trim().toLowerCase())
+        ) {
+          return false;
+        }
       }
 
       if (filters.pvpMin.trim()) {
@@ -180,9 +186,11 @@ export class JuegosPageComponent implements OnInit {
       }
 
       if (filters.juegoBase.trim()) {
-        const juegoBaseNombre = this.getNombreJuegoBase(juego.juegoBaseId, juegos);
+        const juegoBaseNombre = this.getNombreJuegoBase(juego.juegoBaseId);
         if (
-          !juegoBaseNombre.toLowerCase().includes(filters.juegoBase.trim().toLowerCase())
+          !juegoBaseNombre
+            .toLowerCase()
+            .includes(filters.juegoBase.trim().toLowerCase())
         ) {
           return false;
         }
@@ -195,62 +203,129 @@ export class JuegosPageComponent implements OnInit {
       return filtered;
     }
 
-    filtered.sort((a, b) => {
-      const direction = sortDirection === 'asc' ? 1 : -1;
+    const directionFactor = sortDirection === 'asc' ? 1 : -1;
+
+    return filtered.sort((a, b) => {
+      let aValue: string | number | null = null;
+      let bValue: string | number | null = null;
 
       switch (sortColumn) {
         case 'nombre':
-          return a.nombre.localeCompare(b.nombre) * direction;
+          aValue = a.nombre.toLowerCase();
+          bValue = b.nombre.toLowerCase();
+          break;
         case 'numeroJugadoresMin':
-          return (a.numeroJugadoresMin - b.numeroJugadoresMin) * direction;
+          aValue = a.numeroJugadoresMin;
+          bValue = b.numeroJugadoresMin;
+          break;
         case 'numeroJugadoresMax':
-          return (a.numeroJugadoresMax - b.numeroJugadoresMax) * direction;
+          aValue = a.numeroJugadoresMax;
+          bValue = b.numeroJugadoresMax;
+          break;
         case 'propietario':
-          return (
-            this.getNombrePropietario(a.propietarioId, usuarios).localeCompare(
-              this.getNombrePropietario(b.propietarioId, usuarios)
-            ) * direction
-          );
+          aValue = this.getNombrePropietario(a.propietarioId, usuarios).toLowerCase();
+          bValue = this.getNombrePropietario(b.propietarioId, usuarios).toLowerCase();
+          break;
         case 'tipo':
-          return (a.tipo ?? '').localeCompare(b.tipo ?? '') * direction;
+          aValue = a.tipo.toLowerCase();
+          bValue = b.tipo.toLowerCase();
+          break;
         case 'pvp':
-          return ((a.pvp ?? 0) - (b.pvp ?? 0)) * direction;
+          aValue = a.pvp ?? 0;
+          bValue = b.pvp ?? 0;
+          break;
         case 'juegoBase':
-          return (
-            this.getNombreJuegoBase(a.juegoBaseId, juegos).localeCompare(
-              this.getNombreJuegoBase(b.juegoBaseId, juegos)
-            ) * direction
-          );
-        default:
-          return 0;
+          aValue = this.getNombreJuegoBase(a.juegoBaseId).toLowerCase();
+          bValue = this.getNombreJuegoBase(b.juegoBaseId).toLowerCase();
+          break;
       }
+
+      if (aValue === bValue) {
+        return 0;
+      }
+
+      if (aValue === null) {
+        return 1;
+      }
+
+      if (bValue === null) {
+        return -1;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return aValue.localeCompare(bValue) * directionFactor;
+      }
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return (aValue - bValue) * directionFactor;
+      }
+
+      return 0;
     });
-
-    return filtered;
   });
 
-  form = this.fb.group({
-    juegoId: this.fb.nonNullable.control(0),
-    bggId: this.fb.control<number | null>(null),
-    nombre: this.fb.nonNullable.control('', [Validators.required]),
-    dificultadBgg: this.fb.control<number | null>(null),
-    numeroJugadoresMin: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
-    numeroJugadoresMax: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
-    pvp: this.fb.control<number | null>(null),
-    propietarioId: this.fb.control<number | null>(null, [Validators.required]),
-    propietarioSearch: this.fb.nonNullable.control(''),
-    fechaAdquisicion: this.fb.control<string | null>(null),
-    tipo: this.fb.nonNullable.control(''),
-    juegoBaseId: this.fb.control<number | null>(null),
-    juegoBaseSearch: this.fb.nonNullable.control('')
-  });
+  form = this.fb.group(
+    {
+      nombre: ['', [Validators.required, Validators.maxLength(200)]],
+      bggId: [null as number | null],
+      dificultadBgg: [null as number | null],
+      numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
+      numeroJugadoresMax: [1, [Validators.required, Validators.min(1)]],
+      pvp: [null as number | null],
+      propietarioId: [null as number | null, Validators.required],
+      propietarioSearch: [''],
+      fechaAdquisicion: [null as string | null],
+      tipo: ['', [Validators.maxLength(200)]],
+      juegoBaseId: [null as number | null],
+      juegoBaseSearch: ['']
+    },
+    {
+      validators: control => {
+        const min = control.get('numeroJugadoresMin')?.value;
+        const max = control.get('numeroJugadoresMax')?.value;
+
+        if (min && max && min > max) {
+          return { minGreaterThanMax: true };
+        }
+
+        return null;
+      }
+    }
+  );
 
   constructor() {
     effect(() => {
-      if (!this.modalOpen()) {
-        this.showPropietarioOptions.set(false);
-        this.showJuegoBaseOptions.set(false);
+      const search = this.form.controls.propietarioSearch.value ?? '';
+      const all = this.usuarios();
+
+      if (!search.trim()) {
+        this.filteredUsuarios.set(all.slice(0, 20));
+        return;
       }
+
+      const lower = search.toLowerCase();
+      this.filteredUsuarios.set(
+        all
+          .filter(u => u.nombre.toLowerCase().includes(lower))
+          .slice(0, 20)
+      );
+    });
+
+    effect(() => {
+      const search = this.form.controls.juegoBaseSearch.value ?? '';
+      const all = this.juegos();
+
+      if (!search.trim()) {
+        this.filteredJuegosBase.set(all.slice(0, 20));
+        return;
+      }
+
+      const lower = search.toLowerCase();
+      this.filteredJuegosBase.set(
+        all
+          .filter(j => j.nombre.toLowerCase().includes(lower))
+          .slice(0, 20)
+      );
     });
   }
 
@@ -261,15 +336,12 @@ export class JuegosPageComponent implements OnInit {
   cargarDatos(): void {
     this.loading.set(true);
     this.error.set('');
-    this.success.set('');
-
     let juegosCargados = false;
     let usuariosCargados = false;
 
     this.juegosService.getAll().subscribe({
       next: juegos => {
         this.juegos.set(juegos);
-        this.filteredJuegosBase.set(juegos);
         juegosCargados = true;
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
@@ -282,10 +354,9 @@ export class JuegosPageComponent implements OnInit {
     this.usuariosService.getAll().subscribe({
       next: usuarios => {
         this.usuarios.set(usuarios);
-        this.filteredUsuarios.set(usuarios);
-        this.seleccionarPropietarioPorDefecto(usuarios);
         usuariosCargados = true;
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
+        this.precargarPropietarioActual();
       },
       error: () => {
         this.error.set('No s\'han pogut carregar els usuaris.');
@@ -294,11 +365,85 @@ export class JuegosPageComponent implements OnInit {
     });
   }
 
+  logout(): void {
+    this.authService.logout().subscribe({
+      next: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login')
+    });
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update(v => !v);
+  }
+
+  toggleColumnsPanel(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showColumnsPanel.update(v => !v);
+  }
+
+  @HostListener('document:click')
+  closeColumnsPanel(): void {
+    if (this.showColumnsPanel()) {
+      this.showColumnsPanel.set(false);
+    }
+  }
+
+  updateFilter<K extends keyof JuegosFilters>(key: K, value: string): void {
+    this.filters.update(current => ({
+      ...current,
+      [key]: value
+    }));
+  }
+
+  clearAllFilters(): void {
+    this.filters.set({ ...EMPTY_FILTERS });
+  }
+
+  selectAllColumns(): void {
+    const allSelected = this.allColumnsSelected();
+    this.visibleColumns.set({
+      nombre: !allSelected,
+      numeroJugadoresMin: !allSelected,
+      numeroJugadoresMax: !allSelected,
+      propietario: !allSelected,
+      tipo: !allSelected,
+      pvp: !allSelected,
+      juegoBase: !allSelected
+    });
+  }
+
+  toggleColumn(column: keyof VisibleColumns): void {
+    this.visibleColumns.update(current => ({
+      ...current,
+      [column]: !current[column]
+    }));
+  }
+
+  setSort(column: SortColumn): void {
+    const currentColumn = this.sortColumn();
+    const currentDirection = this.sortDirection();
+
+    if (currentColumn === column) {
+      if (currentDirection === 'asc') {
+        this.sortDirection.set('desc');
+      } else if (currentDirection === 'desc') {
+        this.sortColumn.set(null);
+        this.sortDirection.set(null);
+      } else {
+        this.sortDirection.set('asc');
+      }
+    } else {
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
+  }
+
   abrirModal(): void {
     this.form.reset({
-      juegoId: 0,
-      bggId: null,
       nombre: '',
+      bggId: null,
       dificultadBgg: null,
       numeroJugadoresMin: 1,
       numeroJugadoresMax: 1,
@@ -310,150 +455,100 @@ export class JuegosPageComponent implements OnInit {
       juegoBaseId: null,
       juegoBaseSearch: ''
     });
-
-    this.precargarPropietarioActual();
-    this.filteredUsuarios.set(this.usuarios());
-    this.filteredJuegosBase.set(this.juegos());
     this.formError.set('');
     this.success.set('');
+    this.precargarPropietarioActual();
     this.modalOpen.set(true);
   }
 
   cerrarModal(): void {
+    if (this.saving()) {
+      return;
+    }
     this.modalOpen.set(false);
-    this.formError.set('');
-    this.success.set('');
   }
 
-  guardarJuego(): void {
-    this.formError.set('');
-    this.success.set('');
-
+  submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.formError.set('Revisa els camps obligatoris.');
+      this.formError.set('Revisa els camps del formulari.');
+      this.success.set('');
       return;
     }
 
-    const raw = this.form.getRawValue();
+    const value = this.form.getRawValue();
 
-    const propietarioId = raw.propietarioId;
-    if (!propietarioId) {
-      this.formError.set('Has de seleccionar un propietari vàlid.');
-      return;
-    }
-
-    const juegoBaseId = this.parseJuegoBaseId(raw.juegoBaseSearch ?? '') ?? raw.juegoBaseId;
-
-    const data: Juego = {
-      juegoId: raw.juegoId ?? 0,
-      nombre: raw.nombre.trim(),
-      bggId: raw.bggId,
-      dificultadBgg: raw.dificultadBgg,
-      numeroJugadoresMin: raw.numeroJugadoresMin,
-      numeroJugadoresMax: raw.numeroJugadoresMax,
-      pvp: raw.pvp,
-      propietarioId,
-      fechaAdquisicion: raw.fechaAdquisicion || null,
-      tipo: raw.tipo.trim(),
-      juegoBaseId: juegoBaseId ?? null
+    const juego: Juego = {
+      juegoId: 0,
+      nombre: value.nombre?.trim() ?? '',
+      bggId: value.bggId ?? null,
+      dificultadBgg: value.dificultadBgg ?? null,
+      numeroJugadoresMin: value.numeroJugadoresMin ?? 1,
+      numeroJugadoresMax: value.numeroJugadoresMax ?? 1,
+      pvp: value.pvp ?? null,
+      propietarioId: value.propietarioId!,
+      fechaAdquisicion: value.fechaAdquisicion ?? null,
+      tipo: value.tipo?.trim() ?? '',
+      juegoBaseId: value.juegoBaseId ?? null
     };
 
     this.saving.set(true);
+    this.formError.set('');
+    this.success.set('');
 
-    this.juegosService.create(data).subscribe({
-      next: juego => {
-        this.juegos.update(current => [...current, juego]);
-        this.filteredJuegosBase.set(this.juegos());
+    this.juegosService.create(juego).subscribe({
+      next: created => {
+        this.juegos.update(current => [...current, created]);
         this.saving.set(false);
-        this.success.set('Joc desat correctament.');
-        this.cerrarModal();
+        this.success.set('Joc creat correctament.');
+        this.modalOpen.set(false);
       },
       error: err => {
         this.saving.set(false);
-        this.formError.set(
-          err?.error?.message ?? 'No s\'ha pogut desar el joc.'
-        );
+        const message =
+          err?.error?.message ||
+          'No s\'ha pogut desar el joc. Torna-ho a provar més tard.';
+        this.formError.set(message);
       }
     });
   }
 
-  loadFromBgg(): void {
-    const raw = this.form.controls.bggId.value;
-    const bggId = Number(raw);
+  buscarBgg(): void {
+    const bggId = this.form.controls.bggId.value;
 
-    this.formError.set('');
-    this.success.set('');
-
-    if (!Number.isFinite(bggId) || bggId <= 0) {
-      this.formError.set('Has d\'indicar un BGG ID vàlid.');
+    if (!bggId || bggId <= 0) {
+      this.formError.set('Introdueix un BGG ID vàlid.');
+      this.success.set('');
       return;
     }
 
     this.bggLoading.set(true);
+    this.formError.set('');
+    this.success.set('');
 
     this.juegosService.getFromBgg(bggId).subscribe({
-      next: juego => {
-        this.bggLoading.set(false);
+      next: data => {
         this.form.patchValue(
           {
-            bggId: juego.bggId,
-            nombre: juego.nombre,
-            dificultadBgg: juego.dificultadBgg ?? null,
-            numeroJugadoresMin: juego.numeroJugadoresMin,
-            numeroJugadoresMax: juego.numeroJugadoresMax,
-            tipo: juego.tipo ?? ''
+            nombre: data.nombre,
+            dificultadBgg: data.dificultadBgg ?? null,
+            numeroJugadoresMin: data.numeroJugadoresMin,
+            numeroJugadoresMax: data.numeroJugadoresMax,
+            tipo: data.tipo
           },
           { emitEvent: false }
         );
-        this.formError.set('');
-        this.success.set('Informació carregada des de BoardGameGeek.');
+        this.bggLoading.set(false);
+        this.success.set('Dades carregades des de BoardGameGeek.');
       },
       error: err => {
         this.bggLoading.set(false);
-        this.formError.set(
-          err?.error?.message ?? 'No s\'ha pogut consultar BoardGameGeek.'
-        );
+        const message =
+          err?.error?.message ||
+          'No s\'han pogut carregar les dades de BoardGameGeek.';
+        this.formError.set(message);
       }
     });
-  }
-
-  onPropietarioInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.form.patchValue(
-      {
-        propietarioSearch: value,
-        propietarioId: null
-      },
-      { emitEvent: false }
-    );
-
-    this.filteredUsuarios.set(this.filterUsuarios(value));
-    this.showPropietarioOptions.set(true);
-  }
-
-  onJuegoBaseInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
-    this.form.patchValue(
-      {
-        juegoBaseSearch: value,
-        juegoBaseId: null
-      },
-      { emitEvent: false }
-    );
-
-    this.filteredJuegosBase.set(this.filterJuegosBase(value));
-    this.showJuegoBaseOptions.set(true);
-  }
-
-  onPropietarioFocus(): void {
-    this.filteredUsuarios.set(this.filterUsuarios(this.form.controls.propietarioSearch.value));
-    this.showPropietarioOptions.set(true);
-  }
-
-  onJuegoBaseFocus(): void {
-    this.filteredJuegosBase.set(this.filterJuegosBase(this.form.controls.juegoBaseSearch.value));
-    this.showJuegoBaseOptions.set(true);
   }
 
   seleccionarPropietario(usuario: UsuarioOption): void {
@@ -465,6 +560,16 @@ export class JuegosPageComponent implements OnInit {
       { emitEvent: false }
     );
     this.showPropietarioOptions.set(false);
+  }
+
+  limpiarPropietario(): void {
+    this.form.patchValue(
+      {
+        propietarioId: null,
+        propietarioSearch: ''
+      },
+      { emitEvent: false }
+    );
   }
 
   seleccionarJuegoBase(juego: Juego): void {
@@ -486,158 +591,30 @@ export class JuegosPageComponent implements OnInit {
       },
       { emitEvent: false }
     );
-    this.filteredJuegosBase.set(this.juegos());
   }
 
-  updateFilter<K extends keyof JuegosFilters>(key: K, value: string): void {
-    this.filters.update(current => ({
-      ...current,
-      [key]: value
-    }));
+  getNombrePropietario(
+    propietarioId: number,
+    usuariosList: UsuarioOption[] | null = null
+  ): string {
+    const list = usuariosList ?? this.usuarios();
+    const usuario = list.find(u => u.usuarioId === propietarioId);
+    return usuario?.nombre ?? '-';
   }
 
-  resetFilters(): void {
-    this.filters.set({ ...EMPTY_FILTERS });
-  }
-
-  toggleFilters(): void {
-    this.showFilters.update(value => !value);
-  }
-
-  toggleColumnsPanel(event: Event): void {
-    event.stopPropagation();
-    this.showColumnsPanel.update(value => !value);
-  }
-
-  toggleColumn(column: keyof VisibleColumns): void {
-    this.visibleColumns.update(current => ({
-      ...current,
-      [column]: !current[column]
-    }));
-  }
-
-  selectAllColumns(): void {
-    const nextValue = !this.allColumnsSelected();
-
-    this.visibleColumns.set({
-      nombre: nextValue,
-      numeroJugadoresMin: nextValue,
-      numeroJugadoresMax: nextValue,
-      propietario: nextValue,
-      tipo: nextValue,
-      pvp: nextValue,
-      juegoBase: nextValue
-    });
-  }
-
-  sortBy(column: SortColumn): void {
-    if (this.sortColumn() !== column) {
-      this.sortColumn.set(column);
-      this.sortDirection.set('asc');
-      return;
-    }
-
-    if (this.sortDirection() === 'asc') {
-      this.sortDirection.set('desc');
-      return;
-    }
-
-    this.sortColumn.set(null);
-    this.sortDirection.set(null);
-  }
-
-  getSortIndicator(column: SortColumn): string {
-    if (this.sortColumn() !== column) {
-      return '';
-    }
-
-    return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
-  }
-
-  getNombrePropietario(propietarioId: number, usuarios = this.usuarios()): string {
-    return usuarios.find(u => u.usuarioId === propietarioId)?.nombre ?? '—';
-  }
-
-  getNombreJuegoBase(juegoBaseId: number | null | undefined, juegos = this.juegos()): string {
+  getNombreJuegoBase(juegoBaseId: number | null | undefined): string {
     if (!juegoBaseId) {
-      return '—';
+      return '-';
     }
-
-    return juegos.find(j => j.juegoId === juegoBaseId)?.nombre ?? '—';
+    const juego = this.juegos().find(j => j.juegoId === juegoBaseId);
+    return juego?.nombre ?? '-';
   }
 
-  formatCurrency(value: number | null | undefined): string {
-    if (value == null) {
-      return '—';
+  @HostListener('window:resize')
+  onResize(): void {
+    if (window.innerWidth > 820 && this.showColumnsPanel()) {
+      this.showColumnsPanel.set(false);
     }
-
-    return new Intl.NumberFormat('ca-ES', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(value);
-  }
-
-  logout(): void {
-    this.authService.logout().subscribe({
-      next: () => this.router.navigateByUrl('/login'),
-      error: () => this.router.navigateByUrl('/login')
-    });
-  }
-
-  @HostListener('document:click')
-  onDocumentClick(): void {
-    this.showColumnsPanel.set(false);
-    this.showPropietarioOptions.set(false);
-    this.showJuegoBaseOptions.set(false);
-  }
-
-  stopPropagation(event: Event): void {
-    event.stopPropagation();
-  }
-
-  private filterUsuarios(search: string): UsuarioOption[] {
-    const term = search.trim().toLowerCase();
-
-    if (!term) {
-      return this.usuarios();
-    }
-
-    return this.usuarios().filter(u =>
-      u.nombre.toLowerCase().includes(term)
-    );
-  }
-
-  private filterJuegosBase(search: string): Juego[] {
-    const term = search.trim().toLowerCase();
-
-    if (!term) {
-      return this.juegos();
-    }
-
-    return this.juegos().filter(j =>
-      j.nombre.toLowerCase().includes(term)
-    );
-  }
-
-  private seleccionarPropietarioPorDefecto(usuarios: UsuarioOption[]): void {
-    const currentUser = this.authService.currentUser;
-
-    if (!currentUser) {
-      return;
-    }
-
-    const usuario = usuarios.find(u => u.usuarioId === currentUser.usuarioId);
-    if (!usuario) {
-      return;
-    }
-
-    this.form.patchValue(
-      {
-        propietarioId: usuario.usuarioId,
-        propietarioSearch: usuario.nombre
-      },
-      { emitEvent: false }
-    );
   }
 
   private precargarPropietarioActual(): void {
@@ -656,7 +633,10 @@ export class JuegosPageComponent implements OnInit {
     );
   }
 
-  private intentarFinalizarCarga(juegosCargados: boolean, usuariosCargados: boolean): void {
+  private intentarFinalizarCarga(
+    juegosCargados: boolean,
+    usuariosCargados: boolean
+  ): void {
     if (juegosCargados && usuariosCargados) {
       this.loading.set(false);
     }
