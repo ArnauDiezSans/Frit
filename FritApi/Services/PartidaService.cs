@@ -7,22 +7,24 @@ namespace FritApi.Services;
 
 public class PartidaService
 {
-    private readonly AppDbContext _context;
+    private readonly AppDbContext context;
 
     public PartidaService(AppDbContext context)
     {
-        _context = context;
+        this.context = context;
     }
 
     public async Task<List<PartidaDto>> GetAllAsync()
     {
-        return await _context.Partidas
+        return await context.Partidas
             .OrderByDescending(p => p.Fecha)
             .ThenByDescending(p => p.PartidaId)
             .Select(p => new PartidaDto
             {
                 PartidaId = p.PartidaId,
                 JuegoId = p.JuegoId,
+                JuegoNombre = p.Juego.Nombre,
+                UsuarioCreadorId = p.UsuarioCreadorId,
                 Fecha = p.Fecha,
                 DuracionMinutos = p.DuracionMinutos,
                 NumeroJugadores = p.NumeroJugadores,
@@ -34,12 +36,14 @@ public class PartidaService
 
     public async Task<PartidaDto?> GetByIdAsync(int id)
     {
-        return await _context.Partidas
+        return await context.Partidas
             .Where(p => p.PartidaId == id)
             .Select(p => new PartidaDto
             {
                 PartidaId = p.PartidaId,
                 JuegoId = p.JuegoId,
+                JuegoNombre = p.Juego.Nombre,
+                UsuarioCreadorId = p.UsuarioCreadorId,
                 Fecha = p.Fecha,
                 DuracionMinutos = p.DuracionMinutos,
                 NumeroJugadores = p.NumeroJugadores,
@@ -51,28 +55,40 @@ public class PartidaService
 
     public async Task<(bool Success, string? Error, PartidaDto? Partida)> CreateAsync(PartidaDto dto)
     {
-        var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
+        var juegoExiste = await context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
         if (!juegoExiste)
         {
             return (false, "L'identificador de joc indicat no existeix.", null);
         }
 
+        var usuarioExiste = await context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioCreadorId);
+        if (!usuarioExiste)
+        {
+            return (false, "L'identificador d'usuari creador indicat no existeix.", null);
+        }
+
         var partida = new Partida
         {
             JuegoId = dto.JuegoId,
+            UsuarioCreadorId = dto.UsuarioCreadorId,
             Fecha = dto.Fecha,
             DuracionMinutos = dto.DuracionMinutos,
             NumeroJugadores = dto.NumeroJugadores,
             Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim()
         };
 
-        _context.Partidas.Add(partida);
-        await _context.SaveChangesAsync();
+        context.Partidas.Add(partida);
+        await context.SaveChangesAsync();
 
         return (true, null, new PartidaDto
         {
             PartidaId = partida.PartidaId,
             JuegoId = partida.JuegoId,
+            JuegoNombre = (await context.Juegos
+                .Where(j => j.JuegoId == partida.JuegoId)
+                .Select(j => j.Nombre)
+                .FirstAsync()),
+            UsuarioCreadorId = partida.UsuarioCreadorId,
             Fecha = partida.Fecha,
             DuracionMinutos = partida.DuracionMinutos,
             NumeroJugadores = partida.NumeroJugadores,
@@ -88,30 +104,42 @@ public class PartidaService
             return (false, "L'identificador de la ruta no coincideix amb el PartidaId del cos de la petició.", null);
         }
 
-        var partida = await _context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
+        var partida = await context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
         if (partida is null)
         {
             return (false, "Partida no trobada.", null);
         }
 
-        var juegoExiste = await _context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
+        var juegoExiste = await context.Juegos.AnyAsync(j => j.JuegoId == dto.JuegoId);
         if (!juegoExiste)
         {
             return (false, "L'identificador de joc indicat no existeix.", null);
         }
 
+        var usuarioExiste = await context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioCreadorId);
+        if (!usuarioExiste)
+        {
+            return (false, "L'identificador d'usuari creador indicat no existeix.", null);
+        }
+
         partida.JuegoId = dto.JuegoId;
+        partida.UsuarioCreadorId = dto.UsuarioCreadorId;
         partida.Fecha = dto.Fecha;
         partida.DuracionMinutos = dto.DuracionMinutos;
         partida.NumeroJugadores = dto.NumeroJugadores;
         partida.Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim();
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         return (true, null, new PartidaDto
         {
             PartidaId = partida.PartidaId,
             JuegoId = partida.JuegoId,
+            JuegoNombre = (await context.Juegos
+                .Where(j => j.JuegoId == partida.JuegoId)
+                .Select(j => j.Nombre)
+                .FirstAsync()),
+            UsuarioCreadorId = partida.UsuarioCreadorId,
             Fecha = partida.Fecha,
             DuracionMinutos = partida.DuracionMinutos,
             NumeroJugadores = partida.NumeroJugadores,
@@ -122,16 +150,14 @@ public class PartidaService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var partida = await _context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
-
+        var partida = await context.Partidas.FirstOrDefaultAsync(p => p.PartidaId == id);
         if (partida is null)
         {
             return false;
         }
 
-        _context.Partidas.Remove(partida);
-        await _context.SaveChangesAsync();
-
+        context.Partidas.Remove(partida);
+        await context.SaveChangesAsync();
         return true;
     }
 }

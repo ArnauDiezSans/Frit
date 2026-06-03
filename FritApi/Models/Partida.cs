@@ -7,6 +7,9 @@ public class Partida
     public int JuegoId { get; set; }
     public Juego Juego { get; set; } = null!;
 
+    public int UsuarioCreadorId { get; set; }
+    public Usuario UsuarioCreador { get; set; } = null!;
+
     public DateOnly Fecha { get; set; }
 
     public int? DuracionMinutos { get; set; }

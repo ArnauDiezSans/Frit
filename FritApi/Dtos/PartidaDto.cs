@@ -12,9 +12,11 @@ public class PartidaDto
     public string JuegoNombre { get; set; } = string.Empty;
 
     [Required]
+    public int UsuarioCreadorId { get; set; }
+
+    [Required]
     public DateOnly Fecha { get; set; }
 
-    [Range(1, int.MaxValue)]
     public int? DuracionMinutos { get; set; }
 
     [Range(1, int.MaxValue)]

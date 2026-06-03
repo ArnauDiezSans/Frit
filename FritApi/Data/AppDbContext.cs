@@ -81,6 +81,11 @@ public class AppDbContext : DbContext
                 .WithMany(e => e.Partidas)
                 .HasForeignKey(e => e.JuegoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UsuarioCreador)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioCreadorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PartidaJugador>(entity =>

@@ -1,6 +1,7 @@
 export interface Partida {
   partidaId: number;
   juegoId: number;
+  usuarioCreadorId: number;
   fecha: string;
   duracionMinutos?: number | null;
   numeroJugadores: number;

@@ -423,15 +423,23 @@ const jugadores: PartidaJugador[] = (raw.jugadores ?? []).map(
       return;
     }
 
-    const partidaPayload: Partida = {
-      partidaId: 0,
-      juegoId: raw.juegoId,
-      fecha: raw.fecha ?? this.getTodayDate(),
-      duracionMinutos: raw.duracionMinutos ?? null,
-      numeroJugadores: raw.numeroJugadores ?? jugadores.length,
-      observaciones: raw.observaciones?.trim() || null,
-      createdAt: new Date().toISOString()
-    };
+const currentUser = this.authService.currentUser;
+
+if (!currentUser) {
+  this.formError.set('No s’ha pogut identificar l’usuari actual.');
+  return;
+}
+
+const partidaPayload: Partida = {
+  partidaId: 0,
+  juegoId: raw.juegoId,
+  usuarioCreadorId: currentUser.usuarioId,
+  fecha: raw.fecha ?? this.getTodayDate(),
+  duracionMinutos: raw.duracionMinutos ?? null,
+  numeroJugadores: raw.numeroJugadores ?? jugadores.length,
+  observaciones: raw.observaciones?.trim() || null,
+  createdAt: new Date().toISOString()
+};
 
     this.saving.set(true);
 
