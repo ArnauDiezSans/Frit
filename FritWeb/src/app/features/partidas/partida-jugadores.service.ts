@@ -14,4 +14,10 @@ export class PartidaJugadoresService {
       withCredentials: true
     });
   }
+
+  create(data: PartidaJugador): Observable<PartidaJugador> {
+    return this.http.post<PartidaJugador>(this.baseUrl, data, {
+      withCredentials: true
+    });
+  }
 }

@@ -14,4 +14,10 @@ export class PartidasService {
       withCredentials: true
     });
   }
+
+  create(data: Partida): Observable<Partida> {
+    return this.http.post<Partida>(this.baseUrl, data, {
+      withCredentials: true
+    });
+  }
 }
