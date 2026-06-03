@@ -179,15 +179,39 @@
 
       <form [formGroup]="form" (ngSubmit)="guardarPartida()">
         <div class="form-grid">
-          <label class="form-field">
+          <div class="form-field autocomplete-field">
             <span>Joc</span>
-            <select formControlName="juegoId">
-              <option [ngValue]="null">Selecciona un joc</option>
-              <option *ngFor="let juego of juegos(); trackBy: trackByJuegoId" [ngValue]="juego.juegoId">
-                {{ juego.nombre }}
-              </option>
-            </select>
-          </label>
+            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
+              <input
+                type="text"
+                formControlName="juegoSearch"
+                placeholder="Cerca un joc..."
+                (input)="onJuegoInput($event)"
+                (focus)="onJuegoFocus()" />
+
+              <button
+                *ngIf="form.controls.juegoId.value"
+                type="button"
+                class="clear-autocomplete"
+                (click)="limpiarJuegoSeleccionado()">
+                ×
+              </button>
+
+              <div class="autocomplete-panel" *ngIf="showJuegoOptions()">
+                <button
+                  type="button"
+                  class="autocomplete-option"
+                  *ngFor="let juego of filteredJuegos(); trackBy: trackByJuegoId"
+                  (click)="seleccionarJuego(juego)">
+                  {{ juego.nombre }}
+                </button>
+
+                <div class="autocomplete-empty" *ngIf="filteredJuegos().length === 0">
+                  No hi ha coincidències.
+                </div>
+              </div>
+            </div>
+          </div>
 
           <label class="form-field">
             <span>Data</span>
