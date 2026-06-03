@@ -42,104 +42,80 @@
           type="button"
           class="toolbar-chip"
           [class.toolbar-chip-active]="showFilters()"
-          (click)="toggleFilters()"
-        >
+          (click)="toggleFilters()">
           <span>Filtres</span>
         </button>
 
-        <div class="columns-wrapper" (click)="stopPropagation($event)">
+        <div class="columns-wrapper" (click)="$event.stopPropagation()">
           <button
             type="button"
             class="toolbar-chip"
             [class.toolbar-chip-active]="showColumnsPanel()"
-            (click)="toggleColumnsPanel($event)"
-          >
+            (click)="toggleColumnsPanel($event)">
             <span>Columnes</span>
           </button>
 
           <div class="columns-panel" *ngIf="showColumnsPanel()">
             <div class="columns-panel-header">
-              <span>Columnes visibles</span>
-              <button
-                type="button"
-                class="columns-close"
-                (click)="showColumnsPanel.set(false)"
-              >
-                ×
+              <strong>Columnes visibles</strong>
+              <button type="button" class="link-button" (click)="selectAllColumns()">
+                {{ allColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
               </button>
             </div>
 
-            <label class="columns-option">
-              <input
-                type="checkbox"
-                [checked]="allColumnsSelected()"
-                (change)="selectAllColumns()"
-              />
-              <span>Seleccionar totes</span>
-            </label>
-
-            <hr />
-
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().nombre"
-                (change)="toggleColumn('nombre')"
-              />
+                (change)="toggleColumn('nombre')" />
               <span>Nom</span>
             </label>
 
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().numeroJugadoresMin"
-                (change)="toggleColumn('numeroJugadoresMin')"
-              />
+                (change)="toggleColumn('numeroJugadoresMin')" />
               <span>Jugadors mín.</span>
             </label>
 
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().numeroJugadoresMax"
-                (change)="toggleColumn('numeroJugadoresMax')"
-              />
+                (change)="toggleColumn('numeroJugadoresMax')" />
               <span>Jugadors màx.</span>
             </label>
 
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().propietario"
-                (change)="toggleColumn('propietario')"
-              />
+                (change)="toggleColumn('propietario')" />
               <span>Propietari</span>
             </label>
 
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().tipo"
-                (change)="toggleColumn('tipo')"
-              />
+                (change)="toggleColumn('tipo')" />
               <span>Tipus</span>
             </label>
 
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().pvp"
-                (change)="toggleColumn('pvp')"
-              />
+                (change)="toggleColumn('pvp')" />
               <span>PVP</span>
             </label>
 
-            <label class="columns-option">
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().juegoBase"
-                (change)="toggleColumn('juegoBase')"
-              />
+                (change)="toggleColumn('juegoBase')" />
               <span>Joc base</span>
             </label>
           </div>
@@ -149,288 +125,387 @@
 
     <div class="filters-panel" *ngIf="showFilters()">
       <div class="filters-grid">
-        <label>
+        <label class="filter-field">
           <span>Nom</span>
           <input
             type="text"
+            class="filter-input"
+            placeholder="Filtra per nom..."
             [value]="filters().nombre"
-            (input)="updateFilter('nombre', $any($event.target).value)"
-          />
+            (input)="updateFilter('nombre', $any($event.target).value)" />
         </label>
 
-        <label>
-          <span>Jugadors mín. (mínim)</span>
+        <label class="filter-field">
+          <span>Jugadors mín.</span>
           <input
-            type="number"
+            type="text"
+            class="filter-input"
+            placeholder="Ex. 2"
             [value]="filters().numeroJugadoresMin"
-            (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)"
-          />
+            (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)" />
         </label>
 
-        <label>
-          <span>Jugadors màx. (màxim)</span>
+        <label class="filter-field">
+          <span>Jugadors màx.</span>
           <input
-            type="number"
+            type="text"
+            class="filter-input"
+            placeholder="Ex. 6"
             [value]="filters().numeroJugadoresMax"
-            (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)"
-          />
+            (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)" />
         </label>
 
-        <label>
+        <label class="filter-field">
           <span>Propietari</span>
           <input
             type="text"
+            class="filter-input"
+            placeholder="Filtra per propietari..."
             [value]="filters().propietario"
-            (input)="updateFilter('propietario', $any($event.target).value)"
-          />
+            (input)="updateFilter('propietario', $any($event.target).value)" />
         </label>
 
-        <label>
+        <label class="filter-field">
           <span>Tipus</span>
           <input
             type="text"
+            class="filter-input"
+            placeholder="Filtra per tipus..."
             [value]="filters().tipo"
-            (input)="updateFilter('tipo', $any($event.target).value)"
-          />
+            (input)="updateFilter('tipo', $any($event.target).value)" />
         </label>
 
-        <label>
-          <span>PVP mínim</span>
+        <label class="filter-field">
+          <span>PVP</span>
           <input
-            type="number"
-            step="0.01"
-            [value]="filters().pvpMin"
-            (input)="updateFilter('pvpMin', $any($event.target).value)"
-          />
+            type="text"
+            class="filter-input"
+            placeholder="Ex. 30"
+            [value]="filters().pvp"
+            (input)="updateFilter('pvp', $any($event.target).value)" />
         </label>
 
-        <label>
-          <span>PVP màxim</span>
-          <input
-            type="number"
-            step="0.01"
-            [value]="filters().pvpMax"
-            (input)="updateFilter('pvpMax', $any($event.target).value)"
-          />
-        </label>
-
-        <label>
+        <label class="filter-field">
           <span>Joc base</span>
           <input
             type="text"
+            class="filter-input"
+            placeholder="Filtra per joc base..."
             [value]="filters().juegoBase"
-            (input)="updateFilter('juegoBase', $any($event.target).value)"
-          />
+            (input)="updateFilter('juegoBase', $any($event.target).value)" />
         </label>
       </div>
 
       <div class="filters-actions">
-        <button type="button" class="secondary-button" (click)="resetFilters()">
-          Netejar filtres
+        <button type="button" class="ghost-button" (click)="clearAllFilters()">
+          Neteja filtres
         </button>
       </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="juegosFiltradosOrdenados().length > 0; else emptyState">
-      <table>
+    <div class="table-wrapper" *ngIf="juegosFiltradosOrdenados().length > 0">
+      <table class="games-table">
         <thead>
           <tr>
-            <th *ngIf="visibleColumns().nombre" (click)="sortBy('nombre')">
-              Nom{{ getSortIndicator('nombre') }}
+            <th
+              *ngIf="visibleColumns().nombre"
+              class="sortable"
+              (click)="setSort('nombre')">
+              <span>Nom</span>
             </th>
-            <th *ngIf="visibleColumns().numeroJugadoresMin" (click)="sortBy('numeroJugadoresMin')">
-              Jugadors mín.{{ getSortIndicator('numeroJugadoresMin') }}
+
+            <th
+              *ngIf="visibleColumns().numeroJugadoresMin"
+              class="sortable"
+              (click)="setSort('numeroJugadoresMin')">
+              <span>Jugadors mín.</span>
             </th>
-            <th *ngIf="visibleColumns().numeroJugadoresMax" (click)="sortBy('numeroJugadoresMax')">
-              Jugadors màx.{{ getSortIndicator('numeroJugadoresMax') }}
+
+            <th
+              *ngIf="visibleColumns().numeroJugadoresMax"
+              class="sortable"
+              (click)="setSort('numeroJugadoresMax')">
+              <span>Jugadors màx.</span>
             </th>
-            <th *ngIf="visibleColumns().propietario" (click)="sortBy('propietario')">
-              Propietari{{ getSortIndicator('propietario') }}
+
+            <th
+              *ngIf="visibleColumns().propietario"
+              class="sortable"
+              (click)="setSort('propietario')">
+              <span>Propietari</span>
             </th>
-            <th *ngIf="visibleColumns().tipo" (click)="sortBy('tipo')">
-              Tipus{{ getSortIndicator('tipo') }}
+
+            <th
+              *ngIf="visibleColumns().tipo"
+              class="sortable"
+              (click)="setSort('tipo')">
+              <span>Tipus</span>
             </th>
-            <th *ngIf="visibleColumns().pvp" (click)="sortBy('pvp')">
-              PVP{{ getSortIndicator('pvp') }}
+
+            <th
+              *ngIf="visibleColumns().pvp"
+              class="sortable"
+              (click)="setSort('pvp')">
+              <span>PVP</span>
             </th>
-            <th *ngIf="visibleColumns().juegoBase" (click)="sortBy('juegoBase')">
-              Joc base{{ getSortIndicator('juegoBase') }}
+
+            <th
+              *ngIf="visibleColumns().juegoBase"
+              class="sortable"
+              (click)="setSort('juegoBase')">
+              <span>Joc base</span>
+            </th>
+          </tr>
+
+          <tr class="filters-row">
+            <th *ngIf="visibleColumns().nombre">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().nombre"
+                (input)="updateFilter('nombre', $any($event.target).value)" />
+            </th>
+
+            <th *ngIf="visibleColumns().numeroJugadoresMin">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().numeroJugadoresMin"
+                (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)" />
+            </th>
+
+            <th *ngIf="visibleColumns().numeroJugadoresMax">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().numeroJugadoresMax"
+                (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)" />
+            </th>
+
+            <th *ngIf="visibleColumns().propietario">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().propietario"
+                (input)="updateFilter('propietario', $any($event.target).value)" />
+            </th>
+
+            <th *ngIf="visibleColumns().tipo">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().tipo"
+                (input)="updateFilter('tipo', $any($event.target).value)" />
+            </th>
+
+            <th *ngIf="visibleColumns().pvp">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().pvp"
+                (input)="updateFilter('pvp', $any($event.target).value)" />
+            </th>
+
+            <th *ngIf="visibleColumns().juegoBase">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().juegoBase"
+                (input)="updateFilter('juegoBase', $any($event.target).value)" />
             </th>
           </tr>
         </thead>
+
         <tbody>
           <tr *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId">
-            <td *ngIf="visibleColumns().nombre">{{ juego.nombre }}</td>
-            <td *ngIf="visibleColumns().numeroJugadoresMin">{{ juego.numeroJugadoresMin }}</td>
-            <td *ngIf="visibleColumns().numeroJugadoresMax">{{ juego.numeroJugadoresMax }}</td>
-            <td *ngIf="visibleColumns().propietario">{{ getNombrePropietario(juego.propietarioId) }}</td>
-            <td *ngIf="visibleColumns().tipo">{{ juego.tipo || '—' }}</td>
-            <td *ngIf="visibleColumns().pvp">{{ formatCurrency(juego.pvp) }}</td>
-            <td *ngIf="visibleColumns().juegoBase">{{ getNombreJuegoBase(juego.juegoBaseId) }}</td>
+            <td *ngIf="visibleColumns().nombre" data-label="Nom">
+              <span class="cell-value cell-title">{{ juego.nombre }}</span>
+            </td>
+
+            <td *ngIf="visibleColumns().numeroJugadoresMin" data-label="Jugadors mín.">
+              <span class="cell-value">{{ juego.numeroJugadoresMin }}</span>
+            </td>
+
+            <td *ngIf="visibleColumns().numeroJugadoresMax" data-label="Jugadors màx.">
+              <span class="cell-value">{{ juego.numeroJugadoresMax }}</span>
+            </td>
+
+            <td *ngIf="visibleColumns().propietario" data-label="Propietari">
+              <span class="cell-value">{{ getNombrePropietario(juego.propietarioId) }}</span>
+            </td>
+
+            <td *ngIf="visibleColumns().tipo" data-label="Tipus">
+              <span class="cell-value">{{ juego.tipo || '-' }}</span>
+            </td>
+
+            <td *ngIf="visibleColumns().pvp" data-label="PVP">
+              <span class="cell-value">{{ juego.pvp ?? '-' }}</span>
+            </td>
+
+            <td *ngIf="visibleColumns().juegoBase" data-label="Joc base">
+              <span class="cell-value">{{ getNombreJuegoBase(juego.juegoBaseId) || '-' }}</span>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <ng-template #emptyState>
-      <div class="empty-state">
-        <h3>No hi ha jocs per mostrar</h3>
-        <p>Quan afegeixis jocs, apareixeran aquí.</p>
-      </div>
-    </ng-template>
+    <div class="empty-state" *ngIf="juegosFiltradosOrdenados().length === 0">
+      <h3>No hi ha jocs disponibles</h3>
+      <p>Afegeix el primer joc per començar a registrar partides.</p>
+    </div>
   </section>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <div class="modal-card" (click)="stopPropagation($event)">
+    <section class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Nou joc</h2>
           <p>Completa les dades del joc o carrega-les des de BoardGameGeek.</p>
         </div>
 
-        <button type="button" class="ghost-button" (click)="cerrarModal()">
-          Tancar
-        </button>
+        <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="guardarJuego()">
+      <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
-          <div class="form-field bgg-row">
-            <label for="bggId">BGG ID</label>
-            <div class="bgg-input-group">
-              <input id="bggId" type="number" formControlName="bggId" />
+          <label class="form-field">
+            <span>Nom</span>
+            <input type="text" formControlName="nombre" />
+          </label>
+
+          <label class="form-field">
+            <span>BGG ID</span>
+            <div class="inline-field">
+              <input type="number" formControlName="bggId" />
               <button
                 type="button"
-                class="secondary-button"
-                (click)="loadFromBgg()"
-                [disabled]="bggLoading()"
-              >
-                {{ bggLoading() ? 'Carregant...' : 'Carregar' }}
+                class="secondary-button small-button"
+                (click)="buscarBgg()"
+                [disabled]="bggLoading()">
+                {{ bggLoading() ? 'Carregant...' : 'Carrega BGG' }}
               </button>
             </div>
-          </div>
+          </label>
 
-          <div class="form-field">
-            <label for="nombre">Nom *</label>
-            <input id="nombre" type="text" formControlName="nombre" />
-          </div>
+          <label class="form-field">
+            <span>Dificultat BGG</span>
+            <input type="number" step="0.01" formControlName="dificultadBgg" />
+          </label>
 
-          <div class="form-field">
-            <label for="dificultadBgg">Dificultat BGG</label>
-            <input id="dificultadBgg" type="number" step="0.01" formControlName="dificultadBgg" />
-          </div>
+          <label class="form-field">
+            <span>Jugadors mínims</span>
+            <input type="number" formControlName="numeroJugadoresMin" />
+          </label>
 
-          <div class="form-field">
-            <label for="numeroJugadoresMin">Jugadors mínims *</label>
-            <input id="numeroJugadoresMin" type="number" formControlName="numeroJugadoresMin" />
-          </div>
+          <label class="form-field">
+            <span>Jugadors màxims</span>
+            <input type="number" formControlName="numeroJugadoresMax" />
+          </label>
 
-          <div class="form-field">
-            <label for="numeroJugadoresMax">Jugadors màxims *</label>
-            <input id="numeroJugadoresMax" type="number" formControlName="numeroJugadoresMax" />
-          </div>
+          <label class="form-field">
+            <span>PVP</span>
+            <input type="number" step="0.01" formControlName="pvp" />
+          </label>
 
-          <div class="form-field">
-            <label for="pvp">PVP</label>
-            <input id="pvp" type="number" step="0.01" formControlName="pvp" />
-          </div>
-
-          <div class="form-field autocomplete-field" (click)="stopPropagation($event)">
-            <label for="propietarioSearch">Propietari *</label>
-            <div class="autocomplete-wrapper">
+          <div class="form-field autocomplete-field">
+            <span>Propietari</span>
+            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
               <input
-                id="propietarioSearch"
                 type="text"
                 formControlName="propietarioSearch"
-                autocomplete="off"
-                (focus)="onPropietarioFocus()"
-                (input)="onPropietarioInput($event)"
-              />
+                (focus)="showPropietarioOptions.set(true)"
+                placeholder="Cerca un usuari..." />
+
+              <button
+                *ngIf="form.controls.propietarioId.value"
+                type="button"
+                class="clear-autocomplete"
+                (click)="limpiarPropietario()">
+                ×
+              </button>
 
               <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
                 <button
                   type="button"
                   class="autocomplete-option"
                   *ngFor="let usuario of filteredUsuarios()"
-                  (click)="seleccionarPropietario(usuario)"
-                >
+                  (click)="seleccionarPropietario(usuario)">
                   {{ usuario.nombre }}
                 </button>
 
-                <div
-                  class="autocomplete-empty"
-                  *ngIf="filteredUsuarios().length === 0"
-                >
-                  No s'han trobat propietaris.
+                <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                  No hi ha coincidències.
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="form-field">
-            <label for="fechaAdquisicion">Data d'adquisició</label>
-            <input id="fechaAdquisicion" type="date" formControlName="fechaAdquisicion" />
-          </div>
+          <label class="form-field">
+            <span>Data d'adquisició</span>
+            <input type="date" formControlName="fechaAdquisicion" />
+          </label>
 
-          <div class="form-field">
-            <label for="tipo">Tipus</label>
-            <input id="tipo" type="text" formControlName="tipo" />
-          </div>
+          <label class="form-field">
+            <span>Tipus</span>
+            <input type="text" formControlName="tipo" />
+          </label>
 
-          <div class="form-field autocomplete-field" (click)="stopPropagation($event)">
-            <label for="juegoBaseSearch">Joc base</label>
-            <div class="autocomplete-wrapper">
+          <div class="form-field autocomplete-field">
+            <span>Joc base</span>
+            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
               <input
-                id="juegoBaseSearch"
                 type="text"
                 formControlName="juegoBaseSearch"
-                autocomplete="off"
-                (focus)="onJuegoBaseFocus()"
-                (input)="onJuegoBaseInput($event)"
-              />
+                (focus)="showJuegoBaseOptions.set(true)"
+                placeholder="Cerca un joc base..." />
+
+              <button
+                *ngIf="form.controls.juegoBaseId.value"
+                type="button"
+                class="clear-autocomplete"
+                (click)="limpiarJuegoBase()">
+                ×
+              </button>
 
               <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()">
                 <button
                   type="button"
                   class="autocomplete-option"
                   *ngFor="let juego of filteredJuegosBase()"
-                  (click)="seleccionarJuegoBase(juego)"
-                >
+                  (click)="seleccionarJuegoBase(juego)">
                   {{ juego.nombre }}
                 </button>
 
-                <div
-                  class="autocomplete-empty"
-                  *ngIf="filteredJuegosBase().length === 0"
-                >
-                  No s'han trobat jocs base.
+                <div class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
+                  No hi ha coincidències.
                 </div>
               </div>
             </div>
-
-            <button
-              type="button"
-              class="link-button"
-              *ngIf="form.controls.juegoBaseSearch.value"
-              (click)="limpiarJuegoBase()"
-            >
-              Netejar joc base
-            </button>
           </div>
         </div>
 
+        <p class="field-error" *ngIf="form.hasError('minGreaterThanMax')">
+          El nombre mínim de jugadors no pot ser més gran que el màxim.
+        </p>
+
         <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
-        <p class="field-success" *ngIf="success()">{{ success() }}</p>
+        <p class="success-message" *ngIf="success()">{{ success() }}</p>
 
         <div class="modal-actions">
-          <button type="button" class="secondary-button" (click)="cerrarModal()">
-            Cancel·lar
-          </button>
+          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
             {{ saving() ? 'Desant...' : 'Desar joc' }}
           </button>
         </div>
       </form>
-    </div>
+    </section>
   </div>
 </section>
