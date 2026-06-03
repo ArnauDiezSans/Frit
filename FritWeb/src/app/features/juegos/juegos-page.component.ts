@@ -655,4 +655,43 @@ export class JuegosPageComponent implements OnInit {
   get propietarioId() {
     return this.form.controls.propietarioId;
   }
+
+  loadFromBgg(): void {
+  const raw = this.form.controls.bggId.value;
+  const bggId = Number(raw);
+
+  this.formError.set('');
+
+  if (!Number.isFinite(bggId) || bggId <= 0) {
+    this.formError.set('Has d\'indicar un BGG ID vàlid.');
+    return;
+  }
+
+  this.bggLoading.set(true);
+
+  this.juegosService.getFromBgg(bggId).subscribe({
+    next: (juego) => {
+      this.bggLoading.set(false);
+
+      this.form.patchValue(
+        {
+          nombre: juego.nombre,
+          dificultadBgg: juego.dificultadBgg ?? null,
+          numeroJugadoresMin: juego.numeroJugadoresMin,
+          numeroJugadoresMax: juego.numeroJugadoresMax,
+          tipo: juego.tipo ?? ''
+        },
+        { emitEvent: false }
+      );
+    },
+    error: (err) => {
+      this.bggLoading.set(false);
+
+      const msg =
+        err?.error?.message ??
+        'No s\'ha pogut consultar BoardGameGeek. Torna-ho a provar més tard.';
+      this.formError.set(msg);
+    }
+  });
+}
 }
