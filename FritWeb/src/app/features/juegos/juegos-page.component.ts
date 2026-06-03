@@ -568,7 +568,12 @@ export class JuegosPageComponent implements OnInit {
   }
 
   toggleFilters(): void {
-    this.showFilters.update(v => !v);
+    const next = !this.showFilters();
+    this.showFilters.set(next);
+
+    if (!next) {
+      this.clearAllFilters();
+    }
   }
 
   toggleColumnsPanel(event: MouseEvent): void {
