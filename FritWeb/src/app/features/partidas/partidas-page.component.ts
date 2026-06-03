@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  OnInit,
+  computed,
+  effect,
+  inject,
+  signal
+} from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -22,6 +30,7 @@ import { PartidaJugadoresService } from './partida-jugadores.service';
 
 type FormJugador = {
   usuarioId: number | null;
+  usuarioSearch: string;
   nombreMostrado: string;
   posicion: number;
   puntos: number | null;
@@ -80,7 +89,13 @@ export class PartidasPageComponent implements OnInit {
 
   partidas = signal<Partida[]>([]);
   juegos = signal<Juego[]>([]);
+  filteredJuegos = signal<Juego[]>([]);
+  showJuegoOptions = signal(false);
+
   usuarios = signal<UsuarioOption[]>([]);
+  filteredUsuarios = signal<UsuarioOption[]>([]);
+  showUsuarioOptions = signal<number | null>(null);
+
   partidaJugadores = signal<PartidaJugador[]>([]);
 
   filters = signal<PartidasFilters>({ ...EMPTY_FILTERS });
@@ -271,6 +286,7 @@ export class PartidasPageComponent implements OnInit {
 
   form = this.fb.group({
     juegoId: [null as number | null, Validators.required],
+    juegoSearch: [''],
     fecha: [this.getTodayDate(), Validators.required],
     duracionMinutos: [null as number | null],
     numeroJugadores: [2, [Validators.required, Validators.min(1)]],
@@ -278,12 +294,27 @@ export class PartidasPageComponent implements OnInit {
     jugadores: this.fb.array([])
   });
 
+  constructor() {
+    effect(() => {
+      if (!this.modalOpen()) {
+        this.showJuegoOptions.set(false);
+        this.showUsuarioOptions.set(null);
+      }
+    });
+  }
+
   get jugadoresArray(): FormArray {
     return this.form.get('jugadores') as FormArray;
   }
 
   ngOnInit(): void {
     this.cargarPartidas();
+  }
+
+  @HostListener('window:click')
+  onWindowClick(): void {
+    this.showJuegoOptions.set(false);
+    this.showUsuarioOptions.set(null);
   }
 
   cargarPartidas(): void {
@@ -299,7 +330,9 @@ export class PartidasPageComponent implements OnInit {
       next: result => {
         this.partidas.set(result.partidas);
         this.juegos.set(result.juegos);
+        this.filteredJuegos.set(result.juegos);
         this.usuarios.set(result.usuarios);
+        this.filteredUsuarios.set(result.usuarios);
         this.partidaJugadores.set(result.partidaJugadores);
         this.loading.set(false);
       },
@@ -313,6 +346,7 @@ export class PartidasPageComponent implements OnInit {
   abrirModal(): void {
     this.form.reset({
       juegoId: null,
+      juegoSearch: '',
       fecha: this.getTodayDate(),
       duracionMinutos: null,
       numeroJugadores: 2,
@@ -320,6 +354,8 @@ export class PartidasPageComponent implements OnInit {
     });
 
     this.jugadoresArray.clear();
+    this.filteredJuegos.set(this.juegos());
+    this.filteredUsuarios.set(this.usuarios());
     this.syncJugadoresWithNumero(2);
     this.formError.set('');
     this.success.set('');
@@ -342,12 +378,85 @@ export class PartidasPageComponent implements OnInit {
     this.syncJugadoresWithNumero(value);
   }
 
+  onJuegoInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value ?? '';
+    this.form.controls.juegoSearch.setValue(value);
+    this.showJuegoOptions.set(true);
+
+    const normalized = value.trim().toLowerCase();
+    this.filteredJuegos.set(
+      this.juegos().filter(j => j.nombre.toLowerCase().includes(normalized))
+    );
+  }
+
+  onJuegoFocus(): void {
+    this.showJuegoOptions.set(true);
+    const value = this.form.controls.juegoSearch.value ?? '';
+    this.filteredJuegos.set(
+      this.juegos().filter(j => j.nombre.toLowerCase().includes(value.toLowerCase()))
+    );
+  }
+
+  seleccionarJuego(juego: Juego): void {
+    this.form.patchValue({
+      juegoId: juego.juegoId,
+      juegoSearch: juego.nombre
+    });
+    this.showJuegoOptions.set(false);
+  }
+
+  limpiarJuegoSeleccionado(): void {
+    this.form.patchValue({ juegoId: null, juegoSearch: '' });
+    this.showJuegoOptions.set(false);
+  }
+
+  onUsuarioInput(index: number, event: Event): void {
+    const value = (event.target as HTMLInputElement).value ?? '';
+    const group = this.jugadoresArray.at(index);
+    group.get('usuarioSearch')?.setValue(value);
+    this.showUsuarioOptions.set(index);
+
+    const normalized = value.trim().toLowerCase();
+    this.filteredUsuarios.set(
+      this.usuarios().filter(u => u.nombre.toLowerCase().includes(normalized))
+    );
+  }
+
+  onUsuarioFocus(index: number): void {
+    this.showUsuarioOptions.set(index);
+    const value = this.jugadoresArray.at(index).get('usuarioSearch')?.value ?? '';
+    this.filteredUsuarios.set(
+      this.usuarios().filter(u => u.nombre.toLowerCase().includes(value.toLowerCase()))
+    );
+  }
+
+  seleccionarUsuario(index: number, usuario: UsuarioOption): void {
+    const group = this.jugadoresArray.at(index);
+    group.patchValue({
+      usuarioId: usuario.usuarioId,
+      usuarioSearch: usuario.nombre,
+      nombreMostrado: usuario.nombre
+    });
+    this.showUsuarioOptions.set(null);
+  }
+
+  limpiarUsuario(index: number): void {
+    const group = this.jugadoresArray.at(index);
+    group.patchValue({
+      usuarioId: null,
+      usuarioSearch: '',
+      nombreMostrado: ''
+    });
+    this.showUsuarioOptions.set(null);
+  }
+
   addJugador(): void {
     const posicion = this.jugadoresArray.length + 1;
     this.jugadoresArray.push(
       this.fb.group({
         usuarioId: [null as number | null],
-        nombreMostrado: ['', Validators.required],
+        usuarioSearch: ['', Validators.required],
+        nombreMostrado: [''],
         posicion: [posicion, Validators.required],
         puntos: [null as number | null]
       })
@@ -362,21 +471,6 @@ export class PartidasPageComponent implements OnInit {
     this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
   }
 
-  onJugadorUsuarioChange(index: number, event: Event): void {
-    const value = Number((event.target as HTMLSelectElement).value);
-    const usuarioId = Number.isFinite(value) && value > 0 ? value : null;
-    const usuario = this.usuarios().find(item => item.usuarioId === usuarioId);
-
-    const group = this.jugadoresArray.at(index);
-    if (!group) {
-      return;
-    }
-
-    group.patchValue({
-      usuarioId,
-      nombreMostrado: usuario?.nombre ?? group.get('nombreMostrado')?.value ?? ''
-    });
-  }
 
   guardarPartida(): void {
     this.formError.set('');
@@ -402,7 +496,7 @@ const jugadores: PartidaJugador[] = (raw.jugadores ?? []).map(
     partidaJugadorId: 0,
     partidaId: 0,
     usuarioId: jugador.usuarioId ?? null,
-    nombreMostrado: (jugador.nombreMostrado ?? '').trim(),
+    nombreMostrado: (jugador.usuarioSearch ?? '').trim(),
     posicion: index + 1,
     puntos: jugador.puntos ?? null
   })
@@ -555,7 +649,8 @@ const partidaPayload: Partida = {
       this.jugadoresArray.push(
         this.fb.group({
           usuarioId: [null as number | null],
-          nombreMostrado: ['', Validators.required],
+          usuarioSearch: ['', Validators.required],
+          nombreMostrado: [''],
           posicion: [posicion, Validators.required],
           puntos: [null as number | null]
         })

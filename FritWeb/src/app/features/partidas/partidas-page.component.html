@@ -252,20 +252,38 @@
               *ngFor="let jugador of jugadoresArray.controls; let i = index"
               [formGroupName]="i">
               <div class="player-grid">
-                <label class="form-field">
+                <div class="form-field autocomplete-field">
                   <span>Usuari</span>
-                  <select (change)="onJugadorUsuarioChange(i, $event)" [value]="jugador.get('usuarioId')?.value ?? ''">
-                    <option value="">Sense usuari</option>
-                    <option *ngFor="let usuario of usuarios(); trackBy: trackByUsuarioId" [value]="usuario.usuarioId">
-                      {{ usuario.nombre }}
-                    </option>
-                  </select>
-                </label>
+                  <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
+                    <input
+                      type="text"
+                      formControlName="usuarioSearch"
+                      placeholder="Cerca usuari..."
+                      (input)="onUsuarioInput(i, $event)"
+                      (focus)="onUsuarioFocus(i)" />
 
-                <label class="form-field">
-                  <span>Nom mostrat</span>
-                  <input type="text" formControlName="nombreMostrado" />
-                </label>
+                    <button
+                      *ngIf="jugador.get('usuarioId')?.value"
+                      type="button"
+                      class="clear-autocomplete"
+                      (click)="limpiarUsuario(i)">
+                      ×
+                    </button>
+
+                    <div class="autocomplete-panel" *ngIf="showUsuarioOptions() === i">
+                      <button
+                        type="button"
+                        class="autocomplete-option"
+                        *ngFor="let u of filteredUsuarios(); trackBy: trackByUsuarioId"
+                        (click)="seleccionarUsuario(i, u)">
+                        {{ u.nombre }}
+                      </button>
+                      <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                        Sense coincidències.
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 <label class="form-field">
                   <span>Posició</span>
