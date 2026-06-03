@@ -32,3 +32,15 @@ public class JuegoDto
 
     public int? JuegoBaseId { get; set; }
 }
+
+public class BggJuegoLookupDto
+{
+    public int BggId { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public decimal? DificultadBgg { get; set; }
+    public int NumeroJugadoresMin { get; set; }
+    public int NumeroJugadoresMax { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public int? YearPublished { get; set; }
+    public int? PlayingTime { get; set; }
+}

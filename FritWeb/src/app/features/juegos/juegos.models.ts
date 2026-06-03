@@ -12,24 +12,18 @@ export interface Juego {
   juegoBaseId?: number | null;
 }
 
-export interface CrearJuegoRequest {
-  juegoId: number;
+export interface BggJuegoLookup {
+  bggId: number;
   nombre: string;
-  bggId?: number | null;
   dificultadBgg?: number | null;
   numeroJugadoresMin: number;
   numeroJugadoresMax: number;
-  pvp?: number | null;
-  propietarioId: number;
-  fechaAdquisicion?: string | null;
   tipo: string;
-  juegoBaseId?: number | null;
+  yearPublished?: number | null;
+  playingTime?: number | null;
 }
 
 export interface UsuarioOption {
   usuarioId: number;
   nombre: string;
-  grupo?: string | null;
-  observaciones?: string | null;
-  createdAt: string;
 }

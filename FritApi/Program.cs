@@ -4,8 +4,8 @@
 // npm install
 // npm start
 
-// cd C:\Repos\Frit\FritApi
-// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=yqPZlyoRSxxwMbutiGkSstmfkSSwoTXh;SSL Mode=Require;Trust Server Certificate=true"
+// cd C:\\Repos\\Frit\\FritApi
+// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=TU_PASSWORD;SSL Mode=Require;Trust Server Certificate=true"
 // dotnet run
 
 using FritApi.Data;
@@ -37,6 +37,8 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
@@ -92,7 +94,8 @@ static string GetConnectionString(string? databaseUrl)
             Database = uri.AbsolutePath.Trim('/'),
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
-            SslMode = SslMode.Disable
+            SslMode = SslMode.Require,
+            TrustServerCertificate = true
         };
 
         return builder.ConnectionString;

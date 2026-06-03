@@ -35,6 +35,19 @@ public class JuegosController : ControllerBase
         return Ok(juego);
     }
 
+    [HttpGet("bgg/{bggId:int}")]
+    public async Task<ActionResult<BggJuegoLookupDto>> GetFromBgg(int bggId)
+    {
+        var result = await _juegoService.GetFromBggAsync(bggId);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Juego);
+    }
+
     [HttpPost]
     public async Task<ActionResult<JuegoDto>> Create([FromBody] JuegoDto dto)
     {

@@ -384,6 +384,19 @@ public class JuegosController : ControllerBase
         return Ok(juego);
     }
 
+    [HttpGet("bgg/{bggId:int}")]
+    public async Task<ActionResult<BggJuegoLookupDto>> GetFromBgg(int bggId)
+    {
+        var result = await _juegoService.GetFromBggAsync(bggId);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Juego);
+    }
+
     [HttpPost]
     public async Task<ActionResult<JuegoDto>> Create([FromBody] JuegoDto dto)
     {
@@ -883,6 +896,18 @@ public class JuegoDto
     public string Tipo { get; set; } = string.Empty;
 
     public int? JuegoBaseId { get; set; }
+}
+
+public class BggJuegoLookupDto
+{
+    public int BggId { get; set; }
+    public string Nombre { get; set; } = string.Empty;
+    public decimal? DificultadBgg { get; set; }
+    public int NumeroJugadoresMin { get; set; }
+    public int NumeroJugadoresMax { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public int? YearPublished { get; set; }
+    public int? PlayingTime { get; set; }
 }
 </file>
 
@@ -1811,8 +1836,8 @@ public class Usuario
 // npm install
 // npm start
 
-// cd C:\Repos\Frit\FritApi
-// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=yqPZlyoRSxxwMbutiGkSstmfkSSwoTXh;SSL Mode=Require;Trust Server Certificate=true"
+// cd C:\\Repos\\Frit\\FritApi
+// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=TU_PASSWORD;SSL Mode=Require;Trust Server Certificate=true"
 // dotnet run
 
 using FritApi.Data;
@@ -1844,6 +1869,8 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
@@ -1899,7 +1926,8 @@ static string GetConnectionString(string? databaseUrl)
             Database = uri.AbsolutePath.Trim('/'),
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
-            SslMode = SslMode.Disable
+            SslMode = SslMode.Require,
+            TrustServerCertificate = true
         };
 
         return builder.ConnectionString;
@@ -1928,6 +1956,8 @@ static string GetConnectionString(string? databaseUrl)
 </file>
 
 <file path="FritApi/Services/JuegoService.cs">
+using System.Globalization;
+using System.Xml.Linq;
 using FritApi.Data;
 using FritApi.Dtos;
 using FritApi.Models;
@@ -1938,10 +1968,12 @@ namespace FritApi.Services;
 public class JuegoService
 {
     private readonly AppDbContext _context;
+    private readonly HttpClient _httpClient;
 
-    public JuegoService(AppDbContext context)
+    public JuegoService(AppDbContext context, IHttpClientFactory httpClientFactory)
     {
         _context = context;
+        _httpClient = httpClientFactory.CreateClient();
     }
 
     public async Task<List<JuegoDto>> GetAllAsync()
@@ -2067,6 +2099,7 @@ public class JuegoService
             }
         }
 
+        juego.Nombre = dto.Nombre.Trim();
         juego.BggId = dto.BggId;
         juego.DificultadBgg = dto.DificultadBgg;
         juego.NumeroJugadoresMin = dto.NumeroJugadoresMin;
@@ -2095,6 +2128,95 @@ public class JuegoService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<(bool Success, string? Error, BggJuegoLookupDto? Juego)> GetFromBggAsync(int bggId)
+    {
+        if (bggId <= 0)
+        {
+            return (false, "El BGG ID ha de ser més gran que 0.", null);
+        }
+
+        var url = $"https://boardgamegeek.com/xmlapi2/thing?id={bggId}&stats=1";
+
+        using var response = await _httpClient.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return (false, "No s'ha pogut consultar BoardGameGeek.", null);
+        }
+
+        await using var stream = await response.Content.ReadAsStreamAsync();
+        var document = XDocument.Load(stream);
+
+        var item = document.Root?.Elements("item").FirstOrDefault();
+        if (item is null)
+        {
+            return (false, "No s'ha trobat cap joc amb aquest BGG ID.", null);
+        }
+
+        var primaryName = item.Elements("name")
+            .FirstOrDefault(x => string.Equals((string?)x.Attribute("type"), "primary", StringComparison.OrdinalIgnoreCase))
+            ?.Attribute("value")?.Value
+            ?? item.Elements("name").FirstOrDefault()?.Attribute("value")?.Value
+            ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(primaryName))
+        {
+            return (false, "BGG no ha retornat un nom vàlid per a aquest joc.", null);
+        }
+
+        var minPlayers = ParseIntAttribute(item.Element("minplayers"), "value");
+        var maxPlayers = ParseIntAttribute(item.Element("maxplayers"), "value");
+        var yearPublished = ParseIntAttribute(item.Element("yearpublished"), "value");
+        var playingTime = ParseIntAttribute(item.Element("playingtime"), "value");
+
+        var averageWeight = ParseDecimalAttribute(
+            item.Element("statistics")?
+                .Element("ratings")?
+                .Element("averageweight"),
+            "value");
+
+        var categories = item.Elements("link")
+            .Where(x => string.Equals((string?)x.Attribute("type"), "boardgamecategory", StringComparison.OrdinalIgnoreCase))
+            .Select(x => x.Attribute("value")?.Value)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        var tipo = categories.FirstOrDefault() ?? string.Empty;
+
+        if (!minPlayers.HasValue || !maxPlayers.HasValue)
+        {
+            return (false, "BGG no ha retornat el rang de jugadors d'aquest joc.", null);
+        }
+
+        var dto = new BggJuegoLookupDto
+        {
+            BggId = bggId,
+            Nombre = primaryName.Trim(),
+            NumeroJugadoresMin = minPlayers.Value,
+            NumeroJugadoresMax = maxPlayers.Value,
+            DificultadBgg = averageWeight,
+            Tipo = tipo,
+            YearPublished = yearPublished,
+            PlayingTime = playingTime
+        };
+
+        return (true, null, dto);
+    }
+
+    private static int? ParseIntAttribute(XElement? element, string attributeName)
+    {
+        var value = element?.Attribute(attributeName)?.Value;
+        return int.TryParse(value, out var number) ? number : null;
+    }
+
+    private static decimal? ParseDecimalAttribute(XElement? element, string attributeName)
+    {
+        var value = element?.Attribute(attributeName)?.Value;
+        return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var number)
+            ? decimal.Round(number, 2)
+            : null;
     }
 }
 </file>
@@ -3261,161 +3383,6 @@ h1 {
   flex-wrap: wrap;
 }
 
-.stats-grid {
-  max-width: 1100px;
-  margin: 0 auto 24px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.stat-card,
-.content-card {
-  background: #ffffff;
-  border: 1px solid #e4e7ec;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-}
-
-.stat-card {
-  padding: 20px;
-}
-
-.stat-card-action {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.stat-label {
-  display: block;
-  margin-bottom: 10px;
-  color: #667085;
-  font-size: 0.95rem;
-}
-
-.stat-value {
-  font-size: 2rem;
-  line-height: 1.1;
-}
-
-.stat-value.compact {
-  font-size: 1.4rem;
-}
-
-.stat-action-button {
-  margin-top: auto;
-}
-
-.content-card {
-  max-width: 1100px;
-  margin: 0 auto 24px;
-  padding: 24px;
-}
-
-.section-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.section-heading h2 {
-  margin: 0 0 6px;
-}
-
-.section-heading p {
-  margin: 0;
-  color: #667085;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-  min-height: 220px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 14px 12px;
-  text-align: left;
-  border-bottom: 1px solid #e4e7ec;
-  vertical-align: top;
-}
-
-th {
-  color: #475467;
-  font-size: 0.92rem;
-}
-
-.empty-state {
-  padding: 20px 0 8px;
-}
-
-.empty-state h3 {
-  margin: 0 0 8px;
-}
-
-.empty-state p {
-  margin: 0;
-  color: #667085;
-}
-
-.game-form {
-  display: grid;
-  gap: 18px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-label {
-  display: grid;
-  gap: 8px;
-  font-weight: 600;
-}
-
-label span {
-  color: #344054;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid #d0d5dd;
-  border-radius: 12px;
-  font: inherit;
-  background: #ffffff;
-  color: #101828;
-}
-
-textarea {
-  min-height: 120px;
-  padding: 12px 14px;
-  resize: vertical;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  outline: none;
-  border-color: #0f766e;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
-}
-
 .primary-button,
 .secondary-button,
 .ghost-button {
@@ -3433,6 +3400,11 @@ textarea:focus {
   color: #ffffff;
 }
 
+.primary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .secondary-button {
   border: 1px solid #0f766e;
   background: #ffffff;
@@ -3445,87 +3417,322 @@ textarea:focus {
   color: #344054;
 }
 
-.primary-button:disabled,
-.secondary-button:disabled,
-.ghost-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.content-card {
+  max-width: 1100px;
+  margin: 0 auto 24px;
+  background: white;
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
 }
 
 .error-card {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: transparent;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.toolbar-chip span {
+  font-size: 0.875rem;
+}
+
+.toolbar-chip-active {
+  border-color: #0f766e;
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.04);
+}
+
+.columns-wrapper {
+  position: relative;
+}
+
+.columns-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  z-index: 20;
+}
+
+.columns-panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
-.error,
-.field-error {
-  margin: 0;
-  color: #b42318;
+.columns-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
 }
 
-.success {
-  margin: 0;
+.columns-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  padding: 3px 0;
+}
+
+.columns-option input[type='checkbox'] {
+  width: 14px;
+  height: 14px;
+}
+
+.columns-panel hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 6px 0 8px;
+}
+
+.table-wrapper {
+  margin-top: 8px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+thead {
+  background: #f9fafb;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+th {
+  font-weight: 500;
+  color: #6b7280;
+  user-select: none;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+.th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.sort-indicator {
+  font-size: 0.75rem;
   color: #0f766e;
+}
+
+th.sort-active {
+  background: #eef2ff;
+  border-bottom-color: #c7d2fe;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.filter-input:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.3);
+}
+
+.empty-state {
+  padding: 16px 18px;
+  text-align: left;
+  color: #6b7280;
+}
+
+.empty-state h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.85rem;
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  z-index: 1000;
+  z-index: 40;
 }
 
 .modal-card {
-  width: min(920px, 100%);
-  max-height: calc(100vh - 48px);
-  overflow: auto;
   background: #ffffff;
-  border: 1px solid #e4e7ec;
-  border-radius: 20px;
-  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
-  padding: 24px;
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  padding: 20px 24px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .modal-header h2 {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
+  font-size: 1.2rem;
 }
 
 .modal-header p {
   margin: 0;
-  color: #667085;
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 
 .ghost-icon-button {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #d0d5dd;
-  border-radius: 12px;
-  background: #ffffff;
-  color: #344054;
+  border: none;
+  background: transparent;
+  cursor: pointer;
   font-size: 1.4rem;
   line-height: 1;
-  cursor: pointer;
+  color: #6b7280;
 }
 
-.form-actions {
+.game-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+label span {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.required-mark {
+  color: #b91c1c;
+  font-size: 0.9em;
+  margin: 0;
+}
+
+label input {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+}
+
+label input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.2);
+}
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #b91c1c;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+.success {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #15803d;
+}
+
+.modal-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .autocomplete-field {
@@ -3534,63 +3741,59 @@ textarea:focus {
 
 .autocomplete-panel {
   position: absolute;
-  top: calc(100% + 6px);
   left: 0;
   right: 0;
+  margin-top: 4px;
+  max-height: 220px;
+  overflow-y: auto;
   background: #ffffff;
-  border: 1px solid #d0d5dd;
   border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-  overflow: hidden;
-  z-index: 20;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15);
+  z-index: 30;
 }
 
 .autocomplete-option {
   width: 100%;
-  padding: 12px 14px;
-  border: 0;
-  background: #ffffff;
-  color: #101828;
   text-align: left;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
   cursor: pointer;
 }
 
 .autocomplete-option:hover {
-  background: #f9fafb;
+  background: #f3f4ff;
 }
 
 .autocomplete-empty {
-  padding: 12px 14px;
-  color: #667085;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
-.required-mark {
-  color: #b42318;
-  font-weight: 700;
-  margin-left: 4px;
-}
-
-@media (max-width: 820px) {
-  .dashboard-header,
-  .section-heading,
-  .error-card,
-  .modal-header,
-  .form-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .stats-grid,
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
+@media (max-width: 768px) {
   .dashboard-page {
     padding: 16px;
   }
 
-  .modal-card {
-    padding: 18px;
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .content-card {
+    padding: 16px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 }
 </file>
@@ -3601,11 +3804,18 @@ textarea:focus {
     <div>
       <p class="eyebrow">Frit</p>
       <h1>Jocs</h1>
-      <p class="subtitle">Gestiona la teva ludoteca i registra jocs nous abans de crear partides.</p>
+      <p class="subtitle">
+        Gestiona la teva ludoteca i registra jocs nous abans de crear partides.
+      </p>
     </div>
 
     <div class="header-actions">
-      <button type="button" class="secondary-button" routerLink="/app/partidas">Veure partides</button>
+      <button type="button" class="secondary-button" routerLink="/app/partidas">
+        Veure partides
+      </button>
+      <button type="button" class="primary-button" (click)="abrirModal()">
+        Nou joc
+      </button>
       <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
   </header>
@@ -3616,7 +3826,9 @@ textarea:focus {
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarDatos()">Tornar-ho a provar</button>
+    <button type="button" class="primary-button" (click)="cargarDatos()">
+      Tornar-ho a provar
+    </button>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
@@ -3626,82 +3838,319 @@ textarea:focus {
         <p>La teva col·lecció disponible per a futures partides.</p>
       </div>
 
-      <button type="button" class="primary-button" (click)="abrirModal()">Nou joc</button>
+      <div class="toolbar">
+        <button
+          type="button"
+          class="toolbar-chip"
+          [class.toolbar-chip-active]="showFilters()"
+          (click)="toggleFilters()"
+        >
+          <span>Filtres</span>
+        </button>
+
+        <div class="columns-wrapper" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="toolbar-chip"
+            [class.toolbar-chip-active]="showColumnsPanel()"
+            (click)="toggleColumnsPanel($event)"
+          >
+            <span>Columnes</span>
+          </button>
+
+          <div class="columns-panel" *ngIf="showColumnsPanel()">
+            <div class="columns-panel-header">
+              <span>Columnes visibles</span>
+              <button
+                type="button"
+                class="columns-close"
+                (click)="showColumnsPanel.set(false)"
+              >
+                ×
+              </button>
+            </div>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="allColumnsSelected()"
+                (change)="selectAllColumns()"
+              />
+              <span>Seleccionar totes</span>
+            </label>
+
+            <hr />
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().nombre"
+                (change)="toggleColumn('nombre')"
+              />
+              <span>Nom</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().numeroJugadoresMin"
+                (change)="toggleColumn('numeroJugadoresMin')"
+              />
+              <span>Jugadors mín.</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().numeroJugadoresMax"
+                (change)="toggleColumn('numeroJugadoresMax')"
+              />
+              <span>Jugadors màx.</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().propietario"
+                (change)="toggleColumn('propietario')"
+              />
+              <span>Propietari</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().tipo"
+                (change)="toggleColumn('tipo')"
+              />
+              <span>Tipus</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().pvp"
+                (change)="toggleColumn('pvp')"
+              />
+              <span>PVP</span>
+            </label>
+
+            <label class="columns-option">
+              <input
+                type="checkbox"
+                [checked]="visibleColumns().juegoBase"
+                (change)="toggleColumn('juegoBase')"
+              />
+              <span>Joc base</span>
+            </label>
+
+            <div class="columns-actions">
+              <button type="button" class="secondary-button" (click)="resetTableState()">
+                Restablir
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="empty-state" *ngIf="juegos().length === 0">
-      <h3>Encara no hi ha jocs registrats</h3>
-      <p>Comença creant el teu primer joc des del botó Nou joc.</p>
-    </div>
-
-    <div class="table-wrapper" *ngIf="juegos().length > 0">
+    <div class="table-wrapper">
       <table>
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Jugadors</th>
-            <th>Propietari</th>
-            <th>Tipus</th>
-            <th>PVP</th>
+            <th *ngIf="visibleColumns().nombre" (click)="sortBy('nombre')">
+              Nom {{ getSortIndicator('nombre') }}
+            </th>
+            <th *ngIf="visibleColumns().numeroJugadoresMin" (click)="sortBy('numeroJugadoresMin')">
+              Jugadors mín. {{ getSortIndicator('numeroJugadoresMin') }}
+            </th>
+            <th *ngIf="visibleColumns().numeroJugadoresMax" (click)="sortBy('numeroJugadoresMax')">
+              Jugadors màx. {{ getSortIndicator('numeroJugadoresMax') }}
+            </th>
+            <th *ngIf="visibleColumns().propietario" (click)="sortBy('propietario')">
+              Propietari {{ getSortIndicator('propietario') }}
+            </th>
+            <th *ngIf="visibleColumns().tipo" (click)="sortBy('tipo')">
+              Tipus {{ getSortIndicator('tipo') }}
+            </th>
+            <th *ngIf="visibleColumns().pvp" (click)="sortBy('pvp')">
+              PVP {{ getSortIndicator('pvp') }}
+            </th>
+            <th *ngIf="visibleColumns().juegoBase" (click)="sortBy('juegoBase')">
+              Joc base {{ getSortIndicator('juegoBase') }}
+            </th>
+          </tr>
+
+          <tr *ngIf="showFilters()">
+            <th *ngIf="visibleColumns().nombre">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().nombre"
+                (input)="updateFilter('nombre', $any($event.target).value)"
+              />
+            </th>
+
+            <th *ngIf="visibleColumns().numeroJugadoresMin">
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().numeroJugadoresMin"
+                (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)"
+              />
+            </th>
+
+            <th *ngIf="visibleColumns().numeroJugadoresMax">
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().numeroJugadoresMax"
+                (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)"
+              />
+            </th>
+
+            <th *ngIf="visibleColumns().propietario">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().propietario"
+                (input)="updateFilter('propietario', $any($event.target).value)"
+              />
+            </th>
+
+            <th *ngIf="visibleColumns().tipo">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().tipo"
+                (input)="updateFilter('tipo', $any($event.target).value)"
+              />
+            </th>
+
+            <th *ngIf="visibleColumns().pvp">
+              <input
+                type="number"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().pvp"
+                (input)="updateFilter('pvp', $any($event.target).value)"
+              />
+            </th>
+
+            <th *ngIf="visibleColumns().juegoBase">
+              <input
+                type="text"
+                class="filter-input"
+                placeholder="Filtra..."
+                [value]="filters().juegoBase"
+                (input)="updateFilter('juegoBase', $any($event.target).value)"
+              />
+            </th>
           </tr>
         </thead>
+
         <tbody>
-          <tr *ngFor="let juego of juegos(); trackBy: trackByJuegoId">
-            <td>{{ juego.nombre }}</td>
-            <td>{{ juego.numeroJugadoresMin }} - {{ juego.numeroJugadoresMax }}</td>
-            <td>{{ getNombrePropietario(juego.propietarioId) }}</td>
-            <td>{{ juego.tipo }}</td>
-            <td>{{ juego.pvp ?? '-' }}</td>
+          <tr *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId">
+            <td *ngIf="visibleColumns().nombre">{{ juego.nombre }}</td>
+            <td *ngIf="visibleColumns().numeroJugadoresMin">{{ juego.numeroJugadoresMin }}</td>
+            <td *ngIf="visibleColumns().numeroJugadoresMax">{{ juego.numeroJugadoresMax }}</td>
+            <td *ngIf="visibleColumns().propietario">{{ getNombrePropietario(juego.propietarioId) }}</td>
+            <td *ngIf="visibleColumns().tipo">{{ juego.tipo || '-' }}</td>
+            <td *ngIf="visibleColumns().pvp">{{ juego.pvp ?? '-' }}</td>
+            <td *ngIf="visibleColumns().juegoBase">{{ getNombreJuegoBase(juego.juegoBaseId) }}</td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <div class="empty-state" *ngIf="juegos().length > 0 && juegosFiltradosOrdenados().length === 0">
+      <h3>Cap joc coincideix amb els filtres</h3>
+      <p>Prova d’ajustar o esborrar algun filtre de les columnes.</p>
+    </div>
+
+    <div class="empty-state" *ngIf="juegos().length === 0">
+      <h3>Encara no hi ha jocs registrats</h3>
+      <p>Afegeix el primer joc de la teva col·lecció.</p>
+    </div>
   </section>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <section
-      class="modal-card"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="nuevo-juego-title"
-      (click)="$event.stopPropagation()"
-    >
+    <section class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
-          <h2 id="nuevo-juego-title">Nou joc</h2>
-          <p>Escriu el propietari i selecciona una opció de la llista filtrada.</p>
+          <h2>Nou joc</h2>
+          <p>Completa les dades del joc o carrega-les des de BoardGameGeek.</p>
         </div>
 
-        <button
-          type="button"
-          class="ghost-icon-button"
-          aria-label="Tancar formulari"
-          (click)="cerrarModal()"
-        >
-          ×
+        <button type="button" class="ghost-button" (click)="cerrarModal()">
+          Tancar
         </button>
       </div>
 
-      <form class="game-form" [formGroup]="form" (ngSubmit)="submit()">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="game-form">
         <div class="form-grid">
-          <label>
-            <span>Nom <span class="required-mark">*</span></span>
+          <label class="form-field bgg-row">
+            <span>BGG ID</span>
+            <div class="bgg-inline">
+              <input type="number" formControlName="bggId" min="1" />
+              <button
+                type="button"
+                class="secondary-button"
+                (click)="cargarDesdeBgg()"
+                [disabled]="bggLoading()"
+              >
+                {{ bggLoading() ? 'Carregant...' : 'Carregar' }}
+              </button>
+            </div>
+          </label>
+
+          <label class="form-field">
+            <span>Nom</span>
             <input type="text" formControlName="nombre" />
             <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
               El nom és obligatori.
             </small>
           </label>
 
-          <label class="autocomplete-field">
-            <span>Propietari <span class="required-mark">*</span></span>
+          <label class="form-field">
+            <span>Dificultat BGG</span>
+            <input type="number" step="0.01" formControlName="dificultadBgg" />
+          </label>
+
+          <label class="form-field">
+            <span>Jugadors mínims</span>
+            <input type="number" formControlName="numeroJugadoresMin" min="1" />
+          </label>
+
+          <label class="form-field">
+            <span>Jugadors màxims</span>
+            <input type="number" formControlName="numeroJugadoresMax" min="1" />
+          </label>
+
+          <label class="form-field">
+            <span>PVP</span>
+            <input type="number" step="0.01" formControlName="pvp" min="0" />
+          </label>
+
+          <label class="form-field autocomplete-field">
+            <span>Propietari</span>
             <input
               type="text"
               formControlName="propietarioSearch"
-              (focus)="showPropietarioOptions.set(true)"
               autocomplete="off"
+              (click)="$event.stopPropagation()"
             />
 
-            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
+            <div
+              class="autocomplete-panel"
+              *ngIf="showPropietarioOptions()"
+              (click)="$event.stopPropagation()"
+            >
               <button
                 type="button"
                 class="autocomplete-option"
@@ -3711,54 +4160,73 @@ textarea:focus {
                 {{ usuario.nombre }}
               </button>
 
-              <p class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
-                No s'han trobat propietaris.
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngIf="form.controls.propietarioId.value"
+                (click)="limpiarPropietario()"
+              >
+                Sense propietari
+              </button>
+
+              <p
+                class="autocomplete-empty"
+                *ngIf="filteredUsuarios().length === 0 && !form.controls.propietarioId.value"
+              >
+                No s’han trobat propietaris.
               </p>
             </div>
-
-            <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
-              Has de seleccionar un propietari vàlid.
-            </small>
           </label>
 
-          <label>
-            <span>Jugadors mínims <span class="required-mark">*</span></span>
-            <input type="number" formControlName="numeroJugadoresMin" min="1" />
-          </label>
-
-          <label>
-            <span>Jugadors màxims <span class="required-mark">*</span></span>
-            <input type="number" formControlName="numeroJugadoresMax" min="1" />
-          </label>
-
-          <label>
+          <label class="form-field">
             <span>Tipus</span>
             <input type="text" formControlName="tipo" />
           </label>
 
-          <label>
-            <span>BGG ID</span>
-            <input type="number" formControlName="bggId" min="1" />
-          </label>
-
-          <label>
-            <span>Dificultat BGG</span>
-            <input type="number" formControlName="dificultadBgg" step="0.01" min="0" />
-          </label>
-
-          <label>
-            <span>PVP</span>
-            <input type="number" formControlName="pvp" step="0.01" min="0" />
-          </label>
-
-          <label>
-            <span>Data d'adquisició</span>
+          <label class="form-field">
+            <span>Data d’adquisició</span>
             <input type="date" formControlName="fechaAdquisicion" />
           </label>
 
-          <label>
-            <span>ID joc base</span>
-            <input type="number" formControlName="juegoBaseId" min="1" />
+          <label class="form-field autocomplete-field">
+            <span>Joc base</span>
+            <input
+              type="text"
+              formControlName="juegoBaseSearch"
+              autocomplete="off"
+              (click)="$event.stopPropagation()"
+            />
+
+            <div
+              class="autocomplete-panel"
+              *ngIf="showJuegoBaseOptions()"
+              (click)="$event.stopPropagation()"
+            >
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngFor="let juego of filteredJuegosBase()"
+                (click)="seleccionarJuegoBase(juego)"
+              >
+                {{ juego.nombre }}
+              </button>
+
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngIf="form.controls.juegoBaseId.value"
+                (click)="limpiarJuegoBase()"
+              >
+                Sense joc base
+              </button>
+
+              <p
+                class="autocomplete-empty"
+                *ngIf="filteredJuegosBase().length === 0 && !form.controls.juegoBaseId.value"
+              >
+                No s’han trobat jocs base.
+              </p>
+            </div>
           </label>
         </div>
 
@@ -3770,7 +4238,10 @@ textarea:focus {
         <p class="success" *ngIf="success()">{{ success() }}</p>
 
         <div class="modal-actions">
-          <button type="button" class="secondary-button" (click)="cerrarModal()">Cancel·lar</button>
+          <button type="button" class="secondary-button" (click)="cerrarModal()">
+            Cancel·lar
+          </button>
+
           <button type="submit" class="primary-button" [disabled]="saving()">
             {{ saving() ? 'Desant...' : 'Desar joc' }}
           </button>
@@ -3784,10 +4255,17 @@ textarea:focus {
 <file path="FritWeb/src/app/features/juegos/juegos-page.component.ts">
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { Juego, UsuarioOption } from './juegos.models';
+import { BggJuegoLookup, CrearJuegoRequest, Juego, UsuarioOption } from './juegos.models';
 import { JuegosService } from './juegos.service';
 import { UsuariosService } from './usuarios.service';
 
@@ -3803,6 +4281,47 @@ function minLessOrEqualMaxValidator(): ValidatorFn {
     return min <= max ? null : { minGreaterThanMax: true };
   };
 }
+
+type SortColumn =
+  | 'nombre'
+  | 'numeroJugadoresMin'
+  | 'numeroJugadoresMax'
+  | 'propietario'
+  | 'tipo'
+  | 'pvp'
+  | 'juegoBase';
+
+type SortDirection = 'asc' | 'desc' | null;
+
+interface JuegosFilters {
+  nombre: string;
+  numeroJugadoresMin: string;
+  numeroJugadoresMax: string;
+  propietario: string;
+  tipo: string;
+  pvp: string;
+  juegoBase: string;
+}
+
+interface VisibleColumns {
+  nombre: boolean;
+  numeroJugadoresMin: boolean;
+  numeroJugadoresMax: boolean;
+  propietario: boolean;
+  tipo: boolean;
+  pvp: boolean;
+  juegoBase: boolean;
+}
+
+const EMPTY_FILTERS: JuegosFilters = {
+  nombre: '',
+  numeroJugadoresMin: '',
+  numeroJugadoresMax: '',
+  propietario: '',
+  tipo: '',
+  pvp: '',
+  juegoBase: ''
+};
 
 @Component({
   selector: 'app-juegos-page',
@@ -3820,6 +4339,7 @@ export class JuegosPageComponent implements OnInit {
 
   loading = signal(true);
   saving = signal(false);
+  bggLoading = signal(false);
   error = signal('');
   formError = signal('');
   success = signal('');
@@ -3829,42 +4349,178 @@ export class JuegosPageComponent implements OnInit {
   usuarios = signal<UsuarioOption[]>([]);
   filteredUsuarios = signal<UsuarioOption[]>([]);
   showPropietarioOptions = signal(false);
+  filteredJuegosBase = signal<Juego[]>([]);
+  showJuegoBaseOptions = signal(false);
+
+  sortColumn = signal<SortColumn | null>(null);
+  sortDirection = signal<SortDirection>(null);
+  filters = signal<JuegosFilters>({ ...EMPTY_FILTERS });
+
+  visibleColumns = signal<VisibleColumns>({
+    nombre: true,
+    numeroJugadoresMin: true,
+    numeroJugadoresMax: true,
+    propietario: true,
+    tipo: true,
+    pvp: true,
+    juegoBase: true
+  });
+
+  showFilters = signal(false);
+  showColumnsPanel = signal(false);
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
 
-  form = this.fb.nonNullable.group({
-    nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    numeroJugadoresMin: [1, [Validators.required, Validators.min(1)]],
-    numeroJugadoresMax: [4, [Validators.required, Validators.min(1)]],
-    propietarioId: [0, [Validators.required, Validators.min(1)]],
-    propietarioSearch: [''],
-    tipo: ['', [Validators.maxLength(200)]],
-    bggId: [''],
-    dificultadBgg: [''],
-    pvp: [''],
-    fechaAdquisicion: [''],
-    juegoBaseId: ['']
-  }, { validators: minLessOrEqualMaxValidator() });
+  juegosFiltradosOrdenados = computed(() => {
+    const juegos = this.juegos();
+    const filters = this.filters();
+    const sortColumn = this.sortColumn();
+    const sortDirection = this.sortDirection();
+
+    const filtered = juegos.filter(juego => {
+      if (filters.nombre.trim()) {
+        if (!juego.nombre.toLowerCase().includes(filters.nombre.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (filters.numeroJugadoresMin.trim()) {
+        const minFilter = Number(filters.numeroJugadoresMin);
+        if (Number.isFinite(minFilter) && juego.numeroJugadoresMin !== minFilter) {
+          return false;
+        }
+      }
+
+      if (filters.numeroJugadoresMax.trim()) {
+        const maxFilter = Number(filters.numeroJugadoresMax);
+        if (Number.isFinite(maxFilter) && juego.numeroJugadoresMax !== maxFilter) {
+          return false;
+        }
+      }
+
+      if (filters.propietario.trim()) {
+        const propietario = this.getNombrePropietario(juego.propietarioId).toLowerCase();
+        if (!propietario.includes(filters.propietario.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (filters.tipo.trim()) {
+        if (!(juego.tipo ?? '').toLowerCase().includes(filters.tipo.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (filters.pvp.trim()) {
+        const pvpFilter = Number(filters.pvp);
+        if (Number.isFinite(pvpFilter) && Number(juego.pvp ?? 0) !== pvpFilter) {
+          return false;
+        }
+      }
+
+      if (filters.juegoBase.trim()) {
+        const juegoBase = this.getNombreJuegoBase(juego.juegoBaseId).toLowerCase();
+        if (!juegoBase.includes(filters.juegoBase.trim().toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    if (!sortColumn || !sortDirection) {
+      return [...filtered];
+    }
+
+    return [...filtered].sort((a, b) => {
+      const direction = sortDirection === 'asc' ? 1 : -1;
+
+      switch (sortColumn) {
+        case 'nombre':
+          return a.nombre.localeCompare(b.nombre) * direction;
+        case 'numeroJugadoresMin':
+          return (a.numeroJugadoresMin - b.numeroJugadoresMin) * direction;
+        case 'numeroJugadoresMax':
+          return (a.numeroJugadoresMax - b.numeroJugadoresMax) * direction;
+        case 'propietario':
+          return this.getNombrePropietario(a.propietarioId)
+            .localeCompare(this.getNombrePropietario(b.propietarioId)) * direction;
+        case 'tipo':
+          return (a.tipo ?? '').localeCompare(b.tipo ?? '') * direction;
+        case 'pvp':
+          return ((a.pvp ?? 0) - (b.pvp ?? 0)) * direction;
+        case 'juegoBase':
+          return this.getNombreJuegoBase(a.juegoBaseId)
+            .localeCompare(this.getNombreJuegoBase(b.juegoBaseId)) * direction;
+        default:
+          return 0;
+      }
+    });
+  });
+
+  allColumnsSelected = computed(() => {
+    const columns = this.visibleColumns();
+    return Object.values(columns).every(Boolean);
+  });
+
+  form = this.fb.group(
+    {
+      juegoId: this.fb.nonNullable.control(0),
+      nombre: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(200)]),
+      bggId: this.fb.control<number | null>(null),
+      dificultadBgg: this.fb.control<number | null>(null),
+      numeroJugadoresMin: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
+      numeroJugadoresMax: this.fb.nonNullable.control(1, [Validators.required, Validators.min(1)]),
+      pvp: this.fb.control<number | null>(null),
+      propietarioId: this.fb.control<number | null>(null, [Validators.required]),
+      propietarioSearch: this.fb.nonNullable.control('', [Validators.required]),
+      fechaAdquisicion: this.fb.control<string | null>(null),
+      tipo: this.fb.nonNullable.control('', [Validators.maxLength(200)]),
+      juegoBaseId: this.fb.control<number | null>(null),
+      juegoBaseSearch: this.fb.nonNullable.control('')
+    },
+    { validators: minLessOrEqualMaxValidator() }
+  );
 
   ngOnInit(): void {
-    this.precargarPropietarioActual();
     this.inicializarFiltroPropietarios();
+    this.inicializarFiltroJuegosBase();
+    this.precargarPropietarioActual();
     this.cargarDatos();
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    if (this.modalOpen()) {
-      this.cerrarModal();
-    }
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.showPropietarioOptions.set(false);
+    this.showJuegoBaseOptions.set(false);
+    this.showColumnsPanel.set(false);
   }
 
   abrirModal(): void {
+    this.form.reset({
+      juegoId: 0,
+      nombre: '',
+      bggId: null,
+      dificultadBgg: null,
+      numeroJugadoresMin: 1,
+      numeroJugadoresMax: 1,
+      pvp: null,
+      propietarioId: this.authService.currentUser?.usuarioId ?? null,
+      propietarioSearch: this.authService.currentUser?.nombre ?? '',
+      fechaAdquisicion: null,
+      tipo: '',
+      juegoBaseId: null,
+      juegoBaseSearch: ''
+    });
+
     this.formError.set('');
     this.success.set('');
     this.showPropietarioOptions.set(false);
+    this.showJuegoBaseOptions.set(false);
     this.modalOpen.set(true);
+    this.filteredUsuarios.set(this.usuarios());
+    this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
   }
 
   cerrarModal(): void {
@@ -3874,6 +4530,7 @@ export class JuegosPageComponent implements OnInit {
 
     this.modalOpen.set(false);
     this.showPropietarioOptions.set(false);
+    this.showJuegoBaseOptions.set(false);
   }
 
   cargarDatos(): void {
@@ -3886,11 +4543,12 @@ export class JuegosPageComponent implements OnInit {
     this.juegosService.getAll().subscribe({
       next: juegos => {
         this.juegos.set(juegos);
+        this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(this.form.controls.juegoBaseSearch.value));
         juegosCargados = true;
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No s\'han pogut carregar els jocs.');
+        this.error.set('No s’han pogut carregar els jocs.');
         this.loading.set(false);
       }
     });
@@ -3904,7 +4562,7 @@ export class JuegosPageComponent implements OnInit {
         this.intentarFinalizarCarga(juegosCargados, usuariosCargados);
       },
       error: () => {
-        this.error.set('No s\'han pogut carregar els usuaris.');
+        this.error.set('No s’han pogut carregar els usuaris.');
         this.loading.set(false);
       }
     });
@@ -3913,139 +4571,251 @@ export class JuegosPageComponent implements OnInit {
   private inicializarFiltroPropietarios(): void {
     this.form.controls.propietarioSearch.valueChanges.subscribe(value => {
       const term = value.trim().toLowerCase();
-      const filtered = this.usuarios().filter(u => u.nombre.toLowerCase().includes(term));
+
+      const filtered = this.usuarios().filter(u =>
+        u.nombre.toLowerCase().includes(term)
+      );
 
       this.filteredUsuarios.set(filtered);
       this.showPropietarioOptions.set(true);
 
-      const selected = this.usuarios().find(u => u.nombre.toLowerCase() === term);
-      this.form.patchValue(
-        { propietarioId: selected?.usuarioId ?? 0 },
-        { emitEvent: false }
-      );
+      const selected = this.usuarios().find(u => u.usuarioId === this.propietarioId.value);
+      if (!selected || selected.nombre !== value) {
+        this.form.controls.propietarioId.setValue(null, { emitEvent: false });
+      }
     });
   }
 
-  private intentarFinalizarCarga(juegosCargados: boolean, usuariosCargados: boolean): void {
-    if (juegosCargados && usuariosCargados) {
-      this.loading.set(false);
-    }
-  }
+  private inicializarFiltroJuegosBase(): void {
+    this.form.controls.juegoBaseSearch.valueChanges.subscribe(value => {
+      const filtered = this.obtenerJuegosBaseFiltrados(value);
+      this.filteredJuegosBase.set(filtered);
+      this.showJuegoBaseOptions.set(true);
 
-  private precargarPropietarioActual(): void {
-    const usuarioId = this.authService.currentUser?.usuarioId ?? 0;
+      const selectedId = this.form.controls.juegoBaseId.value;
+      const selected = this.juegos().find(j => j.juegoId === selectedId);
 
-    if (usuarioId > 0) {
-      this.form.patchValue(
-        { propietarioId: usuarioId },
-        { emitEvent: false }
-      );
-    }
-  }
-
-  private seleccionarPropietarioPorDefecto(usuarios: UsuarioOption[]): void {
-    const currentUserId = this.authService.currentUser?.usuarioId ?? 0;
-    const existeUsuarioActual = usuarios.some(u => u.usuarioId === currentUserId);
-    const propietarioActual = this.form.controls.propietarioId.value;
-
-    if (propietarioActual > 0) {
-      const actual = usuarios.find(u => u.usuarioId === propietarioActual);
-
-      if (actual) {
-        this.form.patchValue(
-          {
-            propietarioId: actual.usuarioId,
-            propietarioSearch: actual.nombre
-          },
-          { emitEvent: false }
-        );
-        this.filteredUsuarios.set(usuarios);
-        return;
+      if (!selected || selected.nombre !== value) {
+        this.form.controls.juegoBaseId.setValue(null, { emitEvent: false });
       }
+    });
+  }
+
+  cargarDesdeBgg(): void {
+    this.formError.set('');
+    this.success.set('');
+
+    const bggId = this.form.controls.bggId.value;
+
+    if (!bggId || bggId <= 0) {
+      this.formError.set('Introdueix un BGG ID vàlid.');
+      return;
     }
 
-    if (existeUsuarioActual) {
-      const actual = usuarios.find(u => u.usuarioId === currentUserId)!;
-      this.form.patchValue(
-        {
-          propietarioId: actual.usuarioId,
-          propietarioSearch: actual.nombre
-        },
-        { emitEvent: false }
-      );
-      this.filteredUsuarios.set(usuarios);
+    this.bggLoading.set(true);
+
+    this.juegosService.getFromBgg(bggId).subscribe({
+      next: (bggJuego: BggJuegoLookup) => {
+        this.form.patchValue({
+          nombre: bggJuego.nombre,
+          bggId: bggJuego.bggId,
+          dificultadBgg: bggJuego.dificultadBgg ?? null,
+          numeroJugadoresMin: bggJuego.numeroJugadoresMin,
+          numeroJugadoresMax: bggJuego.numeroJugadoresMax,
+          tipo: bggJuego.tipo ?? ''
+        });
+
+        this.success.set('Informació carregada des de BoardGameGeek.');
+        this.bggLoading.set(false);
+      },
+      error: err => {
+        this.formError.set(err?.error?.message ?? 'No s’ha pogut carregar la informació de BGG.');
+        this.bggLoading.set(false);
+      }
+    });
+  }
+
+  submit(): void {
+    this.formError.set('');
+    this.success.set('');
+
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.formError.set('Revisa els camps del formulari.');
+      return;
     }
+
+    const raw = this.form.getRawValue();
+
+    const payload: CrearJuegoRequest = {
+      juegoId: raw.juegoId,
+      nombre: raw.nombre.trim(),
+      bggId: raw.bggId ? Number(raw.bggId) : null,
+      dificultadBgg: raw.dificultadBgg !== null && raw.dificultadBgg !== undefined
+        ? Number(raw.dificultadBgg)
+        : null,
+      numeroJugadoresMin: Number(raw.numeroJugadoresMin),
+      numeroJugadoresMax: Number(raw.numeroJugadoresMax),
+      pvp: raw.pvp !== null && raw.pvp !== undefined ? Number(raw.pvp) : null,
+      propietarioId: Number(raw.propietarioId),
+      fechaAdquisicion: raw.fechaAdquisicion,
+      tipo: raw.tipo.trim(),
+      juegoBaseId: raw.juegoBaseId ? Number(raw.juegoBaseId) : null
+    };
+
+    this.saving.set(true);
+
+    this.juegosService.create(payload).subscribe({
+      next: juego => {
+        this.juegos.update(current => [...current, juego]);
+        this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(this.form.controls.juegoBaseSearch.value));
+        this.success.set('Joc desat correctament.');
+        this.saving.set(false);
+        this.cerrarModal();
+      },
+      error: err => {
+        this.formError.set(err?.error?.message ?? 'No s’ha pogut desar el joc.');
+        this.saving.set(false);
+      }
+    });
   }
 
   seleccionarPropietario(usuario: UsuarioOption): void {
-    this.form.patchValue({
-      propietarioId: usuario.usuarioId,
-      propietarioSearch: usuario.nombre
-    });
+    this.form.patchValue(
+      {
+        propietarioId: usuario.usuarioId,
+        propietarioSearch: usuario.nombre
+      },
+      { emitEvent: false }
+    );
+
+    this.showPropietarioOptions.set(false);
+    this.filteredUsuarios.set(this.usuarios());
+  }
+
+  limpiarPropietario(): void {
+    this.form.patchValue(
+      {
+        propietarioId: null,
+        propietarioSearch: ''
+      },
+      { emitEvent: false }
+    );
 
     this.filteredUsuarios.set(this.usuarios());
     this.showPropietarioOptions.set(false);
   }
 
-  submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.formError.set('Revisa els camps obligatoris del formulari.');
-      return;
-    }
-
-    this.saving.set(true);
-    this.formError.set('');
-    this.success.set('');
-
-    const value = this.form.getRawValue();
-
-    this.juegosService.create({
-      juegoId: 0,
-      nombre: value.nombre.trim(),
-      bggId: this.toNullableNumber(value.bggId),
-      dificultadBgg: this.toNullableNumber(value.dificultadBgg),
-      numeroJugadoresMin: Number(value.numeroJugadoresMin),
-      numeroJugadoresMax: Number(value.numeroJugadoresMax),
-      pvp: this.toNullableNumber(value.pvp),
-      propietarioId: Number(value.propietarioId),
-      fechaAdquisicion: value.fechaAdquisicion || null,
-      tipo: value.tipo.trim(),
-      juegoBaseId: this.toNullableNumber(value.juegoBaseId)
-    }).subscribe({
-      next: juego => {
-        this.juegos.update(items => [juego, ...items]);
-        this.saving.set(false);
-        this.success.set('Joc creat correctament.');
-        this.form.reset({
-          nombre: '',
-          numeroJugadoresMin: 1,
-          numeroJugadoresMax: 4,
-          propietarioId: this.authService.currentUser?.usuarioId ?? 0,
-          propietarioSearch: this.authService.currentUser?.nombre ?? '',
-          tipo: '',
-          bggId: '',
-          dificultadBgg: '',
-          pvp: '',
-          fechaAdquisicion: '',
-          juegoBaseId: ''
-        });
-        this.modalOpen.set(false);
+  seleccionarJuegoBase(juego: Juego): void {
+    this.form.patchValue(
+      {
+        juegoBaseId: juego.juegoId,
+        juegoBaseSearch: juego.nombre
       },
-      error: err => {
-        this.saving.set(false);
-        this.formError.set(err.error?.message ?? 'No s\'ha pogut crear el joc.');
-      }
+      { emitEvent: false }
+    );
+
+    this.showJuegoBaseOptions.set(false);
+    this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(juego.nombre));
+  }
+
+  limpiarJuegoBase(): void {
+    this.form.patchValue(
+      {
+        juegoBaseId: null,
+        juegoBaseSearch: ''
+      },
+      { emitEvent: false }
+    );
+
+    this.filteredJuegosBase.set(this.obtenerJuegosBaseFiltrados(''));
+    this.showJuegoBaseOptions.set(false);
+  }
+
+  updateFilter<K extends keyof JuegosFilters>(key: K, value: JuegosFilters[K]): void {
+    this.filters.update(current => ({
+      ...current,
+      [key]: value
+    }));
+  }
+
+  clearAllFilters(): void {
+    this.filters.set({ ...EMPTY_FILTERS });
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update(value => !value);
+  }
+
+  toggleColumnsPanel(event: Event): void {
+    event.stopPropagation();
+    this.showColumnsPanel.update(value => !value);
+  }
+
+  toggleColumn(column: keyof VisibleColumns): void {
+    this.visibleColumns.update(current => ({
+      ...current,
+      [column]: !current[column]
+    }));
+  }
+
+  selectAllColumns(): void {
+    const allSelected = this.allColumnsSelected();
+
+    this.visibleColumns.set({
+      nombre: !allSelected,
+      numeroJugadoresMin: !allSelected,
+      numeroJugadoresMax: !allSelected,
+      propietario: !allSelected,
+      tipo: !allSelected,
+      pvp: !allSelected,
+      juegoBase: !allSelected
     });
   }
 
-  private toNullableNumber(value: unknown): number | null {
-    if (value === null || value === undefined || value === '') {
-      return null;
+  sortBy(column: SortColumn): void {
+    if (this.sortColumn() !== column) {
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+      return;
     }
 
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
+    if (this.sortDirection() === 'asc') {
+      this.sortDirection.set('desc');
+      return;
+    }
+
+    if (this.sortDirection() === 'desc') {
+      this.sortColumn.set(null);
+      this.sortDirection.set(null);
+      return;
+    }
+
+    this.sortDirection.set('asc');
+  }
+
+  getSortIndicator(column: SortColumn): string {
+    if (this.sortColumn() !== column) {
+      return '';
+    }
+
+    return this.sortDirection() === 'asc' ? '↑' : this.sortDirection() === 'desc' ? '↓' : '';
+  }
+
+  resetTableState(): void {
+    this.visibleColumns.set({
+      nombre: true,
+      numeroJugadoresMin: true,
+      numeroJugadoresMax: true,
+      propietario: true,
+      tipo: true,
+      pvp: true,
+      juegoBase: true
+    });
+
+    this.clearAllFilters();
+    this.sortColumn.set(null);
+    this.sortDirection.set(null);
   }
 
   logout(): void {
@@ -4055,20 +4825,89 @@ export class JuegosPageComponent implements OnInit {
     });
   }
 
-  get nombre() {
-    return this.form.controls.nombre;
+  getNombrePropietario(propietarioId: number): string {
+    return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? `${propietarioId}`;
   }
 
-  get propietarioId() {
-    return this.form.controls.propietarioId;
+  getNombreJuegoBase(juegoBaseId: number | null | undefined): string {
+    if (!juegoBaseId) {
+      return '-';
+    }
+
+    const juegoBase = this.juegos().find(j => j.juegoId === juegoBaseId);
+    return juegoBase?.nombre ?? `${juegoBaseId}`;
+  }
+
+  private obtenerJuegosBaseFiltrados(value: string): Juego[] {
+    const term = value.trim().toLowerCase();
+
+    return this.juegos().filter(j =>
+      j.nombre.toLowerCase().includes(term)
+    );
+  }
+
+  private seleccionarPropietarioPorDefecto(usuarios: UsuarioOption[]): void {
+    const currentUser = this.authService.currentUser;
+
+    if (!currentUser) {
+      return;
+    }
+
+    const usuario = usuarios.find(u => u.usuarioId === currentUser.usuarioId);
+    if (!usuario) {
+      return;
+    }
+
+    this.form.patchValue(
+      {
+        propietarioId: usuario.usuarioId,
+        propietarioSearch: usuario.nombre
+      },
+      { emitEvent: false }
+    );
+  }
+
+  private precargarPropietarioActual(): void {
+    const currentUser = this.authService.currentUser;
+
+    if (!currentUser) {
+      return;
+    }
+
+    this.form.patchValue(
+      {
+        propietarioId: currentUser.usuarioId,
+        propietarioSearch: currentUser.nombre
+      },
+      { emitEvent: false }
+    );
+  }
+
+  private intentarFinalizarCarga(juegosCargados: boolean, usuariosCargados: boolean): void {
+    if (juegosCargados && usuariosCargados) {
+      this.loading.set(false);
+    }
+  }
+
+  private parseJuegoBaseId(value: string): number | null {
+    if (!value) {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }
 
   trackByJuegoId(_: number, juego: Juego): number {
     return juego.juegoId;
   }
 
-  getNombrePropietario(propietarioId: number): string {
-    return this.usuarios().find(u => u.usuarioId === propietarioId)?.nombre ?? `${propietarioId}`;
+  get nombre() {
+    return this.form.controls.nombre;
+  }
+
+  get propietarioId() {
+    return this.form.controls.propietarioId;
   }
 }
 </file>
@@ -4089,7 +4928,6 @@ export interface Juego {
 }
 
 export interface CrearJuegoRequest {
-  juegoId: number;
   nombre: string;
   bggId?: number | null;
   dificultadBgg?: number | null;
@@ -4102,12 +4940,20 @@ export interface CrearJuegoRequest {
   juegoBaseId?: number | null;
 }
 
+export interface BggJuegoLookup {
+  bggId: number;
+  nombre: string;
+  dificultadBgg?: number | null;
+  numeroJugadoresMin: number;
+  numeroJugadoresMax: number;
+  tipo: string;
+  yearPublished?: number | null;
+  playingTime?: number | null;
+}
+
 export interface UsuarioOption {
   usuarioId: number;
   nombre: string;
-  grupo?: string | null;
-  observaciones?: string | null;
-  createdAt: string;
 }
 </file>
 
@@ -4115,8 +4961,8 @@ export interface UsuarioOption {
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE_URL  } from '../../core/api/api.config';
-import { CrearJuegoRequest, Juego } from './juegos.models';
+import { API_BASE_URL } from '../../core/api/api.config';
+import { BggJuegoLookup, CrearJuegoRequest, Juego } from './juegos.models';
 
 @Injectable({ providedIn: 'root' })
 export class JuegosService {
@@ -4124,11 +4970,21 @@ export class JuegosService {
   private baseUrl = `${API_BASE_URL}/juegos`;
 
   getAll(): Observable<Juego[]> {
-    return this.http.get<Juego[]>(this.baseUrl, { withCredentials: true });
+    return this.http.get<Juego[]>(this.baseUrl, {
+      withCredentials: true
+    });
   }
 
   create(data: CrearJuegoRequest): Observable<Juego> {
-    return this.http.post<Juego>(this.baseUrl, data, { withCredentials: true });
+    return this.http.post<Juego>(this.baseUrl, data, {
+      withCredentials: true
+    });
+  }
+
+  getFromBgg(bggId: number): Observable<BggJuegoLookup> {
+    return this.http.get<BggJuegoLookup>(`${this.baseUrl}/bgg/${bggId}`, {
+      withCredentials: true
+    });
   }
 }
 </file>
@@ -4355,7 +5211,7 @@ th {
     </div>
 
     <div class="header-actions">
-      <button type="button" class="secondary-button" routerLink="/app/juegos">Veure jocs</button>
+      <button type="button" class="secondary-button" routerLink="/app/juegos">Ludoteca</button>
       <button type="button" class="secondary-button" disabled>Nova partida</button>
       <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
     </div>
