@@ -142,12 +142,6 @@
               />
               <span>Joc base</span>
             </label>
-
-            <div class="columns-actions">
-              <button type="button" class="secondary-button" (click)="resetTableState()">
-                Restablir
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -190,7 +184,6 @@
                 (input)="updateFilter('nombre', $any($event.target).value)"
               />
             </th>
-
             <th *ngIf="visibleColumns().numeroJugadoresMin">
               <input
                 type="number"
@@ -200,7 +193,6 @@
                 (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)"
               />
             </th>
-
             <th *ngIf="visibleColumns().numeroJugadoresMax">
               <input
                 type="number"
@@ -210,7 +202,6 @@
                 (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)"
               />
             </th>
-
             <th *ngIf="visibleColumns().propietario">
               <input
                 type="text"
@@ -220,7 +211,6 @@
                 (input)="updateFilter('propietario', $any($event.target).value)"
               />
             </th>
-
             <th *ngIf="visibleColumns().tipo">
               <input
                 type="text"
@@ -230,7 +220,6 @@
                 (input)="updateFilter('tipo', $any($event.target).value)"
               />
             </th>
-
             <th *ngIf="visibleColumns().pvp">
               <input
                 type="number"
@@ -240,7 +229,6 @@
                 (input)="updateFilter('pvp', $any($event.target).value)"
               />
             </th>
-
             <th *ngIf="visibleColumns().juegoBase">
               <input
                 type="text"
@@ -261,55 +249,52 @@
             <td *ngIf="visibleColumns().propietario">{{ getNombrePropietario(juego.propietarioId) }}</td>
             <td *ngIf="visibleColumns().tipo">{{ juego.tipo || '-' }}</td>
             <td *ngIf="visibleColumns().pvp">{{ juego.pvp ?? '-' }}</td>
-            <td *ngIf="visibleColumns().juegoBase">{{ getNombreJuegoBase(juego.juegoBaseId) }}</td>
+            <td *ngIf="visibleColumns().juegoBase">{{ getNombreJuegoBase(juego.juegoBaseId) || '-' }}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div class="empty-state" *ngIf="juegos().length > 0 && juegosFiltradosOrdenados().length === 0">
-      <h3>Cap joc coincideix amb els filtres</h3>
-      <p>Prova d’ajustar o esborrar algun filtre de les columnes.</p>
-    </div>
-
-    <div class="empty-state" *ngIf="juegos().length === 0">
-      <h3>Encara no hi ha jocs registrats</h3>
-      <p>Afegeix el primer joc de la teva col·lecció.</p>
+    <div class="empty-state" *ngIf="juegosFiltradosOrdenados().length === 0">
+      <h3>No hi ha jocs disponibles</h3>
+      <p>Afegeix el primer joc per començar a registrar partides.</p>
     </div>
   </section>
 
-  <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
+  <div class="modal-backdrop" *ngIf="modalOpen()">
     <section class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Nou joc</h2>
           <p>Completa les dades del joc o carrega-les des de BoardGameGeek.</p>
         </div>
-
-        <button type="button" class="ghost-button" (click)="cerrarModal()">
-          Tancar
-        </button>
+        <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="submit()" class="game-form">
+      <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
-          <label class="form-field bgg-row">
+          <label class="form-field">
             <span>BGG ID</span>
-            <div class="bgg-inline">
-              <input type="number" formControlName="bggId" min="1" />
-              <button
-                type="button"
-                class="secondary-button"
-                (click)="cargarDesdeBgg()"
-                [disabled]="bggLoading()"
-              >
-                {{ bggLoading() ? 'Carregant...' : 'Carregar' }}
-              </button>
-            </div>
+            <input type="number" formControlName="bggId" min="1" />
           </label>
 
+          <div class="form-field form-field-load">
+            <span>&nbsp;</span>
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="loadFromBgg()"
+              [disabled]="bggLoading()"
+            >
+              {{ bggLoading() ? 'Carregant...' : 'Carregar' }}
+            </button>
+          </div>
+
           <label class="form-field">
-            <span>Nom</span>
+            <span class="label-row">
+              <span>Nom</span>
+              <span class="required-mark">*</span>
+            </span>
             <input type="text" formControlName="nombre" />
             <small class="field-error" *ngIf="nombre.touched && nombre.invalid">
               El nom és obligatori.
@@ -318,38 +303,42 @@
 
           <label class="form-field">
             <span>Dificultat BGG</span>
-            <input type="number" step="0.01" formControlName="dificultadBgg" />
+            <input type="number" formControlName="dificultadBgg" step="0.01" min="0" />
           </label>
 
           <label class="form-field">
-            <span>Jugadors mínims</span>
+            <span class="label-row">
+              <span>Jugadors mínims</span>
+              <span class="required-mark">*</span>
+            </span>
             <input type="number" formControlName="numeroJugadoresMin" min="1" />
           </label>
 
           <label class="form-field">
-            <span>Jugadors màxims</span>
+            <span class="label-row">
+              <span>Jugadors màxims</span>
+              <span class="required-mark">*</span>
+            </span>
             <input type="number" formControlName="numeroJugadoresMax" min="1" />
           </label>
 
           <label class="form-field">
             <span>PVP</span>
-            <input type="number" step="0.01" formControlName="pvp" min="0" />
+            <input type="number" formControlName="pvp" step="0.01" min="0" />
           </label>
 
-          <label class="form-field autocomplete-field">
-            <span>Propietari</span>
+          <div class="form-field autocomplete-field" (click)="$event.stopPropagation()">
+            <span class="label-row">
+              <span>Propietari</span>
+              <span class="required-mark">*</span>
+            </span>
             <input
               type="text"
               formControlName="propietarioSearch"
               autocomplete="off"
-              (click)="$event.stopPropagation()"
+              (focus)="showPropietarioOptions.set(true)"
             />
-
-            <div
-              class="autocomplete-panel"
-              *ngIf="showPropietarioOptions()"
-              (click)="$event.stopPropagation()"
-            >
+            <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
               <button
                 type="button"
                 class="autocomplete-option"
@@ -358,23 +347,18 @@
               >
                 {{ usuario.nombre }}
               </button>
-
-              <button
-                type="button"
-                class="autocomplete-option"
-                *ngIf="form.controls.propietarioId.value"
-                (click)="limpiarPropietario()"
-              >
-                Sense propietari
-              </button>
-
-              <p
-                class="autocomplete-empty"
-                *ngIf="filteredUsuarios().length === 0 && !form.controls.propietarioId.value"
-              >
-                No s’han trobat propietaris.
-              </p>
+              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                No hi ha coincidències.
+              </div>
             </div>
+            <small class="field-error" *ngIf="propietarioId.touched && propietarioId.invalid">
+              El propietari és obligatori.
+            </small>
+          </div>
+
+          <label class="form-field">
+            <span>Data d'adquisició</span>
+            <input type="date" formControlName="fechaAdquisicion" />
           </label>
 
           <label class="form-field">
@@ -382,25 +366,15 @@
             <input type="text" formControlName="tipo" />
           </label>
 
-          <label class="form-field">
-            <span>Data d’adquisició</span>
-            <input type="date" formControlName="fechaAdquisicion" />
-          </label>
-
-          <label class="form-field autocomplete-field">
+          <div class="form-field autocomplete-field" (click)="$event.stopPropagation()">
             <span>Joc base</span>
             <input
               type="text"
               formControlName="juegoBaseSearch"
               autocomplete="off"
-              (click)="$event.stopPropagation()"
+              (focus)="showJuegoBaseOptions.set(true)"
             />
-
-            <div
-              class="autocomplete-panel"
-              *ngIf="showJuegoBaseOptions()"
-              (click)="$event.stopPropagation()"
-            >
+            <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()">
               <button
                 type="button"
                 class="autocomplete-option"
@@ -409,38 +383,22 @@
               >
                 {{ juego.nombre }}
               </button>
-
-              <button
-                type="button"
-                class="autocomplete-option"
-                *ngIf="form.controls.juegoBaseId.value"
-                (click)="limpiarJuegoBase()"
-              >
-                Sense joc base
-              </button>
-
-              <p
-                class="autocomplete-empty"
-                *ngIf="filteredJuegosBase().length === 0 && !form.controls.juegoBaseId.value"
-              >
-                No s’han trobat jocs base.
-              </p>
+              <div class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
+                No hi ha coincidències.
+              </div>
             </div>
-          </label>
+          </div>
         </div>
 
-        <small class="field-error" *ngIf="form.errors?.['minGreaterThanMax']">
-          El mínim de jugadors no pot ser més gran que el màxim.
-        </small>
+        <p class="field-error" *ngIf="form.hasError('minGreaterThanMax')">
+          El nombre mínim de jugadors no pot ser més gran que el màxim.
+        </p>
 
-        <p class="error" *ngIf="formError()">{{ formError() }}</p>
-        <p class="success" *ngIf="success()">{{ success() }}</p>
+        <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+        <p class="success-message" *ngIf="success()">{{ success() }}</p>
 
         <div class="modal-actions">
-          <button type="button" class="secondary-button" (click)="cerrarModal()">
-            Cancel·lar
-          </button>
-
+          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
             {{ saving() ? 'Desant...' : 'Desar joc' }}
           </button>

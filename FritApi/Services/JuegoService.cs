@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Xml.Linq;
 using FritApi.Data;
 using FritApi.Dtos;
@@ -181,70 +182,81 @@ public class JuegoService
 
         var url = $"https://boardgamegeek.com/xmlapi2/thing?id={bggId}&stats=1";
 
-        using var response = await _httpClient.GetAsync(url);
-
-        if (!response.IsSuccessStatusCode)
+        for (var attempt = 1; attempt <= 5; attempt++)
         {
-            return (false, "No s'ha pogut consultar BoardGameGeek.", null);
+            using var response = await _httpClient.GetAsync(url);
+
+            if (response.StatusCode == HttpStatusCode.Accepted)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(attempt));
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return (false, $"No s'ha pogut consultar BoardGameGeek. Codi {(int)response.StatusCode}.", null);
+            }
+
+            await using var stream = await response.Content.ReadAsStreamAsync();
+            var document = XDocument.Load(stream);
+
+            var item = document.Root?.Elements("item").FirstOrDefault();
+            if (item is null)
+            {
+                return (false, "No s'ha trobat cap joc amb aquest BGG ID.", null);
+            }
+
+            var primaryName = item.Elements("name")
+                .FirstOrDefault(x => string.Equals((string?)x.Attribute("type"), "primary", StringComparison.OrdinalIgnoreCase))
+                ?.Attribute("value")?.Value
+                ?? item.Elements("name").FirstOrDefault()?.Attribute("value")?.Value
+                ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(primaryName))
+            {
+                return (false, "BGG no ha retornat un nom vàlid per a aquest joc.", null);
+            }
+
+            var minPlayers = ParseIntAttribute(item.Element("minplayers"), "value");
+            var maxPlayers = ParseIntAttribute(item.Element("maxplayers"), "value");
+            var yearPublished = ParseIntAttribute(item.Element("yearpublished"), "value");
+            var playingTime = ParseIntAttribute(item.Element("playingtime"), "value");
+
+            var averageWeight = ParseDecimalAttribute(
+                item.Element("statistics")?
+                    .Element("ratings")?
+                    .Element("averageweight"),
+                "value");
+
+            var categories = item.Elements("link")
+                .Where(x => string.Equals((string?)x.Attribute("type"), "boardgamecategory", StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Attribute("value")?.Value)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
+
+            var tipo = categories.FirstOrDefault() ?? string.Empty;
+
+            if (!minPlayers.HasValue || !maxPlayers.HasValue)
+            {
+                return (false, "BGG no ha retornat el rang de jugadors d'aquest joc.", null);
+            }
+
+            var dto = new BggJuegoLookupDto
+            {
+                BggId = bggId,
+                Nombre = primaryName.Trim(),
+                NumeroJugadoresMin = minPlayers.Value,
+                NumeroJugadoresMax = maxPlayers.Value,
+                DificultadBgg = averageWeight,
+                Tipo = tipo,
+                YearPublished = yearPublished,
+                PlayingTime = playingTime
+            };
+
+            return (true, null, dto);
         }
 
-        await using var stream = await response.Content.ReadAsStreamAsync();
-        var document = XDocument.Load(stream);
-
-        var item = document.Root?.Elements("item").FirstOrDefault();
-        if (item is null)
-        {
-            return (false, "No s'ha trobat cap joc amb aquest BGG ID.", null);
-        }
-
-        var primaryName = item.Elements("name")
-            .FirstOrDefault(x => string.Equals((string?)x.Attribute("type"), "primary", StringComparison.OrdinalIgnoreCase))
-            ?.Attribute("value")?.Value
-            ?? item.Elements("name").FirstOrDefault()?.Attribute("value")?.Value
-            ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(primaryName))
-        {
-            return (false, "BGG no ha retornat un nom vàlid per a aquest joc.", null);
-        }
-
-        var minPlayers = ParseIntAttribute(item.Element("minplayers"), "value");
-        var maxPlayers = ParseIntAttribute(item.Element("maxplayers"), "value");
-        var yearPublished = ParseIntAttribute(item.Element("yearpublished"), "value");
-        var playingTime = ParseIntAttribute(item.Element("playingtime"), "value");
-
-        var averageWeight = ParseDecimalAttribute(
-            item.Element("statistics")?
-                .Element("ratings")?
-                .Element("averageweight"),
-            "value");
-
-        var categories = item.Elements("link")
-            .Where(x => string.Equals((string?)x.Attribute("type"), "boardgamecategory", StringComparison.OrdinalIgnoreCase))
-            .Select(x => x.Attribute("value")?.Value)
-            .Where(x => !string.IsNullOrWhiteSpace(x))
-            .ToList();
-
-        var tipo = categories.FirstOrDefault() ?? string.Empty;
-
-        if (!minPlayers.HasValue || !maxPlayers.HasValue)
-        {
-            return (false, "BGG no ha retornat el rang de jugadors d'aquest joc.", null);
-        }
-
-        var dto = new BggJuegoLookupDto
-        {
-            BggId = bggId,
-            Nombre = primaryName.Trim(),
-            NumeroJugadoresMin = minPlayers.Value,
-            NumeroJugadoresMax = maxPlayers.Value,
-            DificultadBgg = averageWeight,
-            Tipo = tipo,
-            YearPublished = yearPublished,
-            PlayingTime = playingTime
-        };
-
-        return (true, null, dto);
+        return (false, "BoardGameGeek està processant la consulta. Torna-ho a provar d'aquí uns segons.", null);
     }
 
     private static int? ParseIntAttribute(XElement? element, string attributeName)
