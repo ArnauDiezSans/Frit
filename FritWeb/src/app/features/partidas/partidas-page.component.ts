@@ -179,7 +179,7 @@ export class PartidasPageComponent implements OnInit {
     }).length;
   });
 
-  duracionMedia = computed(() => {
+  duracionAcumulada = computed(() => {
     const conDuracion = this.partidasGrid().filter(
       partida => partida.duracionMinutos !== null && partida.duracionMinutos > 0
     );
@@ -188,12 +188,10 @@ export class PartidasPageComponent implements OnInit {
       return null;
     }
 
-    const total = conDuracion.reduce(
+    return conDuracion.reduce(
       (sum, partida) => sum + (partida.duracionMinutos ?? 0),
       0
     );
-
-    return Math.round(total / conDuracion.length);
   });
 
   partidasFiltradasOrdenadas = computed(() => {
