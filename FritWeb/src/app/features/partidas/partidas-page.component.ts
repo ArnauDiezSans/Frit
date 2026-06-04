@@ -443,21 +443,19 @@ export class PartidasPageComponent implements OnInit {
   onUsuarioInput(index: number, event: Event): void {
     const value = (event.target as HTMLInputElement).value ?? '';
     const group = this.jugadoresArray.at(index);
-    group.get('usuarioSearch')?.setValue(value);
+    group.patchValue({
+      usuarioId: null,
+      usuarioSearch: value,
+      nombreMostrado: ''
+    });
     this.showUsuarioOptions.set(index);
-
-    const normalized = value.trim().toLowerCase();
-    this.filteredUsuarios.set(
-      this.usuarios().filter(u => u.nombre.toLowerCase().includes(normalized))
-    );
+    this.filteredUsuarios.set(this.getUsuariosDisponibles(index, value));
   }
 
   onUsuarioFocus(index: number): void {
     this.showUsuarioOptions.set(index);
     const value = this.jugadoresArray.at(index).get('usuarioSearch')?.value ?? '';
-    this.filteredUsuarios.set(
-      this.usuarios().filter(u => u.nombre.toLowerCase().includes(value.toLowerCase()))
-    );
+    this.filteredUsuarios.set(this.getUsuariosDisponibles(index, value));
   }
 
   seleccionarUsuario(index: number, usuario: UsuarioOption): void {
@@ -730,6 +728,19 @@ const partidaPayload: Partida = {
     this.jugadoresArray.controls.forEach((control, index) => {
       control.get('posicion')?.setValue(index + 1);
     });
+  }
+
+  private getUsuariosDisponibles(index: number, filter: string): UsuarioOption[] {
+    const selectedIds = this.jugadoresArray.controls
+      .map((control, controlIndex) => controlIndex === index ? null : Number(control.get('usuarioId')?.value))
+      .filter((id): id is number => id !== null && Number.isFinite(id) && id > 0);
+
+    const normalized = filter.trim().toLowerCase();
+
+    return this.usuarios().filter(usuario =>
+      !selectedIds.includes(usuario.usuarioId) &&
+      usuario.nombre.toLowerCase().includes(normalized)
+    );
   }
 
   private getTodayDate(): string {

@@ -6,6 +6,7 @@ import { PartidasPageComponent } from './features/partidas/partidas-page.compone
 import { JuegosPageComponent } from './features/juegos/juegos-page.component';
 import { UsuarioPageComponent } from './features/usuario/usuario-page.component';
 import { PendentCompraPageComponent } from './features/pendent-compra/pendent-compra-page.component';
+import { AQueJuguemPageComponent } from './features/a-que-juguem/a-que-juguem-page.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginPageComponent },
@@ -13,6 +14,7 @@ export const routes: Routes = [
   { path: 'app/partidas', component: PartidasPageComponent, canActivate: [authGuard] },
   { path: 'app/juegos', component: JuegosPageComponent, canActivate: [authGuard] },
   { path: 'app/pendent-compra', component: PendentCompraPageComponent, canActivate: [authGuard] },
+  { path: 'app/a-que-juguem', component: AQueJuguemPageComponent, canActivate: [authGuard] },
   { path: 'app/usuario', component: UsuarioPageComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' }

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-export type MenuPage = 'partidas' | 'juegos' | 'pendentCompra' | 'usuario';
+export type MenuPage = 'partidas' | 'juegos' | 'pendentCompra' | 'aQueJuguem' | 'usuario';
 
 @Component({
   selector: 'app-menu',

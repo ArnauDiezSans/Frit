@@ -8,7 +8,13 @@
     routerLink="/app/pendent-compra">
     Pendent Comprar
   </button>
-  <button type="button" class="menu-button" disabled>A que juguem?</button>
+  <button
+    type="button"
+    class="menu-button"
+    [class.menu-button-active]="activePage === 'aQueJuguem'"
+    routerLink="/app/a-que-juguem">
+    A que juguem?
+  </button>
 
   <button
     type="button"

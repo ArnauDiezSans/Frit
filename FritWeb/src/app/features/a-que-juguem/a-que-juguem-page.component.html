@@ -1,0 +1,114 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>A que juguem?</h1>
+      <p class="subtitle">Tria jugadors i deixa que els gustos compartits ordenin les opcions.</p>
+    </div>
+
+    <app-menu activePage="aQueJuguem" (logout)="logout()" />
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant usuaris...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarUsuarios()">
+      Tornar-ho a provar
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <form [formGroup]="form" class="players-form">
+      <label class="form-field player-count-field">
+        <span>Nombre de jugadors</span>
+        <input
+          type="number"
+          formControlName="numeroJugadores"
+          min="1"
+          (input)="onNumeroJugadoresChange($event)" />
+      </label>
+
+      <div class="players-grid" formArrayName="jugadores">
+        <div
+          class="form-field autocomplete-field"
+          *ngFor="let jugador of jugadoresArray.controls; let i = index; trackBy: trackByIndex"
+          [formGroupName]="i">
+          <span>Jugador {{ i + 1 }}</span>
+          <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
+            <input
+              type="text"
+              formControlName="usuarioSearch"
+              placeholder="Cerca usuari..."
+              (input)="onUsuarioInput(i, $event)"
+              (focus)="onUsuarioFocus(i)" />
+
+            <button
+              *ngIf="jugador.get('usuarioId')?.value"
+              type="button"
+              class="clear-autocomplete"
+              (click)="limpiarUsuario(i)">
+              ×
+            </button>
+
+            <div class="autocomplete-panel" *ngIf="showUsuarioOptions() === i">
+              <button
+                type="button"
+                class="autocomplete-option"
+                *ngFor="let usuario of filteredUsuarios(); trackBy: trackByUsuarioId"
+                (click)="seleccionarUsuario(i, usuario)">
+                {{ usuario.nombre }}
+              </button>
+
+              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
+                Sense coincidències.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="section-heading">
+      <div>
+        <h2>Jocs recomanats</h2>
+      </div>
+
+      <button type="button" class="primary-button" (click)="calcular()" [disabled]="!allPlayersSelected() || calculating()">
+        {{ calculating() ? 'Calculant...' : 'Calcular' }}
+      </button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="recommendations().length > 0">
+      <table class="recommendations-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Jugadors</th>
+            <th>Puntuació</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let juego of recommendations(); trackBy: trackByJuegoId">
+            <td data-label="Nom">
+              <span class="cell-title">{{ juego.nombre }}</span>
+            </td>
+            <td data-label="Jugadors">{{ juego.numeroJugadoresMin }}-{{ juego.numeroJugadoresMax }}</td>
+            <td data-label="Puntuació">{{ juego.puntuacion }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="allPlayersSelected() && !calculating() && recommendations().length === 0">
+      <h3>No hi ha jocs compatibles</h3>
+    </div>
+  </section>
+</section>

@@ -97,7 +97,7 @@ public class UsuarioJuegoOrdenService
         return (true, null);
     }
 
-    private async Task EnsureOrdenCompletoAsync(int usuarioId)
+    public async Task EnsureOrdenCompletoAsync(int usuarioId)
     {
         var juegos = await _context.Juegos
             .OrderBy(j => j.Nombre)
