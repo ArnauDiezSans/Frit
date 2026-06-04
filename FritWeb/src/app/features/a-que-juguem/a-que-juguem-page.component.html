@@ -79,10 +79,7 @@
       <div>
         <h2>Jocs recomanats</h2>
       </div>
-
-      <button type="button" class="primary-button" (click)="calcular()" [disabled]="!allPlayersSelected() || calculating()">
-        {{ calculating() ? 'Calculant...' : 'Calcular' }}
-      </button>
+      <span class="status-text" *ngIf="calculating()">Calculant...</span>
     </div>
 
     <div class="table-wrapper" *ngIf="recommendations().length > 0">
