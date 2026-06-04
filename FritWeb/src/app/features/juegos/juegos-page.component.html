@@ -421,22 +421,51 @@
           </label>
 
           <label class="form-field">
-            <span>Jugadors mínims</span>
+            <span>Jugadors mínims *</span>
             <input type="number" formControlName="numeroJugadoresMin" />
           </label>
 
           <label class="form-field">
-            <span>Jugadors màxims</span>
+            <span>Jugadors màxims *</span>
             <input type="number" formControlName="numeroJugadoresMax" />
           </label>
 
-          <label class="form-field">
-            <span>PVP</span>
-            <input type="number" step="0.01" formControlName="pvp" />
-          </label>
+          <div class="form-field autocomplete-field">
+            <span>Joc base</span>
+            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
+              <input
+                type="text"
+                formControlName="juegoBaseSearch"
+                placeholder="Cerca un joc base..."
+                (input)="onJuegoBaseInput($event)"
+                (focus)="onJuegoBaseFocus()" />
+
+              <button
+                *ngIf="form.controls.juegoBaseId.value"
+                type="button"
+                class="clear-autocomplete"
+                (click)="limpiarJuegoBase()">
+                ×
+              </button>
+
+              <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()">
+                <button
+                  type="button"
+                  class="autocomplete-option"
+                  *ngFor="let juego of filteredJuegosBase()"
+                  (click)="seleccionarJuegoBase(juego)">
+                  {{ juego.nombre }}
+                </button>
+
+                <div class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
+                  No hi ha coincidències.
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div class="form-field autocomplete-field">
-            <span>Propietari</span>
+            <span>Propietari *</span>
             <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
               <input
                 type="text"
@@ -479,39 +508,10 @@
             <input type="text" formControlName="tipo" />
           </label>
 
-          <div class="form-field autocomplete-field">
-            <span>Joc base</span>
-            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
-              <input
-                type="text"
-                formControlName="juegoBaseSearch"
-                placeholder="Cerca un joc base..."
-                (input)="onJuegoBaseInput($event)"
-                (focus)="onJuegoBaseFocus()" />
-
-              <button
-                *ngIf="form.controls.juegoBaseId.value"
-                type="button"
-                class="clear-autocomplete"
-                (click)="limpiarJuegoBase()">
-                ×
-              </button>
-
-              <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()">
-                <button
-                  type="button"
-                  class="autocomplete-option"
-                  *ngFor="let juego of filteredJuegosBase()"
-                  (click)="seleccionarJuegoBase(juego)">
-                  {{ juego.nombre }}
-                </button>
-
-                <div class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
-                  No hi ha coincidències.
-                </div>
-              </div>
-            </div>
-          </div>
+          <label class="form-field">
+            <span>PVP</span>
+            <input type="number" step="0.01" formControlName="pvp" />
+          </label>
         </div>
 
         <p class="field-error" *ngIf="form.hasError('minGreaterThanMax')">

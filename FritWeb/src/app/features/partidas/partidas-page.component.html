@@ -180,7 +180,7 @@
       <form [formGroup]="form" (ngSubmit)="guardarPartida()">
         <div class="form-grid">
           <div class="form-field autocomplete-field">
-            <span>Joc</span>
+            <span>Joc *</span>
             <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
               <input
                 type="text"
@@ -214,7 +214,7 @@
           </div>
 
           <label class="form-field">
-            <span>Data</span>
+            <span>Data *</span>
             <input type="date" formControlName="fecha" />
           </label>
 
@@ -224,7 +224,7 @@
           </label>
 
           <label class="form-field">
-            <span>Nombre de jugadors</span>
+            <span>Nombre de jugadors *</span>
             <input
               type="number"
               formControlName="numeroJugadores"
@@ -253,7 +253,7 @@
               [formGroupName]="i">
               <div class="player-grid">
                 <div class="form-field autocomplete-field">
-                  <span>Usuari</span>
+                  <span>Usuari *</span>
                   <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
                     <input
                       type="text"
@@ -286,7 +286,7 @@
                 </div>
 
                 <label class="form-field">
-                  <span>Posició</span>
+                  <span>Posició *</span>
                   <input type="number" formControlName="posicion" />
                 </label>
 
