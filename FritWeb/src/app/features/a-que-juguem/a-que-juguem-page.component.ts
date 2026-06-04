@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -35,11 +35,6 @@ export class AQueJuguemPageComponent {
   recommendations = signal<AQueJuguemRecommendation[]>([]);
   filteredUsuarios = signal<UsuarioOption[]>([]);
   showUsuarioOptions = signal<number | null>(null);
-
-  allPlayersSelected = computed(() =>
-    this.jugadoresArray.length > 0 &&
-    this.jugadoresArray.controls.every(control => Number(control.get('usuarioId')?.value) > 0)
-  );
 
   form = this.fb.group({
     numeroJugadores: [2, [Validators.required, Validators.min(1)]],
@@ -120,6 +115,11 @@ export class AQueJuguemPageComponent {
     });
     this.showUsuarioOptions.set(null);
     this.recommendations.set([]);
+  }
+
+  allPlayersSelected(): boolean {
+    return this.jugadoresArray.length > 0 &&
+      this.jugadoresArray.controls.every(control => Number(control.get('usuarioId')?.value) > 0);
   }
 
   calcular(): void {
