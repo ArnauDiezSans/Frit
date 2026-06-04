@@ -10,8 +10,6 @@
 
     <app-menu
       activePage="partidas"
-      primaryLabel="Nova partida"
-      (primaryAction)="abrirModal()"
       (logout)="logout()" />
   </header>
 
@@ -52,6 +50,10 @@
         <p>Historial de partides jugades</p>
       </div>
       <div class="toolbar">
+        <button type="button" class="primary-button" (click)="abrirModal()">
+          Nova partida
+        </button>
+
         <button
           type="button"
           class="toolbar-chip"

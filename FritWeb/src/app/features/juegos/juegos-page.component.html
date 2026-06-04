@@ -10,8 +10,6 @@
 
     <app-menu
       activePage="juegos"
-      primaryLabel="Nou joc"
-      (primaryAction)="abrirModal()"
       (logout)="logout()" />
   </header>
 
@@ -34,6 +32,10 @@
       </div>
 
       <div class="toolbar">
+        <button type="button" class="primary-button" (click)="abrirModal()">
+          Nou joc
+        </button>
+
         <button
           type="button"
           class="toolbar-chip"
