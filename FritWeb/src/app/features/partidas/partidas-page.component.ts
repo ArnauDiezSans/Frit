@@ -55,6 +55,15 @@ interface PartidasFilters {
   observaciones: string;
 }
 
+interface VisibleColumns {
+  fecha: boolean;
+  juegoNombre: boolean;
+  duracionMinutos: boolean;
+  numeroJugadores: boolean;
+  resultadoJugadores: boolean;
+  observaciones: boolean;
+}
+
 const EMPTY_FILTERS: PartidasFilters = {
   fecha: '',
   juegoNombre: '',
@@ -101,8 +110,20 @@ export class PartidasPageComponent implements OnInit {
   filters = signal<PartidasFilters>({ ...EMPTY_FILTERS });
   sortColumn = signal<SortColumn>('fecha');
   sortDirection = signal<SortDirection>('desc');
+  visibleColumns = signal<VisibleColumns>({
+    fecha: true,
+    juegoNombre: true,
+    duracionMinutos: true,
+    numeroJugadores: true,
+    resultadoJugadores: true,
+    observaciones: true
+  });
+  showFilters = signal(false);
+  showColumnsPanel = signal(false);
+  isMobileFilters = signal(false);
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
+  allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
 
   partidasGrid = computed<PartidaGridRow[]>(() => {
     const partidas = this.partidas();
@@ -301,6 +322,8 @@ export class PartidasPageComponent implements OnInit {
         this.showUsuarioOptions.set(null);
       }
     });
+
+    this.updateResponsiveState();
   }
 
   get jugadoresArray(): FormArray {
@@ -313,8 +336,14 @@ export class PartidasPageComponent implements OnInit {
 
   @HostListener('window:click')
   onWindowClick(): void {
+    this.showColumnsPanel.set(false);
     this.showJuegoOptions.set(false);
     this.showUsuarioOptions.set(null);
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.updateResponsiveState();
   }
 
   cargarPartidas(): void {
@@ -602,6 +631,38 @@ const partidaPayload: Partida = {
     this.filters.set({ ...EMPTY_FILTERS });
   }
 
+  limpiarFiltros(): void {
+    this.clearAllFilters();
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update(value => !value);
+  }
+
+  toggleColumnsPanel(event: Event): void {
+    event.stopPropagation();
+    this.showColumnsPanel.update(value => !value);
+  }
+
+  toggleColumn(column: keyof VisibleColumns): void {
+    this.visibleColumns.update(current => ({
+      ...current,
+      [column]: !current[column]
+    }));
+  }
+
+  selectAllColumns(): void {
+    const nextValue = !this.allColumnsSelected();
+    this.visibleColumns.set({
+      fecha: nextValue,
+      juegoNombre: nextValue,
+      duracionMinutos: nextValue,
+      numeroJugadores: nextValue,
+      resultadoJugadores: nextValue,
+      observaciones: nextValue
+    });
+  }
+
   setSort(column: SortColumn): void {
     if (this.sortColumn() === column) {
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
@@ -676,5 +737,14 @@ const partidaPayload: Partida = {
     const month = `${now.getMonth() + 1}`.padStart(2, '0');
     const day = `${now.getDate()}`.padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private updateResponsiveState(): void {
+    const isMobile = window.innerWidth <= 820;
+    this.isMobileFilters.set(isMobile);
+
+    if (!isMobile) {
+      this.showFilters.set(false);
+    }
   }
 }
