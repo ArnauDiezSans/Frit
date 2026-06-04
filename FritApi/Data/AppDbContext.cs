@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Partida> Partidas => Set<Partida>();
     public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
     public DbSet<UsuarioJuegoOrden> UsuarioJuegoOrdenes => Set<UsuarioJuegoOrden>();
+    public DbSet<PendentCompra> PendentsCompra => Set<PendentCompra>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -133,6 +134,28 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => new { e.UsuarioId, e.Posicion })
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<PendentCompra>(entity =>
+        {
+            entity.HasKey(e => e.PendentCompraId);
+
+            entity.Property(e => e.Descripcio)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(e => e.Link)
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }

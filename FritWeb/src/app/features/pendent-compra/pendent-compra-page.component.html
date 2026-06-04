@@ -1,0 +1,122 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Pendent Comprar</h1>
+      <p class="subtitle">Elements que el grup vol tenir presents per a futures compres.</p>
+    </div>
+
+    <app-menu
+      activePage="pendentCompra"
+      primaryLabel="Nou element"
+      (primaryAction)="abrirModal()"
+      (logout)="logout()" />
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant llista de compra...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarItems()">
+      Tornar-ho a provar
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading()">
+    <div class="section-heading">
+      <div>
+        <h2>Llista de compra</h2>
+      </div>
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="limpiarSeleccionados()"
+        [disabled]="selectedCount() === 0 || deleting()">
+        {{ deleting() ? 'Netejant...' : 'Netejar seleccionats' }}
+      </button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="items().length > 0">
+      <table class="purchase-table">
+        <thead>
+          <tr>
+            <th>Usuari</th>
+            <th>Quantitat</th>
+            <th>Descripció</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let item of items(); trackBy: trackByItemId">
+            <td data-label="Usuari">
+              <label class="select-cell">
+                <input
+                  type="checkbox"
+                  [checked]="isSelected(item.pendentCompraId)"
+                  (change)="toggleSelected(item.pendentCompraId, $any($event.target).checked)" />
+                <span>{{ item.usuarioNombre }}</span>
+              </label>
+            </td>
+            <td data-label="Quantitat">{{ item.quantitat }}</td>
+            <td data-label="Descripció">{{ item.descripcio }}</td>
+            <td data-label="Link">
+              <a *ngIf="item.link; else noLink" [href]="item.link" target="_blank" rel="noopener noreferrer">
+                Obrir
+              </a>
+              <ng-template #noLink>-</ng-template>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="items().length === 0">
+      <h3>No hi ha elements pendents</h3>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
+    <section class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>Nou element</h2>
+        </div>
+
+        <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="guardarItem()">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Quantitat</span>
+            <input type="number" formControlName="quantitat" min="1" />
+          </label>
+
+          <label class="form-field form-field-full">
+            <span>Descripció</span>
+            <input type="text" formControlName="descripcio" />
+          </label>
+
+          <label class="form-field form-field-full">
+            <span>Link</span>
+            <input type="url" formControlName="link" />
+          </label>
+        </div>
+
+        <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+        <p class="success-message" *ngIf="success()">{{ success() }}</p>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
+          <button type="submit" class="primary-button" [disabled]="saving()">
+            {{ saving() ? 'Desant...' : 'Afegir element' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>

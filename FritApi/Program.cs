@@ -46,6 +46,7 @@ builder.Services.AddScoped<UsuarioJuegoOrdenService>();
 builder.Services.AddScoped<JuegoService>();
 builder.Services.AddScoped<PartidaService>();
 builder.Services.AddScoped<PartidaJugadorService>();
+builder.Services.AddScoped<PendentCompraService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
