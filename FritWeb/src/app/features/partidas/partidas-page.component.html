@@ -9,13 +9,28 @@
     </div>
 
     <div class="header-actions">
+      <button type="button" class="secondary-button" disabled>
+        Rankings
+      </button>
+      <button type="button" class="secondary-button" disabled>
+        La llista
+      </button>
+      <button type="button" class="secondary-button" disabled>
+        Pendent Compra
+      </button>
+      <button type="button" class="secondary-button" disabled>
+        A que juguem?
+      </button>
       <button type="button" class="secondary-button" routerLink="/app/juegos">
         Ludoteca
       </button>
       <button type="button" class="primary-button" (click)="abrirModal()">
         Nova partida
       </button>
-      <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
+      <button type="button" class="secondary-button" disabled>
+        Usuari
+      </button>
+      <button type="button" class="secondary-button" (click)="logout()">Sortir</button>
     </div>
   </header>
 
@@ -52,8 +67,8 @@
   <section class="content-card" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
-        <h2>Grid de partides</h2>
-        <p>Data, joc, duració, jugadors, punts i observacions.</p>
+        <h2>Partides Frites</h2>
+        <p>Historial de partides jugades</p>
       </div>
       <div class="toolbar">
         <button
