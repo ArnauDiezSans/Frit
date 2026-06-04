@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Juego> Juegos => Set<Juego>();
     public DbSet<Partida> Partidas => Set<Partida>();
     public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
+    public DbSet<UsuarioJuegoOrden> UsuarioJuegoOrdenes => Set<UsuarioJuegoOrden>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -110,6 +111,27 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => new { e.PartidaId, e.Posicion })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<UsuarioJuegoOrden>(entity =>
+        {
+            entity.HasKey(e => e.UsuarioJuegoOrdenId);
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Juego)
+                .WithMany()
+                .HasForeignKey(e => e.JuegoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.UsuarioId, e.JuegoId })
+                .IsUnique();
+
+            entity.HasIndex(e => new { e.UsuarioId, e.Posicion })
                 .IsUnique();
         });
     }

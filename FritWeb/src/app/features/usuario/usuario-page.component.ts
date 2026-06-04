@@ -1,12 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-import { Juego } from '../juegos/juegos.models';
-import { JuegosService } from '../juegos/juegos.service';
-import { UsuarioDetalle, UsuarioService } from './usuario.service';
+import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.service';
 
 @Component({
   selector: 'app-usuario-page',
@@ -18,28 +16,20 @@ import { UsuarioDetalle, UsuarioService } from './usuario.service';
 export class UsuarioPageComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
-  private juegosService = inject(JuegosService);
   private usuarioService = inject(UsuarioService);
   private router = inject(Router);
 
   loading = signal(true);
   saving = signal(false);
+  savingOrder = signal(false);
   error = signal('');
   formError = signal('');
+  orderError = signal('');
   success = signal('');
   modalOpen = signal(false);
 
   usuario = signal<UsuarioDetalle | null>(null);
-  juegos = signal<Juego[]>([]);
-
-  juegosOrdenados = computed(() =>
-    [...this.juegos()]
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'ca'))
-      .map((juego, index) => ({
-        posicion: index + 1,
-        nombre: juego.nombre
-      }))
-  );
+  juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
 
   passwordForm = this.fb.group(
     {
@@ -73,11 +63,11 @@ export class UsuarioPageComponent {
 
     forkJoin({
       usuario: this.usuarioService.getById(currentUser.usuarioId),
-      juegos: this.juegosService.getAll()
+      juegos: this.usuarioService.getJuegosOrden(currentUser.usuarioId)
     }).subscribe({
       next: result => {
         this.usuario.set(result.usuario);
-        this.juegos.set(result.juegos);
+        this.juegosOrdenados.set(result.juegos);
         this.loading.set(false);
       },
       error: () => {
@@ -141,6 +131,56 @@ export class UsuarioPageComponent {
       });
   }
 
+  moverJuego(index: number, direction: -1 | 1): void {
+    const targetIndex = index + direction;
+    const current = this.juegosOrdenados();
+
+    if (targetIndex < 0 || targetIndex >= current.length || this.savingOrder()) {
+      return;
+    }
+
+    const previous = current.map(juego => ({ ...juego }));
+    const next = current.map(juego => ({ ...juego }));
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    const normalized = next.map((juego, itemIndex) => ({
+      ...juego,
+      posicion: itemIndex + 1
+    }));
+
+    this.juegosOrdenados.set(normalized);
+    this.persistirOrden(previous);
+  }
+
+  private persistirOrden(previous: UsuarioJuegoOrden[]): void {
+    const currentUser = this.authService.currentUser;
+
+    if (!currentUser) {
+      this.router.navigateByUrl('/login');
+      return;
+    }
+
+    this.savingOrder.set(true);
+    this.orderError.set('');
+
+    this.usuarioService
+      .updateJuegosOrden(currentUser.usuarioId, {
+        juegos: this.juegosOrdenados().map(juego => ({
+          juegoId: juego.juegoId,
+          posicion: juego.posicion
+        }))
+      })
+      .subscribe({
+        next: () => {
+          this.savingOrder.set(false);
+        },
+        error: err => {
+          this.juegosOrdenados.set(previous);
+          this.savingOrder.set(false);
+          this.orderError.set(err?.error?.message ?? "No s'ha pogut guardar l'ordre dels jocs.");
+        }
+      });
+  }
+
   logout(): void {
     this.authService.logout().subscribe({
       next: () => this.router.navigateByUrl('/login'),
@@ -152,7 +192,7 @@ export class UsuarioPageComponent {
     return new Date(value).toLocaleDateString('ca-ES');
   }
 
-  trackByJuego(_: number, juego: { posicion: number; nombre: string }): number {
-    return juego.posicion;
+  trackByJuego(_: number, juego: UsuarioJuegoOrden): number {
+    return juego.juegoId;
   }
 }

@@ -55,7 +55,7 @@
   <section class="content-card" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
-        <h2>Jocs registrats</h2>
+        <h2>Els meus jocs preferits</h2>
       </div>
     </div>
 
@@ -69,8 +69,30 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let juego of juegosOrdenados(); trackBy: trackByJuego">
-            <td data-label="Posició">{{ juego.posicion }}</td>
+          <tr *ngFor="let juego of juegosOrdenados(); let i = index; trackBy: trackByJuego">
+            <td data-label="Posició">
+              <div class="position-cell">
+                <span>{{ juego.posicion }}</span>
+                <div class="order-actions">
+                  <button
+                    type="button"
+                    class="icon-button"
+                    aria-label="Moure amunt"
+                    (click)="moverJuego(i, -1)"
+                    [disabled]="i === 0 || savingOrder()">
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    class="icon-button"
+                    aria-label="Moure avall"
+                    (click)="moverJuego(i, 1)"
+                    [disabled]="i === juegosOrdenados().length - 1 || savingOrder()">
+                    ↓
+                  </button>
+                </div>
+              </div>
+            </td>
             <td data-label="Nom">
               <span class="cell-title">{{ juego.nombre }}</span>
             </td>
@@ -78,6 +100,8 @@
         </tbody>
       </table>
     </div>
+
+    <p class="field-error" *ngIf="orderError()">{{ orderError() }}</p>
 
     <div class="empty-state" *ngIf="juegosOrdenados().length === 0">
       <h3>No hi ha jocs registrats</h3>

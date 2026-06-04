@@ -11,10 +11,14 @@ namespace FritApi.Controllers;
 public class UsuariosController : ControllerBase
 {
     private readonly UsuarioService _usuarioService;
+    private readonly UsuarioJuegoOrdenService _usuarioJuegoOrdenService;
 
-    public UsuariosController(UsuarioService usuarioService)
+    public UsuariosController(
+        UsuarioService usuarioService,
+        UsuarioJuegoOrdenService usuarioJuegoOrdenService)
     {
         _usuarioService = usuarioService;
+        _usuarioJuegoOrdenService = usuarioJuegoOrdenService;
     }
 
     [HttpGet]
@@ -88,6 +92,49 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id:int}/juegos-orden")]
+    [Authorize]
+    public async Task<ActionResult<List<UsuarioJuegoOrdenDto>>> GetJuegosOrden(int id)
+    {
+        if (!IsCurrentUser(id))
+        {
+            return Forbid();
+        }
+
+        var orden = await _usuarioJuegoOrdenService.GetOrdenAsync(id);
+
+        if (orden is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(orden);
+    }
+
+    [HttpPut("{id:int}/juegos-orden")]
+    [Authorize]
+    public async Task<IActionResult> UpdateJuegosOrden(int id, [FromBody] UsuarioJuegoOrdenUpdateDto dto)
+    {
+        if (!IsCurrentUser(id))
+        {
+            return Forbid();
+        }
+
+        var result = await _usuarioJuegoOrdenService.UpdateOrdenAsync(id, dto);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Usuari no trobat.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return NoContent();
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -99,5 +146,11 @@ public class UsuariosController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    private bool IsCurrentUser(int id)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(userIdClaim, out var currentUserId) && currentUserId == id;
     }
 }
