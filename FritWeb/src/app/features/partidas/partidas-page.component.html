@@ -117,7 +117,7 @@
       <div class="filters-grid">
         <label class="filter-field">
           <span>Data</span>
-          <div class="inline-table-filters">
+          <div class="inline-table-filters date-range-filter">
             <input
               type="date"
               class="filter-input"
@@ -231,7 +231,7 @@
 
           <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
             <th *ngIf="visibleColumns().fecha">
-              <div class="inline-table-filters">
+              <div class="inline-table-filters date-range-filter">
                 <input
                   type="date"
                   class="filter-input"
