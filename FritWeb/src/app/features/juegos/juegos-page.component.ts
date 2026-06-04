@@ -327,7 +327,13 @@ export class JuegosPageComponent implements OnInit {
   }
 
   toggleFilters(): void {
-    this.showFilters.update(value => !value);
+    this.showFilters.update(value => {
+      if (value) {
+        this.limpiarFiltros();
+      }
+
+      return !value;
+    });
   }
 
   toggleColumnsPanel(event: Event): void {
