@@ -1,6 +1,12 @@
 <nav class="app-menu" aria-label="Navegació principal">
   <button type="button" class="menu-button" disabled>Rankings</button>
-  <button type="button" class="menu-button" disabled>La llista</button>
+  <button
+    type="button"
+    class="menu-button"
+    [class.menu-button-active]="activePage === 'laLlista'"
+    routerLink="/app/la-llista">
+    La llista
+  </button>
   <button
     type="button"
     class="menu-button"

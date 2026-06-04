@@ -1,0 +1,50 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>La llista</h1>
+      <p class="subtitle">Jocs ordenats pel temps que fa que no es juguen.</p>
+    </div>
+
+    <app-menu activePage="laLlista" (logout)="logout()" />
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant llista...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarItems()">
+      Tornar-ho a provar
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="table-wrapper" *ngIf="items().length > 0">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>Nom joc</th>
+            <th>Última partida</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            *ngFor="let item of items(); trackBy: trackByJuegoId"
+            [class]="getRowClass(item)">
+            <td data-label="Nom joc">
+              <span class="cell-title">{{ item.nombre }}</span>
+            </td>
+            <td data-label="Última partida">{{ formatFecha(item.ultimaPartida) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="items().length === 0">
+      <h3>No hi ha jocs registrats</h3>
+    </div>
+  </section>
+</section>
