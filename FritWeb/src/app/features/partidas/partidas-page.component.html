@@ -55,34 +55,162 @@
         <h2>Grid de partides</h2>
         <p>Data, joc, duració, jugadors, punts i observacions.</p>
       </div>
+      <div class="toolbar">
+        <button
+          type="button"
+          class="toolbar-chip"
+          [class.toolbar-chip-active]="showFilters()"
+          (click)="toggleFilters()">
+          <span>Filtres</span>
+        </button>
+
+        <div class="columns-wrapper" (click)="$event.stopPropagation()">
+          <button
+            type="button"
+            class="toolbar-chip"
+            [class.toolbar-chip-active]="showColumnsPanel()"
+            (click)="toggleColumnsPanel($event)">
+            <span>Columnes</span>
+          </button>
+
+          <div class="columns-panel" *ngIf="showColumnsPanel()">
+            <div class="columns-panel-header">
+              <strong>Columnes visibles</strong>
+              <button type="button" class="link-button" (click)="selectAllColumns()">
+                {{ allColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
+              </button>
+            </div>
+
+            <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().fecha" (change)="toggleColumn('fecha')" />
+              <span>Data</span>
+            </label>
+
+            <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().juegoNombre" (change)="toggleColumn('juegoNombre')" />
+              <span>Nom joc</span>
+            </label>
+
+            <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().duracionMinutos" (change)="toggleColumn('duracionMinutos')" />
+              <span>Duració</span>
+            </label>
+
+            <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().numeroJugadores" (change)="toggleColumn('numeroJugadores')" />
+              <span>Núm. jugadors</span>
+            </label>
+
+            <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().resultadoJugadores" (change)="toggleColumn('resultadoJugadores')" />
+              <span>Jugadors i punts</span>
+            </label>
+
+            <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().observaciones" (change)="toggleColumn('observaciones')" />
+              <span>Observacions</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filters-panel mobile-filters-panel" *ngIf="showFilters() && isMobileFilters()">
+      <div class="filters-grid">
+        <label class="filter-field">
+          <span>Data</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Filtra per data..."
+            [value]="filters().fecha"
+            (input)="updateFilter('fecha', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Nom joc</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Filtra per joc..."
+            [value]="filters().juegoNombre"
+            (input)="updateFilter('juegoNombre', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Duració</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Minuts..."
+            [value]="filters().duracionMinutos"
+            (input)="updateFilter('duracionMinutos', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Núm. jugadors</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Jugadors..."
+            [value]="filters().numeroJugadores"
+            (input)="updateFilter('numeroJugadores', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Jugadors i punts</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Nom o punts..."
+            [value]="filters().resultadoJugadores"
+            (input)="updateFilter('resultadoJugadores', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Observacions</span>
+          <input
+            type="text"
+            class="filter-input"
+            placeholder="Filtra..."
+            [value]="filters().observaciones"
+            (input)="updateFilter('observaciones', $any($event.target).value)" />
+        </label>
+      </div>
+
+      <div class="filters-actions">
+        <button type="button" class="ghost-button" (click)="limpiarFiltros()">
+          Neteja filtres
+        </button>
+      </div>
     </div>
 
     <div class="table-wrapper" *ngIf="partidasFiltradasOrdenadas().length > 0">
       <table class="games-table">
         <thead>
           <tr>
-            <th (click)="setSort('fecha')" class="sortable">
+            <th *ngIf="visibleColumns().fecha" (click)="setSort('fecha')" class="sortable">
               Data
             </th>
-            <th (click)="setSort('juegoNombre')" class="sortable">
+            <th *ngIf="visibleColumns().juegoNombre" (click)="setSort('juegoNombre')" class="sortable">
               Nom joc
             </th>
-            <th (click)="setSort('duracionMinutos')" class="sortable">
+            <th *ngIf="visibleColumns().duracionMinutos" (click)="setSort('duracionMinutos')" class="sortable">
               Duració
             </th>
-            <th (click)="setSort('numeroJugadores')" class="sortable">
+            <th *ngIf="visibleColumns().numeroJugadores" (click)="setSort('numeroJugadores')" class="sortable">
               Núm. jugadors
             </th>
-            <th (click)="setSort('resultadoJugadores')" class="sortable">
+            <th *ngIf="visibleColumns().resultadoJugadores" (click)="setSort('resultadoJugadores')" class="sortable">
               Jugadors i punts
             </th>
-            <th (click)="setSort('observaciones')" class="sortable">
+            <th *ngIf="visibleColumns().observaciones" (click)="setSort('observaciones')" class="sortable">
               Observacions
             </th>
           </tr>
 
-          <tr>
-            <th>
+          <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
+            <th *ngIf="visibleColumns().fecha">
               <input
                 type="text"
                 class="filter-input"
@@ -90,7 +218,7 @@
                 [value]="filters().fecha"
                 (input)="updateFilter('fecha', $any($event.target).value)" />
             </th>
-            <th>
+            <th *ngIf="visibleColumns().juegoNombre">
               <input
                 type="text"
                 class="filter-input"
@@ -98,7 +226,7 @@
                 [value]="filters().juegoNombre"
                 (input)="updateFilter('juegoNombre', $any($event.target).value)" />
             </th>
-            <th>
+            <th *ngIf="visibleColumns().duracionMinutos">
               <input
                 type="text"
                 class="filter-input"
@@ -106,7 +234,7 @@
                 [value]="filters().duracionMinutos"
                 (input)="updateFilter('duracionMinutos', $any($event.target).value)" />
             </th>
-            <th>
+            <th *ngIf="visibleColumns().numeroJugadores">
               <input
                 type="text"
                 class="filter-input"
@@ -114,7 +242,7 @@
                 [value]="filters().numeroJugadores"
                 (input)="updateFilter('numeroJugadores', $any($event.target).value)" />
             </th>
-            <th>
+            <th *ngIf="visibleColumns().resultadoJugadores">
               <input
                 type="text"
                 class="filter-input"
@@ -122,7 +250,7 @@
                 [value]="filters().resultadoJugadores"
                 (input)="updateFilter('resultadoJugadores', $any($event.target).value)" />
             </th>
-            <th>
+            <th *ngIf="visibleColumns().observaciones">
               <input
                 type="text"
                 class="filter-input"
@@ -135,24 +263,24 @@
 
         <tbody>
           <tr *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId">
-            <td data-label="Data">
+            <td *ngIf="visibleColumns().fecha" data-label="Data">
               <span class="cell-value cell-title">{{ formatFecha(partida.fecha) }}</span>
             </td>
-            <td data-label="Nom joc">
+            <td *ngIf="visibleColumns().juegoNombre" data-label="Nom joc">
               <span class="cell-value">{{ partida.juegoNombre }}</span>
             </td>
-            <td data-label="Duració">
+            <td *ngIf="visibleColumns().duracionMinutos" data-label="Duració">
               <span class="cell-value">
                 {{ partida.duracionMinutos !== null ? partida.duracionMinutos + ' min' : '-' }}
               </span>
             </td>
-            <td data-label="Núm. jugadors">
+            <td *ngIf="visibleColumns().numeroJugadores" data-label="Núm. jugadors">
               <span class="cell-value">{{ partida.numeroJugadores }}</span>
             </td>
-            <td data-label="Jugadors i punts">
+            <td *ngIf="visibleColumns().resultadoJugadores" data-label="Jugadors i punts">
               <span class="cell-value">{{ partida.resultadoJugadores }}</span>
             </td>
-            <td data-label="Observacions">
+            <td *ngIf="visibleColumns().observaciones" data-label="Observacions">
               <span class="cell-value">{{ partida.observaciones || '-' }}</span>
             </td>
           </tr>

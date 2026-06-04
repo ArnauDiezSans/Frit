@@ -101,6 +101,111 @@ h1 {
   color: #667085;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.toolbar-chip-active {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.columns-wrapper {
+  position: relative;
+}
+
+.columns-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 240px;
+  padding: 14px;
+  border: 1px solid #e4e7ec;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+}
+
+.columns-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.link-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #0f766e;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.column-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.filters-panel {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e4e7ec;
+  border-radius: 16px;
+  background: #f8fafc;
+}
+
+.mobile-filters-panel {
+  display: none;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-field span {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #344054;
+}
+
+.filters-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
 .table-actions {
   display: flex;
   gap: 12px;
@@ -143,6 +248,10 @@ h1 {
 
 .filters-row th {
   background: #f8fafc;
+}
+
+.filters-row-hidden {
+  display: none;
 }
 
 .filter-input {
@@ -387,6 +496,18 @@ h1 {
     border-radius: 14px;
   }
 
+  .mobile-filters-panel {
+    display: block;
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters-row {
+    display: none;
+  }
+
   .table-wrapper {
     overflow: visible;
   }
@@ -449,6 +570,16 @@ h1 {
   .ghost-button,
   .header-actions > * {
     width: 100%;
+  }
+
+  .toolbar {
+    width: 100%;
+  }
+
+  .columns-panel {
+    left: 0;
+    right: 0;
+    width: auto;
   }
 
   .modal-backdrop {
