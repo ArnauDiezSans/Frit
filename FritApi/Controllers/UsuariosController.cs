@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using FritApi.Dtos;
 using FritApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FritApi.Controllers;
@@ -53,6 +55,37 @@ public class UsuariosController : ControllerBase
         }
 
         return Ok(usuario);
+    }
+
+    [HttpPut("{id:int}/password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        if (currentUserId != id)
+        {
+            return Forbid();
+        }
+
+        var result = await _usuarioService.ChangePasswordAsync(id, dto);
+
+        if (result is null)
+        {
+            return NotFound();
+        }
+
+        if (result == false)
+        {
+            return BadRequest(new { message = "La contrasenya antiga no és correcta." });
+        }
+
+        return NoContent();
     }
 
     [HttpDelete("{id:int}")]

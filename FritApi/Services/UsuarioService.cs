@@ -95,6 +95,26 @@ public class UsuarioService
         };
     }
 
+    public async Task<bool?> ChangePasswordAsync(int id, ChangePasswordDto dto)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+        if (usuario is null)
+        {
+            return null;
+        }
+
+        if (!_passwordService.VerifyPassword(usuario.PasswordHash, dto.OldPassword))
+        {
+            return false;
+        }
+
+        usuario.PasswordHash = _passwordService.HashPassword(dto.NewPassword);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
     public async Task<bool> DeleteAsync(int id)
     {
         var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);

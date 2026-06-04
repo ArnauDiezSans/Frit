@@ -1,0 +1,137 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Usuari</h1>
+      <p class="subtitle">Consulta les teves dades i els jocs registrats.</p>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" class="secondary-button" disabled>Rankings</button>
+      <button type="button" class="secondary-button" disabled>La llista</button>
+      <button type="button" class="secondary-button" disabled>Pendent Compra</button>
+      <button type="button" class="secondary-button" disabled>A que juguem?</button>
+      <button type="button" class="secondary-button" routerLink="/app/juegos">Ludoteca</button>
+      <button type="button" class="primary-button" routerLink="/app/partidas">Nova partida</button>
+      <button type="button" class="secondary-button" disabled>Usuari</button>
+      <button type="button" class="secondary-button" (click)="logout()">Sortir</button>
+    </div>
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant dades...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarDatos()">
+      Tornar-ho a provar
+    </button>
+  </section>
+
+  <section class="user-card" *ngIf="!loading() && !error() && usuario() as user">
+    <div class="user-info">
+      <div>
+        <span class="info-label">Nom</span>
+        <strong>{{ user.nombre }}</strong>
+      </div>
+
+      <div>
+        <span class="info-label">Grup</span>
+        <strong>{{ user.grupo || '-' }}</strong>
+      </div>
+
+      <div>
+        <span class="info-label">Membre des de</span>
+        <strong>{{ formatFecha(user.createdAt) }}</strong>
+      </div>
+    </div>
+
+    <button type="button" class="secondary-button" (click)="abrirModalPassword()">
+      Canviar contrasenya
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="section-heading">
+      <div>
+        <h2>Jocs registrats</h2>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="juegosOrdenados().length > 0">
+      <table class="games-table">
+        <thead>
+          <tr>
+            <th>Posició</th>
+            <th>Nom</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let juego of juegosOrdenados(); trackBy: trackByJuego">
+            <td data-label="Posició">{{ juego.posicion }}</td>
+            <td data-label="Nom">
+              <span class="cell-title">{{ juego.nombre }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="juegosOrdenados().length === 0">
+      <h3>No hi ha jocs registrats</h3>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModalPassword()">
+    <section class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>Canviar contrasenya</h2>
+        </div>
+
+        <button type="button" class="ghost-button" (click)="cerrarModalPassword()">Tancar</button>
+      </div>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="guardarPassword()">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Contrasenya antiga</span>
+            <input type="password" formControlName="oldPassword" />
+          </label>
+
+          <label class="form-field">
+            <span>Contrasenya nova</span>
+            <input type="password" formControlName="newPassword" maxlength="24" />
+          </label>
+
+          <label class="form-field">
+            <span>Confirmar contrasenya</span>
+            <input type="password" formControlName="confirmPassword" maxlength="24" />
+          </label>
+        </div>
+
+        <p
+          class="field-error"
+          *ngIf="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('maxlength')">
+          La contrasenya nova no pot superar els 24 caràcters.
+        </p>
+
+        <p class="field-error" *ngIf="passwordForm.hasError('passwordMismatch') && passwordForm.touched">
+          Les contrasenyes no coincideixen.
+        </p>
+
+        <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+        <p class="success-message" *ngIf="success()">{{ success() }}</p>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" (click)="cerrarModalPassword()">Cancel·lar</button>
+          <button type="submit" class="primary-button" [disabled]="saving()">
+            {{ saving() ? 'Desant...' : 'Desar contrasenya' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
