@@ -33,9 +33,25 @@ type FormJugador = {
   usuarioId: number | null;
   usuarioSearch: string;
   nombreMostrado: string;
+  equipoColor: string;
   posicion: number;
   puntos: number | null;
 };
+
+const TEAM_COLORS = [
+  { name: 'verd', value: '#16a34a' },
+  { name: 'vermell', value: '#dc2626' },
+  { name: 'blau', value: '#2563eb' },
+  { name: 'groc', value: '#ca8a04' },
+  { name: 'lila', value: '#7c3aed' },
+  { name: 'taronja', value: '#ea580c' },
+  { name: 'rosa', value: '#db2777' },
+  { name: 'turquesa', value: '#0891b2' },
+  { name: 'negre', value: '#111827' },
+  { name: 'gris', value: '#6b7280' },
+  { name: 'marró', value: '#92400e' },
+  { name: 'blanc', value: '#f8fafc' }
+];
 
 type SortColumn =
   | 'fecha'
@@ -128,6 +144,7 @@ export class PartidasPageComponent implements OnInit {
   showFilters = signal(false);
   showColumnsPanel = signal(false);
   isMobileFilters = signal(false);
+  teamColors = TEAM_COLORS;
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
@@ -305,6 +322,7 @@ export class PartidasPageComponent implements OnInit {
     fecha: [this.getTodayDate(), Validators.required],
     duracionMinutos: [null as number | null],
     numeroJugadores: [2, [Validators.required, Validators.min(1)]],
+    perEquips: [false],
     observaciones: [''],
     jugadores: this.fb.array([])
   });
@@ -373,6 +391,7 @@ export class PartidasPageComponent implements OnInit {
       fecha: this.getTodayDate(),
       duracionMinutos: null,
       numeroJugadores: 2,
+      perEquips: false,
       observaciones: ''
     });
 
@@ -380,6 +399,7 @@ export class PartidasPageComponent implements OnInit {
     this.filteredJuegos.set(this.juegos());
     this.filteredUsuarios.set(this.usuarios());
     this.syncJugadoresWithNumero(2);
+    this.updateTeamSummary();
     this.formError.set('');
     this.success.set('');
     this.modalOpen.set(true);
@@ -399,6 +419,7 @@ export class PartidasPageComponent implements OnInit {
 
     this.form.controls.numeroJugadores.setValue(value);
     this.syncJugadoresWithNumero(value);
+    this.updateTeamSummary();
   }
 
   onJuegoInput(event: Event): void {
@@ -443,6 +464,7 @@ export class PartidasPageComponent implements OnInit {
     });
     this.showUsuarioOptions.set(index);
     this.filteredUsuarios.set(this.getUsuariosDisponibles(index, value));
+    this.updateTeamSummary();
   }
 
   onUsuarioFocus(index: number): void {
@@ -459,6 +481,7 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: usuario.nombre
     });
     this.showUsuarioOptions.set(null);
+    this.updateTeamSummary();
   }
 
   limpiarUsuario(index: number): void {
@@ -469,6 +492,21 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: ''
     });
     this.showUsuarioOptions.set(null);
+    this.updateTeamSummary();
+  }
+
+  onPerEquipsChange(): void {
+    if (!this.form.controls.perEquips.value) {
+      this.form.controls.observaciones.setValue('');
+      return;
+    }
+
+    this.updateTeamSummary();
+  }
+
+  onEquipoColorChange(index: number, color: string): void {
+    this.jugadoresArray.at(index).get('equipoColor')?.setValue(color);
+    this.updateTeamSummary();
   }
 
   addJugador(): void {
@@ -478,18 +516,21 @@ export class PartidasPageComponent implements OnInit {
         usuarioId: [null as number | null],
         usuarioSearch: ['', Validators.required],
         nombreMostrado: [''],
+        equipoColor: [this.getDefaultTeamColor(posicion - 1)],
         posicion: [posicion, Validators.required],
         puntos: [null as number | null]
       })
     );
 
     this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
+    this.updateTeamSummary();
   }
 
   removeJugador(index: number): void {
     this.jugadoresArray.removeAt(index);
     this.reindexJugadores();
     this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
+    this.updateTeamSummary();
   }
 
 
@@ -508,6 +549,7 @@ const raw = this.form.getRawValue() as {
   fecha: string | null;
   duracionMinutos: number | null;
   numeroJugadores: number | null;
+  perEquips: boolean | null;
   observaciones: string | null;
   jugadores: FormJugador[];
 };
@@ -702,6 +744,41 @@ const partidaPayload: Partida = {
     return Number.isInteger(value) ? String(value) : value.toFixed(2);
   }
 
+  private updateTeamSummary(): void {
+    if (!this.form.controls.perEquips.value) {
+      return;
+    }
+
+    const groups = new Map<string, string[]>();
+
+    this.jugadoresArray.controls.forEach((control, index) => {
+      const color = control.get('equipoColor')?.value || this.getDefaultTeamColor(index);
+      const name = (control.get('usuarioSearch')?.value ?? '').trim();
+
+      if (!name) {
+        return;
+      }
+
+      const current = groups.get(color) ?? [];
+      current.push(name);
+      groups.set(color, current);
+    });
+
+    const summary = Array.from(groups.entries())
+      .map(([color, names]) => `Equip ${this.getTeamColorName(color)}: ${names.join(', ')}.`)
+      .join(' ');
+
+    this.form.controls.observaciones.setValue(summary);
+  }
+
+  private getDefaultTeamColor(index: number): string {
+    return TEAM_COLORS[index % TEAM_COLORS.length].value;
+  }
+
+  private getTeamColorName(value: string): string {
+    return TEAM_COLORS.find(color => color.value === value)?.name ?? 'sense color';
+  }
+
   private parseDateOnly(value: string): number | null {
     if (!value.trim()) {
       return null;
@@ -739,6 +816,7 @@ const partidaPayload: Partida = {
           usuarioId: [null as number | null],
           usuarioSearch: ['', Validators.required],
           nombreMostrado: [''],
+          equipoColor: [this.getDefaultTeamColor(posicion - 1)],
           posicion: [posicion, Validators.required],
           puntos: [null as number | null]
         })

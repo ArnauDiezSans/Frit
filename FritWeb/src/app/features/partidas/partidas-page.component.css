@@ -380,6 +380,22 @@ h1 {
   grid-column: 1 / -1;
 }
 
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: end;
+  min-height: 42px;
+  font-weight: 600;
+  color: #344054;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0f766e;
+}
+
 .field-error {
   margin: 14px 0 0;
   color: #b42318;
@@ -427,6 +443,32 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   align-items: flex-end;
+}
+
+.player-user-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.team-color-options {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 6px;
+}
+
+.team-color-option {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #d0d5dd;
+  cursor: pointer;
+}
+
+.team-color-option-active {
+  box-shadow: 0 0 0 3px #0f766e;
 }
 
 .player-actions {
@@ -618,6 +660,10 @@ h1 {
   }
 
   .form-grid, .player-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .player-user-row {
     grid-template-columns: 1fr;
   }
 }

@@ -402,6 +402,14 @@
               (input)="onNumeroJugadoresChange($event)" />
           </label>
 
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              formControlName="perEquips"
+              (change)="onPerEquipsChange()" />
+            <span>Per equips</span>
+          </label>
+
           <label class="form-field form-field-full">
             <span>Observacions</span>
             <textarea rows="3" formControlName="observaciones"></textarea>
@@ -424,6 +432,7 @@
               <div class="player-grid">
                 <div class="form-field autocomplete-field">
                   <span>Usuari *</span>
+                  <div class="player-user-row">
                   <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
                     <input
                       type="text"
@@ -451,6 +460,21 @@
                       <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
                         Sense coincidències.
                       </div>
+                    </div>
+                  </div>
+                    <div
+                      *ngIf="form.controls.perEquips.value"
+                      class="team-color-options">
+                      <button
+                        *ngFor="let color of teamColors"
+                        type="button"
+                        class="team-color-option"
+                        [class.team-color-option-active]="jugador.get('equipoColor')?.value === color.value"
+                        [style.background]="color.value"
+                        [attr.aria-label]="'Equip ' + color.name"
+                        [title]="color.name"
+                        (click)="onEquipoColorChange(i, color.value)">
+                      </button>
                     </div>
                   </div>
                 </div>
