@@ -30,6 +30,8 @@ export class PendentCompraPageComponent {
   items = signal<PendentCompraItem[]>([]);
   selectedIds = signal<number[]>([]);
   selectedCount = computed(() => this.selectedIds().length);
+  allSelected = computed(() => this.items().length > 0 && this.selectedCount() === this.items().length);
+  someSelected = computed(() => this.selectedCount() > 0 && !this.allSelected());
 
   form = this.fb.group({
     quantitat: [1, [Validators.required, Validators.min(1)]],
@@ -121,6 +123,10 @@ export class PendentCompraPageComponent {
     return this.selectedIds().includes(id);
   }
 
+  toggleAll(checked: boolean): void {
+    this.selectedIds.set(checked ? this.items().map(item => item.pendentCompraId) : []);
+  }
+
   limpiarSeleccionados(): void {
     const ids = this.selectedIds();
 
@@ -153,5 +159,10 @@ export class PendentCompraPageComponent {
 
   trackByItemId(_: number, item: PendentCompraItem): number {
     return item.pendentCompraId;
+  }
+
+  formatLink(link: string): string {
+    const trimmed = link.trim();
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   }
 }

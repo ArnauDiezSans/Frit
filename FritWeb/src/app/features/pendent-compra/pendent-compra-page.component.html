@@ -8,8 +8,6 @@
 
     <app-menu
       activePage="pendentCompra"
-      primaryLabel="Nou element"
-      (primaryAction)="abrirModal()"
       (logout)="logout()" />
   </header>
 
@@ -30,19 +28,32 @@
         <h2>Llista de compra</h2>
       </div>
 
-      <button
-        type="button"
-        class="secondary-button"
-        (click)="limpiarSeleccionados()"
-        [disabled]="selectedCount() === 0 || deleting()">
-        {{ deleting() ? 'Netejant...' : 'Netejar seleccionats' }}
-      </button>
+      <div class="section-actions">
+        <button type="button" class="primary-button" (click)="abrirModal()">
+          Nou element
+        </button>
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="limpiarSeleccionados()"
+          [disabled]="selectedCount() === 0 || deleting()">
+          {{ deleting() ? 'Netejant...' : 'Netejar seleccionats' }}
+        </button>
+      </div>
     </div>
 
     <div class="table-wrapper" *ngIf="items().length > 0">
       <table class="purchase-table">
         <thead>
           <tr>
+            <th class="selection-column">
+              <input
+                type="checkbox"
+                aria-label="Seleccionar tots"
+                [checked]="allSelected()"
+                [indeterminate]="someSelected()"
+                (change)="toggleAll($any($event.target).checked)" />
+            </th>
             <th>Usuari</th>
             <th>Quantitat</th>
             <th>Descripció</th>
@@ -52,19 +63,19 @@
 
         <tbody>
           <tr *ngFor="let item of items(); trackBy: trackByItemId">
+            <td data-label="Seleccionar" class="selection-column">
+              <input
+                type="checkbox"
+                [checked]="isSelected(item.pendentCompraId)"
+                (change)="toggleSelected(item.pendentCompraId, $any($event.target).checked)" />
+            </td>
             <td data-label="Usuari">
-              <label class="select-cell">
-                <input
-                  type="checkbox"
-                  [checked]="isSelected(item.pendentCompraId)"
-                  (change)="toggleSelected(item.pendentCompraId, $any($event.target).checked)" />
-                <span>{{ item.usuarioNombre }}</span>
-              </label>
+              <span class="user-name">{{ item.usuarioNombre }}</span>
             </td>
             <td data-label="Quantitat">{{ item.quantitat }}</td>
             <td data-label="Descripció">{{ item.descripcio }}</td>
             <td data-label="Link">
-              <a *ngIf="item.link; else noLink" [href]="item.link" target="_blank" rel="noopener noreferrer">
+              <a *ngIf="item.link; else noLink" [href]="formatLink(item.link)" target="_blank" rel="noopener noreferrer">
                 Obrir
               </a>
               <ng-template #noLink>-</ng-template>

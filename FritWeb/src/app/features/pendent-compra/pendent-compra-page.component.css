@@ -62,6 +62,13 @@ h1 {
   margin: 0;
 }
 
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .table-wrapper {
   width: 100%;
   overflow-x: auto;
@@ -91,18 +98,20 @@ h1 {
   background: #fafafa;
 }
 
-.select-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 700;
-  color: #101828;
+.selection-column {
+  width: 56px;
+  text-align: center;
 }
 
-.select-cell input {
+.selection-column input {
   width: 18px;
   height: 18px;
   accent-color: #0f766e;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #101828;
 }
 
 .empty-state {
@@ -275,6 +284,12 @@ h1 {
     border-radius: 14px;
   }
 
+  .section-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .table-wrapper {
     overflow: visible;
   }
@@ -321,6 +336,11 @@ h1 {
     font-size: 0.85rem;
     font-weight: 700;
     color: #667085;
+  }
+
+  .selection-column {
+    width: auto;
+    text-align: left;
   }
 
   .modal-backdrop {
