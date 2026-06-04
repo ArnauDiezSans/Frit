@@ -14,9 +14,10 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { forkJoin, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
 import { UsuariosService } from '../juegos/usuarios.service';
@@ -76,7 +77,7 @@ const EMPTY_FILTERS: PartidasFilters = {
 @Component({
   selector: 'app-partidas-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
   templateUrl: './partidas-page.component.html',
   styleUrl: './partidas-page.component.css'
 })

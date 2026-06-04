@@ -9,8 +9,9 @@ import {
   signal
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from './juegos.models';
 import { JuegosService } from './juegos.service';
 import { UsuariosService } from './usuarios.service';
@@ -61,7 +62,7 @@ const EMPTY_FILTERS: JuegosFilters = {
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
   templateUrl: './juegos-page.component.html',
   styleUrl: './juegos-page.component.css'
 })

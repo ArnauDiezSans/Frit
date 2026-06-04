@@ -6,16 +6,7 @@
       <p class="subtitle">Consulta les teves dades i els jocs registrats.</p>
     </div>
 
-    <div class="header-actions">
-      <button type="button" class="secondary-button" disabled>Rankings</button>
-      <button type="button" class="secondary-button" disabled>La llista</button>
-      <button type="button" class="secondary-button" disabled>Pendent Compra</button>
-      <button type="button" class="secondary-button" disabled>A que juguem?</button>
-      <button type="button" class="secondary-button" routerLink="/app/juegos">Ludoteca</button>
-      <button type="button" class="primary-button" routerLink="/app/partidas">Nova partida</button>
-      <button type="button" class="secondary-button" disabled>Usuari</button>
-      <button type="button" class="secondary-button" (click)="logout()">Sortir</button>
-    </div>
+    <app-menu activePage="usuario" (logout)="logout()" />
   </header>
 
   <section class="content-card" *ngIf="loading()">

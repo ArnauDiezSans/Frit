@@ -1,0 +1,40 @@
+<nav class="app-menu" aria-label="Navegació principal">
+  <button type="button" class="menu-button" disabled>Rankings</button>
+  <button type="button" class="menu-button" disabled>La llista</button>
+  <button type="button" class="menu-button" disabled>Pendent Compra</button>
+  <button type="button" class="menu-button" disabled>A que juguem?</button>
+
+  <button
+    type="button"
+    class="menu-button"
+    [class.menu-button-active]="activePage === 'partidas'"
+    routerLink="/app/partidas">
+    Partides
+  </button>
+
+  <button
+    type="button"
+    class="menu-button"
+    [class.menu-button-active]="activePage === 'juegos'"
+    routerLink="/app/juegos">
+    Ludoteca
+  </button>
+
+  <button
+    *ngIf="primaryLabel"
+    type="button"
+    class="menu-button menu-button-primary"
+    (click)="onPrimaryAction()">
+    {{ primaryLabel }}
+  </button>
+
+  <button
+    type="button"
+    class="menu-button"
+    [class.menu-button-active]="activePage === 'usuario'"
+    routerLink="/app/usuario">
+    Usuari
+  </button>
+
+  <button type="button" class="menu-button" (click)="onLogout()">Sortir</button>
+</nav>

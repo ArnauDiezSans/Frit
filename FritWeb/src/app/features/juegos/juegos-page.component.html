@@ -8,15 +8,11 @@
       </p>
     </div>
 
-    <div class="header-actions">
-      <button type="button" class="secondary-button" routerLink="/app/partidas">
-        Veure partides
-      </button>
-      <button type="button" class="primary-button" (click)="abrirModal()">
-        Nou joc
-      </button>
-      <button type="button" class="ghost-button" (click)="logout()">Sortir</button>
-    </div>
+    <app-menu
+      activePage="juegos"
+      primaryLabel="Nou joc"
+      (primaryAction)="abrirModal()"
+      (logout)="logout()" />
   </header>
 
   <section class="content-card" *ngIf="loading()">

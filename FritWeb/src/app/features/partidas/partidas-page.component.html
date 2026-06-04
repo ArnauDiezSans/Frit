@@ -8,30 +8,11 @@
       </p>
     </div>
 
-    <div class="header-actions">
-      <button type="button" class="secondary-button" disabled>
-        Rankings
-      </button>
-      <button type="button" class="secondary-button" disabled>
-        La llista
-      </button>
-      <button type="button" class="secondary-button" disabled>
-        Pendent Compra
-      </button>
-      <button type="button" class="secondary-button" disabled>
-        A que juguem?
-      </button>
-      <button type="button" class="secondary-button" routerLink="/app/juegos">
-        Ludoteca
-      </button>
-      <button type="button" class="primary-button" (click)="abrirModal()">
-        Nova partida
-      </button>
-      <button type="button" class="secondary-button" routerLink="/app/usuario">
-        Usuari
-      </button>
-      <button type="button" class="secondary-button" (click)="logout()">Sortir</button>
-    </div>
+    <app-menu
+      activePage="partidas"
+      primaryLabel="Nova partida"
+      (primaryAction)="abrirModal()"
+      (logout)="logout()" />
   </header>
 
   <section class="stats-grid" *ngIf="!loading() && !error()">
