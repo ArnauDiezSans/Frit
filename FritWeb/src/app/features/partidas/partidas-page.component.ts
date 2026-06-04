@@ -48,10 +48,13 @@ type SortColumn =
 type SortDirection = 'asc' | 'desc';
 
 interface PartidasFilters {
-  fecha: string;
+  fechaDesde: string;
+  fechaHasta: string;
   juegoNombre: string;
-  duracionMinutos: string;
-  numeroJugadores: string;
+  duracionMinutosMin: string;
+  duracionMinutosMax: string;
+  numeroJugadoresMin: string;
+  numeroJugadoresMax: string;
   resultadoJugadores: string;
   observaciones: string;
 }
@@ -66,10 +69,13 @@ interface VisibleColumns {
 }
 
 const EMPTY_FILTERS: PartidasFilters = {
-  fecha: '',
+  fechaDesde: '',
+  fechaHasta: '',
   juegoNombre: '',
-  duracionMinutos: '',
-  numeroJugadores: '',
+  duracionMinutosMin: '',
+  duracionMinutosMax: '',
+  numeroJugadoresMin: '',
+  numeroJugadoresMax: '',
   resultadoJugadores: '',
   observaciones: ''
 };
@@ -197,12 +203,15 @@ export class PartidasPageComponent implements OnInit {
     const rows = [...this.partidasGrid()];
 
     const filtered = rows.filter(row => {
-      if (
-        filters.fecha.trim() &&
-        !this.formatFecha(row.fecha)
-          .toLowerCase()
-          .includes(filters.fecha.trim().toLowerCase())
-      ) {
+      const rowDate = this.parseDateOnly(row.fecha);
+      const fechaDesde = this.parseDateOnly(filters.fechaDesde);
+      const fechaHasta = this.parseDateOnly(filters.fechaHasta);
+
+      if (fechaDesde !== null && (rowDate === null || rowDate < fechaDesde)) {
+        return false;
+      }
+
+      if (fechaHasta !== null && (rowDate === null || rowDate > fechaHasta)) {
         return false;
       }
 
@@ -213,46 +222,32 @@ export class PartidasPageComponent implements OnInit {
         return false;
       }
 
-      if (filters.duracionMinutos.trim()) {
-        const value = Number(filters.duracionMinutos);
+      const duracionMin = this.parseNumberFilter(filters.duracionMinutosMin);
+      const duracionMax = this.parseNumberFilter(filters.duracionMinutosMax);
+      const duracion = row.duracionMinutos;
 
-        if (Number.isFinite(value)) {
-          if ((row.duracionMinutos ?? 0) !== value) {
-            return false;
-          }
-        } else if (
-          !(
-            row.duracionMinutos !== null &&
-            String(row.duracionMinutos)
-              .toLowerCase()
-              .includes(filters.duracionMinutos.trim().toLowerCase())
-          )
-        ) {
-          return false;
-        }
+      if (duracionMin !== null && (duracion === null || duracion < duracionMin)) {
+        return false;
       }
 
-      if (filters.numeroJugadores.trim()) {
-        const value = Number(filters.numeroJugadores);
+      if (duracionMax !== null && (duracion === null || duracion > duracionMax)) {
+        return false;
+      }
 
-        if (Number.isFinite(value)) {
-          if (row.numeroJugadores !== value) {
-            return false;
-          }
-        } else if (
-          !String(row.numeroJugadores)
-            .toLowerCase()
-            .includes(filters.numeroJugadores.trim().toLowerCase())
-        ) {
-          return false;
-        }
+      const jugadoresMin = this.parseNumberFilter(filters.numeroJugadoresMin);
+      const jugadoresMax = this.parseNumberFilter(filters.numeroJugadoresMax);
+
+      if (jugadoresMin !== null && row.numeroJugadores < jugadoresMin) {
+        return false;
+      }
+
+      if (jugadoresMax !== null && row.numeroJugadores > jugadoresMax) {
+        return false;
       }
 
       if (
         filters.resultadoJugadores.trim() &&
-        !row.resultadoJugadores
-          .toLowerCase()
-          .includes(filters.resultadoJugadores.trim().toLowerCase())
+        !this.matchesAllTerms(row.resultadoJugadores, filters.resultadoJugadores)
       ) {
         return false;
       }
@@ -707,6 +702,35 @@ const partidaPayload: Partida = {
 
   private formatPuntos(value: number): string {
     return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  }
+
+  private parseDateOnly(value: string): number | null {
+    if (!value.trim()) {
+      return null;
+    }
+
+    const time = new Date(`${value}T00:00:00`).getTime();
+    return Number.isFinite(time) ? time : null;
+  }
+
+  private parseNumberFilter(value: string): number | null {
+    if (!value.trim()) {
+      return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private matchesAllTerms(value: string, filter: string): boolean {
+    const normalizedValue = value.toLowerCase();
+    const terms = filter
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    return terms.every(term => normalizedValue.includes(term));
   }
 
   private syncJugadoresWithNumero(numero: number): void {

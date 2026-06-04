@@ -117,12 +117,18 @@
       <div class="filters-grid">
         <label class="filter-field">
           <span>Data</span>
-          <input
-            type="text"
-            class="filter-input"
-            placeholder="Filtra per data..."
-            [value]="filters().fecha"
-            (input)="updateFilter('fecha', $any($event.target).value)" />
+          <div class="inline-table-filters">
+            <input
+              type="date"
+              class="filter-input"
+              [value]="filters().fechaDesde"
+              (input)="updateFilter('fechaDesde', $any($event.target).value)" />
+            <input
+              type="date"
+              class="filter-input"
+              [value]="filters().fechaHasta"
+              (input)="updateFilter('fechaHasta', $any($event.target).value)" />
+          </div>
         </label>
 
         <label class="filter-field">
@@ -137,22 +143,38 @@
 
         <label class="filter-field">
           <span>Duració</span>
-          <input
-            type="text"
-            class="filter-input"
-            placeholder="Minuts..."
-            [value]="filters().duracionMinutos"
-            (input)="updateFilter('duracionMinutos', $any($event.target).value)" />
+          <div class="inline-table-filters">
+            <input
+              type="number"
+              class="filter-input"
+              placeholder="Mín."
+              [value]="filters().duracionMinutosMin"
+              (input)="updateFilter('duracionMinutosMin', $any($event.target).value)" />
+            <input
+              type="number"
+              class="filter-input"
+              placeholder="Màx."
+              [value]="filters().duracionMinutosMax"
+              (input)="updateFilter('duracionMinutosMax', $any($event.target).value)" />
+          </div>
         </label>
 
         <label class="filter-field">
           <span>Núm. jugadors</span>
-          <input
-            type="text"
-            class="filter-input"
-            placeholder="Jugadors..."
-            [value]="filters().numeroJugadores"
-            (input)="updateFilter('numeroJugadores', $any($event.target).value)" />
+          <div class="inline-table-filters">
+            <input
+              type="number"
+              class="filter-input"
+              placeholder="Mín."
+              [value]="filters().numeroJugadoresMin"
+              (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)" />
+            <input
+              type="number"
+              class="filter-input"
+              placeholder="Màx."
+              [value]="filters().numeroJugadoresMax"
+              (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)" />
+          </div>
         </label>
 
         <label class="filter-field">
@@ -209,12 +231,18 @@
 
           <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
             <th *ngIf="visibleColumns().fecha">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Filtra per data..."
-                [value]="filters().fecha"
-                (input)="updateFilter('fecha', $any($event.target).value)" />
+              <div class="inline-table-filters">
+                <input
+                  type="date"
+                  class="filter-input"
+                  [value]="filters().fechaDesde"
+                  (input)="updateFilter('fechaDesde', $any($event.target).value)" />
+                <input
+                  type="date"
+                  class="filter-input"
+                  [value]="filters().fechaHasta"
+                  (input)="updateFilter('fechaHasta', $any($event.target).value)" />
+              </div>
             </th>
             <th *ngIf="visibleColumns().juegoNombre">
               <input
@@ -225,20 +253,36 @@
                 (input)="updateFilter('juegoNombre', $any($event.target).value)" />
             </th>
             <th *ngIf="visibleColumns().duracionMinutos">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Minuts..."
-                [value]="filters().duracionMinutos"
-                (input)="updateFilter('duracionMinutos', $any($event.target).value)" />
+              <div class="inline-table-filters">
+                <input
+                  type="number"
+                  class="filter-input"
+                  placeholder="Mín."
+                  [value]="filters().duracionMinutosMin"
+                  (input)="updateFilter('duracionMinutosMin', $any($event.target).value)" />
+                <input
+                  type="number"
+                  class="filter-input"
+                  placeholder="Màx."
+                  [value]="filters().duracionMinutosMax"
+                  (input)="updateFilter('duracionMinutosMax', $any($event.target).value)" />
+              </div>
             </th>
             <th *ngIf="visibleColumns().numeroJugadores">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Jugadors..."
-                [value]="filters().numeroJugadores"
-                (input)="updateFilter('numeroJugadores', $any($event.target).value)" />
+              <div class="inline-table-filters">
+                <input
+                  type="number"
+                  class="filter-input"
+                  placeholder="Mín."
+                  [value]="filters().numeroJugadoresMin"
+                  (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)" />
+                <input
+                  type="number"
+                  class="filter-input"
+                  placeholder="Màx."
+                  [value]="filters().numeroJugadoresMax"
+                  (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)" />
+              </div>
             </th>
             <th *ngIf="visibleColumns().resultadoJugadores">
               <input
