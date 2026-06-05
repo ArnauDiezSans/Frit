@@ -43,6 +43,38 @@ h1 {
   gap: 16px;
 }
 
+.ranking-view-switch {
+  width: fit-content;
+  max-width: 1100px;
+  margin: 0 auto 18px;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid #d0d5dd;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.ranking-view-option {
+  min-height: 42px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #475467;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ranking-view-option-active {
+  background: #0f766e;
+  color: #ffffff;
+}
+
 .rankings-grid {
   max-width: 1100px;
   margin: 0 auto;
@@ -332,6 +364,15 @@ h1 {
   .stats-grid,
   .rankings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ranking-view-switch {
+    width: 100%;
+    display: grid;
+  }
+
+  .ranking-view-option {
+    white-space: normal;
   }
 
   .filters-grid {

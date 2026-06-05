@@ -15,6 +15,7 @@ type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'victorias' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
+type ActiveRankingView = 'game' | 'user';
 
 interface GameRankingRow {
   juegoId: number;
@@ -105,6 +106,7 @@ export class RankingsPageComponent {
   loading = signal(true);
   error = signal('');
   rankings = signal<Rankings | null>(null);
+  activeRankingView = signal<ActiveRankingView>('game');
 
   gameFilters = signal<GameFilters>({ ...EMPTY_GAME_FILTERS });
   userFilters = signal<UserFilters>({ ...EMPTY_USER_FILTERS });
@@ -298,6 +300,12 @@ export class RankingsPageComponent {
       this.userSortColumn.set(value ? 'partidas' : 'victorias');
       this.userSortDirection.set('desc');
     }
+  }
+
+  selectRankingView(view: ActiveRankingView): void {
+    this.activeRankingView.set(view);
+    this.showGameColumnsPanel.set(false);
+    this.showUserColumnsPanel.set(false);
   }
 
   clearGameFilters(): void {

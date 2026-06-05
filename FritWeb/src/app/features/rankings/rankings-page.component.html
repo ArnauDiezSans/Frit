@@ -42,7 +42,28 @@
       </article>
     </section>
 
-    <section class="content-card">
+    <div class="ranking-view-switch" role="tablist" aria-label="Selector de ranking">
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeRankingView() === 'game'"
+        [class.ranking-view-option-active]="activeRankingView() === 'game'"
+        class="ranking-view-option"
+        (click)="selectRankingView('game')">
+        Rankings per joc
+      </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeRankingView() === 'user'"
+        [class.ranking-view-option-active]="activeRankingView() === 'user'"
+        class="ranking-view-option"
+        (click)="selectRankingView('user')">
+        Ranking per usuari
+      </button>
+    </div>
+
+    <section class="content-card" *ngIf="activeRankingView() === 'game'">
       <div class="section-heading">
         <div>
           <h2>Rankings per joc</h2>
@@ -219,7 +240,7 @@
       </div>
     </section>
 
-    <section class="content-card">
+    <section class="content-card" *ngIf="activeRankingView() === 'user'">
       <div class="section-heading">
         <div>
           <h2>Ranking per usuari</h2>
