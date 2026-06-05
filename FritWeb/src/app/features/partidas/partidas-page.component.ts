@@ -712,7 +712,11 @@ const partidaPayload: Partida = {
   }
 
   formatFecha(value: string): string {
-    return new Date(value).toLocaleDateString('ca-ES');
+    return new Date(value).toLocaleDateString('ca-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 
   getJuegoNombre(juegoId: number): string {

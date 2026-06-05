@@ -207,6 +207,14 @@
 
     <div class="table-wrapper" *ngIf="partidasFiltradasOrdenadas().length > 0">
       <table class="games-table">
+        <colgroup>
+          <col *ngIf="visibleColumns().fecha" />
+          <col *ngIf="visibleColumns().juegoNombre" />
+          <col *ngIf="visibleColumns().duracionMinutos" />
+          <col *ngIf="visibleColumns().numeroJugadores" />
+          <col *ngIf="visibleColumns().resultadoJugadores" />
+          <col *ngIf="visibleColumns().observaciones" />
+        </colgroup>
         <thead>
           <tr>
             <th *ngIf="visibleColumns().fecha" (click)="setSort('fecha')" class="sortable">
@@ -308,13 +316,13 @@
             *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId"
             [class.row-highlight]="highlightedPartidaId() === partida.partidaId">
             <td *ngIf="visibleColumns().fecha" data-label="Data">
-              <span class="cell-value cell-title">{{ formatFecha(partida.fecha) }}</span>
+              <span class="cell-value cell-title cell-date">{{ formatFecha(partida.fecha) }}</span>
             </td>
             <td *ngIf="visibleColumns().juegoNombre" data-label="Nom joc">
               <span class="cell-value">{{ partida.juegoNombre }}</span>
             </td>
             <td *ngIf="visibleColumns().duracionMinutos" data-label="Duració">
-              <span class="cell-value">
+              <span class="cell-value cell-duration">
                 {{ partida.duracionMinutos !== null ? partida.duracionMinutos + ' min' : '-' }}
               </span>
             </td>
