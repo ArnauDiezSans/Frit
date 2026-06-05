@@ -27,6 +27,22 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
+              {
+                "glob": "favicon-*.png",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "apple-icon-180x180.png",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "android-icon-192x192.png",
+                "input": "src",
+                "output": "/"
+              },
+              "src/manifest.json",
               "src/assets"
             ],
             "styles": [
@@ -98,6 +114,22 @@
             "tsConfig": "tsconfig.spec.json",
             "assets": [
               "src/favicon.ico",
+              {
+                "glob": "favicon-*.png",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "apple-icon-180x180.png",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "android-icon-192x192.png",
+                "input": "src",
+                "output": "/"
+              },
+              "src/manifest.json",
               "src/assets"
             ],
             "styles": [
