@@ -89,7 +89,8 @@ h1 {
 .row-actions {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 .small-button {
@@ -284,6 +285,12 @@ h1 {
   text-align: left;
   border-bottom: 1px solid #e4e7ec;
   vertical-align: top;
+}
+
+.games-table th:last-child,
+.games-table td:last-child {
+  width: 170px;
+  min-width: 170px;
 }
 
 .games-table th {
@@ -592,6 +599,10 @@ h1 {
   .secondary-button,
   .ghost-button {
     width: 100%;
+  }
+
+  .row-actions {
+    flex-wrap: wrap;
   }
 
   .header-actions {
