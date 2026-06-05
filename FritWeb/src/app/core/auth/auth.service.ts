@@ -2,11 +2,13 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { API_BASE_URL } from '../api/api.config';
+import { DataStoreService } from '../data/data-store.service';
 import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
+  private dataStore = inject(DataStoreService);
   private baseUrl = `${API_BASE_URL}/auth`;
 
   currentUser: AuthUser | null = null;
@@ -17,6 +19,7 @@ export class AuthService {
       withCredentials: true
     }).pipe(
       tap(user => {
+        this.dataStore.clear();
         this.currentUser = user;
         this.initialized = true;
       })
@@ -28,6 +31,7 @@ export class AuthService {
       withCredentials: true
     }).pipe(
       tap(user => {
+        this.dataStore.clear();
         this.currentUser = user;
         this.initialized = true;
       })
@@ -39,6 +43,7 @@ export class AuthService {
       withCredentials: true
     }).pipe(
       tap(() => {
+        this.dataStore.clear();
         this.currentUser = null;
         this.initialized = true;
       })

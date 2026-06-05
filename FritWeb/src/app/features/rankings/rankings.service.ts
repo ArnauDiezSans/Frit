@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api.config';
+import { DataStoreService } from '../../core/data/data-store.service';
 
 export interface Rankings {
   resumen: RankingResumen;
@@ -82,11 +83,15 @@ export interface RankingJugador {
 @Injectable({ providedIn: 'root' })
 export class RankingsService {
   private http = inject(HttpClient);
+  private dataStore = inject(DataStoreService);
   private baseUrl = `${API_BASE_URL}/rankings`;
+  private cacheKey = 'rankings';
 
   get(): Observable<Rankings> {
-    return this.http.get<Rankings>(this.baseUrl, {
-      withCredentials: true
-    });
+    return this.dataStore.get(this.cacheKey, () =>
+      this.http.get<Rankings>(this.baseUrl, {
+        withCredentials: true
+      })
+    );
   }
 }
