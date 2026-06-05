@@ -7,6 +7,8 @@ public class RankingsDto
     public List<RankingUsuarioDto> Usuarios { get; set; } = new();
     public List<RankingVictoriaJuegoDto> VictoriasPorJuego { get; set; } = new();
     public List<RankingPeriodoDto> Periodos { get; set; } = new();
+    public List<RankingPartidaDto> Partidas { get; set; } = new();
+    public List<RankingJugadorDto> Jugadores { get; set; } = new();
 }
 
 public class RankingResumenDto
@@ -14,7 +16,10 @@ public class RankingResumenDto
     public int PartidasTotales { get; set; }
     public decimal HorasTotales { get; set; }
     public int? PartidaMasLargaMinutos { get; set; }
-    public int JuegosConPartidas { get; set; }
+    public string? PartidaMasLargaJuegoNombre { get; set; }
+    public int? JuegoMasJugadoId { get; set; }
+    public string? JuegoMasJugadoNombre { get; set; }
+    public int JuegoMasJugadoPartidas { get; set; }
 }
 
 public class RankingJuegoDto
@@ -57,4 +62,24 @@ public class RankingPeriodoDto
     public int PartidasTotales { get; set; }
     public int Victorias { get; set; }
     public decimal PorcentajeVictoria { get; set; }
+}
+
+public class RankingPartidaDto
+{
+    public int PartidaId { get; set; }
+    public int JuegoId { get; set; }
+    public string JuegoNombre { get; set; } = string.Empty;
+    public DateOnly Fecha { get; set; }
+    public int? DuracionMinutos { get; set; }
+}
+
+public class RankingJugadorDto
+{
+    public int PartidaId { get; set; }
+    public int JuegoId { get; set; }
+    public string JuegoNombre { get; set; } = string.Empty;
+    public DateOnly Fecha { get; set; }
+    public int UsuarioId { get; set; }
+    public string UsuarioNombre { get; set; } = string.Empty;
+    public int Posicion { get; set; }
 }

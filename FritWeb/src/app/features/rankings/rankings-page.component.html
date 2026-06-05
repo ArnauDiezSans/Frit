@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">Frit</p>
       <h1>Rankings</h1>
-      <p class="subtitle">Estadistiques de partides, jocs, preus i victories.</p>
+      <p class="subtitle">Estadistiques de partides, jocs i victories.</p>
     </div>
 
     <app-menu activePage="rankings" (logout)="logout()" />
@@ -28,151 +28,316 @@
       </article>
       <article class="stat-card">
         <span class="stat-label">Hores totals</span>
-        <strong class="stat-value">{{ formatHours(data.resumen.horasTotales) }}</strong>
+        <strong class="stat-value">{{ data.resumen.horasTotales }} h</strong>
       </article>
       <article class="stat-card">
         <span class="stat-label">Partida mes llarga</span>
         <strong class="stat-value">{{ formatMinutes(data.resumen.partidaMasLargaMinutos) }}</strong>
+        <span class="stat-detail">{{ data.resumen.partidaMasLargaJuegoNombre || '-' }}</span>
       </article>
       <article class="stat-card">
-        <span class="stat-label">Jocs jugats</span>
-        <strong class="stat-value">{{ data.resumen.juegosConPartidas }}</strong>
+        <span class="stat-label">Joc mes jugat</span>
+        <strong class="stat-value stat-value-text">{{ data.resumen.juegoMasJugadoNombre || '-' }}</strong>
+        <span class="stat-detail">{{ data.resumen.juegoMasJugadoPartidas }} partides</span>
       </article>
     </section>
 
-    <section class="rankings-grid">
-      <article class="content-card ranking-card ranking-card-wide">
-        <div class="section-heading">
-          <div>
-            <h2>Partides per joc</h2>
-            <p>Inclou durada acumulada i preu per partida.</p>
+    <section class="content-card">
+      <div class="section-heading">
+        <div>
+          <h2>Rankings per joc</h2>
+          <p *ngIf="!gameFilters().juegoId">Jocs ordenats per activitat dins del periode seleccionat.</p>
+          <p *ngIf="gameFilters().juegoId">Victories dels usuaris a {{ selectedGameName() }}.</p>
+        </div>
+
+        <div class="toolbar">
+          <button
+            type="button"
+            class="toolbar-chip"
+            [class.toolbar-chip-active]="showGameFilters()"
+            (click)="toggleGameFilters()">
+            <span>Filtres</span>
+          </button>
+
+          <div class="columns-wrapper" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="toolbar-chip"
+              [class.toolbar-chip-active]="showGameColumnsPanel()"
+              (click)="toggleGameColumnsPanel($event)">
+              <span>Columnes</span>
+            </button>
+
+            <div class="columns-panel" *ngIf="showGameColumnsPanel()">
+              <ng-container *ngIf="!gameFilters().juegoId; else detailGameColumns">
+                <div class="columns-panel-header">
+                  <strong>Columnes visibles</strong>
+                  <button type="button" class="link-button" (click)="selectAllGameColumns()">
+                    {{ allGameColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
+                  </button>
+                </div>
+
+                <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().nombre" (change)="toggleGameColumn('nombre')" />
+                  <span>Joc</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().partidas" (change)="toggleGameColumn('partidas')" />
+                  <span>Partides</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().horas" (change)="toggleGameColumn('horas')" />
+                  <span>Hores</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().mitjana" (change)="toggleGameColumn('mitjana')" />
+                  <span>Mitjana</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().ultima" (change)="toggleGameColumn('ultima')" />
+                  <span>Ultima</span>
+                </label>
+              </ng-container>
+
+              <ng-template #detailGameColumns>
+                <div class="columns-panel-header">
+                  <strong>Columnes visibles</strong>
+                  <button type="button" class="link-button" (click)="selectAllDetailColumns()">
+                    {{ allDetailColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
+                  </button>
+                </div>
+
+                <label class="column-option">
+                  <input type="checkbox" [checked]="detailColumns().usuario" (change)="toggleDetailColumn('usuario')" />
+                  <span>Usuari</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="detailColumns().partidas" (change)="toggleDetailColumn('partidas')" />
+                  <span>Partides</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="detailColumns().victorias" (change)="toggleDetailColumn('victorias')" />
+                  <span>Victories</span>
+                </label>
+                <label class="column-option">
+                  <input type="checkbox" [checked]="detailColumns().porcentaje" (change)="toggleDetailColumn('porcentaje')" />
+                  <span>%</span>
+                </label>
+              </ng-template>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div class="table-wrapper" *ngIf="data.juegos.length > 0">
-          <table class="ranking-table">
-            <thead>
-              <tr>
-                <th>Joc</th>
-                <th>Partides</th>
-                <th>Hores</th>
-                <th>Mitjana</th>
-                <th>PVP</th>
-                <th>Preu/partida</th>
-                <th>Ultima</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of data.juegos; trackBy: trackByJuegoId">
-                <td data-label="Joc"><span class="cell-title">{{ item.nombre }}</span></td>
-                <td data-label="Partides">{{ item.numeroPartidas }}</td>
-                <td data-label="Hores">{{ formatHours(item.duracionTotalMinutos / 60) }}</td>
-                <td data-label="Mitjana">{{ formatMinutes(item.duracionMediaMinutos) }}</td>
-                <td data-label="PVP">{{ formatMoney(item.pvp) }}</td>
-                <td data-label="Preu/partida">{{ formatMoney(item.precioPorPartida) }}</td>
-                <td data-label="Ultima">{{ formatDate(item.ultimaPartida) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
+      <div class="filters-panel" *ngIf="showGameFilters() || isMobileFilters()">
+        <div class="filters-grid">
+          <label class="filter-field">
+            <span>Joc</span>
+            <select
+              class="filter-input"
+              [value]="gameFilters().juegoId"
+              (change)="updateGameFilter('juegoId', $any($event.target).value)">
+              <option value="">Tots els jocs</option>
+              <option *ngFor="let juego of gameOptions()" [value]="juego.juegoId">
+                {{ juego.nombre }}
+              </option>
+            </select>
+          </label>
 
-      <article class="content-card ranking-card">
-        <div class="section-heading">
-          <div>
-            <h2>Victories per usuari</h2>
-            <p>La posicio 1 compta com a victoria.</p>
-          </div>
-        </div>
+          <label class="filter-field">
+            <span>Data des de</span>
+            <input
+              type="date"
+              class="filter-input"
+              [value]="gameFilters().fechaDesde"
+              (input)="updateGameFilter('fechaDesde', $any($event.target).value)" />
+          </label>
 
-        <div class="table-wrapper" *ngIf="data.usuarios.length > 0">
-          <table class="ranking-table">
-            <thead>
-              <tr>
-                <th>Usuari</th>
-                <th>Partides</th>
-                <th>Victories</th>
-                <th>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of data.usuarios; trackBy: trackByUsuarioId">
-                <td data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
-                <td data-label="Partides">{{ item.partidasTotales }}</td>
-                <td data-label="Victories">{{ item.victorias }}</td>
-                <td data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
-
-      <article class="content-card ranking-card">
-        <div class="section-heading">
-          <div>
-            <h2>Victories per joc</h2>
-            <p>Millors combinacions joc i usuari.</p>
-          </div>
+          <label class="filter-field">
+            <span>Data fins</span>
+            <input
+              type="date"
+              class="filter-input"
+              [value]="gameFilters().fechaHasta"
+              (input)="updateGameFilter('fechaHasta', $any($event.target).value)" />
+          </label>
         </div>
 
-        <div class="table-wrapper" *ngIf="data.victoriasPorJuego.length > 0">
-          <table class="ranking-table">
-            <thead>
-              <tr>
-                <th>Joc</th>
-                <th>Usuari</th>
-                <th>Victories</th>
-                <th>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of data.victoriasPorJuego; trackBy: trackByVictoria">
-                <td data-label="Joc"><span class="cell-title">{{ item.juegoNombre }}</span></td>
-                <td data-label="Usuari">{{ item.usuarioNombre }}</td>
-                <td data-label="Victories">{{ item.victorias }}</td>
-                <td data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="filters-actions">
+          <button type="button" class="ghost-button" (click)="clearGameFilters()">
+            Neteja filtres
+          </button>
         </div>
-      </article>
+      </div>
 
-      <article class="content-card ranking-card ranking-card-wide">
-        <div class="section-heading">
-          <div>
-            <h2>% victoria per periode</h2>
-            <p>Vista mensual per usuari.</p>
-          </div>
-        </div>
+      <div class="table-wrapper" *ngIf="!gameFilters().juegoId && gameRows().length > 0">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th *ngIf="gameColumns().nombre" class="sortable" (click)="sortGamesBy('nombre')">Joc{{ getGameSortIndicator('nombre') }}</th>
+              <th *ngIf="gameColumns().partidas" class="sortable" (click)="sortGamesBy('partidas')">Partides{{ getGameSortIndicator('partidas') }}</th>
+              <th *ngIf="gameColumns().horas" class="sortable" (click)="sortGamesBy('horas')">Hores{{ getGameSortIndicator('horas') }}</th>
+              <th *ngIf="gameColumns().mitjana" class="sortable" (click)="sortGamesBy('mitjana')">Mitjana{{ getGameSortIndicator('mitjana') }}</th>
+              <th *ngIf="gameColumns().ultima" class="sortable" (click)="sortGamesBy('ultima')">Ultima{{ getGameSortIndicator('ultima') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of gameRows(); trackBy: trackByGameRow">
+              <td *ngIf="gameColumns().nombre" data-label="Joc"><span class="cell-title">{{ item.nombre }}</span></td>
+              <td *ngIf="gameColumns().partidas" data-label="Partides">{{ item.numeroPartidas }}</td>
+              <td *ngIf="gameColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
+              <td *ngIf="gameColumns().mitjana" data-label="Mitjana">{{ formatMinutes(item.duracionMediaMinutos) }}</td>
+              <td *ngIf="gameColumns().ultima" data-label="Ultima">{{ formatDate(item.ultimaPartida) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <div class="table-wrapper" *ngIf="data.periodos.length > 0">
-          <table class="ranking-table">
-            <thead>
-              <tr>
-                <th>Periode</th>
-                <th>Usuari</th>
-                <th>Partides</th>
-                <th>Victories</th>
-                <th>% victoria</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let item of data.periodos; trackBy: trackByPeriodo">
-                <td data-label="Periode"><span class="cell-title">{{ item.periodo }}</span></td>
-                <td data-label="Usuari">{{ item.usuarioNombre }}</td>
-                <td data-label="Partides">{{ item.partidasTotales }}</td>
-                <td data-label="Victories">{{ item.victorias }}</td>
-                <td data-label="% victoria">{{ formatPercent(item.porcentajeVictoria) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </article>
+      <div class="table-wrapper" *ngIf="gameFilters().juegoId && selectedGameRows().length > 0">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th *ngIf="detailColumns().usuario" class="sortable" (click)="sortGameDetailBy('usuario')">Usuari{{ getGameDetailSortIndicator('usuario') }}</th>
+              <th *ngIf="detailColumns().partidas" class="sortable" (click)="sortGameDetailBy('partidas')">Partides{{ getGameDetailSortIndicator('partidas') }}</th>
+              <th *ngIf="detailColumns().victorias" class="sortable" (click)="sortGameDetailBy('victorias')">Victories{{ getGameDetailSortIndicator('victorias') }}</th>
+              <th *ngIf="detailColumns().porcentaje" class="sortable" (click)="sortGameDetailBy('porcentaje')">%{{ getGameDetailSortIndicator('porcentaje') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedGameRows(); trackBy: trackByUserRow">
+              <td *ngIf="detailColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
+              <td *ngIf="detailColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
+              <td *ngIf="detailColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
+              <td *ngIf="detailColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" *ngIf="(!gameFilters().juegoId && gameRows().length === 0) || (gameFilters().juegoId && selectedGameRows().length === 0)">
+        <h3>No hi ha dades amb aquests filtres</h3>
+      </div>
     </section>
 
-    <section class="content-card empty-state" *ngIf="data.resumen.partidasTotales === 0">
-      <h3>Encara no hi ha estadistiques</h3>
-      <p>Quan registreu partides, els rankings es calcularan automaticament.</p>
+    <section class="content-card">
+      <div class="section-heading">
+        <div>
+          <h2>Ranking per usuari</h2>
+          <p>Victories i percentatge segons joc i periode.</p>
+        </div>
+
+        <div class="toolbar">
+          <button
+            type="button"
+            class="toolbar-chip"
+            [class.toolbar-chip-active]="showUserFilters()"
+            (click)="toggleUserFilters()">
+            <span>Filtres</span>
+          </button>
+
+          <div class="columns-wrapper" (click)="$event.stopPropagation()">
+            <button
+              type="button"
+              class="toolbar-chip"
+              [class.toolbar-chip-active]="showUserColumnsPanel()"
+              (click)="toggleUserColumnsPanel($event)">
+              <span>Columnes</span>
+            </button>
+
+            <div class="columns-panel" *ngIf="showUserColumnsPanel()">
+              <div class="columns-panel-header">
+                <strong>Columnes visibles</strong>
+                <button type="button" class="link-button" (click)="selectAllUserColumns()">
+                  {{ allUserColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
+                </button>
+              </div>
+
+              <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().usuario" (change)="toggleUserColumn('usuario')" />
+                <span>Usuari</span>
+              </label>
+              <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().partidas" (change)="toggleUserColumn('partidas')" />
+                <span>Partides</span>
+              </label>
+              <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().victorias" (change)="toggleUserColumn('victorias')" />
+                <span>Victories</span>
+              </label>
+              <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().porcentaje" (change)="toggleUserColumn('porcentaje')" />
+                <span>%</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-panel" *ngIf="showUserFilters() || isMobileFilters()">
+        <div class="filters-grid">
+          <label class="filter-field">
+            <span>Joc</span>
+            <select
+              class="filter-input"
+              [value]="userFilters().juegoId"
+              (change)="updateUserFilter('juegoId', $any($event.target).value)">
+              <option value="">Tots els jocs</option>
+              <option *ngFor="let juego of gameOptions()" [value]="juego.juegoId">
+                {{ juego.nombre }}
+              </option>
+            </select>
+          </label>
+
+          <label class="filter-field">
+            <span>Data des de</span>
+            <input
+              type="date"
+              class="filter-input"
+              [value]="userFilters().fechaDesde"
+              (input)="updateUserFilter('fechaDesde', $any($event.target).value)" />
+          </label>
+
+          <label class="filter-field">
+            <span>Data fins</span>
+            <input
+              type="date"
+              class="filter-input"
+              [value]="userFilters().fechaHasta"
+              (input)="updateUserFilter('fechaHasta', $any($event.target).value)" />
+          </label>
+        </div>
+
+        <div class="filters-actions">
+          <button type="button" class="ghost-button" (click)="clearUserFilters()">
+            Neteja filtres
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper" *ngIf="userRows().length > 0">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th *ngIf="userColumns().usuario" class="sortable" (click)="sortUsersBy('usuario')">Usuari{{ getUserSortIndicator('usuario') }}</th>
+              <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
+              <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
+              <th *ngIf="userColumns().porcentaje" class="sortable" (click)="sortUsersBy('porcentaje')">%{{ getUserSortIndicator('porcentaje') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of userRows(); trackBy: trackByUserRow">
+              <td *ngIf="userColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
+              <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
+              <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
+              <td *ngIf="userColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" *ngIf="userRows().length === 0">
+        <h3>No hi ha dades amb aquests filtres</h3>
+      </div>
     </section>
   </ng-container>
 </section>

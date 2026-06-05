@@ -30,6 +30,7 @@ public class RankingsService
         var jugadoresRegistrados = partidas
             .SelectMany(partida => partida.Jugadores.Select(jugador => new
             {
+                partida.PartidaId,
                 partida.JuegoId,
                 JuegoNombre = partida.Juego.Nombre,
                 partida.Fecha,
@@ -39,6 +40,7 @@ public class RankingsService
             }))
             .Where(jugador => jugador.UsuarioId.HasValue)
             .Select(jugador => new RankingPlayerRow(
+                jugador.PartidaId,
                 jugador.JuegoId,
                 jugador.JuegoNombre,
                 jugador.Fecha,
@@ -53,25 +55,41 @@ public class RankingsService
             Juegos = BuildJuegos(juegos, partidas),
             Usuarios = BuildUsuarios(jugadoresRegistrados),
             VictoriasPorJuego = BuildVictoriasPorJuego(jugadoresRegistrados),
-            Periodos = BuildPeriodos(jugadoresRegistrados)
+            Periodos = BuildPeriodos(jugadoresRegistrados),
+            Partidas = BuildPartidas(partidas),
+            Jugadores = BuildJugadores(jugadoresRegistrados)
         };
     }
 
     private static RankingResumenDto BuildResumen(List<Models.Partida> partidas)
     {
+        var partidaMasLarga = partidas
+            .Where(partida => partida.DuracionMinutos.HasValue)
+            .OrderByDescending(partida => partida.DuracionMinutos)
+            .ThenByDescending(partida => partida.Fecha)
+            .FirstOrDefault();
+
+        var juegoMasJugado = partidas
+            .GroupBy(partida => new { partida.JuegoId, partida.Juego.Nombre })
+            .Select(group => new
+            {
+                group.Key.JuegoId,
+                group.Key.Nombre,
+                Partidas = group.Count()
+            })
+            .OrderByDescending(row => row.Partidas)
+            .ThenBy(row => row.Nombre)
+            .FirstOrDefault();
+
         return new RankingResumenDto
         {
             PartidasTotales = partidas.Count,
             HorasTotales = Math.Round(partidas.Sum(partida => partida.DuracionMinutos ?? 0) / 60m, 1),
-            PartidaMasLargaMinutos = partidas
-                .Where(partida => partida.DuracionMinutos.HasValue)
-                .Select(partida => partida.DuracionMinutos)
-                .DefaultIfEmpty()
-                .Max(),
-            JuegosConPartidas = partidas
-                .Select(partida => partida.JuegoId)
-                .Distinct()
-                .Count()
+            PartidaMasLargaMinutos = partidaMasLarga?.DuracionMinutos,
+            PartidaMasLargaJuegoNombre = partidaMasLarga?.Juego.Nombre,
+            JuegoMasJugadoId = juegoMasJugado?.JuegoId,
+            JuegoMasJugadoNombre = juegoMasJugado?.Nombre,
+            JuegoMasJugadoPartidas = juegoMasJugado?.Partidas ?? 0
         };
     }
 
@@ -214,7 +232,42 @@ public class RankingsService
         return Math.Round(numerator * 100m / denominator, 1);
     }
 
+    private static List<RankingPartidaDto> BuildPartidas(List<Models.Partida> partidas)
+    {
+        return partidas
+            .Select(partida => new RankingPartidaDto
+            {
+                PartidaId = partida.PartidaId,
+                JuegoId = partida.JuegoId,
+                JuegoNombre = partida.Juego.Nombre,
+                Fecha = partida.Fecha,
+                DuracionMinutos = partida.DuracionMinutos
+            })
+            .OrderByDescending(partida => partida.Fecha)
+            .ThenBy(partida => partida.JuegoNombre)
+            .ToList();
+    }
+
+    private static List<RankingJugadorDto> BuildJugadores(IEnumerable<RankingPlayerRow> jugadores)
+    {
+        return jugadores
+            .Select(jugador => new RankingJugadorDto
+            {
+                PartidaId = jugador.PartidaId,
+                JuegoId = jugador.JuegoId,
+                JuegoNombre = jugador.JuegoNombre,
+                Fecha = jugador.Fecha,
+                UsuarioId = jugador.UsuarioId,
+                UsuarioNombre = jugador.UsuarioNombre,
+                Posicion = jugador.Posicion
+            })
+            .OrderBy(jugador => jugador.JuegoNombre)
+            .ThenBy(jugador => jugador.UsuarioNombre)
+            .ToList();
+    }
+
     private sealed record RankingPlayerRow(
+        int PartidaId,
         int JuegoId,
         string JuegoNombre,
         DateOnly Fecha,

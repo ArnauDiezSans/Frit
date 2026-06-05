@@ -9,13 +9,18 @@ export interface Rankings {
   usuarios: RankingUsuario[];
   victoriasPorJuego: RankingVictoriaJuego[];
   periodos: RankingPeriodo[];
+  partidas: RankingPartida[];
+  jugadores: RankingJugador[];
 }
 
 export interface RankingResumen {
   partidasTotales: number;
   horasTotales: number;
   partidaMasLargaMinutos?: number | null;
-  juegosConPartidas: number;
+  partidaMasLargaJuegoNombre?: string | null;
+  juegoMasJugadoId?: number | null;
+  juegoMasJugadoNombre?: string | null;
+  juegoMasJugadoPartidas: number;
 }
 
 export interface RankingJuego {
@@ -54,6 +59,24 @@ export interface RankingPeriodo {
   partidasTotales: number;
   victorias: number;
   porcentajeVictoria: number;
+}
+
+export interface RankingPartida {
+  partidaId: number;
+  juegoId: number;
+  juegoNombre: string;
+  fecha: string;
+  duracionMinutos?: number | null;
+}
+
+export interface RankingJugador {
+  partidaId: number;
+  juegoId: number;
+  juegoNombre: string;
+  fecha: string;
+  usuarioId: number;
+  usuarioNombre: string;
+  posicion: number;
 }
 
 @Injectable({ providedIn: 'root' })
