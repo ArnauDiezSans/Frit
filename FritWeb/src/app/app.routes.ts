@@ -8,11 +8,13 @@ import { UsuarioPageComponent } from './features/usuario/usuario-page.component'
 import { PendentCompraPageComponent } from './features/pendent-compra/pendent-compra-page.component';
 import { AQueJuguemPageComponent } from './features/a-que-juguem/a-que-juguem-page.component';
 import { LaLlistaPageComponent } from './features/la-llista/la-llista-page.component';
+import { RankingsPageComponent } from './features/rankings/rankings-page.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginPageComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'app/partidas', component: PartidasPageComponent, canActivate: [authGuard] },
+  { path: 'app/rankings', component: RankingsPageComponent, canActivate: [authGuard] },
   { path: 'app/juegos', component: JuegosPageComponent, canActivate: [authGuard] },
   { path: 'app/la-llista', component: LaLlistaPageComponent, canActivate: [authGuard] },
   { path: 'app/pendent-compra', component: PendentCompraPageComponent, canActivate: [authGuard] },
