@@ -26,11 +26,13 @@
 h1 {
   margin: 0 0 8px;
   font-size: 2rem;
+  line-height: 1.12;
 }
 
 .subtitle {
   margin: 0;
   color: #667085;
+  line-height: 1.45;
 }
 
 .header-actions {
@@ -285,6 +287,7 @@ h1 {
   text-align: left;
   border-bottom: 1px solid #e4e7ec;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 
 .games-table th:last-child,
@@ -365,6 +368,7 @@ h1 {
   width: min(920px, 100%);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-radius: 20px;
   background: #ffffff;
   padding: 24px;
@@ -544,14 +548,15 @@ h1 {
     display: block;
     padding: 14px;
     border: 1px solid #e4e7ec;
-    border-radius: 16px;
+    border-radius: 12px;
     background: #ffffff;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
   }
 
   .games-table td {
     display: grid;
     grid-template-columns: minmax(120px, 42%) minmax(0, 1fr);
+    align-items: start;
     gap: 10px;
     padding: 8px 0;
     border-bottom: 1px solid #f1f5f9;
@@ -603,6 +608,7 @@ h1 {
 
   .row-actions {
     flex-wrap: wrap;
+    justify-content: stretch;
   }
 
   .header-actions {
@@ -616,6 +622,10 @@ h1 {
   .toolbar {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .toolbar > * {
     width: 100%;
   }
 

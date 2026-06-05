@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 24px 16px;
   background: #f5f6f8;
 }
 
@@ -10,32 +10,38 @@
   width: 100%;
   max-width: 380px;
   background: #ffffff;
-  border: 1px solid #dddddd;
+  border: 1px solid #e4e7ec;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   margin-top: 16px;
 }
 
 input {
   height: 42px;
   padding: 0 12px;
-  border: 1px solid #cfcfcf;
-  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  color: #101828;
 }
 
 button {
   height: 44px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #0f766e;
   color: #ffffff;
   font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0c615b;
 }
 
 .error {
@@ -47,11 +53,11 @@ button {
   display: block;
   width: 100%;
   margin-top: 12px;
-  padding: 14px 16px;
-  border: 1px solid #4d8781;
-  border-radius: 14px;
-  background: white;
-  color: #4d8781;
+  padding: 12px 16px;
+  border: 1px solid #0f766e;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0f766e;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
@@ -59,9 +65,16 @@ button {
 }
 
 .secondary-button:hover {
-  background: #f2f8f7;
+  background: #f0fdfa;
 }
 
 .secondary-button:active {
   background: #e7f1ef;
+}
+
+@media (max-width: 520px) {
+  .login-card {
+    padding: 22px 18px;
+    border-radius: 14px;
+  }
 }
