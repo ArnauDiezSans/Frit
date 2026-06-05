@@ -17,6 +17,9 @@ public class PendentCompraService
     public async Task<List<PendentCompraDto>> GetAllAsync()
     {
         return await _context.PendentsCompra
+            .Where(item =>
+                item.UsuarioId != ExternalUserPolicy.ExternalUserId &&
+                item.Usuario.Nombre != ExternalUserPolicy.ExternalUserName)
             .OrderBy(item => item.CreatedAt)
             .ThenBy(item => item.PendentCompraId)
             .Select(item => new PendentCompraDto
@@ -41,6 +44,11 @@ public class PendentCompraService
         if (usuario is null)
         {
             return (false, "Usuari no trobat.", null);
+        }
+
+        if (ExternalUserPolicy.IsExternal(usuario))
+        {
+            return (false, "L'usuari Extern no pot afegir elements a la llista de compra.", null);
         }
 
         var link = string.IsNullOrWhiteSpace(dto.Link) ? null : dto.Link.Trim();

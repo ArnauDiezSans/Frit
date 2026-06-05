@@ -57,10 +57,14 @@ public class PartidaJugadorService
 
         if (dto.UsuarioId.HasValue)
         {
-            var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
-            if (!usuarioExiste)
+            var usuarioValido = await _context.Usuarios.AnyAsync(u =>
+                u.UsuarioId == dto.UsuarioId.Value &&
+                u.UsuarioId != ExternalUserPolicy.ExternalUserId &&
+                u.Nombre != ExternalUserPolicy.ExternalUserName);
+
+            if (!usuarioValido)
             {
-                return (false, "L'identificador d'usuari indicat no existeix.", null);
+                return (false, "L'identificador d'usuari indicat no existeix o no pot jugar.", null);
             }
         }
 
@@ -116,10 +120,14 @@ public class PartidaJugadorService
 
         if (dto.UsuarioId.HasValue)
         {
-            var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.UsuarioId.Value);
-            if (!usuarioExiste)
+            var usuarioValido = await _context.Usuarios.AnyAsync(u =>
+                u.UsuarioId == dto.UsuarioId.Value &&
+                u.UsuarioId != ExternalUserPolicy.ExternalUserId &&
+                u.Nombre != ExternalUserPolicy.ExternalUserName);
+
+            if (!usuarioValido)
             {
-                return (false, "L'identificador d'usuari indicat no existeix.", null);
+                return (false, "L'identificador d'usuari indicat no existeix o no pot jugar.", null);
             }
         }
 

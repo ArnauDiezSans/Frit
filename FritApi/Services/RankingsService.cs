@@ -38,7 +38,10 @@ public class RankingsService
                 UsuarioNombre = jugador.Usuario != null ? jugador.Usuario.Nombre : jugador.NombreMostrado,
                 jugador.Posicion
             }))
-            .Where(jugador => jugador.UsuarioId.HasValue)
+            .Where(jugador =>
+                jugador.UsuarioId.HasValue &&
+                jugador.UsuarioId.Value != ExternalUserPolicy.ExternalUserId &&
+                jugador.UsuarioNombre != ExternalUserPolicy.ExternalUserName)
             .Select(jugador => new RankingPlayerRow(
                 jugador.PartidaId,
                 jugador.JuegoId,

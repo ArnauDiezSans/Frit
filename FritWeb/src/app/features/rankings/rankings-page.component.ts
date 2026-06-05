@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import {
   RankingJugador,
@@ -162,11 +163,16 @@ export class RankingsPageComponent {
 
     const users = new Map<number, string>();
     for (const jugador of data.jugadores) {
+      if (this.isExternalRankingJugador(jugador)) {
+        continue;
+      }
+
       users.set(jugador.usuarioId, jugador.usuarioNombre);
     }
 
     return Array.from(users.entries())
       .map(([usuarioId, nombre]) => ({ usuarioId, nombre }))
+      .filter(usuario => !isExternalUser(usuario))
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
 
@@ -198,7 +204,7 @@ export class RankingsPageComponent {
     }
 
     const rows = this.buildUserRows(
-      data.jugadores.filter(jugador => jugador.juegoId === juegoId),
+      data.jugadores.filter(jugador => jugador.juegoId === juegoId && !this.isExternalRankingJugador(jugador)),
       {
         juegoId: String(juegoId),
         fechaDesde: this.gameFilters().fechaDesde,
@@ -215,7 +221,10 @@ export class RankingsPageComponent {
       return [];
     }
 
-    const rows = this.buildUserRows(data.jugadores, this.userFilters());
+    const rows = this.buildUserRows(
+      data.jugadores.filter(jugador => !this.isExternalRankingJugador(jugador)),
+      this.userFilters()
+    );
     return this.sortDetailRows(rows, this.userSortColumn(), this.userSortDirection());
   });
 
@@ -226,7 +235,10 @@ export class RankingsPageComponent {
       return [];
     }
 
-    const rows = this.buildUserGameRows(data.jugadores, this.userFilters());
+    const rows = this.buildUserGameRows(
+      data.jugadores.filter(jugador => !this.isExternalRankingJugador(jugador)),
+      this.userFilters()
+    );
     return this.sortUserGameRows(rows);
   });
 
@@ -456,6 +468,13 @@ export class RankingsPageComponent {
 
   trackByUserGameRow(_: number, item: UserGameRankingRow): number {
     return item.juegoId;
+  }
+
+  private isExternalRankingJugador(jugador: RankingJugador): boolean {
+    return isExternalUser({
+      usuarioId: jugador.usuarioId,
+      nombre: jugador.usuarioNombre
+    });
   }
 
   private buildGameRows(partidas: RankingPartida[], filters: GameFilters): GameRankingRow[] {

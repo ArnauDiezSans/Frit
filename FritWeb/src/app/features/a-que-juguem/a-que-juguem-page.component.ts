@@ -54,7 +54,7 @@ export class AQueJuguemPageComponent {
     this.loading.set(true);
     this.error.set('');
 
-    this.usuariosService.getAll().subscribe({
+    this.usuariosService.getJugadores().subscribe({
       next: usuarios => {
         this.usuarios.set(usuarios);
         this.filteredUsuarios.set(usuarios);

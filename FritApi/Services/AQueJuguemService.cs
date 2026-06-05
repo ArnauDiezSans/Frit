@@ -28,11 +28,14 @@ public class AQueJuguemService
         }
 
         var existingUsersCount = await _context.Usuarios
-            .CountAsync(usuario => usuarioIds.Contains(usuario.UsuarioId));
+            .CountAsync(usuario =>
+                usuarioIds.Contains(usuario.UsuarioId) &&
+                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
+                usuario.Nombre != ExternalUserPolicy.ExternalUserName);
 
         if (existingUsersCount != usuarioIds.Count)
         {
-            return (false, "Algun dels usuaris indicats no existeix.", []);
+            return (false, "Algun dels usuaris indicats no existeix o no pot jugar.", []);
         }
 
         foreach (var usuarioId in usuarioIds)

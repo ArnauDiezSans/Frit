@@ -29,7 +29,7 @@
       </div>
 
       <div class="section-actions">
-        <button type="button" class="primary-button" (click)="abrirModal()">
+        <button *ngIf="canCreateItem()" type="button" class="primary-button" (click)="abrirModal()">
           Nou element
         </button>
         <button

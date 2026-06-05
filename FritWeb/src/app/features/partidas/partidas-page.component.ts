@@ -373,7 +373,7 @@ export class PartidasPageComponent implements OnInit {
     forkJoin({
       partidas: this.partidasService.getAll(),
       juegos: this.juegosService.getAll(),
-      usuarios: this.usuariosService.getAll(),
+      usuarios: this.usuariosService.getJugadores(),
       partidaJugadores: this.partidaJugadoresService.getAll()
     }).subscribe({
       next: result => {

@@ -1,5 +1,8 @@
 // npx.cmd repomix 
 
+//reset DB (al sql console del postgres):
+// TRUNCATE TABLE public."PendentsCompra", public."UsuarioJuegoOrdenes", public."Partidas", public."Juegos", public."Usuarios", public."PartidaJugadores" RESTART IDENTITY CASCADE;
+
 // cd FritWeb
 // npm install
 // npm start

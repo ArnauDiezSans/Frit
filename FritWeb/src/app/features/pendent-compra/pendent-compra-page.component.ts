@@ -3,6 +3,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { PendentCompraItem, PendentCompraService } from './pendent-compra.service';
 
@@ -34,6 +35,10 @@ export class PendentCompraPageComponent {
   selectedCount = computed(() => this.selectedIds().length);
   allSelected = computed(() => this.items().length > 0 && this.selectedCount() === this.items().length);
   someSelected = computed(() => this.selectedCount() > 0 && !this.allSelected());
+  canCreateItem = computed(() => {
+    const currentUser = this.authService.currentUser;
+    return currentUser ? !isExternalUser(currentUser) : false;
+  });
 
   form = this.fb.group({
     quantitat: [1, [Validators.required, Validators.min(1)]],
@@ -63,6 +68,10 @@ export class PendentCompraPageComponent {
   }
 
   abrirModal(): void {
+    if (!this.canCreateItem()) {
+      return;
+    }
+
     this.form.reset({
       quantitat: 1,
       descripcio: '',
