@@ -223,7 +223,8 @@
       <div class="section-heading">
         <div>
           <h2>Ranking per usuari</h2>
-          <p>Victories i percentatge segons joc i periode.</p>
+          <p *ngIf="!userFilters().usuarioId">Victories i percentatge segons periode.</p>
+          <p *ngIf="userFilters().usuarioId">Jocs de {{ selectedUserName() }} ordenats per partides.</p>
         </div>
 
         <div class="toolbar">
@@ -257,6 +258,10 @@
                 <span>Usuari</span>
               </label>
               <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().joc" (change)="toggleUserColumn('joc')" />
+                <span>Joc</span>
+              </label>
+              <label class="column-option">
                 <input type="checkbox" [checked]="userColumns().partidas" (change)="toggleUserColumn('partidas')" />
                 <span>Partides</span>
               </label>
@@ -268,6 +273,10 @@
                 <input type="checkbox" [checked]="userColumns().porcentaje" (change)="toggleUserColumn('porcentaje')" />
                 <span>%</span>
               </label>
+              <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().ultima" (change)="toggleUserColumn('ultima')" />
+                <span>Ultima</span>
+              </label>
             </div>
           </div>
         </div>
@@ -276,14 +285,14 @@
       <div class="filters-panel" *ngIf="showUserFilters() || isMobileFilters()">
         <div class="filters-grid">
           <label class="filter-field">
-            <span>Joc</span>
+            <span>Usuari</span>
             <select
               class="filter-input"
-              [value]="userFilters().juegoId"
-              (change)="updateUserFilter('juegoId', $any($event.target).value)">
-              <option value="">Tots els jocs</option>
-              <option *ngFor="let juego of gameOptions()" [value]="juego.juegoId">
-                {{ juego.nombre }}
+              [value]="userFilters().usuarioId"
+              (change)="updateUserFilter('usuarioId', $any($event.target).value)">
+              <option value="">Tots els usuaris</option>
+              <option *ngFor="let usuario of userOptions()" [value]="usuario.usuarioId">
+                {{ usuario.nombre }}
               </option>
             </select>
           </label>
@@ -314,7 +323,7 @@
         </div>
       </div>
 
-      <div class="table-wrapper" *ngIf="userRows().length > 0">
+      <div class="table-wrapper" *ngIf="!userFilters().usuarioId && userRows().length > 0">
         <table class="ranking-table">
           <thead>
             <tr>
@@ -335,7 +344,30 @@
         </table>
       </div>
 
-      <div class="empty-state" *ngIf="userRows().length === 0">
+      <div class="table-wrapper" *ngIf="userFilters().usuarioId && selectedUserGameRows().length > 0">
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th *ngIf="userColumns().joc" class="sortable" (click)="sortUsersBy('joc')">Joc{{ getUserSortIndicator('joc') }}</th>
+              <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
+              <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
+              <th *ngIf="userColumns().porcentaje" class="sortable" (click)="sortUsersBy('porcentaje')">%{{ getUserSortIndicator('porcentaje') }}</th>
+              <th *ngIf="userColumns().ultima" class="sortable" (click)="sortUsersBy('ultima')">Ultima{{ getUserSortIndicator('ultima') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of selectedUserGameRows(); trackBy: trackByUserGameRow">
+              <td *ngIf="userColumns().joc" data-label="Joc"><span class="cell-title">{{ item.juegoNombre }}</span></td>
+              <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
+              <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
+              <td *ngIf="userColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
+              <td *ngIf="userColumns().ultima" data-label="Ultima">{{ formatDate(item.ultimaPartida) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state" *ngIf="(!userFilters().usuarioId && userRows().length === 0) || (userFilters().usuarioId && selectedUserGameRows().length === 0)">
         <h3>No hi ha dades amb aquests filtres</h3>
       </div>
     </section>

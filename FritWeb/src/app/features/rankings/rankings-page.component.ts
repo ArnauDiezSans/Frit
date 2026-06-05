@@ -11,7 +11,7 @@ import {
 } from './rankings.service';
 
 type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
-type UserSortColumn = 'usuario' | 'partidas' | 'victorias' | 'porcentaje';
+type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'victorias' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
 
@@ -32,6 +32,15 @@ interface UserRankingRow {
   porcentajeVictoria: number;
 }
 
+interface UserGameRankingRow {
+  juegoId: number;
+  juegoNombre: string;
+  partidasTotales: number;
+  victorias: number;
+  porcentajeVictoria: number;
+  ultimaPartida: string | null;
+}
+
 interface GameFilters {
   juegoId: string;
   fechaDesde: string;
@@ -39,7 +48,7 @@ interface GameFilters {
 }
 
 interface UserFilters {
-  juegoId: string;
+  usuarioId: string;
   fechaDesde: string;
   fechaHasta: string;
 }
@@ -59,6 +68,15 @@ interface DetailColumns {
   porcentaje: boolean;
 }
 
+interface UserColumns {
+  usuario: boolean;
+  joc: boolean;
+  partidas: boolean;
+  victorias: boolean;
+  porcentaje: boolean;
+  ultima: boolean;
+}
+
 const EMPTY_GAME_FILTERS: GameFilters = {
   juegoId: '',
   fechaDesde: '',
@@ -66,7 +84,7 @@ const EMPTY_GAME_FILTERS: GameFilters = {
 };
 
 const EMPTY_USER_FILTERS: UserFilters = {
-  juegoId: '',
+  usuarioId: '',
   fechaDesde: '',
   fechaHasta: ''
 };
@@ -105,11 +123,13 @@ export class RankingsPageComponent {
     porcentaje: true
   });
 
-  userColumns = signal<DetailColumns>({
+  userColumns = signal<UserColumns>({
     usuario: true,
+    joc: true,
     partidas: true,
     victorias: true,
-    porcentaje: true
+    porcentaje: true,
+    ultima: true
   });
 
   showGameFilters = signal(false);
@@ -134,9 +154,30 @@ export class RankingsPageComponent {
     return [...data.juegos].sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
 
+  userOptions = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return [];
+    }
+
+    const users = new Map<number, string>();
+    for (const jugador of data.jugadores) {
+      users.set(jugador.usuarioId, jugador.usuarioNombre);
+    }
+
+    return Array.from(users.entries())
+      .map(([usuarioId, nombre]) => ({ usuarioId, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+
   selectedGameName = computed(() => {
     const juegoId = Number(this.gameFilters().juegoId);
     return this.gameOptions().find(juego => juego.juegoId === juegoId)?.nombre ?? '';
+  });
+
+  selectedUserName = computed(() => {
+    const usuarioId = Number(this.userFilters().usuarioId);
+    return this.userOptions().find(usuario => usuario.usuarioId === usuarioId)?.nombre ?? '';
   });
 
   gameRows = computed(() => {
@@ -170,12 +211,23 @@ export class RankingsPageComponent {
 
   userRows = computed(() => {
     const data = this.rankings();
-    if (!data) {
+    if (!data || this.userFilters().usuarioId) {
       return [];
     }
 
     const rows = this.buildUserRows(data.jugadores, this.userFilters());
     return this.sortDetailRows(rows, this.userSortColumn(), this.userSortDirection());
+  });
+
+  selectedUserGameRows = computed(() => {
+    const data = this.rankings();
+    const usuarioId = Number(this.userFilters().usuarioId);
+    if (!data || !usuarioId) {
+      return [];
+    }
+
+    const rows = this.buildUserGameRows(data.jugadores, this.userFilters());
+    return this.sortUserGameRows(rows);
   });
 
   allGameColumnsSelected = computed(() => Object.values(this.gameColumns()).every(Boolean));
@@ -229,6 +281,11 @@ export class RankingsPageComponent {
       ...current,
       [key]: value
     }));
+
+    if (key === 'usuarioId') {
+      this.userSortColumn.set(value ? 'partidas' : 'victorias');
+      this.userSortDirection.set('desc');
+    }
   }
 
   clearGameFilters(): void {
@@ -283,7 +340,7 @@ export class RankingsPageComponent {
     }));
   }
 
-  toggleUserColumn(column: keyof DetailColumns): void {
+  toggleUserColumn(column: keyof UserColumns): void {
     this.userColumns.update(current => ({
       ...current,
       [column]: !current[column]
@@ -315,9 +372,11 @@ export class RankingsPageComponent {
     const nextValue = !this.allUserColumnsSelected();
     this.userColumns.set({
       usuario: nextValue,
+      joc: nextValue,
       partidas: nextValue,
       victorias: nextValue,
-      porcentaje: nextValue
+      porcentaje: nextValue,
+      ultima: nextValue
     });
   }
 
@@ -395,6 +454,10 @@ export class RankingsPageComponent {
     return item.usuarioId;
   }
 
+  trackByUserGameRow(_: number, item: UserGameRankingRow): number {
+    return item.juegoId;
+  }
+
   private buildGameRows(partidas: RankingPartida[], filters: GameFilters): GameRankingRow[] {
     const filtered = this.filterPartidas(partidas, filters.fechaDesde, filters.fechaHasta);
     const grouped = new Map<number, RankingPartida[]>();
@@ -424,9 +487,16 @@ export class RankingsPageComponent {
   }
 
   private buildUserRows(jugadores: RankingJugador[], filters: UserFilters | GameFilters): UserRankingRow[] {
-    const juegoId = Number(filters.juegoId);
     const filtered = jugadores.filter(jugador => {
+      const maybeGameFilters = filters as Partial<GameFilters>;
+      const juegoId = Number(maybeGameFilters.juegoId);
       if (juegoId && jugador.juegoId !== juegoId) {
+        return false;
+      }
+
+      const maybeUserFilters = filters as Partial<UserFilters>;
+      const usuarioId = Number(maybeUserFilters.usuarioId);
+      if (usuarioId && jugador.usuarioId !== usuarioId) {
         return false;
       }
 
@@ -447,6 +517,34 @@ export class RankingsPageComponent {
         partidasTotales: rows.length,
         victorias,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length)
+      };
+    });
+  }
+
+  private buildUserGameRows(jugadores: RankingJugador[], filters: UserFilters): UserGameRankingRow[] {
+    const usuarioId = Number(filters.usuarioId);
+    const filtered = jugadores.filter(jugador =>
+      jugador.usuarioId === usuarioId &&
+      this.matchesDateRange(jugador.fecha, filters.fechaDesde, filters.fechaHasta)
+    );
+
+    const grouped = new Map<number, RankingJugador[]>();
+    for (const jugador of filtered) {
+      grouped.set(jugador.juegoId, [...(grouped.get(jugador.juegoId) ?? []), jugador]);
+    }
+
+    return Array.from(grouped.entries()).map(([juegoId, rows]) => {
+      const victorias = rows.filter(row => row.posicion === 1).length;
+
+      return {
+        juegoId,
+        juegoNombre: rows[0].juegoNombre,
+        partidasTotales: rows.length,
+        victorias,
+        porcentajeVictoria: this.calculatePercentage(victorias, rows.length),
+        ultimaPartida: rows
+          .map(row => row.fecha)
+          .sort((a, b) => b.localeCompare(a))[0] ?? null
       };
     });
   }
@@ -516,6 +614,36 @@ export class RankingsPageComponent {
           return (a.victorias - b.victorias) * multiplier;
         case 'porcentaje':
           return (a.porcentajeVictoria - b.porcentajeVictoria) * multiplier;
+        case 'ultima':
+          return 0;
+        default:
+          return 0;
+      }
+    });
+  }
+
+  private sortUserGameRows(rows: UserGameRankingRow[]): UserGameRankingRow[] {
+    const column = this.userSortColumn();
+    const direction = this.userSortDirection();
+
+    if (!column || !direction) {
+      return rows;
+    }
+
+    return [...rows].sort((a, b) => {
+      const multiplier = direction === 'asc' ? 1 : -1;
+
+      switch (column) {
+        case 'joc':
+          return a.juegoNombre.localeCompare(b.juegoNombre) * multiplier;
+        case 'partidas':
+          return (a.partidasTotales - b.partidasTotales) * multiplier;
+        case 'victorias':
+          return (a.victorias - b.victorias) * multiplier;
+        case 'porcentaje':
+          return (a.porcentajeVictoria - b.porcentajeVictoria) * multiplier;
+        case 'ultima':
+          return ((a.ultimaPartida ?? '').localeCompare(b.ultimaPartida ?? '')) * multiplier;
         default:
           return 0;
       }
@@ -529,7 +657,7 @@ export class RankingsPageComponent {
   ): void {
     if (columnSignal() !== column) {
       columnSignal.set(column);
-      directionSignal.set(column === 'usuario' ? 'asc' : 'desc');
+      directionSignal.set(column === 'usuario' || column === 'joc' ? 'asc' : 'desc');
       return;
     }
 
