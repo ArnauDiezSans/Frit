@@ -304,7 +304,9 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId">
+          <tr
+            *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId"
+            [class.row-highlight]="highlightedPartidaId() === partida.partidaId">
             <td *ngIf="visibleColumns().fecha" data-label="Data">
               <span class="cell-value cell-title">{{ formatFecha(partida.fecha) }}</span>
             </td>

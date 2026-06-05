@@ -28,6 +28,7 @@ export class UsuarioPageComponent {
   orderError = signal('');
   success = signal('');
   modalOpen = signal(false);
+  profileModalOpen = signal(false);
 
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
@@ -46,6 +47,12 @@ export class UsuarioPageComponent {
       }
     }
   );
+
+  profileForm = this.fb.group({
+    nombre: ['', [Validators.required, Validators.maxLength(200)]],
+    grupo: ['', Validators.maxLength(200)],
+    observaciones: ['', Validators.maxLength(800)]
+  });
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -92,6 +99,67 @@ export class UsuarioPageComponent {
   cerrarModalPassword(): void {
     this.modalOpen.set(false);
     this.formError.set('');
+  }
+
+  abrirModalPerfil(): void {
+    const user = this.usuario();
+    if (!user) {
+      return;
+    }
+
+    this.profileForm.reset({
+      nombre: user.nombre,
+      grupo: user.grupo ?? '',
+      observaciones: user.observaciones ?? ''
+    });
+    this.formError.set('');
+    this.success.set('');
+    this.profileModalOpen.set(true);
+  }
+
+  cerrarModalPerfil(): void {
+    this.profileModalOpen.set(false);
+    this.formError.set('');
+  }
+
+  guardarPerfil(): void {
+    const currentUser = this.authService.currentUser;
+
+    if (!currentUser) {
+      this.router.navigateByUrl('/login');
+      return;
+    }
+
+    if (this.profileForm.invalid) {
+      this.profileForm.markAllAsTouched();
+      this.formError.set('Revisa els camps del perfil.');
+      return;
+    }
+
+    const raw = this.profileForm.getRawValue();
+
+    this.saving.set(true);
+    this.formError.set('');
+
+    this.usuarioService.updateProfile(currentUser.usuarioId, {
+      nombre: raw.nombre?.trim() ?? '',
+      grupo: raw.grupo?.trim() || null,
+      observaciones: raw.observaciones?.trim() || null
+    }).subscribe({
+      next: usuario => {
+        this.usuario.set(usuario);
+        this.authService.currentUser = {
+          ...currentUser,
+          nombre: usuario.nombre
+        };
+        this.saving.set(false);
+        this.cerrarModalPerfil();
+      },
+      error: err => {
+        this.saving.set(false);
+        this.formError.set(err?.error?.message ?? "No s'ha pogut guardar el perfil.");
+      }
+    });
   }
 
   guardarPassword(): void {

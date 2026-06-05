@@ -67,6 +67,51 @@ public class PendentCompraService
         });
     }
 
+    public async Task<(bool Success, string? Error, PendentCompraDto? Item)> UpdateAsync(
+        int id,
+        PendentCompraWriteDto dto)
+    {
+        var item = await _context.PendentsCompra
+            .Include(pendent => pendent.Usuario)
+            .FirstOrDefaultAsync(pendent => pendent.PendentCompraId == id);
+
+        if (item is null)
+        {
+            return (false, "Element no trobat.", null);
+        }
+
+        item.Quantitat = dto.Quantitat;
+        item.Descripcio = dto.Descripcio.Trim();
+        item.Link = string.IsNullOrWhiteSpace(dto.Link) ? null : dto.Link.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return (true, null, new PendentCompraDto
+        {
+            PendentCompraId = item.PendentCompraId,
+            UsuarioId = item.UsuarioId,
+            UsuarioNombre = item.Usuario.Nombre,
+            Quantitat = item.Quantitat,
+            Descripcio = item.Descripcio,
+            Link = item.Link,
+            CreatedAt = item.CreatedAt
+        });
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var item = await _context.PendentsCompra.FirstOrDefaultAsync(pendent => pendent.PendentCompraId == id);
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        _context.PendentsCompra.Remove(item);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<int> DeleteSelectedAsync(IEnumerable<int> ids)
     {
         var idsList = ids.Distinct().ToList();

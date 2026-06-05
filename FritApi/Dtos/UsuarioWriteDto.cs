@@ -19,3 +19,16 @@ public class UsuarioWriteDto
     [MaxLength(100)]
     public string Password { get; set; } = string.Empty;
 }
+
+public class UsuarioProfileUpdateDto
+{
+    [Required]
+    [MaxLength(200)]
+    public string Nombre { get; set; } = string.Empty;
+
+    [MaxLength(200)]
+    public string? Grupo { get; set; }
+
+    [MaxLength(800)]
+    public string? Observaciones { get; set; }
+}

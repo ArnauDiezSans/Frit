@@ -252,6 +252,16 @@ h1 {
   background: #fafafa;
 }
 
+.games-table tbody tr.row-highlight {
+  background: #ecfdf5;
+  animation: highlightFade 2.5s ease-out;
+}
+
+@keyframes highlightFade {
+  0% { background: #bbf7d0; }
+  100% { background: #ecfdf5; }
+}
+
 .sortable {
   cursor: pointer;
   user-select: none;

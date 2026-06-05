@@ -92,6 +92,25 @@ public class UsuariosController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id:int}/profile")]
+    [Authorize]
+    public async Task<ActionResult<UsuarioDto>> UpdateProfile(int id, [FromBody] UsuarioProfileUpdateDto dto)
+    {
+        if (!IsCurrentUser(id))
+        {
+            return Forbid();
+        }
+
+        var usuario = await _usuarioService.UpdateProfileAsync(id, dto);
+
+        if (usuario is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(usuario);
+    }
+
     [HttpGet("{id:int}/juegos-orden")]
     [Authorize]
     public async Task<ActionResult<List<UsuarioJuegoOrdenDto>>> GetJuegosOrden(int id)

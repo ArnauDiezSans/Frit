@@ -18,6 +18,12 @@ export interface ChangePasswordRequest {
   newPassword: string;
 }
 
+export interface UsuarioProfileUpdate {
+  nombre: string;
+  grupo?: string | null;
+  observaciones?: string | null;
+}
+
 export interface UsuarioJuegoOrden {
   juegoId: number;
   nombre: string;
@@ -49,6 +55,17 @@ export class UsuarioService {
     return this.http.put<void>(`${this.baseUrl}/${id}/password`, data, {
       withCredentials: true
     });
+  }
+
+  updateProfile(id: number, data: UsuarioProfileUpdate): Observable<UsuarioDetalle> {
+    return this.http.put<UsuarioDetalle>(`${this.baseUrl}/${id}/profile`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(usuario => {
+        this.dataStore.set(`usuario:${id}`, usuario);
+        this.dataStore.invalidate('usuarios');
+      })
+    );
   }
 
   getJuegosOrden(id: number): Observable<UsuarioJuegoOrden[]> {

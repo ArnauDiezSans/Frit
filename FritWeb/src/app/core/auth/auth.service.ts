@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { API_BASE_URL } from '../api/api.config';
 import { DataStoreService } from '../data/data-store.service';
+import { UiStateService } from '../data/ui-state.service';
 import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private dataStore = inject(DataStoreService);
+  private uiState = inject(UiStateService);
   private baseUrl = `${API_BASE_URL}/auth`;
 
   currentUser: AuthUser | null = null;
@@ -20,6 +22,7 @@ export class AuthService {
     }).pipe(
       tap(user => {
         this.dataStore.clear();
+        this.uiState.clearByPrefix('ui:');
         this.currentUser = user;
         this.initialized = true;
       })
@@ -32,6 +35,7 @@ export class AuthService {
     }).pipe(
       tap(user => {
         this.dataStore.clear();
+        this.uiState.clearByPrefix('ui:');
         this.currentUser = user;
         this.initialized = true;
       })
@@ -44,6 +48,7 @@ export class AuthService {
     }).pipe(
       tap(() => {
         this.dataStore.clear();
+        this.uiState.clearByPrefix('ui:');
         this.currentUser = null;
         this.initialized = true;
       })

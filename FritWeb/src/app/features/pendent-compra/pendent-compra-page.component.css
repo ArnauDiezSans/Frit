@@ -98,6 +98,16 @@ h1 {
   background: #fafafa;
 }
 
+.purchase-table tbody tr.row-highlight {
+  background: #ecfdf5;
+  animation: highlightFade 2.5s ease-out;
+}
+
+@keyframes highlightFade {
+  0% { background: #bbf7d0; }
+  100% { background: #ecfdf5; }
+}
+
 .selection-column {
   width: 56px;
   text-align: center;
@@ -235,6 +245,17 @@ h1 {
 
 .primary-button:hover {
   background: #0c615b;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.small-button {
+  height: 34px;
+  padding: 0 10px;
 }
 
 .primary-button:disabled,

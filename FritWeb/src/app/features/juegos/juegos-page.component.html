@@ -263,6 +263,7 @@
               (click)="ordenarPor('juegoBase')">
               <span>Joc base{{ getSortIndicator('juegoBase') }}</span>
             </th>
+            <th>Accions</th>
           </tr>
 
           <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
@@ -336,11 +337,14 @@
                 [value]="filters().juegoBase"
                 (input)="updateFilter('juegoBase', $any($event.target).value)" />
             </th>
+            <th></th>
           </tr>
         </thead>
 
         <tbody>
-          <tr *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId">
+          <tr
+            *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId"
+            [class.row-highlight]="highlightedJuegoId() === juego.juegoId">
             <td *ngIf="visibleColumns().nombre" data-label="Nom">
               <span class="cell-value cell-title">{{ juego.nombre }}</span>
             </td>
@@ -368,6 +372,12 @@
             <td *ngIf="visibleColumns().juegoBase" data-label="Joc base">
               <span class="cell-value">{{ getNombreJuegoBase(juego.juegoBaseId) || '-' }}</span>
             </td>
+            <td data-label="Accions">
+              <div class="row-actions">
+                <button type="button" class="ghost-button small-button" (click)="editarJuego(juego)">Editar</button>
+                <button type="button" class="ghost-button small-button" (click)="eliminarJuego(juego)">Eliminar</button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -383,7 +393,7 @@
     <section class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
-          <h2>Nou joc</h2>
+          <h2>{{ editingJuegoId() ? 'Editar joc' : 'Nou joc' }}</h2>
           <p>Completa les dades del joc o carrega-les des de BoardGameGeek.</p>
         </div>
 
@@ -522,7 +532,7 @@
         <div class="modal-actions">
           <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
-            {{ saving() ? 'Desant...' : 'Desar joc' }}
+            {{ saving() ? 'Desant...' : (editingJuegoId() ? 'Guardar canvis' : 'Desar joc') }}
           </button>
         </div>
       </form>

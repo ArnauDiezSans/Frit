@@ -58,11 +58,14 @@
             <th>Quantitat</th>
             <th>Descripció</th>
             <th>Link</th>
+            <th>Accions</th>
           </tr>
         </thead>
 
         <tbody>
-          <tr *ngFor="let item of items(); trackBy: trackByItemId">
+          <tr
+            *ngFor="let item of items(); trackBy: trackByItemId"
+            [class.row-highlight]="highlightedItemId() === item.pendentCompraId">
             <td data-label="Seleccionar" class="selection-column">
               <input
                 type="checkbox"
@@ -80,6 +83,12 @@
               </a>
               <ng-template #noLink>-</ng-template>
             </td>
+            <td data-label="Accions">
+              <div class="row-actions">
+                <button type="button" class="ghost-button small-button" (click)="editarItem(item)">Editar</button>
+                <button type="button" class="ghost-button small-button" (click)="eliminarItem(item)">Eliminar</button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -94,7 +103,7 @@
     <section class="modal-card" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
-          <h2>Nou element</h2>
+          <h2>{{ editingItemId() ? 'Editar element' : 'Nou element' }}</h2>
         </div>
 
         <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
@@ -124,7 +133,7 @@
         <div class="modal-actions">
           <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
-            {{ saving() ? 'Desant...' : 'Afegir element' }}
+            {{ saving() ? 'Desant...' : (editingItemId() ? 'Guardar canvis' : 'Afegir element') }}
           </button>
         </div>
       </form>

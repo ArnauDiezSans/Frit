@@ -95,6 +95,31 @@ public class UsuarioService
         };
     }
 
+    public async Task<UsuarioDto?> UpdateProfileAsync(int id, UsuarioProfileUpdateDto dto)
+    {
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+        if (usuario is null)
+        {
+            return null;
+        }
+
+        usuario.Nombre = dto.Nombre.Trim();
+        usuario.Grupo = string.IsNullOrWhiteSpace(dto.Grupo) ? null : dto.Grupo.Trim();
+        usuario.Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return new UsuarioDto
+        {
+            UsuarioId = usuario.UsuarioId,
+            Nombre = usuario.Nombre,
+            Grupo = usuario.Grupo,
+            Observaciones = usuario.Observaciones,
+            CreatedAt = usuario.CreatedAt
+        };
+    }
+
     public async Task<bool?> ChangePasswordAsync(int id, ChangePasswordDto dto)
     {
         var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == id);

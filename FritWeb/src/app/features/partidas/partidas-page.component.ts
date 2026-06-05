@@ -17,6 +17,7 @@ import {
 import { Router } from '@angular/router';
 import { forkJoin, map, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { UiStateService } from '../../core/data/ui-state.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
@@ -110,6 +111,7 @@ export class PartidasPageComponent implements OnInit {
   private juegosService = inject(JuegosService);
   private usuariosService = inject(UsuariosService);
   private partidaJugadoresService = inject(PartidaJugadoresService);
+  private uiState = inject(UiStateService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -129,18 +131,19 @@ export class PartidasPageComponent implements OnInit {
   showUsuarioOptions = signal<number | null>(null);
 
   partidaJugadores = signal<PartidaJugador[]>([]);
+  highlightedPartidaId = signal<number | null>(null);
 
-  filters = signal<PartidasFilters>({ ...EMPTY_FILTERS });
-  sortColumn = signal<SortColumn>('fecha');
-  sortDirection = signal<SortDirection>('desc');
-  visibleColumns = signal<VisibleColumns>({
+  filters = signal<PartidasFilters>(this.uiState.get('ui:partidas:filters', { ...EMPTY_FILTERS }));
+  sortColumn = signal<SortColumn>(this.uiState.get('ui:partidas:sortColumn', 'fecha' as SortColumn));
+  sortDirection = signal<SortDirection>(this.uiState.get('ui:partidas:sortDirection', 'desc' as SortDirection));
+  visibleColumns = signal<VisibleColumns>(this.uiState.get('ui:partidas:columns', {
     fecha: true,
     juegoNombre: true,
     duracionMinutos: true,
     numeroJugadores: true,
     resultadoJugadores: true,
     observaciones: true
-  });
+  }));
   showFilters = signal(false);
   showColumnsPanel = signal(false);
   isMobileFilters = signal(false);
@@ -334,6 +337,11 @@ export class PartidasPageComponent implements OnInit {
         this.showUsuarioOptions.set(null);
       }
     });
+
+    effect(() => this.uiState.set('ui:partidas:filters', this.filters()));
+    effect(() => this.uiState.set('ui:partidas:sortColumn', this.sortColumn()));
+    effect(() => this.uiState.set('ui:partidas:sortDirection', this.sortDirection()));
+    effect(() => this.uiState.set('ui:partidas:columns', this.visibleColumns()));
 
     this.updateResponsiveState();
   }
@@ -623,6 +631,8 @@ const partidaPayload: Partida = {
         next: result => {
           this.partidas.update(current => [result.partida, ...current]);
           this.partidaJugadores.update(current => [...current, ...result.jugadores]);
+          this.highlightedPartidaId.set(result.partida.partidaId);
+          window.setTimeout(() => this.highlightedPartidaId.set(null), 2500);
 
           this.saving.set(false);
           this.success.set('Partida desada correctament.');

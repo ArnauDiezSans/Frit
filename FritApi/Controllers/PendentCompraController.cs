@@ -51,4 +51,35 @@ public class PendentCompraController : ControllerBase
         await _pendentCompraService.DeleteSelectedAsync(dto.Ids);
         return NoContent();
     }
+
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<PendentCompraDto>> Update(int id, [FromBody] PendentCompraWriteDto dto)
+    {
+        var result = await _pendentCompraService.UpdateAsync(id, dto);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Element no trobat.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Item);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _pendentCompraService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

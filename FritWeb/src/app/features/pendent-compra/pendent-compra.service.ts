@@ -46,6 +46,30 @@ export class PendentCompraService {
     );
   }
 
+  update(id: number, data: PendentCompraWrite): Observable<PendentCompraItem> {
+    return this.http.put<PendentCompraItem>(`${this.baseUrl}/${id}`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(updated => {
+        this.dataStore.update<PendentCompraItem[]>(this.cacheKey, current =>
+          (current ?? []).map(item => item.pendentCompraId === id ? updated : item)
+        );
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.dataStore.update<PendentCompraItem[]>(this.cacheKey, current =>
+          (current ?? []).filter(item => item.pendentCompraId !== id)
+        );
+      })
+    );
+  }
+
   deleteSelected(ids: number[]): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/delete-selected`, { ids }, {
       withCredentials: true

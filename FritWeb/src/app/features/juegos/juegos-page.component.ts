@@ -11,6 +11,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { UiStateService } from '../../core/data/ui-state.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from './juegos.models';
 import { JuegosService } from './juegos.service';
@@ -71,6 +72,7 @@ export class JuegosPageComponent implements OnInit {
   private authService = inject(AuthService);
   private juegosService = inject(JuegosService);
   private usuariosService = inject(UsuariosService);
+  private uiState = inject(UiStateService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -80,8 +82,10 @@ export class JuegosPageComponent implements OnInit {
   formError = signal('');
   success = signal('');
   modalOpen = signal(false);
+  editingJuegoId = signal<number | null>(null);
 
   juegos = signal<Juego[]>([]);
+  highlightedJuegoId = signal<number | null>(null);
   usuarios = signal<UsuarioOption[]>([]);
 
   filteredUsuarios = signal<UsuarioOption[]>([]);
@@ -90,12 +94,12 @@ export class JuegosPageComponent implements OnInit {
   filteredJuegosBase = signal<Juego[]>([]);
   showJuegoBaseOptions = signal(false);
 
-  sortColumn = signal<SortColumn | null>(null);
-  sortDirection = signal<SortDirection | null>(null);
+  sortColumn = signal<SortColumn | null>(this.uiState.get('ui:juegos:sortColumn', null as SortColumn | null));
+  sortDirection = signal<SortDirection | null>(this.uiState.get('ui:juegos:sortDirection', null as SortDirection | null));
 
-  filters = signal<JuegosFilters>({ ...EMPTY_FILTERS });
+  filters = signal<JuegosFilters>(this.uiState.get('ui:juegos:filters', { ...EMPTY_FILTERS }));
 
-  visibleColumns = signal<VisibleColumns>({
+  visibleColumns = signal<VisibleColumns>(this.uiState.get('ui:juegos:columns', {
     nombre: true,
     numeroJugadoresMin: true,
     numeroJugadoresMax: true,
@@ -103,7 +107,7 @@ export class JuegosPageComponent implements OnInit {
     tipo: true,
     pvp: true,
     juegoBase: true
-  });
+  }));
 
   showFilters = signal(false);
   showColumnsPanel = signal(false);
@@ -263,6 +267,11 @@ export class JuegosPageComponent implements OnInit {
         this.showJuegoBaseOptions.set(false);
       }
     });
+
+    effect(() => this.uiState.set('ui:juegos:filters', this.filters()));
+    effect(() => this.uiState.set('ui:juegos:sortColumn', this.sortColumn()));
+    effect(() => this.uiState.set('ui:juegos:sortDirection', this.sortDirection()));
+    effect(() => this.uiState.set('ui:juegos:columns', this.visibleColumns()));
 
     this.updateResponsiveState();
   }
@@ -437,8 +446,34 @@ export class JuegosPageComponent implements OnInit {
 
     this.formError.set('');
     this.success.set('');
+    this.editingJuegoId.set(null);
     this.filteredUsuarios.set(this.usuarios());
     this.filteredJuegosBase.set(this.juegos());
+    this.modalOpen.set(true);
+  }
+
+  editarJuego(juego: Juego): void {
+    this.form.reset({
+      juegoId: juego.juegoId,
+      nombre: juego.nombre,
+      bggId: juego.bggId ?? null,
+      dificultadBgg: juego.dificultadBgg ?? null,
+      numeroJugadoresMin: juego.numeroJugadoresMin,
+      numeroJugadoresMax: juego.numeroJugadoresMax,
+      pvp: juego.pvp ?? null,
+      propietarioId: juego.propietarioId,
+      propietarioSearch: this.getNombrePropietario(juego.propietarioId),
+      fechaAdquisicion: juego.fechaAdquisicion ?? '',
+      tipo: juego.tipo ?? '',
+      juegoBaseId: juego.juegoBaseId ?? null,
+      juegoBaseSearch: this.getNombreJuegoBase(juego.juegoBaseId)
+    });
+
+    this.formError.set('');
+    this.success.set('');
+    this.editingJuegoId.set(juego.juegoId);
+    this.filteredUsuarios.set(this.usuarios());
+    this.filteredJuegosBase.set(this.juegos().filter(item => item.juegoId !== juego.juegoId));
     this.modalOpen.set(true);
   }
 
@@ -593,17 +628,44 @@ export class JuegosPageComponent implements OnInit {
     this.formError.set('');
     this.success.set('');
 
-    this.juegosService.create(payload).subscribe({
+    const editingId = this.editingJuegoId();
+    const request = editingId
+      ? this.juegosService.update(editingId, payload)
+      : this.juegosService.create(payload);
+
+    request.subscribe({
       next: juego => {
-        this.juegos.update(current => [...current, juego]);
+        this.juegos.update(current =>
+          editingId
+            ? current.map(item => item.juegoId === editingId ? juego : item)
+            : [...current, juego]
+        );
         this.filteredJuegosBase.set(this.juegos());
-        this.success.set('Joc desat correctament.');
+        this.highlightedJuegoId.set(juego.juegoId);
+        window.setTimeout(() => this.highlightedJuegoId.set(null), 2500);
+        this.success.set(editingId ? 'Joc actualitzat correctament.' : 'Joc desat correctament.');
         this.saving.set(false);
         this.cerrarModal();
       },
       error: error => {
         this.formError.set(error?.error?.message ?? 'No s’ha pogut desar el joc.');
         this.saving.set(false);
+      }
+    });
+  }
+
+  eliminarJuego(juego: Juego): void {
+    if (!window.confirm(`Eliminar "${juego.nombre}"?`)) {
+      return;
+    }
+
+    this.juegosService.delete(juego.juegoId).subscribe({
+      next: () => {
+        this.juegos.update(current => current.filter(item => item.juegoId !== juego.juegoId));
+        this.filteredJuegosBase.set(this.juegos());
+      },
+      error: error => {
+        this.error.set(error?.error?.message ?? 'No s’ha pogut eliminar el joc.');
       }
     });
   }

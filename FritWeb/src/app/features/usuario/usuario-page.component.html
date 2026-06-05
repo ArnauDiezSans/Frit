@@ -38,9 +38,11 @@
       </div>
     </div>
 
-    <button type="button" class="secondary-button" (click)="abrirModalPassword()">
-      Canviar contrasenya
-    </button>
+    <div class="user-actions">
+      <button type="button" class="secondary-button" (click)="abrirModalPassword()">
+        Canviar contrasenya
+      </button>
+    </div>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
@@ -144,6 +146,46 @@
           <button type="button" class="ghost-button" (click)="cerrarModalPassword()">Cancel·lar</button>
           <button type="submit" class="primary-button" [disabled]="saving()">
             {{ saving() ? 'Desant...' : 'Desar contrasenya' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="profileModalOpen()" (click)="cerrarModalPerfil()">
+    <section class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>Editar perfil</h2>
+        </div>
+
+        <button type="button" class="ghost-button" (click)="cerrarModalPerfil()">Tancar</button>
+      </div>
+
+      <form [formGroup]="profileForm" (ngSubmit)="guardarPerfil()">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Nom</span>
+            <input type="text" formControlName="nombre" />
+          </label>
+
+          <label class="form-field">
+            <span>Grup</span>
+            <input type="text" formControlName="grupo" />
+          </label>
+
+          <label class="form-field form-field-full">
+            <span>Observacions</span>
+            <textarea rows="3" formControlName="observaciones"></textarea>
+          </label>
+        </div>
+
+        <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" (click)="cerrarModalPerfil()">Cancel·lar</button>
+          <button type="submit" class="primary-button" [disabled]="saving()">
+            {{ saving() ? 'Desant...' : 'Guardar perfil' }}
           </button>
         </div>
       </form>

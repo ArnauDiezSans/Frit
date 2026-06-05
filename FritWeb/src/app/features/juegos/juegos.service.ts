@@ -33,6 +33,36 @@ export class JuegosService {
     );
   }
 
+  update(id: number, data: Juego): Observable<Juego> {
+    return this.http.put<Juego>(`${this.baseUrl}/${id}`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(juego => {
+        this.dataStore.update<Juego[]>(this.cacheKey, current =>
+          (current ?? []).map(item => item.juegoId === id ? juego : item)
+        );
+        this.dataStore.invalidateMany(['la-llista', 'rankings']);
+        this.dataStore.invalidateByPrefix('usuario-juegos-orden:');
+        this.dataStore.invalidateByPrefix('a-que-juguem:');
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.dataStore.update<Juego[]>(this.cacheKey, current =>
+          (current ?? []).filter(item => item.juegoId !== id)
+        );
+        this.dataStore.invalidateMany(['la-llista', 'rankings']);
+        this.dataStore.invalidateByPrefix('usuario-juegos-orden:');
+        this.dataStore.invalidateByPrefix('a-que-juguem:');
+      })
+    );
+  }
+
   getFromBgg(bggId: number): Observable<BggJuegoLookup> {
     return this.http.get<BggJuegoLookup>(`${this.baseUrl}/bgg/${bggId}`, {
       withCredentials: true

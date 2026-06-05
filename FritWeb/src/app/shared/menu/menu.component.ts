@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { DataStoreService } from '../../core/data/data-store.service';
 
 export type MenuPage = 'rankings' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'usuario';
 
@@ -12,6 +13,11 @@ export type MenuPage = 'rankings' | 'partidas' | 'juegos' | 'laLlista' | 'penden
   styleUrl: './menu.component.css'
 })
 export class MenuComponent {
+  constructor(
+    private dataStore: DataStoreService,
+    private router: Router
+  ) {}
+
   @Input({ required: true }) activePage!: MenuPage;
   @Input() primaryLabel = '';
 
@@ -24,5 +30,13 @@ export class MenuComponent {
 
   onLogout(): void {
     this.logout.emit();
+  }
+
+  refresh(): void {
+    this.dataStore.clear();
+    const currentUrl = this.router.url;
+    this.router.navigateByUrl('/login', { skipLocationChange: true }).then(() => {
+      this.router.navigateByUrl(currentUrl);
+    });
   }
 }

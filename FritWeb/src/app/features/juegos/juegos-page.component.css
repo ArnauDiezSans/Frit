@@ -86,6 +86,17 @@ h1 {
   background: #f9fafb;
 }
 
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.small-button {
+  height: 34px;
+  padding: 0 10px;
+}
+
 .small-button {
   height: 42px;
   white-space: nowrap;
@@ -284,6 +295,16 @@ h1 {
 
 .games-table tbody tr:hover {
   background: #fafafa;
+}
+
+.games-table tbody tr.row-highlight {
+  background: #ecfdf5;
+  animation: highlightFade 2.5s ease-out;
+}
+
+@keyframes highlightFade {
+  0% { background: #bbf7d0; }
+  100% { background: #ecfdf5; }
 }
 
 .sortable {
