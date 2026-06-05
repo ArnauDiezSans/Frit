@@ -15,7 +15,7 @@ import {
   Validators
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, switchMap } from 'rxjs';
+import { forkJoin, map, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
@@ -611,37 +611,18 @@ const partidaPayload: Partida = {
             })
           );
 
-          if (requests.length === 0) {
-            return forkJoin([]);
-          }
-
           return forkJoin(requests).pipe(
-            switchMap(jugadoresCreados =>
-              forkJoin({
-                partida: [partidaCreada],
-                jugadores: [jugadoresCreados]
-              })
-            )
+            map(jugadoresCreados => ({
+              partida: partidaCreada,
+              jugadores: jugadoresCreados
+            }))
           );
         })
       )
       .subscribe({
         next: result => {
-          const partidaCreada = Array.isArray((result as any).partida)
-            ? (result as any).partida[0]
-            : null;
-
-          const jugadoresCreados = Array.isArray((result as any).jugadores)
-            ? (result as any).jugadores[0]
-            : [];
-
-          if (partidaCreada) {
-            this.partidas.update(current => [partidaCreada, ...current]);
-          }
-
-          if (jugadoresCreados?.length) {
-            this.partidaJugadores.update(current => [...current, ...jugadoresCreados]);
-          }
+          this.partidas.update(current => [result.partida, ...current]);
+          this.partidaJugadores.update(current => [...current, ...result.jugadores]);
 
           this.saving.set(false);
           this.success.set('Partida desada correctament.');
