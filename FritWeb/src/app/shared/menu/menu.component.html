@@ -16,28 +16,28 @@
   (click)="closeMenu()">
   <button
     type="button"
-    class="menu-button"
+    class="menu-button menu-rankings"
     [class.menu-button-active]="activePage === 'rankings'"
     routerLink="/app/rankings">
     Rankings
   </button>
   <button
     type="button"
-    class="menu-button"
+    class="menu-button menu-la-llista"
     [class.menu-button-active]="activePage === 'laLlista'"
     routerLink="/app/la-llista">
     La llista
   </button>
   <button
     type="button"
-    class="menu-button"
+    class="menu-button menu-pendent-compra"
     [class.menu-button-active]="activePage === 'pendentCompra'"
     routerLink="/app/pendent-compra">
     Pendent comprar
   </button>
   <button
     type="button"
-    class="menu-button"
+    class="menu-button menu-a-que-juguem"
     [class.menu-button-active]="activePage === 'aQueJuguem'"
     routerLink="/app/a-que-juguem">
     A què juguem?
@@ -45,7 +45,7 @@
 
   <button
     type="button"
-    class="menu-button"
+    class="menu-button menu-partidas"
     [class.menu-button-active]="activePage === 'partidas'"
     routerLink="/app/partidas">
     Partides
@@ -53,7 +53,7 @@
 
   <button
     type="button"
-    class="menu-button"
+    class="menu-button menu-juegos"
     [class.menu-button-active]="activePage === 'juegos'"
     routerLink="/app/juegos">
     Ludoteca
@@ -62,17 +62,9 @@
   <button
     *ngIf="primaryLabel"
     type="button"
-    class="menu-button menu-button-primary"
+    class="menu-button menu-button-primary menu-primary-action"
     (click)="onPrimaryAction()">
     {{ primaryLabel }}
-  </button>
-
-  <button
-    type="button"
-    class="menu-button"
-    [class.menu-button-active]="activePage === 'usuario'"
-    routerLink="/app/usuario">
-    Usuari
   </button>
 
   <div class="session-actions">
@@ -86,6 +78,14 @@
         <path d="M20 6v5h-5"></path>
         <path d="M19 11a7 7 0 1 0-2.05 4.95"></path>
       </svg>
+    </button>
+
+    <button
+      type="button"
+      class="menu-button menu-usuario"
+      [class.menu-button-active]="activePage === 'usuario'"
+      routerLink="/app/usuario">
+      Usuari
     </button>
 
     <button type="button" class="menu-button logout-button" (click)="onLogout()">Sortir</button>
