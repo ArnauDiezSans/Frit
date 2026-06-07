@@ -270,7 +270,7 @@
               class="partida-notes"
               [class.partida-notes-empty]="!partida.observaciones"
               data-label="Observacions">
-              <span class="cell-value">{{ partida.observaciones || '-' }}</span>
+              <span class="cell-value">{{ partida.observaciones }}</span>
             </td>
             <td
               *ngIf="isMobileFilters() && expandedPartidaId() === partida.partidaId"

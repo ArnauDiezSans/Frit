@@ -146,7 +146,7 @@
 
   .app-menu-open {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(20, minmax(0, 1fr));
   }
 
   .menu-button {
@@ -203,18 +203,30 @@
 
   .menu-partidas,
   .menu-rankings,
-  .menu-la-llista,
-  .menu-pendent-compra,
   .menu-a-que-juguem,
   .menu-juegos,
   .menu-primary-action {
+    grid-column: span 10;
+  }
+
+  .menu-la-llista {
+    grid-column: span 7;
+  }
+
+  .menu-pendent-compra {
+    grid-column: span 13;
+  }
+
+  .refresh-icon-button {
     grid-column: span 3;
   }
 
-  .refresh-icon-button,
-  .menu-usuario,
+  .menu-usuario {
+    grid-column: span 10;
+  }
+
   .logout-button {
-    grid-column: span 2;
+    grid-column: span 7;
   }
 
   .refresh-icon-button {
