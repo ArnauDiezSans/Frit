@@ -97,10 +97,6 @@ h1 {
   padding: 20px;
 }
 
-.stat-icon {
-  display: none;
-}
-
 .stat-label {
   display: block;
   margin-bottom: 10px;
@@ -398,54 +394,27 @@ h1 {
   }
 
   .stat-card {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr);
-    align-items: center;
-    gap: 3px 6px;
-    padding: 7px 6px;
+    padding: 10px 8px;
     border-radius: 12px;
   }
 
-  .stat-icon {
-    display: inline-grid;
-    width: 18px;
-    height: 18px;
-    place-items: center;
-    border-radius: 999px;
-    background: #ecfdf5;
-    color: #0f766e;
-    font-size: 0.68rem;
-    font-weight: 800;
-  }
-
   .stat-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    margin-bottom: 6px;
+    font-size: 0.68rem;
+    line-height: 1.15;
   }
 
   .stat-value,
   .stat-value-text {
-    min-width: 0;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     line-height: 1.1;
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .stat-detail {
-    grid-column: 1 / -1;
-    margin-top: 0;
-    font-size: 0.64rem;
+    margin-top: 5px;
+    font-size: 0.68rem;
     line-height: 1.15;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .ranking-view-switch {
@@ -551,15 +520,15 @@ h1 {
 
   .ranking-table tbody {
     display: grid;
-    gap: 8px;
+    gap: 6px;
   }
 
   .ranking-table tr {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) repeat(4, minmax(48px, auto));
+    grid-template-columns: minmax(0, 1fr) repeat(4, max-content);
     align-items: center;
-    gap: 6px 8px;
-    padding: 9px 10px;
+    gap: 4px 7px;
+    padding: 7px 8px;
     border: 1px solid #e4e7ec;
     border-radius: 10px;
     background: #ffffff;
@@ -572,7 +541,7 @@ h1 {
     padding: 0;
     border-bottom: 0;
     color: #344054;
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     text-align: right;
   }
 
@@ -581,13 +550,41 @@ h1 {
   }
 
   .ranking-table td::before {
-    content: attr(data-label);
-    display: block;
-    margin-bottom: 1px;
-    font-size: 0.66rem;
+    display: inline-grid;
+    width: 15px;
+    height: 15px;
+    place-items: center;
+    margin-right: 3px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #667085;
+    font-size: 0.58rem;
     font-weight: 700;
     line-height: 1;
-    color: #98a2b3;
+  }
+
+  .ranking-table td[data-label="Partides"]::before {
+    content: "P";
+  }
+
+  .ranking-table td[data-label="Hores"]::before {
+    content: "H";
+  }
+
+  .ranking-table td[data-label="Mitjana"]::before {
+    content: "M";
+  }
+
+  .ranking-table td[data-label="Última"]::before {
+    content: "U";
+  }
+
+  .ranking-table td[data-label="Victories"]::before {
+    content: "V";
+  }
+
+  .ranking-table td[data-label="%"]::before {
+    content: "%";
   }
 
   .ranking-table td:first-child::before {
@@ -596,8 +593,11 @@ h1 {
 
   .cell-title {
     display: block;
-    font-size: 0.92rem;
+    font-size: 0.88rem;
     line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .primary-button,
@@ -612,29 +612,6 @@ h1 {
 @media (max-width: 520px) {
   h1 {
     font-size: 1.45rem;
-  }
-
-  .ranking-table tr {
-    grid-template-columns: 1fr;
-    gap: 5px;
-  }
-
-  .ranking-table td {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    text-align: right;
-  }
-
-  .ranking-table td:first-child {
-    display: block;
-    padding-bottom: 2px;
-  }
-
-  .ranking-table td::before {
-    display: inline;
-    margin: 0;
-    font-size: 0.72rem;
   }
 
   .ranking-view-switch {

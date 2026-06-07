@@ -23,25 +23,21 @@
   <ng-container *ngIf="!loading() && !error() && rankings() as data">
     <section class="stats-grid">
       <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">J</span>
         <span class="stat-label">Joc més jugat</span>
         <strong class="stat-value stat-value-text">{{ data.resumen.juegoMasJugadoNombre || '-' }}</strong>
         <span class="stat-detail">{{ data.resumen.juegoMasJugadoPartidas }} partides</span>
       </article>
       <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">T</span>
         <span class="stat-label">Partida més llarga</span>
         <strong class="stat-value">{{ formatMinutes(data.resumen.partidaMasLargaMinutos) }}</strong>
         <span class="stat-detail">{{ data.resumen.partidaMasLargaJuegoNombre || '-' }}</span>
       </article>
       <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">P</span>
         <span class="stat-label">Jugador amb més partides</span>
         <strong class="stat-value stat-value-text">{{ topUserByGames()?.usuarioNombre || '-' }}</strong>
         <span class="stat-detail">{{ topUserByGames()?.partidasTotales ?? 0 }} partides</span>
       </article>
       <article class="stat-card">
-        <span class="stat-icon" aria-hidden="true">%</span>
         <span class="stat-label">Jugador amb més winrate</span>
         <strong class="stat-value stat-value-text">{{ topUserByWinrate()?.usuarioNombre || '-' }}</strong>
         <span class="stat-detail">{{ formatPercent(topUserByWinrate()?.porcentajeVictoria) }} · {{ topUserByWinrate()?.partidasTotales ?? 0 }} partides</span>
