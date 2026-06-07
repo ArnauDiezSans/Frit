@@ -110,7 +110,7 @@
       </div>
     </div>
 
-    <div class="filters-panel mobile-filters-panel" *ngIf="showFilters() && isMobileFilters()">
+    <div class="filters-panel" *ngIf="showFilters()">
       <div class="filters-grid">
         <label class="filter-field">
           <span>Data</span>
@@ -193,12 +193,12 @@
             [value]="filters().observaciones"
             (input)="updateFilter('observaciones', $any($event.target).value)" />
         </label>
-      </div>
 
-      <div class="filters-actions">
-        <button type="button" class="ghost-button" (click)="limpiarFiltros()">
-          Neteja filtres
-        </button>
+        <div class="filters-actions">
+          <button type="button" class="ghost-button" (click)="limpiarFiltros()">
+            Neteja
+          </button>
+        </div>
       </div>
     </div>
 
@@ -234,78 +234,6 @@
             </th>
           </tr>
 
-          <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
-            <th *ngIf="visibleColumns().fecha">
-              <div class="inline-table-filters date-range-filter">
-                <input
-                  type="date"
-                  class="filter-input"
-                  [value]="filters().fechaDesde"
-                  (input)="updateFilter('fechaDesde', $any($event.target).value)" />
-                <input
-                  type="date"
-                  class="filter-input"
-                  [value]="filters().fechaHasta"
-                  (input)="updateFilter('fechaHasta', $any($event.target).value)" />
-              </div>
-            </th>
-            <th *ngIf="visibleColumns().juegoNombre">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Filtra per joc..."
-                [value]="filters().juegoNombre"
-                (input)="updateFilter('juegoNombre', $any($event.target).value)" />
-            </th>
-            <th *ngIf="visibleColumns().duracionMinutos">
-              <div class="inline-table-filters">
-                <input
-                  type="number"
-                  class="filter-input"
-                  placeholder="Mín."
-                  [value]="filters().duracionMinutosMin"
-                  (input)="updateFilter('duracionMinutosMin', $any($event.target).value)" />
-                <input
-                  type="number"
-                  class="filter-input"
-                  placeholder="Màx."
-                  [value]="filters().duracionMinutosMax"
-                  (input)="updateFilter('duracionMinutosMax', $any($event.target).value)" />
-              </div>
-            </th>
-            <th *ngIf="visibleColumns().numeroJugadores">
-              <div class="inline-table-filters">
-                <input
-                  type="number"
-                  class="filter-input"
-                  placeholder="Mín."
-                  [value]="filters().numeroJugadoresMin"
-                  (input)="updateFilter('numeroJugadoresMin', $any($event.target).value)" />
-                <input
-                  type="number"
-                  class="filter-input"
-                  placeholder="Màx."
-                  [value]="filters().numeroJugadoresMax"
-                  (input)="updateFilter('numeroJugadoresMax', $any($event.target).value)" />
-              </div>
-            </th>
-            <th *ngIf="visibleColumns().resultadoJugadores">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Nom o punts..."
-                [value]="filters().resultadoJugadores"
-                (input)="updateFilter('resultadoJugadores', $any($event.target).value)" />
-            </th>
-            <th *ngIf="visibleColumns().observaciones">
-              <input
-                type="text"
-                class="filter-input"
-                placeholder="Filtra..."
-                [value]="filters().observaciones"
-                (input)="updateFilter('observaciones', $any($event.target).value)" />
-            </th>
-          </tr>
         </thead>
 
         <tbody>

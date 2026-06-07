@@ -661,13 +661,7 @@ const partidaPayload: Partida = {
   }
 
   toggleFilters(): void {
-    this.showFilters.update(value => {
-      if (value) {
-        this.clearAllFilters();
-      }
-
-      return !value;
-    });
+    this.showFilters.update(value => !value);
   }
 
   toggleColumnsPanel(event: Event): void {

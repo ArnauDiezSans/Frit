@@ -168,56 +168,43 @@ h1 {
 }
 
 .filters-panel {
-  margin-bottom: 20px;
-  padding: 16px;
+  margin: -4px 0 14px;
+  padding: 10px;
   border: 1px solid #e4e7ec;
-  border-radius: 16px;
+  border-radius: 12px;
   background: #f8fafc;
-}
-
-.mobile-filters-panel {
-  display: none;
 }
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 8px;
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .filter-field span {
-  font-size: 0.92rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #344054;
 }
 
 .filters-actions {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 14px;
+  align-items: end;
+  margin-top: 0;
 }
 
 .inline-table-filters {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.date-range-filter {
-  grid-template-columns: minmax(120px, 150px);
-  justify-content: start;
-}
-
-.table-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .table-wrapper {
@@ -275,23 +262,16 @@ h1 {
   user-select: none;
 }
 
-.filters-row th {
-  background: #f8fafc;
-}
-
-.filters-row-hidden {
-  display: none;
-}
-
 .filter-input {
   width: 100%;
-  min-height: 42px;
-  padding: 10px 12px;
+  min-height: 36px;
+  padding: 7px 10px;
   border: 1px solid #d0d5dd;
-  border-radius: 12px;
+  border-radius: 10px;
   background: #ffffff;
   color: #101828;
   font: inherit;
+  font-size: 0.88rem;
 }
 
 .filter-input:focus {
@@ -593,12 +573,27 @@ h1 {
     border-radius: 14px;
   }
 
-  .mobile-filters-panel {
-    display: block;
+  .filters-panel {
+    margin: -2px 0 10px;
+    padding: 10px;
   }
 
   .filters-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .filter-field:first-child,
+  .filter-field:nth-child(2),
+  .filter-field:nth-child(5),
+  .filter-field:nth-child(6),
+  .filters-actions {
+    grid-column: 1 / -1;
+  }
+
+  .filter-input {
+    min-height: 34px;
+    padding: 6px 9px;
   }
 
   .filters-row {
