@@ -51,19 +51,6 @@ button {
 }
 
 @media (max-width: 820px) {
-  .player-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-  }
-
-  .player-icon {
-    display: inline-block;
-    width: 13px;
-    height: 13px;
-    fill: #475467;
-  }
-
   .partida-detail-popup {
     margin-top: 4px;
     padding-top: 8px;

@@ -646,6 +646,14 @@ h1 {
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
   }
 
+  .games-table tr.row-expanded {
+    grid-template-areas: "detail detail detail detail";
+  }
+
+  .games-table tr.row-expanded > td:not(.partida-detail-popup) {
+    display: none;
+  }
+
   .games-table td {
     display: block;
     min-width: 0;
@@ -682,6 +690,19 @@ h1 {
 
   .partida-players {
     grid-area: players;
+  }
+
+  .player-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .player-icon {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    fill: #475467;
   }
 
   .partida-results {
