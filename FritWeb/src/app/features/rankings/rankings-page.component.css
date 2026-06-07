@@ -537,6 +537,7 @@ h1 {
 
   .ranking-table td {
     display: block;
+    position: relative;
     min-width: 0;
     padding: 0;
     border-bottom: 0;
@@ -564,19 +565,38 @@ h1 {
   }
 
   .ranking-table td[data-label="Partides"]::before {
-    content: "P";
+    content: "#";
   }
 
   .ranking-table td[data-label="Hores"]::before {
-    content: "H";
+    content: "";
+    background: transparent;
+    border: 2px solid #0b4a79;
+    position: relative;
+  }
+
+  .ranking-table td[data-label="Hores"]::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 5px;
+    border-left: 2px solid #0b4a79;
+    border-bottom: 2px solid #0b4a79;
+    transform: translate(-10px, 4px);
   }
 
   .ranking-table td[data-label="Mitjana"]::before {
-    content: "M";
+    content: "⌛";
+    background: transparent;
+    color: #0b4a79;
+    font-size: 0.82rem;
   }
 
   .ranking-table td[data-label="Última"]::before {
-    content: "U";
+    content: "▣";
+    background: transparent;
+    color: #0b4a79;
+    font-size: 0.78rem;
   }
 
   .ranking-table td[data-label="Victories"]::before {
