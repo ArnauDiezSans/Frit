@@ -507,6 +507,13 @@ h1 {
     padding: 16px;
   }
 
+  .dashboard-header {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
   .content-card {
     padding: 18px 16px;
     border-radius: 14px;

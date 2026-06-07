@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DataStoreService } from '../../core/data/data-store.service';
 
@@ -24,15 +24,34 @@ export class MenuComponent {
   @Output() primaryAction = new EventEmitter<void>();
   @Output() logout = new EventEmitter<void>();
 
+  menuOpen = false;
+
+  @HostListener('window:click')
+  onWindowClick(): void {
+    this.menuOpen = false;
+  }
+
+  toggleMenu(event: Event): void {
+    event.stopPropagation();
+    this.menuOpen = !this.menuOpen;
+  }
+
+  closeMenu(): void {
+    this.menuOpen = false;
+  }
+
   onPrimaryAction(): void {
+    this.closeMenu();
     this.primaryAction.emit();
   }
 
   onLogout(): void {
+    this.closeMenu();
     this.logout.emit();
   }
 
   refresh(): void {
+    this.closeMenu();
     this.dataStore.clear();
     const currentUrl = this.router.url;
     this.router.navigateByUrl('/login', { skipLocationChange: true }).then(() => {

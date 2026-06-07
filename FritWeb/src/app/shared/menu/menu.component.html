@@ -1,4 +1,19 @@
-<nav class="app-menu" aria-label="Navegació principal">
+<button
+  type="button"
+  class="menu-toggle"
+  [attr.aria-expanded]="menuOpen"
+  aria-label="Obre el menu"
+  (click)="toggleMenu($event)">
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
+
+<nav
+  class="app-menu"
+  [class.app-menu-open]="menuOpen"
+  aria-label="Navegacio principal"
+  (click)="closeMenu()">
   <button
     type="button"
     class="menu-button"

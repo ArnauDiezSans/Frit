@@ -317,23 +317,11 @@ export class RankingsPageComponent {
   }
 
   toggleGameFilters(): void {
-    this.showGameFilters.update(value => {
-      if (value) {
-        this.clearGameFilters();
-      }
-
-      return !value;
-    });
+    this.showGameFilters.update(value => !value);
   }
 
   toggleUserFilters(): void {
-    this.showUserFilters.update(value => {
-      if (value) {
-        this.clearUserFilters();
-      }
-
-      return !value;
-    });
+    this.showUserFilters.update(value => !value);
   }
 
   toggleGameColumnsPanel(event: Event): void {
