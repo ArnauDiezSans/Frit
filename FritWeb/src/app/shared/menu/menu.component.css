@@ -68,6 +68,27 @@
   background: #0c615b;
 }
 
+.session-actions {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.refresh-icon-button {
+  width: 44px;
+  padding: 0;
+}
+
+.refresh-icon-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 @media (max-width: 820px) {
   :host {
     flex: 0 0 auto;
@@ -125,6 +146,22 @@
     padding: 0 12px;
     justify-content: flex-start;
     border-radius: 10px;
+  }
+
+  .session-actions {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .refresh-icon-button {
+    width: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .logout-button {
+    justify-content: center;
   }
 }
 
