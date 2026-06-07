@@ -132,6 +132,7 @@ export class PartidasPageComponent implements OnInit {
 
   partidaJugadores = signal<PartidaJugador[]>([]);
   highlightedPartidaId = signal<number | null>(null);
+  expandedPartidaId = signal<number | null>(null);
 
   filters = signal<PartidasFilters>(this.uiState.get('ui:partidas:filters', { ...EMPTY_FILTERS }));
   sortColumn = signal<SortColumn>(this.uiState.get('ui:partidas:sortColumn', 'fecha' as SortColumn));
@@ -664,6 +665,14 @@ const partidaPayload: Partida = {
     this.showFilters.update(value => !value);
   }
 
+  togglePartidaDetail(partidaId: number): void {
+    if (!this.isMobileFilters()) {
+      return;
+    }
+
+    this.expandedPartidaId.update(current => current === partidaId ? null : partidaId);
+  }
+
   toggleColumnsPanel(event: Event): void {
     event.stopPropagation();
     this.showColumnsPanel.update(value => !value);
@@ -852,6 +861,7 @@ const partidaPayload: Partida = {
 
     if (!isMobile) {
       this.showFilters.set(false);
+      this.expandedPartidaId.set(null);
     }
   }
 }

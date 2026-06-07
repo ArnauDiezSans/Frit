@@ -239,7 +239,9 @@
         <tbody>
           <tr
             *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId"
-            [class.row-highlight]="highlightedPartidaId() === partida.partidaId">
+            [class.row-highlight]="highlightedPartidaId() === partida.partidaId"
+            [class.row-expanded]="expandedPartidaId() === partida.partidaId"
+            (click)="togglePartidaDetail(partida.partidaId)">
             <td *ngIf="visibleColumns().fecha" class="partida-date" data-label="Data">
               <span class="cell-value cell-title cell-date">{{ formatFecha(partida.fecha) }}</span>
             </td>
@@ -252,7 +254,13 @@
               </span>
             </td>
             <td *ngIf="visibleColumns().numeroJugadores" class="partida-players" data-label="Núm. jugadors">
-              <span class="cell-value">{{ partida.numeroJugadores }}</span>
+              <span class="cell-value player-count">
+                <svg class="player-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 12a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z"></path>
+                  <path d="M4.5 21a7.5 7.5 0 0 1 15 0Z"></path>
+                </svg>
+                <span>{{ partida.numeroJugadores }}</span>
+              </span>
             </td>
             <td *ngIf="visibleColumns().resultadoJugadores" class="partida-results" data-label="Jugadors i punts">
               <span class="cell-value">{{ partida.resultadoJugadores }}</span>
@@ -263,6 +271,40 @@
               [class.partida-notes-empty]="!partida.observaciones"
               data-label="Observacions">
               <span class="cell-value">{{ partida.observaciones || '-' }}</span>
+            </td>
+            <td
+              *ngIf="isMobileFilters() && expandedPartidaId() === partida.partidaId"
+              class="partida-detail-popup"
+              style="grid-area: detail"
+              colspan="6">
+              <div class="partida-detail-grid">
+                <div class="partida-detail-item">
+                  <span class="partida-detail-label">Data</span>
+                  <strong class="partida-detail-value">{{ formatFecha(partida.fecha) }}</strong>
+                </div>
+                <div class="partida-detail-item">
+                  <span class="partida-detail-label">Nom joc</span>
+                  <strong class="partida-detail-value">{{ partida.juegoNombre }}</strong>
+                </div>
+                <div class="partida-detail-item">
+                  <span class="partida-detail-label">Duracio</span>
+                  <span class="partida-detail-value">
+                    {{ partida.duracionMinutos !== null ? partida.duracionMinutos + ' min' : '-' }}
+                  </span>
+                </div>
+                <div class="partida-detail-item">
+                  <span class="partida-detail-label">Num. jugadors</span>
+                  <span class="partida-detail-value">{{ partida.numeroJugadores }}</span>
+                </div>
+                <div class="partida-detail-item partida-detail-wide">
+                  <span class="partida-detail-label">Jugadors i punts</span>
+                  <span class="partida-detail-value">{{ partida.resultadoJugadores }}</span>
+                </div>
+                <div class="partida-detail-item partida-detail-wide">
+                  <span class="partida-detail-label">Observacions</span>
+                  <span class="partida-detail-value">{{ partida.observaciones || '-' }}</span>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>

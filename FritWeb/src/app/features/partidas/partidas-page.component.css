@@ -627,7 +627,8 @@ h1 {
     grid-template-areas:
       "game date duration players"
       "results results results results"
-      "notes notes notes notes";
+      "notes notes notes notes"
+      "detail detail detail detail";
     align-items: center;
     gap: 4px 8px;
     padding: 9px 10px;
@@ -655,10 +656,6 @@ h1 {
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .cell-title {
-    font-size: inherit;
   }
 
   .partida-game {
