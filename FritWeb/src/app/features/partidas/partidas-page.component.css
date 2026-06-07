@@ -581,7 +581,27 @@ h1 {
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .stat-card {
+    padding: 10px 8px;
+    border-radius: 12px;
+  }
+
+  .stat-label {
+    margin-bottom: 6px;
+    font-size: 0.72rem;
+    line-height: 1.15;
+  }
+
+  .stat-value {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
   }
 
   .content-card {
