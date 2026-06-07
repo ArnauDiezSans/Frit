@@ -1,4 +1,4 @@
-.dashboard-page {
+﻿.dashboard-page {
   min-height: 100vh;
   padding: 24px;
   background: #f5f6f8;
@@ -562,41 +562,33 @@ h1 {
     font-size: 0.58rem;
     font-weight: 700;
     line-height: 1;
+    vertical-align: -3px;
   }
 
   .ranking-table td[data-label="Partides"]::before {
     content: "#";
   }
 
-  .ranking-table td[data-label="Hores"]::before {
+  .ranking-table td[data-label="Hores"]::before,
+  .ranking-table td[data-label="Mitjana"]::before,
+  .ranking-table td[data-label*="ltima"]::before {
     content: "";
-    background: transparent;
-    border: 2px solid #0b4a79;
-    position: relative;
+    background-color: transparent;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 15px 15px;
   }
 
-  .ranking-table td[data-label="Hores"]::after {
-    content: "";
-    position: absolute;
-    width: 4px;
-    height: 5px;
-    border-left: 2px solid #0b4a79;
-    border-bottom: 2px solid #0b4a79;
-    transform: translate(-10px, 4px);
+  .ranking-table td[data-label="Hores"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='12' cy='12' r='8.5' fill='none' stroke='%230b4a79' stroke-width='2.4'/%3E%3Cpath d='M12 6.8v5.4l3.7 2.2' fill='none' stroke='%230b4a79' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
 
   .ranking-table td[data-label="Mitjana"]::before {
-    content: "⌛";
-    background: transparent;
-    color: #0b4a79;
-    font-size: 0.82rem;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 3h10M7 21h10M8 3c0 4 2 6 4 8 2-2 4-4 4-8M8 21c0-4 2-6 4-8 2 2 4 4 4 8' fill='none' stroke='%230b4a79' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
 
-  .ranking-table td[data-label="Última"]::before {
-    content: "▣";
-    background: transparent;
-    color: #0b4a79;
-    font-size: 0.78rem;
+  .ranking-table td[data-label*="ltima"]::before {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='4' y='5.5' width='16' height='15' rx='1.8' fill='none' stroke='%230b4a79' stroke-width='2'/%3E%3Cpath d='M8 3.5v4M16 3.5v4M4 10h16' fill='none' stroke='%230b4a79' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M12 13.4h3v3' fill='none' stroke='%230b4a79' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
 
   .ranking-table td[data-label="Victories"]::before {
