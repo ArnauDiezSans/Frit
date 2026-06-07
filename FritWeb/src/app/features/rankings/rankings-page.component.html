@@ -91,12 +91,6 @@
 
             <div class="columns-panel" *ngIf="showGameColumnsPanel()">
               <ng-container *ngIf="!gameFilters().juegoId; else detailGameColumns">
-                <div class="columns-panel-header">
-                  <strong>Columnes visibles</strong>
-                  <button type="button" class="link-button" (click)="selectAllGameColumns()">
-                    {{ allGameColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
-                  </button>
-                </div>
 
                 <label class="column-option">
                   <input type="checkbox" [checked]="gameColumns().nombre" (change)="toggleGameColumn('nombre')" />
@@ -121,12 +115,6 @@
               </ng-container>
 
               <ng-template #detailGameColumns>
-                <div class="columns-panel-header">
-                  <strong>Columnes visibles</strong>
-                  <button type="button" class="link-button" (click)="selectAllDetailColumns()">
-                    {{ allDetailColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
-                  </button>
-                </div>
 
                 <label class="column-option">
                   <input type="checkbox" [checked]="detailColumns().usuario" (change)="toggleDetailColumn('usuario')" />
@@ -267,12 +255,6 @@
             </button>
 
             <div class="columns-panel" *ngIf="showUserColumnsPanel()">
-              <div class="columns-panel-header">
-                <strong>Columnes visibles</strong>
-                <button type="button" class="link-button" (click)="selectAllUserColumns()">
-                  {{ allUserColumnsSelected() ? 'Deselecciona totes' : 'Selecciona totes' }}
-                </button>
-              </div>
 
               <label class="column-option">
                 <input type="checkbox" [checked]="userColumns().usuario" (change)="toggleUserColumn('usuario')" />
