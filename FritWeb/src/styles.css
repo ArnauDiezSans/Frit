@@ -58,6 +58,7 @@ button {
   }
 
   .player-icon {
+    display: inline-block;
     width: 13px;
     height: 13px;
     fill: #475467;
