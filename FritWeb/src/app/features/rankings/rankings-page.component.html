@@ -23,21 +23,25 @@
   <ng-container *ngIf="!loading() && !error() && rankings() as data">
     <section class="stats-grid">
       <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">J</span>
         <span class="stat-label">Joc més jugat</span>
         <strong class="stat-value stat-value-text">{{ data.resumen.juegoMasJugadoNombre || '-' }}</strong>
         <span class="stat-detail">{{ data.resumen.juegoMasJugadoPartidas }} partides</span>
       </article>
       <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">T</span>
         <span class="stat-label">Partida més llarga</span>
         <strong class="stat-value">{{ formatMinutes(data.resumen.partidaMasLargaMinutos) }}</strong>
         <span class="stat-detail">{{ data.resumen.partidaMasLargaJuegoNombre || '-' }}</span>
       </article>
       <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">P</span>
         <span class="stat-label">Jugador amb més partides</span>
         <strong class="stat-value stat-value-text">{{ topUserByGames()?.usuarioNombre || '-' }}</strong>
         <span class="stat-detail">{{ topUserByGames()?.partidasTotales ?? 0 }} partides</span>
       </article>
       <article class="stat-card">
+        <span class="stat-icon" aria-hidden="true">%</span>
         <span class="stat-label">Jugador amb més winrate</span>
         <strong class="stat-value stat-value-text">{{ topUserByWinrate()?.usuarioNombre || '-' }}</strong>
         <span class="stat-detail">{{ formatPercent(topUserByWinrate()?.porcentajeVictoria) }} · {{ topUserByWinrate()?.partidasTotales ?? 0 }} partides</span>
@@ -112,7 +116,7 @@
                 </label>
                 <label class="column-option">
                   <input type="checkbox" [checked]="gameColumns().ultima" (change)="toggleGameColumn('ultima')" />
-                  <span>Ãšltima</span>
+                  <span>Última</span>
                 </label>
               </ng-container>
 
@@ -189,7 +193,7 @@
               <th *ngIf="gameColumns().partidas" class="sortable" (click)="sortGamesBy('partidas')">Partides{{ getGameSortIndicator('partidas') }}</th>
               <th *ngIf="gameColumns().horas" class="sortable" (click)="sortGamesBy('horas')">Hores{{ getGameSortIndicator('horas') }}</th>
               <th *ngIf="gameColumns().mitjana" class="sortable" (click)="sortGamesBy('mitjana')">Mitjana{{ getGameSortIndicator('mitjana') }}</th>
-              <th *ngIf="gameColumns().ultima" class="sortable" (click)="sortGamesBy('ultima')">Ãšltima{{ getGameSortIndicator('ultima') }}</th>
+              <th *ngIf="gameColumns().ultima" class="sortable" (click)="sortGamesBy('ultima')">Última{{ getGameSortIndicator('ultima') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -198,7 +202,7 @@
               <td *ngIf="gameColumns().partidas" data-label="Partides">{{ item.numeroPartidas }}</td>
               <td *ngIf="gameColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
               <td *ngIf="gameColumns().mitjana" data-label="Mitjana">{{ formatMinutes(item.duracionMediaMinutos) }}</td>
-              <td *ngIf="gameColumns().ultima" data-label="Ãšltima">{{ formatDate(item.ultimaPartida) }}</td>
+              <td *ngIf="gameColumns().ultima" data-label="Última">{{ formatDate(item.ultimaPartida) }}</td>
             </tr>
           </tbody>
         </table>
@@ -280,7 +284,7 @@
               </label>
               <label class="column-option">
                 <input type="checkbox" [checked]="userColumns().ultima" (change)="toggleUserColumn('ultima')" />
-                <span>Ãšltima</span>
+                <span>Última</span>
               </label>
             </div>
           </div>
@@ -357,7 +361,7 @@
               <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
               <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
               <th *ngIf="userColumns().porcentaje" class="sortable" (click)="sortUsersBy('porcentaje')">%{{ getUserSortIndicator('porcentaje') }}</th>
-              <th *ngIf="userColumns().ultima" class="sortable" (click)="sortUsersBy('ultima')">Ãšltima{{ getUserSortIndicator('ultima') }}</th>
+              <th *ngIf="userColumns().ultima" class="sortable" (click)="sortUsersBy('ultima')">Última{{ getUserSortIndicator('ultima') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -366,7 +370,7 @@
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
               <td *ngIf="userColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
-              <td *ngIf="userColumns().ultima" data-label="Ãšltima">{{ formatDate(item.ultimaPartida) }}</td>
+              <td *ngIf="userColumns().ultima" data-label="Última">{{ formatDate(item.ultimaPartida) }}</td>
             </tr>
           </tbody>
         </table>

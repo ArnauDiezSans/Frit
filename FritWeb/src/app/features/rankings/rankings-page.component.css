@@ -97,6 +97,10 @@ h1 {
   padding: 20px;
 }
 
+.stat-icon {
+  display: none;
+}
+
 .stat-label {
   display: block;
   margin-bottom: 10px;
@@ -394,27 +398,54 @@ h1 {
   }
 
   .stat-card {
-    padding: 10px 8px;
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 3px 6px;
+    padding: 7px 6px;
     border-radius: 12px;
   }
 
-  .stat-label {
-    margin-bottom: 6px;
+  .stat-icon {
+    display: inline-grid;
+    width: 18px;
+    height: 18px;
+    place-items: center;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #0f766e;
     font-size: 0.68rem;
-    line-height: 1.15;
+    font-weight: 800;
+  }
+
+  .stat-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .stat-value,
   .stat-value-text {
-    font-size: 0.9rem;
+    min-width: 0;
+    font-size: 0.82rem;
     line-height: 1.1;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .stat-detail {
-    margin-top: 5px;
-    font-size: 0.68rem;
+    grid-column: 1 / -1;
+    margin-top: 0;
+    font-size: 0.64rem;
     line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .ranking-view-switch {
