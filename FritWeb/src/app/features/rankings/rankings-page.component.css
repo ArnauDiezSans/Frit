@@ -384,14 +384,9 @@ h1 {
   }
 
   .stats-grid {
-    gap: 0;
+    gap: 8px;
     margin-bottom: 12px;
-    padding: 4px 12px;
-    grid-template-columns: 1fr;
-    border: 1px solid #e4e7ec;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .rankings-grid {
@@ -399,36 +394,27 @@ h1 {
   }
 
   .stat-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 8px 12px;
-    padding: 9px 0;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .stat-card + .stat-card {
-    border-top: 1px solid #f1f5f9;
+    padding: 10px 8px;
+    border-radius: 12px;
   }
 
   .stat-label {
-    margin: 0;
-    font-size: 0.82rem;
+    margin-bottom: 6px;
+    font-size: 0.68rem;
+    line-height: 1.15;
   }
 
   .stat-value,
   .stat-value-text {
-    font-size: 1rem;
-    text-align: right;
+    font-size: 0.9rem;
+    line-height: 1.1;
+    text-align: left;
   }
 
   .stat-detail {
-    grid-column: 1 / -1;
-    margin-top: -4px;
-    font-size: 0.78rem;
-    text-align: right;
+    margin-top: 5px;
+    font-size: 0.68rem;
+    line-height: 1.15;
   }
 
   .ranking-view-switch {

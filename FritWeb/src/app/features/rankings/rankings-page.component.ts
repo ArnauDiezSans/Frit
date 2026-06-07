@@ -188,6 +188,36 @@ export class RankingsPageComponent {
     return this.userOptions().find(usuario => usuario.usuarioId === usuarioId)?.nombre ?? '';
   });
 
+  topUserByGames = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return null;
+    }
+
+    return [...data.usuarios]
+      .filter(usuario => !isExternalUser({ usuarioId: usuario.usuarioId, nombre: usuario.usuarioNombre }))
+      .sort((a, b) =>
+        b.partidasTotales - a.partidasTotales ||
+        b.victorias - a.victorias ||
+        a.usuarioNombre.localeCompare(b.usuarioNombre)
+      )[0] ?? null;
+  });
+
+  topUserByWinrate = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return null;
+    }
+
+    return [...data.usuarios]
+      .filter(usuario => !isExternalUser({ usuarioId: usuario.usuarioId, nombre: usuario.usuarioNombre }))
+      .sort((a, b) =>
+        b.porcentajeVictoria - a.porcentajeVictoria ||
+        b.partidasTotales - a.partidasTotales ||
+        a.usuarioNombre.localeCompare(b.usuarioNombre)
+      )[0] ?? null;
+  });
+
   gameRows = computed(() => {
     const data = this.rankings();
     if (!data) {

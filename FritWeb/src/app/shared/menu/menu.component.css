@@ -17,6 +17,46 @@
   width: 100%;
 }
 
+.menu-partidas {
+  order: 1;
+}
+
+.menu-rankings {
+  order: 2;
+}
+
+.menu-la-llista {
+  order: 3;
+}
+
+.menu-pendent-compra {
+  order: 4;
+}
+
+.menu-a-que-juguem {
+  order: 5;
+}
+
+.menu-juegos {
+  order: 6;
+}
+
+.menu-primary-action {
+  order: 7;
+}
+
+.refresh-icon-button {
+  order: 8;
+}
+
+.menu-usuario {
+  order: 9;
+}
+
+.logout-button {
+  order: 10;
+}
+
 .menu-button {
   min-height: 44px;
   padding: 0 16px;
@@ -77,15 +117,6 @@
 .refresh-icon-button {
   width: 44px;
   padding: 0;
-  order: 2;
-}
-
-.menu-usuario {
-  order: 1;
-}
-
-.logout-button {
-  order: 3;
 }
 
 .refresh-icon-button svg {
@@ -159,46 +190,6 @@
 
   .session-actions {
     display: contents;
-  }
-
-  .menu-partidas {
-    order: 1;
-  }
-
-  .menu-rankings {
-    order: 2;
-  }
-
-  .menu-la-llista {
-    order: 3;
-  }
-
-  .menu-pendent-compra {
-    order: 4;
-  }
-
-  .menu-a-que-juguem {
-    order: 5;
-  }
-
-  .menu-juegos {
-    order: 6;
-  }
-
-  .menu-primary-action {
-    order: 7;
-  }
-
-  .refresh-icon-button {
-    order: 8;
-  }
-
-  .menu-usuario {
-    order: 9;
-  }
-
-  .logout-button {
-    order: 10;
   }
 
   .menu-partidas,
