@@ -3,9 +3,6 @@
     <div>
       <p class="eyebrow">Frit</p>
       <h1>Partides</h1>
-      <p class="subtitle">
-        Consulta totes les partides registrades amb filtres, ordenació i resultats per jugador.
-      </p>
     </div>
 
     <app-menu
@@ -315,24 +312,28 @@
           <tr
             *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId"
             [class.row-highlight]="highlightedPartidaId() === partida.partidaId">
-            <td *ngIf="visibleColumns().fecha" data-label="Data">
+            <td *ngIf="visibleColumns().fecha" class="partida-date" data-label="Data">
               <span class="cell-value cell-title cell-date">{{ formatFecha(partida.fecha) }}</span>
             </td>
-            <td *ngIf="visibleColumns().juegoNombre" data-label="Nom joc">
+            <td *ngIf="visibleColumns().juegoNombre" class="partida-game" data-label="Nom joc">
               <span class="cell-value">{{ partida.juegoNombre }}</span>
             </td>
-            <td *ngIf="visibleColumns().duracionMinutos" data-label="Duració">
+            <td *ngIf="visibleColumns().duracionMinutos" class="partida-duration" data-label="Duració">
               <span class="cell-value cell-duration">
                 {{ partida.duracionMinutos !== null ? partida.duracionMinutos + ' min' : '-' }}
               </span>
             </td>
-            <td *ngIf="visibleColumns().numeroJugadores" data-label="Núm. jugadors">
+            <td *ngIf="visibleColumns().numeroJugadores" class="partida-players" data-label="Núm. jugadors">
               <span class="cell-value">{{ partida.numeroJugadores }}</span>
             </td>
-            <td *ngIf="visibleColumns().resultadoJugadores" data-label="Jugadors i punts">
+            <td *ngIf="visibleColumns().resultadoJugadores" class="partida-results" data-label="Jugadors i punts">
               <span class="cell-value">{{ partida.resultadoJugadores }}</span>
             </td>
-            <td *ngIf="visibleColumns().observaciones" data-label="Observacions">
+            <td
+              *ngIf="visibleColumns().observaciones"
+              class="partida-notes"
+              [class.partida-notes-empty]="!partida.observaciones"
+              data-label="Observacions">
               <span class="cell-value">{{ partida.observaciones || '-' }}</span>
             </td>
           </tr>

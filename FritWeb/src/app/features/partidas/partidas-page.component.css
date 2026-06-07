@@ -35,12 +35,6 @@ h1 {
   line-height: 1.45;
 }
 
-.header-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .stats-grid {
   max-width: 1240px;
   margin: 0 auto 24px;
@@ -510,8 +504,7 @@ h1 {
 
 .primary-button,
 .secondary-button,
-.ghost-button,
-.nav-link {
+.ghost-button {
   height: 44px;
   padding: 0 16px;
   border-radius: 12px;
@@ -542,15 +535,6 @@ h1 {
 
 .secondary-button:hover {
   background: #f0fdfa;
-}
-
-.secondary-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.secondary-button:disabled:hover {
-  background: #ffffff;
 }
 
 .ghost-button {
@@ -639,60 +623,88 @@ h1 {
 
   .games-table tbody {
     display: grid;
-    gap: 12px;
+    gap: 8px;
   }
 
   .games-table tr {
-    display: block;
-    padding: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "game date duration players"
+      "results results results results"
+      "notes notes notes notes";
+    align-items: center;
+    gap: 4px 8px;
+    padding: 9px 10px;
     border: 1px solid #e4e7ec;
-    border-radius: 12px;
+    border-radius: 10px;
     background: #ffffff;
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
   }
 
   .games-table td {
-    display: grid;
-    grid-template-columns: minmax(120px, 42%) minmax(0, 1fr);
-    align-items: start;
-    gap: 10px;
-    padding: 8px 0;
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .games-table td:last-child {
+    display: block;
+    min-width: 0;
+    padding: 0;
     border-bottom: 0;
+    font-size: 0.82rem;
   }
 
   .games-table td::before {
-    content: attr(data-label);
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #667085;
+    content: none;
   }
 
   .cell-value {
-    text-align: right;
+    display: block;
+    overflow: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .cell-title {
-    font-size: 1rem;
+    font-size: inherit;
+  }
+
+  .partida-game {
+    grid-area: game;
+    color: #101828;
+    font-weight: 700;
+  }
+
+  .partida-date {
+    grid-area: date;
+  }
+
+  .partida-duration {
+    grid-area: duration;
+  }
+
+  .partida-players {
+    grid-area: players;
+  }
+
+  .partida-results {
+    grid-area: results;
+  }
+
+  .partida-notes {
+    grid-area: notes;
+  }
+
+  .partida-notes-empty {
+    display: none;
+  }
+
+  .partida-date .cell-value,
+  .partida-duration .cell-value,
+  .partida-players .cell-value {
     text-align: right;
   }
 
   .primary-button,
   .secondary-button,
   .ghost-button {
-    width: 100%;
-  }
-
-  .header-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-  }
-
-  .header-actions > * {
     width: 100%;
   }
 
