@@ -536,7 +536,10 @@ h1 {
   }
 
   .ranking-table td {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
     position: relative;
     min-width: 0;
     padding: 0;
@@ -547,22 +550,23 @@ h1 {
   }
 
   .ranking-table td:first-child {
+    display: block;
     text-align: left;
   }
 
   .ranking-table td::before {
     display: inline-grid;
+    flex: 0 0 15px;
     width: 15px;
     height: 15px;
     place-items: center;
-    margin-right: 3px;
+    margin-right: 0;
     border-radius: 999px;
     background: #f1f5f9;
     color: #667085;
     font-size: 0.58rem;
     font-weight: 700;
     line-height: 1;
-    vertical-align: -3px;
   }
 
   .ranking-table td[data-label="Partides"]::before {
