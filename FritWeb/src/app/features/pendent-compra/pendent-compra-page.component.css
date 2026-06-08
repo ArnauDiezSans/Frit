@@ -355,7 +355,7 @@ h1 {
     display: grid;
     grid-template-columns: auto auto minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 6px 10px;
+    gap: 6px 5px;
     padding: 10px;
     border: 1px solid #e4e7ec;
     border-radius: 12px;
@@ -436,8 +436,8 @@ h1 {
   }
 
   .selection-column input {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
   }
 
   .user-name {
@@ -451,7 +451,7 @@ h1 {
     display: inline-flex;
     flex-wrap: nowrap;
     width: auto;
-    gap: 6px;
+    gap: 2px;
   }
 
   .small-button {
@@ -460,6 +460,32 @@ h1 {
     height: 32px;
     min-height: 32px;
     padding: 0 8px;
+  }
+
+  .purchase-table td:nth-child(4) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: block;
+    padding-top: 4px;
+    color: #344054;
+  }
+
+  .purchase-table td[data-label="Quantitat"]::before,
+  .purchase-table td:nth-child(4)::before {
+    display: none;
+  }
+
+  .row-actions .icon-action-button {
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0 !important;
+  }
+
+  .row-actions .icon-action-button svg {
+    width: 15px;
+    height: 15px;
   }
 
   .modal-backdrop {
@@ -500,6 +526,10 @@ h1 {
   }
 
   .purchase-table td[data-label="DescripciÃ³"] {
+    grid-column: 1 / 4;
+  }
+
+  .purchase-table td:nth-child(4) {
     grid-column: 1 / 4;
   }
 
