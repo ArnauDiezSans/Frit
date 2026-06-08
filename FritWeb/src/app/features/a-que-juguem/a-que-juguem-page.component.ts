@@ -8,6 +8,8 @@ import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
 import { UsuariosService } from '../juegos/usuarios.service';
+import { Partida } from '../partidas/partidas.models';
+import { PartidasService } from '../partidas/partidas.service';
 import { UsuarioJuegoOrden, UsuarioService } from '../usuario/usuario.service';
 import { AQueJuguemRecommendation } from './a-que-juguem.service';
 
@@ -23,6 +25,7 @@ export class AQueJuguemPageComponent {
   private authService = inject(AuthService);
   private usuariosService = inject(UsuariosService);
   private juegosService = inject(JuegosService);
+  private partidasService = inject(PartidasService);
   private usuarioService = inject(UsuarioService);
   private router = inject(Router);
 
@@ -145,14 +148,15 @@ export class AQueJuguemPageComponent {
 
     forkJoin({
       juegos: this.juegosService.getAll(),
+      partidas: this.partidasService.getAll(),
       ordenes: forkJoin(usuarioIds.map(usuarioId => this.usuarioService.getJuegosOrden(usuarioId)))
     }).subscribe({
-      next: ({ juegos, ordenes }) => {
+      next: ({ juegos, partidas, ordenes }) => {
         if (requestId !== this.calculationRequestId) {
           return;
         }
 
-        this.recommendations.set(this.buildRecommendations(juegos, usuarioIds, ordenes));
+        this.recommendations.set(this.buildRecommendations(juegos, partidas, usuarioIds, ordenes));
         this.calculating.set(false);
       },
       error: err => {
@@ -190,12 +194,21 @@ export class AQueJuguemPageComponent {
     return detalle ? `${juego.puntuacion} (${detalle})` : String(juego.puntuacion);
   }
 
+  formatTempsMig(juego: AQueJuguemRecommendation): string {
+    if (juego.tempsMigMinuts === null || juego.tempsMigMinuts === undefined) {
+      return '-';
+    }
+
+    return `${juego.tempsMigMinuts} min${juego.tempsMigFallback ? ' *' : ''}`;
+  }
+
   trackByUsuarioId(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;
   }
 
   private buildRecommendations(
     juegos: Juego[],
+    partidas: Partida[],
     usuarioIds: number[],
     ordenes: UsuarioJuegoOrden[][]
   ): AQueJuguemRecommendation[] {
@@ -229,13 +242,44 @@ export class AQueJuguemPageComponent {
           numeroJugadoresMin: juego.numeroJugadoresMin,
           numeroJugadoresMax: juego.numeroJugadoresMax,
           puntuacion: puntuacionesUsuarios.reduce((total, item) => total + item.puntuacion, 0),
-          puntuacionesUsuarios
+          puntuacionesUsuarios,
+          ...this.getTempsMig(juego.juegoId, numeroJugadores, partidas)
         };
       })
       .sort((left, right) =>
         right.puntuacion - left.puntuacion ||
         left.nombre.localeCompare(right.nombre)
       );
+  }
+
+  private getTempsMig(
+    juegoId: number,
+    numeroJugadores: number,
+    partidas: Partida[]
+  ): Pick<AQueJuguemRecommendation, 'tempsMigMinuts' | 'tempsMigFallback'> {
+    const partidasDelJuego = partidas.filter(partida =>
+      partida.juegoId === juegoId &&
+      partida.duracionMinutos !== null &&
+      partida.duracionMinutos !== undefined
+    );
+    const partidasMismaCantidad = partidasDelJuego.filter(partida =>
+      partida.numeroJugadores === numeroJugadores
+    );
+    const base = partidasMismaCantidad.length > 0 ? partidasMismaCantidad : partidasDelJuego;
+
+    if (base.length === 0) {
+      return {
+        tempsMigMinuts: null,
+        tempsMigFallback: false
+      };
+    }
+
+    return {
+      tempsMigMinuts: Math.round(
+        base.reduce((total, partida) => total + Number(partida.duracionMinutos), 0) / base.length
+      ),
+      tempsMigFallback: partidasMismaCantidad.length === 0
+    };
   }
 
   private recalculateForCurrentPlayers(): void {

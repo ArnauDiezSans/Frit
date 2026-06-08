@@ -11,6 +11,8 @@ export interface AQueJuguemRecommendation {
   numeroJugadoresMax: number;
   puntuacion: number;
   puntuacionesUsuarios?: AQueJuguemPuntuacionUsuario[];
+  tempsMigMinuts?: number | null;
+  tempsMigFallback?: boolean;
 }
 
 export interface AQueJuguemPuntuacionUsuario {
