@@ -141,6 +141,67 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task RankingsService_CountsPlayersMentionedInTeamDisplayedName()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var xumi = new Usuario { Nombre = "Xumi", PasswordHash = "hash" };
+        var gemma = new Usuario { Nombre = "Gemma", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Agricola",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Propietario = arnau
+        };
+        context.AddRange(arnau, xumi, gemma, game);
+        await context.SaveChangesAsync();
+
+        var partida = new Partida
+        {
+            JuegoId = game.JuegoId,
+            UsuarioCreadorId = arnau.UsuarioId,
+            Fecha = new DateOnly(2024, 12, 5),
+            DuracionMinutos = 135,
+            NumeroJugadores = 4
+        };
+        context.Partidas.Add(partida);
+        await context.SaveChangesAsync();
+
+        context.PartidaJugadores.AddRange(
+            new PartidaJugador
+            {
+                PartidaId = partida.PartidaId,
+                NombreMostrado = "Arnau, Xumi",
+                Posicion = 1,
+                Puntos = 49
+            },
+            new PartidaJugador
+            {
+                PartidaId = partida.PartidaId,
+                UsuarioId = gemma.UsuarioId,
+                NombreMostrado = "Gemma",
+                Posicion = 2,
+                Puntos = 38
+            });
+        await context.SaveChangesAsync();
+
+        var service = new RankingsService(context);
+
+        var rankings = await service.GetAsync();
+
+        var arnauRanking = rankings.Usuarios.Single(row => row.UsuarioNombre == "Arnau");
+        var xumiRanking = rankings.Usuarios.Single(row => row.UsuarioNombre == "Xumi");
+        var gemmaRanking = rankings.Usuarios.Single(row => row.UsuarioNombre == "Gemma");
+        Assert.Equal(1, arnauRanking.PartidasTotales);
+        Assert.Equal(1, arnauRanking.Victorias);
+        Assert.Equal(1, xumiRanking.PartidasTotales);
+        Assert.Equal(1, xumiRanking.Victorias);
+        Assert.Equal(1, gemmaRanking.PartidasTotales);
+        Assert.Equal(0, gemmaRanking.Victorias);
+    }
+
+    [Fact]
     public async Task UsuarioService_UpdateProfile_DoesNotChangePasswordHash()
     {
         await using var context = CreateContext();

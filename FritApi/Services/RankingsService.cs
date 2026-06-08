@@ -1,6 +1,8 @@
 using FritApi.Data;
 using FritApi.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using System.Text;
 
 namespace FritApi.Services;
 
@@ -27,30 +29,18 @@ public class RankingsService
             .OrderBy(juego => juego.Nombre)
             .ToListAsync();
 
-        var jugadoresRegistrados = partidas
-            .SelectMany(partida => partida.Jugadores.Select(jugador => new
-            {
-                partida.PartidaId,
-                partida.JuegoId,
-                JuegoNombre = partida.Juego.Nombre,
-                partida.Fecha,
-                jugador.UsuarioId,
-                UsuarioNombre = jugador.Usuario != null ? jugador.Usuario.Nombre : jugador.NombreMostrado,
-                jugador.Posicion
-            }))
-            .Where(jugador =>
-                jugador.UsuarioId.HasValue &&
-                jugador.UsuarioId.Value != ExternalUserPolicy.ExternalUserId &&
-                jugador.UsuarioNombre != ExternalUserPolicy.ExternalUserName)
-            .Select(jugador => new RankingPlayerRow(
-                jugador.PartidaId,
-                jugador.JuegoId,
-                jugador.JuegoNombre,
-                jugador.Fecha,
-                jugador.UsuarioId!.Value,
-                jugador.UsuarioNombre,
-                jugador.Posicion))
-            .ToList();
+        var usuariosRegistrados = await context.Usuarios
+            .AsNoTracking()
+            .Where(usuario =>
+                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
+                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+            .Select(usuario => new RegisteredUserRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                NormalizeName(usuario.Nombre)))
+            .ToListAsync();
+
+        var jugadoresRegistrados = BuildRankingPlayerRows(partidas, usuariosRegistrados);
 
         return new RankingsDto
         {
@@ -235,6 +225,100 @@ public class RankingsService
         return Math.Round(numerator * 100m / denominator, 1);
     }
 
+    private static List<RankingPlayerRow> BuildRankingPlayerRows(
+        List<Models.Partida> partidas,
+        List<RegisteredUserRow> usuariosRegistrados)
+    {
+        var usuariosById = usuariosRegistrados.ToDictionary(usuario => usuario.UsuarioId);
+        var result = new List<RankingPlayerRow>();
+
+        foreach (var partida in partidas)
+        {
+            foreach (var jugador in partida.Jugadores)
+            {
+                var jugadoresDetectados = new Dictionary<int, RegisteredUserRow>();
+
+                if (jugador.UsuarioId.HasValue &&
+                    usuariosById.TryGetValue(jugador.UsuarioId.Value, out var usuario))
+                {
+                    jugadoresDetectados[usuario.UsuarioId] = usuario;
+                }
+
+                foreach (var usuarioDetectado in MatchUsuariosByNombreMostrado(
+                    jugador.NombreMostrado,
+                    usuariosRegistrados))
+                {
+                    jugadoresDetectados.TryAdd(usuarioDetectado.UsuarioId, usuarioDetectado);
+                }
+
+                foreach (var usuarioDetectado in jugadoresDetectados.Values)
+                {
+                    result.Add(new RankingPlayerRow(
+                        partida.PartidaId,
+                        partida.JuegoId,
+                        partida.Juego.Nombre,
+                        partida.Fecha,
+                        usuarioDetectado.UsuarioId,
+                        usuarioDetectado.Nombre,
+                        jugador.Posicion));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private static IEnumerable<RegisteredUserRow> MatchUsuariosByNombreMostrado(
+        string nombreMostrado,
+        List<RegisteredUserRow> usuariosRegistrados)
+    {
+        var nombres = SplitDisplayedNames(nombreMostrado);
+
+        if (nombres.Count == 0)
+        {
+            return [];
+        }
+
+        return usuariosRegistrados.Where(usuario => nombres.Contains(usuario.NormalizedNombre));
+    }
+
+    private static HashSet<string> SplitDisplayedNames(string value)
+    {
+        var normalized = NormalizeName(value);
+
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return [];
+        }
+
+        normalized = normalized
+            .Replace(" i ", ", ", StringComparison.Ordinal)
+            .Replace(" y ", ", ", StringComparison.Ordinal)
+            .Replace(" and ", ", ", StringComparison.Ordinal)
+            .Replace(" amb ", ", ", StringComparison.Ordinal)
+            .Replace(" con ", ", ", StringComparison.Ordinal);
+
+        return normalized
+            .Split([',', ';', '/', '+', '&'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToHashSet();
+    }
+
+    private static string NormalizeName(string value)
+    {
+        var normalized = value.Trim().Normalize(NormalizationForm.FormD);
+        var chars = normalized
+            .Where(character => CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.NonSpacingMark)
+            .Select(char.ToLowerInvariant)
+            .ToArray();
+
+        return string.Join(
+            ' ',
+            new string(chars)
+                .Normalize(NormalizationForm.FormC)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    }
+
     private static List<RankingPartidaDto> BuildPartidas(List<Models.Partida> partidas)
     {
         return partidas
@@ -277,4 +361,9 @@ public class RankingsService
         int UsuarioId,
         string UsuarioNombre,
         int Posicion);
+
+    private sealed record RegisteredUserRow(
+        int UsuarioId,
+        string Nombre,
+        string NormalizedNombre);
 }
