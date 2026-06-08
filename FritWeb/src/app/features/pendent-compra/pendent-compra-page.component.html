@@ -128,8 +128,6 @@
         <div>
           <h2>{{ editingItemId() ? 'Editar element' : 'Nou element' }}</h2>
         </div>
-
-        <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="guardarItem()">
