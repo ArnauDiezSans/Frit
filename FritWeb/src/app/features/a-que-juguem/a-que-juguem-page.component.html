@@ -89,7 +89,7 @@
               <span class="cell-title">{{ juego.nombre }}</span>
             </td>
             <td data-label="Jugadors">{{ juego.numeroJugadoresMin }}-{{ juego.numeroJugadoresMax }}</td>
-            <td data-label="Puntuació">{{ juego.puntuacion }}</td>
+            <td data-label="Puntuació">{{ formatPuntuacion(juego) }}</td>
           </tr>
         </tbody>
       </table>
@@ -100,3 +100,4 @@
     </div>
   </section>
 </section>
+

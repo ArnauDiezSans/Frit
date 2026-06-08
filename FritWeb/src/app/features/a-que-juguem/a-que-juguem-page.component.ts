@@ -2,11 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
-import { UsuarioOption } from '../juegos/juegos.models';
+import { Juego, UsuarioOption } from '../juegos/juegos.models';
+import { JuegosService } from '../juegos/juegos.service';
 import { UsuariosService } from '../juegos/usuarios.service';
-import { AQueJuguemRecommendation, AQueJuguemService } from './a-que-juguem.service';
+import { UsuarioJuegoOrden, UsuarioService } from '../usuario/usuario.service';
+import { AQueJuguemRecommendation } from './a-que-juguem.service';
 
 @Component({
   selector: 'app-a-que-juguem-page',
@@ -19,7 +22,8 @@ export class AQueJuguemPageComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private usuariosService = inject(UsuariosService);
-  private aQueJuguemService = inject(AQueJuguemService);
+  private juegosService = inject(JuegosService);
+  private usuarioService = inject(UsuarioService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -115,8 +119,10 @@ export class AQueJuguemPageComponent {
     const usuarioIds = this.getSelectedUsuarioIds();
 
     if (usuarioIds.length === 0) {
+      this.calculationRequestId++;
       this.form.controls.numeroJugadores.setValue(0);
       this.lastRecommendationKey = '';
+      this.calculating.set(false);
       this.formError.set('');
       this.recommendations.set([]);
       return;
@@ -137,13 +143,16 @@ export class AQueJuguemPageComponent {
     this.calculating.set(true);
     this.formError.set('');
 
-    this.aQueJuguemService.getRecommendations(numeroJugadores, usuarioIds).subscribe({
-      next: recommendations => {
+    forkJoin({
+      juegos: this.juegosService.getAll(),
+      ordenes: forkJoin(usuarioIds.map(usuarioId => this.usuarioService.getJuegosOrden(usuarioId)))
+    }).subscribe({
+      next: ({ juegos, ordenes }) => {
         if (requestId !== this.calculationRequestId) {
           return;
         }
 
-        this.recommendations.set(recommendations);
+        this.recommendations.set(this.buildRecommendations(juegos, usuarioIds, ordenes));
         this.calculating.set(false);
       },
       error: err => {
@@ -173,8 +182,60 @@ export class AQueJuguemPageComponent {
     return juego.juegoId;
   }
 
+  formatPuntuacion(juego: AQueJuguemRecommendation): string {
+    const detalle = juego.puntuacionesUsuarios
+      ?.map(item => `${item.usuarioNombre} ${item.puntuacion}`)
+      .join(', ');
+
+    return detalle ? `${juego.puntuacion} (${detalle})` : String(juego.puntuacion);
+  }
+
   trackByUsuarioId(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;
+  }
+
+  private buildRecommendations(
+    juegos: Juego[],
+    usuarioIds: number[],
+    ordenes: UsuarioJuegoOrden[][]
+  ): AQueJuguemRecommendation[] {
+    const numeroJugadores = usuarioIds.length;
+    const totalJuegos = juegos.length;
+    const usuarioNombreById = new Map(this.usuarios().map(usuario => [usuario.usuarioId, usuario.nombre]));
+    const puntuacionesByUsuario = new Map<number, Map<number, number>>();
+
+    usuarioIds.forEach((usuarioId, index) => {
+      puntuacionesByUsuario.set(
+        usuarioId,
+        new Map(ordenes[index].map(orden => [orden.juegoId, totalJuegos - orden.posicion]))
+      );
+    });
+
+    return juegos
+      .filter(juego =>
+        juego.numeroJugadoresMin <= numeroJugadores &&
+        juego.numeroJugadoresMax >= numeroJugadores
+      )
+      .map(juego => {
+        const puntuacionesUsuarios = usuarioIds.map(usuarioId => ({
+          usuarioId,
+          usuarioNombre: usuarioNombreById.get(usuarioId) ?? '',
+          puntuacion: puntuacionesByUsuario.get(usuarioId)?.get(juego.juegoId) ?? 0
+        }));
+
+        return {
+          juegoId: juego.juegoId,
+          nombre: juego.nombre,
+          numeroJugadoresMin: juego.numeroJugadoresMin,
+          numeroJugadoresMax: juego.numeroJugadoresMax,
+          puntuacion: puntuacionesUsuarios.reduce((total, item) => total + item.puntuacion, 0),
+          puntuacionesUsuarios
+        };
+      })
+      .sort((left, right) =>
+        right.puntuacion - left.puntuacion ||
+        left.nombre.localeCompare(right.nombre)
+      );
   }
 
   private recalculateForCurrentPlayers(): void {

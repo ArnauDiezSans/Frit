@@ -10,6 +10,13 @@ export interface AQueJuguemRecommendation {
   numeroJugadoresMin: number;
   numeroJugadoresMax: number;
   puntuacion: number;
+  puntuacionesUsuarios?: AQueJuguemPuntuacionUsuario[];
+}
+
+export interface AQueJuguemPuntuacionUsuario {
+  usuarioId: number;
+  usuarioNombre: string;
+  puntuacion: number;
 }
 
 @Injectable({ providedIn: 'root' })
