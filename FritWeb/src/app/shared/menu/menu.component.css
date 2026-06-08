@@ -45,6 +45,10 @@
   order: 7;
 }
 
+.session-actions {
+  order: 8;
+}
+
 .refresh-icon-button {
   order: 9;
 }
@@ -190,6 +194,47 @@
 
   .session-actions {
     display: contents;
+    order: initial;
+  }
+
+  .menu-partidas {
+    order: 1;
+  }
+
+  .menu-rankings {
+    order: 2;
+  }
+
+  .menu-la-llista {
+    order: 3;
+  }
+
+  .menu-pendent-compra {
+    order: 4;
+  }
+
+  .menu-a-que-juguem {
+    order: 5;
+  }
+
+  .menu-juegos {
+    order: 6;
+  }
+
+  .menu-primary-action {
+    order: 7;
+  }
+
+  .refresh-icon-button {
+    order: 8;
+  }
+
+  .menu-usuario {
+    order: 9;
+  }
+
+  .logout-button {
+    order: 10;
   }
 
   .menu-partidas,
