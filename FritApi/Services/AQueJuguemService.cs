@@ -43,8 +43,6 @@ public class AQueJuguemService
             await _usuarioJuegoOrdenService.EnsureOrdenCompletoAsync(usuarioId);
         }
 
-        var totalJuegos = await _context.Juegos.CountAsync();
-
         var juegos = await _context.Juegos
             .Where(juego =>
                 juego.NumeroJugadoresMin <= dto.NumeroJugadores &&
@@ -66,7 +64,7 @@ public class AQueJuguemService
             .Select(group => new
             {
                 JuegoId = group.Key,
-                Puntuacion = group.Sum(orden => totalJuegos - orden.Posicion)
+                Puntuacion = group.Sum(orden => orden.Puntuacion)
             })
             .ToDictionaryAsync(item => item.JuegoId, item => item.Puntuacion);
 

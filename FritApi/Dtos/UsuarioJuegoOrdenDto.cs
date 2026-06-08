@@ -6,7 +6,7 @@ public class UsuarioJuegoOrdenDto
 {
     public int JuegoId { get; set; }
     public string Nombre { get; set; } = string.Empty;
-    public int Posicion { get; set; }
+    public int Puntuacion { get; set; }
 }
 
 public class UsuarioJuegoOrdenUpdateDto
@@ -20,6 +20,6 @@ public class UsuarioJuegoOrdenItemDto
     [Required]
     public int JuegoId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int Posicion { get; set; }
+    [Range(0, 10)]
+    public int Puntuacion { get; set; }
 }

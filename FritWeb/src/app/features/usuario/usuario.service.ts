@@ -27,13 +27,13 @@ export interface UsuarioProfileUpdate {
 export interface UsuarioJuegoOrden {
   juegoId: number;
   nombre: string;
-  posicion: number;
+  puntuacion: number;
 }
 
 export interface UsuarioJuegoOrdenUpdate {
   juegos: Array<{
     juegoId: number;
-    posicion: number;
+    puntuacion: number;
   }>;
 }
 

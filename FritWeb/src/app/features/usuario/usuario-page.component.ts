@@ -32,6 +32,18 @@ export class UsuarioPageComponent {
 
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
+  scoreSearch = signal<Partial<Record<number, string>>>({});
+  filteredScoreGames = signal<UsuarioJuegoOrden[]>([]);
+  showScoreOptions = signal<number | null>(null);
+
+  readonly scoreValues = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+  private readonly scoreLimits = new Map<number, number>([
+    [10, 1],
+    [9, 2],
+    [8, 3],
+    [7, 4],
+    [6, 5]
+  ]);
 
   passwordForm = this.fb.group(
     {
@@ -75,7 +87,7 @@ export class UsuarioPageComponent {
     }).subscribe({
       next: result => {
         this.usuario.set(result.usuario);
-        this.juegosOrdenados.set(result.juegos);
+        this.juegosOrdenados.set(this.sortJuegos(result.juegos));
         this.loading.set(false);
       },
       error: () => {
@@ -200,82 +212,110 @@ export class UsuarioPageComponent {
       });
   }
 
-  moverJuego(index: number, direction: -1 | 1): void {
-    const targetIndex = index + direction;
-    const current = this.juegosOrdenados();
+  getScoreGames(score: number): UsuarioJuegoOrden[] {
+    return this.juegosOrdenados()
+      .filter(juego => juego.puntuacion === score)
+      .sort((left, right) => left.nombre.localeCompare(right.nombre));
+  }
 
-    if (targetIndex < 0 || targetIndex >= current.length || this.savingOrder()) {
-      return;
-    }
+  getScoreLimit(score: number): number | null {
+    return this.scoreLimits.get(score) ?? null;
+  }
 
-    const previous = current.map(juego => ({ ...juego }));
-    const next = current.map(juego => ({ ...juego }));
-    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
-    const normalized = next.map((juego, itemIndex) => ({
-      ...juego,
-      posicion: itemIndex + 1
+  getScoreLabel(score: number): string {
+    const count = this.getScoreGames(score).length;
+    const limit = this.getScoreLimit(score);
+
+    return limit === null ? `${count}` : `${count}/${limit}`;
+  }
+
+  isScoreFull(score: number): boolean {
+    const limit = this.getScoreLimit(score);
+    return limit !== null && this.getScoreGames(score).length >= limit;
+  }
+
+  onScoreInput(score: number, event: Event): void {
+    const value = (event.target as HTMLInputElement).value ?? '';
+    this.scoreSearch.update(current => ({
+      ...current,
+      [score]: value
     }));
-
-    this.juegosOrdenados.set(normalized);
-    this.persistirOrden(previous);
+    this.showScoreOptions.set(score);
+    this.filteredScoreGames.set(this.getFilteredGames(score, value));
   }
 
-  moverJuegoAPosicion(index: number, event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const value = input.value.trim();
+  onScoreFocus(score: number): void {
+    this.showScoreOptions.set(score);
+    this.filteredScoreGames.set(this.getFilteredGames(score, this.scoreSearch()[score] ?? ''));
+  }
 
-    if (!value) {
+  seleccionarJuegoPuntuacion(score: number, juego: UsuarioJuegoOrden): void {
+    if (this.savingOrder()) {
       return;
     }
 
-    const targetPosition = Number(value);
     const current = this.juegosOrdenados();
+    const selected = current.find(item => item.juegoId === juego.juegoId);
 
-    input.value = '';
-
-    if (
-      this.savingOrder() ||
-      !Number.isInteger(targetPosition) ||
-      targetPosition <= 0 ||
-      targetPosition > current.length
-    ) {
-      this.orderError.set(`Indica una posicio entre 1 i ${current.length}.`);
+    if (!selected || selected.puntuacion === score) {
+      this.clearScoreSearch(score);
       return;
     }
 
-    const targetIndex = targetPosition - 1;
-
-    if (targetIndex === index) {
-      this.orderError.set('');
+    if (!this.canMoveToScore(score, selected.juegoId)) {
+      this.orderError.set(`La puntuacio ${score} ja esta plena.`);
       return;
     }
 
-    const previous = current.map(juego => ({ ...juego }));
-    const next = current.map(juego => ({ ...juego }));
-    const [moved] = next.splice(index, 1);
-    next.splice(targetIndex, 0, moved);
+    const previous = current.map(item => ({ ...item }));
+    const next = current.map(item =>
+      item.juegoId === selected.juegoId ? { ...item, puntuacion: score } : { ...item }
+    );
 
-    const normalized = next.map((juego, itemIndex) => ({
-      ...juego,
-      posicion: itemIndex + 1
+    this.juegosOrdenados.set(this.sortJuegos(next));
+    this.clearScoreSearch(score);
+    this.persistirPuntuaciones(previous);
+  }
+
+  private canMoveToScore(score: number, juegoId: number): boolean {
+    const limit = this.getScoreLimit(score);
+
+    if (limit === null) {
+      return true;
+    }
+
+    return this.juegosOrdenados().filter(juego =>
+      juego.puntuacion === score &&
+      juego.juegoId !== juegoId
+    ).length < limit;
+  }
+
+  private getFilteredGames(score: number, filter: string): UsuarioJuegoOrden[] {
+    const normalized = filter.trim().toLowerCase();
+
+    return this.juegosOrdenados()
+      .filter(juego =>
+        juego.puntuacion !== score &&
+        this.canMoveToScore(score, juego.juegoId) &&
+        (!normalized || juego.nombre.toLowerCase().includes(normalized))
+      )
+      .sort((left, right) =>
+        right.puntuacion - left.puntuacion ||
+        left.nombre.localeCompare(right.nombre)
+      )
+      .slice(0, 8);
+  }
+
+  private clearScoreSearch(score: number): void {
+    this.scoreSearch.update(current => ({
+      ...current,
+      [score]: ''
     }));
-
-    this.juegosOrdenados.set(normalized);
-    this.persistirOrden(previous);
+    this.filteredScoreGames.set([]);
+    this.showScoreOptions.set(null);
   }
 
-  onPositionInputKeydown(event: KeyboardEvent): void {
-    if (['e', 'E', '+', '-', '.', ','].includes(event.key)) {
-      event.preventDefault();
-    }
-  }
-
-  onPositionInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    input.value = input.value.replace(/\D/g, '').replace(/^0+/, '');
-  }
-
-  private persistirOrden(previous: UsuarioJuegoOrden[]): void {
+  private persistirPuntuaciones(previous: UsuarioJuegoOrden[]): void {
     const currentUser = this.authService.currentUser;
 
     if (!currentUser) {
@@ -290,7 +330,7 @@ export class UsuarioPageComponent {
       .updateJuegosOrden(currentUser.usuarioId, {
         juegos: this.juegosOrdenados().map(juego => ({
           juegoId: juego.juegoId,
-          posicion: juego.posicion
+          puntuacion: juego.puntuacion
         }))
       })
       .subscribe({
@@ -300,7 +340,7 @@ export class UsuarioPageComponent {
         error: err => {
           this.juegosOrdenados.set(previous);
           this.savingOrder.set(false);
-          this.orderError.set(err?.error?.message ?? "No s'ha pogut guardar l'ordre dels jocs.");
+          this.orderError.set(err?.error?.message ?? "No s'ha pogut guardar la puntuacio dels jocs.");
         }
       });
   }
@@ -318,5 +358,18 @@ export class UsuarioPageComponent {
 
   trackByJuego(_: number, juego: UsuarioJuegoOrden): number {
     return juego.juegoId;
+  }
+
+  trackByScore(_: number, score: number): number {
+    return score;
+  }
+
+  private sortJuegos(juegos: UsuarioJuegoOrden[]): UsuarioJuegoOrden[] {
+    return juegos
+      .map(juego => ({ ...juego }))
+      .sort((left, right) =>
+        right.puntuacion - left.puntuacion ||
+        left.nombre.localeCompare(right.nombre)
+      );
   }
 }

@@ -131,9 +131,6 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => new { e.UsuarioId, e.JuegoId })
                 .IsUnique();
-
-            entity.HasIndex(e => new { e.UsuarioId, e.Posicion })
-                .IsUnique();
         });
 
         modelBuilder.Entity<PendentCompra>(entity =>

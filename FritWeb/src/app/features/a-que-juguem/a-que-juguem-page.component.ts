@@ -217,14 +217,13 @@ export class AQueJuguemPageComponent {
     ordenes: UsuarioJuegoOrden[][]
   ): AQueJuguemRecommendation[] {
     const numeroJugadores = usuarioIds.length;
-    const totalJuegos = juegos.length;
     const usuarioNombreById = new Map(this.usuarios().map(usuario => [usuario.usuarioId, usuario.nombre]));
     const puntuacionesByUsuario = new Map<number, Map<number, number>>();
 
     usuarioIds.forEach((usuarioId, index) => {
       puntuacionesByUsuario.set(
         usuarioId,
-        new Map(ordenes[index].map(orden => [orden.juegoId, totalJuegos - orden.posicion]))
+        new Map(ordenes[index].map(orden => [orden.juegoId, orden.puntuacion]))
       );
     });
 

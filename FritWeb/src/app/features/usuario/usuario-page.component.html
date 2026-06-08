@@ -51,79 +51,46 @@
       </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="juegosOrdenados().length > 0">
-      <table class="games-table">
-        <thead>
-          <tr>
-            <th>Posició</th>
-            <th>Moure a</th>
-            <th>Nom</th>
-          </tr>
-        </thead>
+    <div class="score-board" *ngIf="juegosOrdenados().length > 0">
+      <article
+        class="score-group"
+        *ngFor="let score of scoreValues; trackBy: trackByScore"
+        [class.score-group-full]="isScoreFull(score)">
+        <header class="score-header">
+          <span class="score-badge">{{ score }}</span>
+          <span class="score-count">{{ getScoreLabel(score) }}</span>
+        </header>
 
-        <tbody>
-          <tr *ngFor="let juego of juegosOrdenados(); let i = index; trackBy: trackByJuego">
-            <td data-label="Posició">
-              <div class="position-cell">
-                <span class="position-badge">{{ juego.posicion }}</span>
-                <div class="order-actions">
-                  <button
-                    type="button"
-                    class="icon-button"
-                    aria-label="Moure amunt"
-                    (click)="moverJuego(i, -1)"
-                    [disabled]="i === 0 || savingOrder()">
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    class="icon-button"
-                    aria-label="Moure avall"
-                    (click)="moverJuego(i, 1)"
-                    [disabled]="i === juegosOrdenados().length - 1 || savingOrder()">
-                    ↓
-                  </button>
-                </div>
-              </div>
-            </td>
-            <td data-label="Moure a">
-              <div class="order-actions mobile-order-actions">
-                <button
-                  type="button"
-                  class="icon-button"
-                  aria-label="Moure amunt"
-                  (click)="moverJuego(i, -1)"
-                  [disabled]="i === 0 || savingOrder()">
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  class="icon-button"
-                  aria-label="Moure avall"
-                  (click)="moverJuego(i, 1)"
-                  [disabled]="i === juegosOrdenados().length - 1 || savingOrder()">
-                  ↓
-                </button>
-              </div>
-              <input
-                type="number"
-                class="position-input"
-                min="1"
-                [max]="juegosOrdenados().length"
-                step="1"
-                inputmode="numeric"
-                aria-label="Moure joc a la posicio"
-                [disabled]="savingOrder()"
-                (keydown)="onPositionInputKeydown($event)"
-                (input)="onPositionInput($event)"
-                (change)="moverJuegoAPosicion(i, $event)" />
-            </td>
-            <td data-label="Nom">
-              <span class="cell-title">{{ juego.nombre }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <div class="score-picker">
+          <input
+            type="text"
+            [value]="scoreSearch()[score] ?? ''"
+            [placeholder]="isScoreFull(score) ? 'Ple' : 'Afegir joc...'"
+            [disabled]="savingOrder() || isScoreFull(score)"
+            (focus)="onScoreFocus(score)"
+            (input)="onScoreInput(score, $event)" />
+
+          <div class="autocomplete-options" *ngIf="showScoreOptions() === score && filteredScoreGames().length > 0">
+            <button
+              type="button"
+              *ngFor="let juego of filteredScoreGames(); trackBy: trackByJuego"
+              (click)="seleccionarJuegoPuntuacion(score, juego)">
+              <span>{{ juego.nombre }}</span>
+              <small>{{ juego.puntuacion }}</small>
+            </button>
+          </div>
+        </div>
+
+        <div class="score-games">
+          <button
+            type="button"
+            class="score-game"
+            *ngFor="let juego of getScoreGames(score); trackBy: trackByJuego"
+            (click)="onScoreFocus(score)">
+            {{ juego.nombre }}
+          </button>
+        </div>
+      </article>
     </div>
 
     <p class="field-error" *ngIf="orderError()">{{ orderError() }}</p>

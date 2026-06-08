@@ -10,5 +10,5 @@ public class UsuarioJuegoOrden
     public int JuegoId { get; set; }
     public Juego Juego { get; set; } = null!;
 
-    public int Posicion { get; set; }
+    public int Puntuacion { get; set; }
 }
