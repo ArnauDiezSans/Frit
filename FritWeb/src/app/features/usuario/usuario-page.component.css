@@ -147,6 +147,10 @@ h1 {
   gap: 6px;
 }
 
+.mobile-order-actions {
+  display: none;
+}
+
 .position-input {
   width: 82px;
   min-height: 34px;
@@ -442,8 +446,8 @@ h1 {
 
   .games-table tr {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr);
-    align-items: center;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
     gap: 6px 8px;
     padding: 9px 10px;
     border: 1px solid #e4e7ec;
@@ -471,12 +475,13 @@ h1 {
 
   .games-table td[data-label="Moure a"] {
     grid-column: 2;
-    grid-row: 1;
+    grid-row: 2;
   }
 
   .games-table td[data-label="Nom"] {
-    grid-column: 1 / -1;
-    grid-row: 2;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
   }
 
   .games-table td::before {
@@ -486,6 +491,10 @@ h1 {
   .position-cell {
     gap: 6px;
     justify-content: flex-start;
+  }
+
+  .position-cell .order-actions {
+    display: none;
   }
 
   .order-actions {
@@ -505,6 +514,26 @@ h1 {
     min-height: 28px;
     padding: 4px 6px;
     border-radius: 8px;
+  }
+
+  .games-table td[data-label="Moure a"]::before {
+    display: none;
+  }
+
+  .games-table td[data-label="Moure a"] {
+    display: grid;
+    grid-template-columns: 18px auto 58px;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .mobile-order-actions {
+    grid-column: 2;
+    display: inline-flex;
+  }
+
+  .games-table td[data-label="Moure a"] .position-input {
+    grid-column: 3;
   }
 
   .cell-title {

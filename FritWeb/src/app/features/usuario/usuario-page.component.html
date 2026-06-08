@@ -87,6 +87,24 @@
               </div>
             </td>
             <td data-label="Moure a">
+              <div class="order-actions mobile-order-actions">
+                <button
+                  type="button"
+                  class="icon-button"
+                  aria-label="Moure amunt"
+                  (click)="moverJuego(i, -1)"
+                  [disabled]="i === 0 || savingOrder()">
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  class="icon-button"
+                  aria-label="Moure avall"
+                  (click)="moverJuego(i, 1)"
+                  [disabled]="i === juegosOrdenados().length - 1 || savingOrder()">
+                  ↓
+                </button>
+              </div>
               <input
                 type="number"
                 class="position-input"
