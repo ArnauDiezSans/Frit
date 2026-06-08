@@ -142,6 +142,21 @@ h1 {
   gap: 12px;
 }
 
+.position-badge {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  color: #0f766e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .order-actions {
   display: inline-flex;
   gap: 6px;
@@ -491,6 +506,13 @@ h1 {
   .position-cell {
     gap: 6px;
     justify-content: flex-start;
+  }
+
+  .position-badge {
+    min-width: 38px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 1.08rem;
   }
 
   .position-cell .order-actions {

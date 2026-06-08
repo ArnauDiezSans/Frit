@@ -65,7 +65,7 @@
           <tr *ngFor="let juego of juegosOrdenados(); let i = index; trackBy: trackByJuego">
             <td data-label="Posició">
               <div class="position-cell">
-                <span>{{ juego.posicion }}</span>
+                <span class="position-badge">{{ juego.posicion }}</span>
                 <div class="order-actions">
                   <button
                     type="button"
