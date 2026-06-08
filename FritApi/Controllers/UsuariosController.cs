@@ -115,11 +115,6 @@ public class UsuariosController : ControllerBase
     [Authorize]
     public async Task<ActionResult<List<UsuarioJuegoOrdenDto>>> GetJuegosOrden(int id)
     {
-        if (!IsCurrentUser(id))
-        {
-            return Forbid();
-        }
-
         var orden = await _usuarioJuegoOrdenService.GetOrdenAsync(id);
 
         if (orden is null)
