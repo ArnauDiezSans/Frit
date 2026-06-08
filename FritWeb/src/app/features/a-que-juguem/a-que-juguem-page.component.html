@@ -80,6 +80,7 @@
             <th>Nom</th>
             <th>Jugadors</th>
             <th>Temps mig</th>
+            <th>Última</th>
             <th>Puntuació</th>
           </tr>
         </thead>
@@ -91,6 +92,7 @@
             </td>
             <td data-label="Jugadors">{{ juego.numeroJugadoresMin }}-{{ juego.numeroJugadoresMax }}</td>
             <td data-label="Temps mig">{{ formatTempsMig(juego) }}</td>
+            <td data-label="Última">{{ formatUltimaPartida(juego) }}</td>
             <td data-label="Puntuació">{{ formatPuntuacion(juego) }}</td>
           </tr>
         </tbody>

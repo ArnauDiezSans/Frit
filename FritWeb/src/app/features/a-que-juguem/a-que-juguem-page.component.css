@@ -317,6 +317,7 @@ h1 {
     grid-template-columns: auto auto minmax(0, 1fr);
     align-items: center;
     gap: 5px 10px;
+    position: relative;
     padding: 9px 10px;
     border: 1px solid #e4e7ec;
     border-radius: 10px;
@@ -338,6 +339,7 @@ h1 {
   .recommendations-table td[data-label="Nom"] {
     grid-column: 1 / -1;
     display: block;
+    padding-right: 72px;
   }
 
   .recommendations-table td[data-label="Jugadors"] {
@@ -347,6 +349,16 @@ h1 {
 
   .recommendations-table td[data-label="Temps mig"] {
     grid-column: 2;
+    white-space: nowrap;
+  }
+
+  .recommendations-table td[data-label="Última"] {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    color: #667085;
+    font-size: 0.7rem;
+    line-height: 1;
     white-space: nowrap;
   }
 
@@ -364,7 +376,8 @@ h1 {
     color: #667085;
   }
 
-  .recommendations-table td[data-label="Nom"]::before {
+  .recommendations-table td[data-label="Nom"]::before,
+  .recommendations-table td[data-label="Última"]::before {
     display: none;
   }
 

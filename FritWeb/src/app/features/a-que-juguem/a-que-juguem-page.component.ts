@@ -202,6 +202,10 @@ export class AQueJuguemPageComponent {
     return `${juego.tempsMigMinuts} min${juego.tempsMigFallback ? ' *' : ''}`;
   }
 
+  formatUltimaPartida(juego: AQueJuguemRecommendation): string {
+    return juego.ultimaPartida ? new Date(juego.ultimaPartida).toLocaleDateString('ca-ES') : '-';
+  }
+
   trackByUsuarioId(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;
   }
@@ -243,7 +247,8 @@ export class AQueJuguemPageComponent {
           numeroJugadoresMax: juego.numeroJugadoresMax,
           puntuacion: puntuacionesUsuarios.reduce((total, item) => total + item.puntuacion, 0),
           puntuacionesUsuarios,
-          ...this.getTempsMig(juego.juegoId, numeroJugadores, partidas)
+          ...this.getTempsMig(juego.juegoId, numeroJugadores, partidas),
+          ultimaPartida: this.getUltimaPartida(juego.juegoId, partidas)
         };
       })
       .sort((left, right) =>
@@ -280,6 +285,13 @@ export class AQueJuguemPageComponent {
       ),
       tempsMigFallback: partidasMismaCantidad.length === 0
     };
+  }
+
+  private getUltimaPartida(juegoId: number, partidas: Partida[]): string | null {
+    return partidas
+      .filter(partida => partida.juegoId === juegoId)
+      .map(partida => partida.fecha)
+      .sort((left, right) => right.localeCompare(left))[0] ?? null;
   }
 
   private recalculateForCurrentPlayers(): void {
