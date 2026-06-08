@@ -143,17 +143,18 @@ h1 {
 }
 
 .position-badge {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 8px;
-  border-radius: 10px;
-  background: #ecfdf5;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 4px;
+  border-left: 3px solid #0f766e;
+  border-radius: 0;
+  background: transparent;
   color: #0f766e;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 1.12rem;
+  font-weight: 900;
   line-height: 1;
 }
 
@@ -461,9 +462,9 @@ h1 {
 
   .games-table tr {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: start;
-    gap: 6px 8px;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 8px;
     padding: 9px 10px;
     border: 1px solid #e4e7ec;
     border-radius: 10px;
@@ -485,7 +486,8 @@ h1 {
 
   .games-table td:first-child {
     grid-column: 1;
-    grid-row: 1;
+    grid-row: 1 / 3;
+    align-self: center;
   }
 
   .games-table td[data-label="Moure a"] {
@@ -504,15 +506,18 @@ h1 {
   }
 
   .position-cell {
-    gap: 6px;
-    justify-content: flex-start;
+    gap: 0;
+    justify-content: center;
   }
 
   .position-badge {
-    min-width: 38px;
-    height: 32px;
-    border-radius: 9px;
-    font-size: 1.08rem;
+    min-width: 42px;
+    height: 42px;
+    padding: 0 4px;
+    border-left-width: 4px;
+    justify-content: center;
+    font-size: 1.35rem;
+    line-height: 1;
   }
 
   .position-cell .order-actions {
@@ -547,6 +552,7 @@ h1 {
     grid-template-columns: 18px auto 58px;
     align-items: center;
     gap: 6px;
+    margin-top: 2px;
   }
 
   .mobile-order-actions {
