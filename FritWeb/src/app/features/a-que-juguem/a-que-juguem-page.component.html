@@ -22,15 +22,6 @@
 
   <section class="content-card" *ngIf="!loading() && !error()">
     <form [formGroup]="form" class="players-form">
-      <label class="form-field player-count-field">
-        <span>Nombre de jugadors</span>
-        <input
-          type="number"
-          formControlName="numeroJugadores"
-          min="1"
-          (input)="onNumeroJugadoresChange($event)" />
-      </label>
-
       <div class="players-grid" formArrayName="jugadores">
         <div
           class="form-field autocomplete-field"
