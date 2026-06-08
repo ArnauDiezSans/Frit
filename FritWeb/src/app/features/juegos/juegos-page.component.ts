@@ -654,22 +654,6 @@ export class JuegosPageComponent implements OnInit {
     });
   }
 
-  eliminarJuego(juego: Juego): void {
-    if (!window.confirm(`Eliminar "${juego.nombre}"?`)) {
-      return;
-    }
-
-    this.juegosService.delete(juego.juegoId).subscribe({
-      next: () => {
-        this.juegos.update(current => current.filter(item => item.juegoId !== juego.juegoId));
-        this.filteredJuegosBase.set(this.juegos());
-      },
-      error: error => {
-        this.error.set(error?.error?.message ?? 'No s’ha pogut eliminar el joc.');
-      }
-    });
-  }
-
   submit(): void {
     this.guardarJuego();
   }
