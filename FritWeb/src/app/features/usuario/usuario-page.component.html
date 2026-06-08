@@ -57,6 +57,7 @@
         <thead>
           <tr>
             <th>Posició</th>
+            <th>Moure a</th>
             <th>Nom</th>
           </tr>
         </thead>
@@ -85,6 +86,20 @@
                   </button>
                 </div>
               </div>
+            </td>
+            <td data-label="Moure a">
+              <input
+                type="number"
+                class="position-input"
+                min="1"
+                [max]="juegosOrdenados().length"
+                step="1"
+                inputmode="numeric"
+                aria-label="Moure joc a la posicio"
+                [disabled]="savingOrder()"
+                (keydown)="onPositionInputKeydown($event)"
+                (input)="onPositionInput($event)"
+                (change)="moverJuegoAPosicion(i, $event)" />
             </td>
             <td data-label="Nom">
               <span class="cell-title">{{ juego.nombre }}</span>

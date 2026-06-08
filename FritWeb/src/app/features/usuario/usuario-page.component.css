@@ -147,6 +147,29 @@ h1 {
   gap: 6px;
 }
 
+.position-input {
+  width: 82px;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+  text-align: center;
+}
+
+.position-input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.position-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .icon-button {
   width: 34px;
   height: 34px;
@@ -424,6 +447,12 @@ h1 {
     justify-content: flex-end;
   }
 
+  .position-input {
+    width: 100%;
+    max-width: 92px;
+    min-height: 34px;
+  }
+
   .modal-backdrop {
     padding: 12px;
   }
@@ -452,6 +481,10 @@ h1 {
 
   .position-cell {
     justify-content: flex-start;
+  }
+
+  .position-input {
+    max-width: 100%;
   }
 
   .modal-actions {

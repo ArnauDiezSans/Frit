@@ -220,6 +220,61 @@ export class UsuarioPageComponent {
     this.persistirOrden(previous);
   }
 
+  moverJuegoAPosicion(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value.trim();
+
+    if (!value) {
+      return;
+    }
+
+    const targetPosition = Number(value);
+    const current = this.juegosOrdenados();
+
+    input.value = '';
+
+    if (
+      this.savingOrder() ||
+      !Number.isInteger(targetPosition) ||
+      targetPosition <= 0 ||
+      targetPosition > current.length
+    ) {
+      this.orderError.set(`Indica una posicio entre 1 i ${current.length}.`);
+      return;
+    }
+
+    const targetIndex = targetPosition - 1;
+
+    if (targetIndex === index) {
+      this.orderError.set('');
+      return;
+    }
+
+    const previous = current.map(juego => ({ ...juego }));
+    const next = current.map(juego => ({ ...juego }));
+    const [moved] = next.splice(index, 1);
+    next.splice(targetIndex, 0, moved);
+
+    const normalized = next.map((juego, itemIndex) => ({
+      ...juego,
+      posicion: itemIndex + 1
+    }));
+
+    this.juegosOrdenados.set(normalized);
+    this.persistirOrden(previous);
+  }
+
+  onPositionInputKeydown(event: KeyboardEvent): void {
+    if (['e', 'E', '+', '-', '.', ','].includes(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  onPositionInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value.replace(/\D/g, '').replace(/^0+/, '');
+  }
+
   private persistirOrden(previous: UsuarioJuegoOrden[]): void {
     const currentUser = this.authService.currentUser;
 
