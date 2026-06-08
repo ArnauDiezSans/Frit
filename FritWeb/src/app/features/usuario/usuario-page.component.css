@@ -119,6 +119,12 @@ h1 {
   background: #fbfcfd;
 }
 
+.score-group-drop {
+  border-color: #0f766e;
+  background: #f0fdfa;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+}
+
 .score-header {
   display: flex;
   align-items: center;
@@ -247,12 +253,23 @@ h1 {
   line-height: 1.15;
   text-align: left;
   overflow-wrap: anywhere;
-  cursor: pointer;
+  cursor: grab;
+  user-select: none;
+  touch-action: manipulation;
 }
 
 .score-game:hover {
   border-color: #0f766e;
   background: #f0fdfa;
+}
+
+.score-game:active {
+  cursor: grabbing;
+}
+
+.score-game-dragging {
+  opacity: 0.45;
+  border-style: dashed;
 }
 
 .table-wrapper {

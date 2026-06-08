@@ -35,6 +35,8 @@ export class UsuarioPageComponent {
   scoreSearch = signal<Partial<Record<number, string>>>({});
   filteredScoreGames = signal<UsuarioJuegoOrden[]>([]);
   showScoreOptions = signal<number | null>(null);
+  draggedJuegoId = signal<number | null>(null);
+  dragOverScore = signal<number | null>(null);
 
   readonly scoreValues = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
   private readonly scoreLimits = new Map<number, number>([
@@ -234,6 +236,10 @@ export class UsuarioPageComponent {
     return limit !== null && this.getScoreGames(score).length >= limit;
   }
 
+  canShowScorePicker(score: number): boolean {
+    return !this.savingOrder() && this.getFilteredGames(score, '').length > 0;
+  }
+
   onScoreInput(score: number, event: Event): void {
     const value = (event.target as HTMLInputElement).value ?? '';
     this.scoreSearch.update(current => ({
@@ -250,21 +256,83 @@ export class UsuarioPageComponent {
   }
 
   seleccionarJuegoPuntuacion(score: number, juego: UsuarioJuegoOrden): void {
+    if (this.moveJuegoToScore(score, juego.juegoId)) {
+      this.clearScoreSearch(score);
+    }
+  }
+
+  onJuegoDragStart(event: DragEvent, juego: UsuarioJuegoOrden): void {
     if (this.savingOrder()) {
+      event.preventDefault();
       return;
     }
 
+    this.draggedJuegoId.set(juego.juegoId);
+    event.dataTransfer?.setData('text/plain', String(juego.juegoId));
+
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+    }
+  }
+
+  onJuegoDragEnd(): void {
+    this.draggedJuegoId.set(null);
+    this.dragOverScore.set(null);
+  }
+
+  onScoreDragOver(score: number, event: DragEvent): void {
+    const juegoId = this.getDraggedJuegoId(event);
+
+    if (juegoId === null || !this.canMoveToScore(score, juegoId) || this.savingOrder()) {
+      return;
+    }
+
+    event.preventDefault();
+    this.dragOverScore.set(score);
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onScoreDragLeave(score: number, event: DragEvent): void {
+    const currentTarget = event.currentTarget as HTMLElement | null;
+    const nextTarget = event.relatedTarget as Node | null;
+
+    if (!currentTarget || !nextTarget || !currentTarget.contains(nextTarget)) {
+      if (this.dragOverScore() === score) {
+        this.dragOverScore.set(null);
+      }
+    }
+  }
+
+  onScoreDrop(score: number, event: DragEvent): void {
+    event.preventDefault();
+
+    const juegoId = this.getDraggedJuegoId(event);
+    this.draggedJuegoId.set(null);
+    this.dragOverScore.set(null);
+
+    if (juegoId !== null) {
+      this.moveJuegoToScore(score, juegoId);
+    }
+  }
+
+  private moveJuegoToScore(score: number, juegoId: number): boolean {
+    if (this.savingOrder()) {
+      return false;
+    }
+
     const current = this.juegosOrdenados();
-    const selected = current.find(item => item.juegoId === juego.juegoId);
+    const selected = current.find(item => item.juegoId === juegoId);
 
     if (!selected || selected.puntuacion === score) {
-      this.clearScoreSearch(score);
-      return;
+      return false;
     }
 
     if (!this.canMoveToScore(score, selected.juegoId)) {
       this.orderError.set(`La puntuacio ${score} ja esta plena.`);
-      return;
+      return false;
     }
 
     const previous = current.map(item => ({ ...item }));
@@ -273,8 +341,8 @@ export class UsuarioPageComponent {
     );
 
     this.juegosOrdenados.set(this.sortJuegos(next));
-    this.clearScoreSearch(score);
     this.persistirPuntuaciones(previous);
+    return true;
   }
 
   private canMoveToScore(score: number, juegoId: number): boolean {
@@ -313,6 +381,19 @@ export class UsuarioPageComponent {
     }));
     this.filteredScoreGames.set([]);
     this.showScoreOptions.set(null);
+  }
+
+  private getDraggedJuegoId(event: DragEvent): number | null {
+    const draggedId = this.draggedJuegoId();
+
+    if (draggedId !== null) {
+      return draggedId;
+    }
+
+    const dataTransferValue = event.dataTransfer?.getData('text/plain');
+    const parsed = Number(dataTransferValue);
+
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }
 
   private persistirPuntuaciones(previous: UsuarioJuegoOrden[]): void {

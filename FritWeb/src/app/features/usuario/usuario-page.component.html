@@ -55,18 +55,22 @@
       <article
         class="score-group"
         *ngFor="let score of scoreValues; trackBy: trackByScore"
-        [class.score-group-full]="isScoreFull(score)">
+        [class.score-group-full]="isScoreFull(score)"
+        [class.score-group-drop]="dragOverScore() === score"
+        (dragover)="onScoreDragOver(score, $event)"
+        (dragleave)="onScoreDragLeave(score, $event)"
+        (drop)="onScoreDrop(score, $event)">
         <header class="score-header">
           <span class="score-badge">{{ score }}</span>
           <span class="score-count">{{ getScoreLabel(score) }}</span>
         </header>
 
-        <div class="score-picker">
+        <div class="score-picker" *ngIf="canShowScorePicker(score)">
           <input
             type="text"
             [value]="scoreSearch()[score] ?? ''"
-            [placeholder]="isScoreFull(score) ? 'Ple' : 'Afegir joc...'"
-            [disabled]="savingOrder() || isScoreFull(score)"
+            placeholder="Afegir joc..."
+            [disabled]="savingOrder()"
             (focus)="onScoreFocus(score)"
             (input)="onScoreInput(score, $event)" />
 
@@ -86,7 +90,11 @@
             type="button"
             class="score-game"
             *ngFor="let juego of getScoreGames(score); trackBy: trackByJuego"
-            (click)="onScoreFocus(score)">
+            [class.score-game-dragging]="draggedJuegoId() === juego.juegoId"
+            [attr.draggable]="savingOrder() ? null : true"
+            (click)="onScoreFocus(score)"
+            (dragstart)="onJuegoDragStart($event, juego)"
+            (dragend)="onJuegoDragEnd()">
             {{ juego.nombre }}
           </button>
         </div>
