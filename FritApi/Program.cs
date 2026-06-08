@@ -11,6 +11,10 @@
 // $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=TU_PASSWORD;SSL Mode=Require;Trust Server Certificate=true"
 // dotnet run
 
+//Agafar la pass del posgress
+// $env:DATABASE_URL="Host=zephyr.proxy.rlwy.net;Port=35416;Database=railway;Username=postgres;Password=LA_TEVA_PASSWORD;SSL Mode=Require;Trust Server Certificate=true"
+// dotnet run --project tools\ResetPasswords -- --user Xumi 1234
+
 using FritApi.Data;
 using FritApi.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
