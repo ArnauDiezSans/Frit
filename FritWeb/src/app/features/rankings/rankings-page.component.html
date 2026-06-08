@@ -182,7 +182,7 @@
       </div>
 
       <div class="table-wrapper" *ngIf="!gameFilters().juegoId && gameRows().length > 0">
-        <table class="ranking-table">
+        <table class="ranking-table game-ranking-table">
           <thead>
             <tr>
               <th *ngIf="gameColumns().nombre" class="sortable" (click)="sortGamesBy('nombre')">Joc{{ getGameSortIndicator('nombre') }}</th>

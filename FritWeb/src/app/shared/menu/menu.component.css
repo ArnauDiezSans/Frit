@@ -26,19 +26,19 @@
 }
 
 .menu-la-llista {
-  order: 3;
-}
-
-.menu-pendent-compra {
   order: 4;
 }
 
-.menu-a-que-juguem {
+.menu-pendent-compra {
   order: 5;
 }
 
-.menu-juegos {
+.menu-a-que-juguem {
   order: 6;
+}
+
+.menu-juegos {
+  order: 3;
 }
 
 .menu-primary-action {
@@ -46,11 +46,11 @@
 }
 
 .refresh-icon-button {
-  order: 8;
+  order: 9;
 }
 
 .menu-usuario {
-  order: 9;
+  order: 8;
 }
 
 .logout-button {

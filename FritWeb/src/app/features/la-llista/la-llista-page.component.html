@@ -21,6 +21,21 @@
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="color-legend" aria-label="Llegenda del codi de colors">
+      <div class="legend-item">
+        <span class="legend-swatch legend-swatch-red" aria-hidden="true"></span>
+        <span>Caducat o caduca aquesta setmana</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch legend-swatch-yellow" aria-hidden="true"></span>
+        <span>Caduca en les properes dues setmanes</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-swatch" aria-hidden="true"></span>
+        <span>Encara dins del marge</span>
+      </div>
+    </div>
+
     <div class="table-wrapper" *ngIf="items().length > 0">
       <table class="list-table">
         <thead>

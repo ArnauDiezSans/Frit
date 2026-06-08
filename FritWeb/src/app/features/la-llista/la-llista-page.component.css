@@ -57,6 +57,45 @@ h1 {
   overflow-x: auto;
 }
 
+.color-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #344054;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.legend-swatch {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1px solid #d0d5dd;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.legend-swatch-red {
+  border-color: #fecaca;
+  background: #fee2e2;
+}
+
+.legend-swatch-yellow {
+  border-color: #fde68a;
+  background: #fef3c7;
+}
+
 .list-table {
   width: 100%;
   border-collapse: collapse;
@@ -154,6 +193,19 @@ h1 {
     overflow: visible;
   }
 
+  .color-legend {
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .legend-item {
+    width: 100%;
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
   .list-table,
   .list-table thead,
   .list-table tbody {
@@ -182,11 +234,27 @@ h1 {
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
   }
 
+  .list-table tr.row-red {
+    border-color: #fecaca;
+    background: #fee2e2;
+  }
+
+  .list-table tr.row-yellow {
+    border-color: #fde68a;
+    background: #fef3c7;
+  }
+
+  .list-table tr.row-red td,
+  .list-table tr.row-yellow td {
+    background: transparent;
+  }
+
   .list-table td {
     display: block;
     min-width: 0;
     padding: 0;
     border-bottom: 0;
+    background: transparent;
     font-size: 0.88rem;
   }
 

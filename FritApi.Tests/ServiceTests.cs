@@ -54,6 +54,39 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task LaLlistaService_ExcludesNoLlistaGames()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Add(user);
+        context.Juegos.AddRange(
+            new Juego
+            {
+                Nombre = "Catan",
+                Tipo = "Eurogame",
+                NumeroJugadoresMin = 2,
+                NumeroJugadoresMax = 4,
+                Propietario = user
+            },
+            new Juego
+            {
+                Nombre = "Promo",
+                Tipo = "No llista",
+                NumeroJugadoresMin = 2,
+                NumeroJugadoresMax = 4,
+                Propietario = user
+            });
+        await context.SaveChangesAsync();
+
+        var service = new LaLlistaService(context);
+
+        var rows = await service.GetAllAsync(new DateOnly(2026, 6, 5));
+
+        var row = Assert.Single(rows);
+        Assert.Equal("Catan", row.Nombre);
+    }
+
+    [Fact]
     public async Task RankingsService_CountsPositionOneAsVictory()
     {
         await using var context = CreateContext();
