@@ -7,15 +7,6 @@ namespace FritApi.Services;
 
 public class UsuarioJuegoOrdenService
 {
-    private static readonly Dictionary<int, int> PuntuacionLimits = new()
-    {
-        [10] = 1,
-        [9] = 2,
-        [8] = 3,
-        [7] = 4,
-        [6] = 5
-    };
-
     private readonly AppDbContext _context;
 
     public UsuarioJuegoOrdenService(AppDbContext context)
@@ -82,11 +73,6 @@ public class UsuarioJuegoOrdenService
             return (false, "Les puntuacions han d'estar entre 0 i 10.");
         }
 
-        if (!PuntuacionesValidas(dto.Juegos))
-        {
-            return (false, "Massa jocs amb la mateixa puntuacio alta.");
-        }
-
         var ordenes = await _context.UsuarioJuegoOrdenes
             .Where(o => o.UsuarioId == usuarioId)
             .ToListAsync();
@@ -135,11 +121,5 @@ public class UsuarioJuegoOrdenService
         }
 
         await _context.SaveChangesAsync();
-    }
-
-    private static bool PuntuacionesValidas(List<UsuarioJuegoOrdenItemDto> juegos)
-    {
-        return PuntuacionLimits.All(limit =>
-            juegos.Count(juego => juego.Puntuacion == limit.Key) <= limit.Value);
     }
 }

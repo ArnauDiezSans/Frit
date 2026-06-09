@@ -600,6 +600,33 @@ h1 {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  position: relative;
+}
+
+.bug-link {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 16px;
+  height: 16px;
+  color: #667085;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bug-link:hover {
+  color: #0f766e;
+}
+
+.bug-link svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .secondary-button:disabled {
