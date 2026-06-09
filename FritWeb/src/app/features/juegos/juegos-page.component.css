@@ -278,7 +278,9 @@ h1 {
 
 .games-table {
   width: 100%;
+  min-width: 980px;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 .games-table th,
@@ -290,10 +292,48 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+.games-table th {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.games-table th:nth-child(1),
+.games-table td:nth-child(1) {
+  min-width: 240px;
+}
+
+.games-table th:nth-child(2),
+.games-table th:nth-child(3),
+.games-table td:nth-child(2),
+.games-table td:nth-child(3) {
+  min-width: 116px;
+}
+
+.games-table th:nth-child(4),
+.games-table td:nth-child(4) {
+  min-width: 128px;
+}
+
+.games-table th:nth-child(5),
+.games-table td:nth-child(5) {
+  min-width: 96px;
+}
+
+.games-table th:nth-child(6),
+.games-table td:nth-child(6) {
+  min-width: 72px;
+}
+
+.games-table th:nth-child(7),
+.games-table td:nth-child(7) {
+  min-width: 128px;
+}
+
 .games-table th:last-child,
 .games-table td:last-child {
-  width: 170px;
-  min-width: 170px;
+  width: 104px;
+  min-width: 104px;
 }
 
 .games-table th {
