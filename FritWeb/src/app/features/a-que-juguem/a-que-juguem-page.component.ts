@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -35,8 +35,28 @@ export class AQueJuguemPageComponent {
   formError = signal('');
   usuarios = signal<UsuarioOption[]>([]);
   recommendations = signal<AQueJuguemRecommendation[]>([]);
+  filteredRecommendations = computed(() => {
+    const tempsMigMin = this.parseTempsMigFilter(this.tempsMigMesGranQue());
+    const tempsMigMax = this.parseTempsMigFilter(this.tempsMigMesPetitQue());
+
+    return this.recommendations().filter(juego => {
+      if (tempsMigMin === null && tempsMigMax === null) {
+        return true;
+      }
+
+      if (juego.tempsMigMinuts === null || juego.tempsMigMinuts === undefined) {
+        return false;
+      }
+
+      return (tempsMigMin === null || juego.tempsMigMinuts > tempsMigMin) &&
+        (tempsMigMax === null || juego.tempsMigMinuts < tempsMigMax);
+    });
+  });
   filteredUsuarios = signal<UsuarioOption[]>([]);
   showUsuarioOptions = signal<number | null>(null);
+  showRecommendationFilters = signal(false);
+  tempsMigMesGranQue = signal('');
+  tempsMigMesPetitQue = signal('');
   private calculationRequestId = 0;
   private lastRecommendationKey = '';
 
@@ -206,6 +226,28 @@ export class AQueJuguemPageComponent {
     return juego.ultimaPartida ? new Date(juego.ultimaPartida).toLocaleDateString('ca-ES') : '-';
   }
 
+  toggleRecommendationFilters(): void {
+    this.showRecommendationFilters.update(value => !value);
+  }
+
+  onTempsMigMesGranQueInput(event: Event): void {
+    this.tempsMigMesGranQue.set((event.target as HTMLInputElement).value ?? '');
+  }
+
+  onTempsMigMesPetitQueInput(event: Event): void {
+    this.tempsMigMesPetitQue.set((event.target as HTMLInputElement).value ?? '');
+  }
+
+  clearRecommendationFilters(): void {
+    this.tempsMigMesGranQue.set('');
+    this.tempsMigMesPetitQue.set('');
+  }
+
+  hasRecommendationFilters(): boolean {
+    return this.parseTempsMigFilter(this.tempsMigMesGranQue()) !== null ||
+      this.parseTempsMigFilter(this.tempsMigMesPetitQue()) !== null;
+  }
+
   trackByUsuarioId(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;
   }
@@ -291,6 +333,12 @@ export class AQueJuguemPageComponent {
       .filter(partida => partida.juegoId === juegoId)
       .map(partida => partida.fecha)
       .sort((left, right) => right.localeCompare(left))[0] ?? null;
+  }
+
+  private parseTempsMigFilter(value: string): number | null {
+    const parsed = Number(value);
+
+    return value.trim() !== '' && Number.isFinite(parsed) ? parsed : null;
   }
 
   private recalculateForCurrentPlayers(): void {

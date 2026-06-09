@@ -70,10 +70,51 @@
       <div>
         <h2>Jocs recomanats</h2>
       </div>
-      <span class="status-text" *ngIf="calculating()">Calculant...</span>
+      <div class="recommendation-actions">
+        <span class="status-text" *ngIf="calculating()">Calculant...</span>
+        <button
+          type="button"
+          class="filter-button"
+          [class.active]="showRecommendationFilters() || hasRecommendationFilters()"
+          (click)="toggleRecommendationFilters()">
+          Filtre
+        </button>
+      </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="recommendations().length > 0">
+    <div class="recommendation-filters" *ngIf="showRecommendationFilters()">
+      <div class="filter-field">
+        <span>Temps mig &gt;</span>
+        <input
+          type="number"
+          min="0"
+          inputmode="numeric"
+          placeholder="min"
+          [value]="tempsMigMesGranQue()"
+          (input)="onTempsMigMesGranQueInput($event)" />
+      </div>
+
+      <div class="filter-field">
+        <span>Temps mig &lt;</span>
+        <input
+          type="number"
+          min="0"
+          inputmode="numeric"
+          placeholder="min"
+          [value]="tempsMigMesPetitQue()"
+          (input)="onTempsMigMesPetitQueInput($event)" />
+      </div>
+
+      <button
+        type="button"
+        class="clear-filter-button"
+        *ngIf="hasRecommendationFilters()"
+        (click)="clearRecommendationFilters()">
+        Netejar
+      </button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="filteredRecommendations().length > 0">
       <table class="recommendations-table">
         <thead>
           <tr>
@@ -86,7 +127,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let juego of recommendations(); trackBy: trackByJuegoId">
+          <tr *ngFor="let juego of filteredRecommendations(); trackBy: trackByJuegoId">
             <td data-label="Nom">
               <span class="cell-title">{{ juego.nombre }}</span>
             </td>
@@ -101,6 +142,10 @@
 
     <div class="empty-state" *ngIf="allPlayersSelected() && !calculating() && recommendations().length === 0">
       <h3>No hi ha jocs compatibles</h3>
+    </div>
+
+    <div class="empty-state" *ngIf="allPlayersSelected() && !calculating() && recommendations().length > 0 && filteredRecommendations().length === 0">
+      <h3>No hi ha jocs amb aquest filtre</h3>
     </div>
   </section>
 </section>

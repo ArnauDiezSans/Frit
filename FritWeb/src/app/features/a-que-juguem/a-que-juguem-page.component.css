@@ -66,6 +66,77 @@ h1 {
   font-weight: 600;
 }
 
+.recommendation-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-button,
+.clear-filter-button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-button:hover,
+.clear-filter-button:hover {
+  background: #f8fafc;
+}
+
+.filter-button.active {
+  border-color: #0f766e;
+  background: #ecfdf3;
+  color: #0f766e;
+}
+
+.recommendation-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 180px)) auto;
+  align-items: end;
+  gap: 12px;
+  margin: -4px 0 18px;
+  padding: 14px;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-field span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475467;
+}
+
+.filter-field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+}
+
+.filter-field input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
 .players-form {
   display: grid;
   gap: 18px;
@@ -257,6 +328,22 @@ h1 {
     margin-bottom: 10px;
   }
 
+  .recommendation-actions {
+    justify-content: space-between;
+  }
+
+  .recommendation-filters {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px;
+  }
+
+  .clear-filter-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
   .section-heading h2 {
     font-size: 1.25rem;
   }
@@ -394,6 +481,14 @@ h1 {
 @media (max-width: 520px) {
   h1 {
     font-size: 1.7rem;
+  }
+
+  .recommendation-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .clear-filter-button {
+    grid-column: auto;
   }
 
   .recommendations-table td[data-label="Puntuació"] {
