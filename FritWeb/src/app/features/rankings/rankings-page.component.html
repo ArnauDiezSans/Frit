@@ -193,6 +193,7 @@
         <table class="ranking-table game-ranking-table">
           <thead>
             <tr>
+              <th class="row-number-column">#</th>
               <th *ngIf="gameColumns().nombre" class="sortable" (click)="sortGamesBy('nombre')">Joc{{ getGameSortIndicator('nombre') }}</th>
               <th *ngIf="gameColumns().partidas" class="sortable" (click)="sortGamesBy('partidas')">Partides{{ getGameSortIndicator('partidas') }}</th>
               <th *ngIf="gameColumns().horas" class="sortable" (click)="sortGamesBy('horas')">Hores{{ getGameSortIndicator('horas') }}</th>
@@ -201,7 +202,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of gameRows(); trackBy: trackByGameRow">
+            <tr *ngFor="let item of gameRows(); let i = index; trackBy: trackByGameRow">
+              <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="gameColumns().nombre" data-label="Joc"><span class="cell-title">{{ item.nombre }}</span></td>
               <td *ngIf="gameColumns().partidas" data-label="Partides">{{ item.numeroPartidas }}</td>
               <td *ngIf="gameColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
@@ -216,6 +218,7 @@
         <table class="ranking-table">
           <thead>
             <tr>
+              <th class="row-number-column">#</th>
               <th *ngIf="detailColumns().usuario" class="sortable" (click)="sortGameDetailBy('usuario')">Usuari{{ getGameDetailSortIndicator('usuario') }}</th>
               <th *ngIf="detailColumns().partidas" class="sortable" (click)="sortGameDetailBy('partidas')">Partides{{ getGameDetailSortIndicator('partidas') }}</th>
               <th *ngIf="detailColumns().victorias" class="sortable" (click)="sortGameDetailBy('victorias')">Victories{{ getGameDetailSortIndicator('victorias') }}</th>
@@ -223,7 +226,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of selectedGameRows(); trackBy: trackByUserRow">
+            <tr *ngFor="let item of selectedGameRows(); let i = index; trackBy: trackByUserRow">
+              <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="detailColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
               <td *ngIf="detailColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="detailColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
@@ -348,6 +352,7 @@
         <table class="ranking-table">
           <thead>
             <tr>
+              <th class="row-number-column">#</th>
               <th *ngIf="userColumns().usuario" class="sortable" (click)="sortUsersBy('usuario')">Usuari{{ getUserSortIndicator('usuario') }}</th>
               <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
               <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
@@ -355,7 +360,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of userRows(); trackBy: trackByUserRow">
+            <tr *ngFor="let item of userRows(); let i = index; trackBy: trackByUserRow">
+              <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="userColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
@@ -369,6 +375,7 @@
         <table class="ranking-table">
           <thead>
             <tr>
+              <th class="row-number-column">#</th>
               <th *ngIf="userColumns().joc" class="sortable" (click)="sortUsersBy('joc')">Joc{{ getUserSortIndicator('joc') }}</th>
               <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
               <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
@@ -377,7 +384,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of selectedUserGameRows(); trackBy: trackByUserGameRow">
+            <tr *ngFor="let item of selectedUserGameRows(); let i = index; trackBy: trackByUserGameRow">
+              <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="userColumns().joc" data-label="Joc"><span class="cell-title">{{ item.juegoNombre }}</span></td>
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>

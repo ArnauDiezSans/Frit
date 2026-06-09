@@ -46,6 +46,7 @@
       <table class="purchase-table">
         <thead>
           <tr>
+            <th class="row-number-column">#</th>
             <th class="selection-column">
               <input
                 type="checkbox"
@@ -64,8 +65,9 @@
 
         <tbody>
           <tr
-            *ngFor="let item of items(); trackBy: trackByItemId"
+            *ngFor="let item of items(); let i = index; trackBy: trackByItemId"
             [class.row-highlight]="highlightedItemId() === item.pendentCompraId">
+            <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
             <td data-label="Seleccionar" class="selection-column">
               <input
                 type="checkbox"

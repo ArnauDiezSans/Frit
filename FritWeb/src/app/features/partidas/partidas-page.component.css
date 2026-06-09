@@ -227,12 +227,13 @@ h1 {
   table-layout: fixed;
 }
 
-.games-table col:nth-child(1) { width: 100px; }
-.games-table col:nth-child(2) { width: 190px; }
-.games-table col:nth-child(3) { width: 92px; }
-.games-table col:nth-child(4) { width: 96px; }
-.games-table col:nth-child(5) { width: 290px; }
-.games-table col:nth-child(6) { width: auto; }
+.games-table col.row-number-column { width: 34px; }
+.games-table col:nth-child(2) { width: 100px; }
+.games-table col:nth-child(3) { width: 190px; }
+.games-table col:nth-child(4) { width: 92px; }
+.games-table col:nth-child(5) { width: 96px; }
+.games-table col:nth-child(6) { width: 290px; }
+.games-table col:nth-child(7) { width: auto; }
 
 .games-table th,
 .games-table td {
@@ -631,12 +632,12 @@ h1 {
 
   .games-table tr {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    grid-template-columns: 24px minmax(0, 1fr) auto auto auto;
     grid-template-areas:
-      "game date duration players"
-      "results results results results"
-      "notes notes notes notes"
-      "detail detail detail detail";
+      "number game date duration players"
+      "results results results results results"
+      "notes notes notes notes notes"
+      "detail detail detail detail detail";
     align-items: center;
     gap: 4px 8px;
     padding: 9px 10px;
@@ -647,7 +648,7 @@ h1 {
   }
 
   .games-table tr.row-expanded {
-    grid-template-areas: "detail detail detail detail";
+    grid-template-areas: "detail detail detail detail detail";
   }
 
   .games-table tr.row-expanded > td:not(.partida-detail-popup) {
@@ -664,6 +665,12 @@ h1 {
 
   .games-table td::before {
     content: none;
+  }
+
+  .games-table td.row-number-cell {
+    grid-area: number;
+    padding-top: 1px;
+    text-align: left !important;
   }
 
   .cell-value {

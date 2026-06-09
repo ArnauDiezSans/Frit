@@ -553,7 +553,7 @@ h1 {
 
   .ranking-table tr {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) repeat(4, max-content);
+    grid-template-columns: 24px minmax(0, 1fr) repeat(4, max-content);
     align-items: center;
     gap: 4px 7px;
     padding: 7px 8px;
@@ -564,14 +564,31 @@ h1 {
   }
 
   .game-ranking-table tr {
-    grid-template-columns: repeat(4, minmax(0, max-content));
+    grid-template-columns: 24px repeat(4, minmax(0, max-content));
     justify-content: space-between;
     gap: 6px 8px;
   }
 
   .game-ranking-table td[data-label="Joc"] {
-    grid-column: 1 / -1;
+    grid-column: 2 / -1;
     justify-content: flex-start;
+    text-align: left;
+  }
+
+  .ranking-table td.row-number-cell {
+    display: block;
+    grid-column: 1;
+    justify-content: flex-start;
+    text-align: left !important;
+  }
+
+  .ranking-table td.row-number-cell::before {
+    display: none;
+  }
+
+  .ranking-table td[data-label="Joc"],
+  .ranking-table td[data-label="Usuari"] {
+    display: block;
     text-align: left;
   }
 
@@ -643,7 +660,9 @@ h1 {
     content: "%";
   }
 
-  .ranking-table td:first-child::before {
+  .ranking-table td:first-child::before,
+  .ranking-table td[data-label="Joc"]::before,
+  .ranking-table td[data-label="Usuari"]::before {
     display: none;
   }
 

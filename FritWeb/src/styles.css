@@ -59,6 +59,28 @@ button {
   color: #b42318 !important;
 }
 
+.row-number-column,
+.row-number-cell {
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.row-number-column {
+  color: #98a2b3 !important;
+  font-weight: 700;
+}
+
+.row-number-cell {
+  color: #98a2b3 !important;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 :focus-visible {
   outline: 3px solid rgba(15, 118, 110, 0.35);
   outline-offset: 2px;

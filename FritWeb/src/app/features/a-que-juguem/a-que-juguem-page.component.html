@@ -118,6 +118,7 @@
       <table class="recommendations-table">
         <thead>
           <tr>
+            <th class="row-number-column">#</th>
             <th>Nom</th>
             <th>Jugadors</th>
             <th>Temps mig</th>
@@ -127,7 +128,8 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let juego of filteredRecommendations(); trackBy: trackByJuegoId">
+          <tr *ngFor="let juego of filteredRecommendations(); let i = index; trackBy: trackByJuegoId">
+            <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
             <td data-label="Nom">
               <span class="cell-title">{{ juego.nombre }}</span>
             </td>

@@ -353,7 +353,7 @@ h1 {
 
   .purchase-table tr {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-columns: 22px auto auto minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 6px 5px;
     padding: 10px;
@@ -373,24 +373,24 @@ h1 {
   }
 
   .purchase-table td[data-label="Seleccionar"] {
-    grid-column: 1;
+    grid-column: 2;
     grid-row: 1;
   }
 
   .purchase-table td[data-label="Usuari"] {
-    grid-column: 3;
+    grid-column: 4;
     grid-row: 1;
   }
 
   .purchase-table td[data-label="Quantitat"] {
-    grid-column: 4;
+    grid-column: 5;
     grid-row: 1;
     justify-content: flex-end;
     white-space: nowrap;
   }
 
   .purchase-table td[data-label="Link"] {
-    grid-column: 5;
+    grid-column: 6;
     grid-row: 1;
     justify-content: flex-end;
     white-space: nowrap;
@@ -405,8 +405,20 @@ h1 {
   }
 
   .purchase-table td[data-label="Accions"] {
-    grid-column: 2;
+    grid-column: 3;
     grid-row: 1;
+  }
+
+  .purchase-table td.row-number-cell {
+    grid-column: 1;
+    grid-row: 1;
+    justify-content: flex-start;
+    padding-top: 6px;
+    text-align: left !important;
+  }
+
+  .purchase-table td.row-number-cell::before {
+    display: none;
   }
 
   .purchase-table td::before {
@@ -462,7 +474,7 @@ h1 {
     padding: 0 8px;
   }
 
-  .purchase-table td:nth-child(4) {
+  .purchase-table td:nth-child(5) {
     grid-column: 1 / -1;
     grid-row: 2;
     display: block;
@@ -471,7 +483,7 @@ h1 {
   }
 
   .purchase-table td[data-label="Quantitat"]::before,
-  .purchase-table td:nth-child(4)::before {
+  .purchase-table td:nth-child(5)::before {
     display: none;
   }
 
@@ -515,22 +527,22 @@ h1 {
   }
 
   .purchase-table tr {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-columns: 22px auto auto minmax(0, 1fr) auto;
   }
 
   .purchase-table td[data-label="Link"] {
-    grid-column: 4;
+    grid-column: 5;
     grid-row: 2;
     align-self: start;
     padding-top: 4px;
   }
 
   .purchase-table td[data-label="DescripciÃ³"] {
-    grid-column: 1 / 4;
+    grid-column: 1 / 5;
   }
 
-  .purchase-table td:nth-child(4) {
-    grid-column: 1 / 4;
+  .purchase-table td:nth-child(5) {
+    grid-column: 1 / 5;
   }
 
   .modal-actions {

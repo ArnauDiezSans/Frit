@@ -199,6 +199,7 @@
     <div class="table-wrapper" *ngIf="partidasFiltradasOrdenadas().length > 0">
       <table class="games-table">
         <colgroup>
+          <col class="row-number-column" />
           <col *ngIf="visibleColumns().fecha" />
           <col *ngIf="visibleColumns().juegoNombre" />
           <col *ngIf="visibleColumns().duracionMinutos" />
@@ -208,6 +209,7 @@
         </colgroup>
         <thead>
           <tr>
+            <th class="row-number-column">#</th>
             <th *ngIf="visibleColumns().fecha" (click)="setSort('fecha')" class="sortable">
               Data{{ getSortIndicator('fecha') }}
             </th>
@@ -232,10 +234,11 @@
 
         <tbody>
           <tr
-            *ngFor="let partida of partidasFiltradasOrdenadas(); trackBy: trackByPartidaId"
+            *ngFor="let partida of partidasFiltradasOrdenadas(); let i = index; trackBy: trackByPartidaId"
             [class.row-highlight]="highlightedPartidaId() === partida.partidaId"
             [class.row-expanded]="expandedPartidaId() === partida.partidaId"
             (click)="togglePartidaDetail(partida.partidaId)">
+            <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
             <td *ngIf="visibleColumns().fecha" class="partida-date" data-label="Data">
               <span class="cell-value cell-title cell-date">{{ formatFecha(partida.fecha) }}</span>
             </td>
@@ -270,7 +273,7 @@
               *ngIf="isMobileFilters() && expandedPartidaId() === partida.partidaId"
               class="partida-detail-popup"
               style="grid-area: detail"
-              colspan="6">
+              colspan="7">
               <div class="partida-detail-grid">
                 <div class="partida-detail-item">
                   <span class="partida-detail-label">Data</span>

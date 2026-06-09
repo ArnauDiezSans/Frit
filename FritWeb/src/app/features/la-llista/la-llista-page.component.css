@@ -224,7 +224,7 @@ h1 {
 
   .list-table tr {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
     align-items: center;
     gap: 10px;
     padding: 9px 10px;
@@ -262,7 +262,17 @@ h1 {
     display: none;
   }
 
+  .list-table td.row-number-cell {
+    grid-column: 1;
+    text-align: left !important;
+  }
+
+  .list-table td[data-label="Nom joc"] {
+    grid-column: 2;
+  }
+
   .list-table td:last-child {
+    grid-column: 3;
     color: #667085;
     text-align: right;
     white-space: nowrap;
@@ -289,6 +299,6 @@ h1 {
   }
 
   .list-table tr {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
   }
 }

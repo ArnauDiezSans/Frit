@@ -209,6 +209,7 @@
       <table class="games-table">
         <thead>
           <tr>
+            <th class="row-number-column">#</th>
             <th
               *ngIf="visibleColumns().nombre"
               class="sortable"
@@ -261,6 +262,7 @@
           </tr>
 
           <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
+            <th class="row-number-column"></th>
             <th *ngIf="visibleColumns().nombre">
               <input
                 type="text"
@@ -337,8 +339,9 @@
 
         <tbody>
           <tr
-            *ngFor="let juego of juegosFiltradosOrdenados(); trackBy: trackByJuegoId"
+            *ngFor="let juego of juegosFiltradosOrdenados(); let i = index; trackBy: trackByJuegoId"
             [class.row-highlight]="highlightedJuegoId() === juego.juegoId">
+            <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
             <td *ngIf="visibleColumns().nombre" data-label="Nom">
               <span class="cell-value cell-title">{{ juego.nombre }}</span>
             </td>

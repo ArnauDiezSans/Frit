@@ -298,35 +298,35 @@ h1 {
   word-break: normal;
 }
 
-.games-table th:nth-child(1),
-.games-table td:nth-child(1) {
+.games-table th:nth-child(2),
+.games-table td:nth-child(2) {
   min-width: 240px;
 }
 
-.games-table th:nth-child(2),
 .games-table th:nth-child(3),
-.games-table td:nth-child(2),
-.games-table td:nth-child(3) {
-  min-width: 116px;
-}
-
 .games-table th:nth-child(4),
+.games-table td:nth-child(3),
 .games-table td:nth-child(4) {
-  min-width: 128px;
+  min-width: 116px;
 }
 
 .games-table th:nth-child(5),
 .games-table td:nth-child(5) {
-  min-width: 96px;
+  min-width: 128px;
 }
 
 .games-table th:nth-child(6),
 .games-table td:nth-child(6) {
-  min-width: 72px;
+  min-width: 96px;
 }
 
 .games-table th:nth-child(7),
 .games-table td:nth-child(7) {
+  min-width: 72px;
+}
+
+.games-table th:nth-child(8),
+.games-table td:nth-child(8) {
   min-width: 128px;
 }
 
@@ -618,6 +618,17 @@ h1 {
     font-size: 0.85rem;
     font-weight: 700;
     color: #667085;
+  }
+
+  .games-table td.row-number-cell {
+    display: block;
+    padding: 0 0 4px;
+    border-bottom: 0;
+    text-align: left !important;
+  }
+
+  .games-table td.row-number-cell::before {
+    display: none;
   }
 
   .cell-value {

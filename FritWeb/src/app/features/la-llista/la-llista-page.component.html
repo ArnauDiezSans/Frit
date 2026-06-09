@@ -40,6 +40,7 @@
       <table class="list-table">
         <thead>
           <tr>
+            <th class="row-number-column">#</th>
             <th>Nom joc</th>
             <th>Última partida</th>
           </tr>
@@ -47,8 +48,9 @@
 
         <tbody>
           <tr
-            *ngFor="let item of items(); trackBy: trackByJuegoId"
+            *ngFor="let item of items(); let i = index; trackBy: trackByJuegoId"
             [class]="getRowClass(item)">
+            <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
             <td data-label="Nom joc">
               <span class="cell-title">{{ item.nombre }}</span>
             </td>
