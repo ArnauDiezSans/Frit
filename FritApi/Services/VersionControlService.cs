@@ -7,7 +7,7 @@ public class VersionControlService
 {
     public async Task<VersionControlDto> GetAsync()
     {
-        var repositoryRoot = (await RunGitAsync(Directory.GetCurrentDirectory(), "rev-parse", "--show-toplevel")).Trim();
+        var repositoryRoot = await ResolveRepositoryRootAsync();
         var branch = (await RunGitAsync(repositoryRoot, "rev-parse", "--abbrev-ref", "HEAD")).Trim();
         var log = await RunGitAsync(
             repositoryRoot,
@@ -95,5 +95,57 @@ public class VersionControlService
         }
 
         return output;
+    }
+
+    private static async Task<string> ResolveRepositoryRootAsync()
+    {
+        var configuredPath = Environment.GetEnvironmentVariable("VERSION_CONTROL_REPOSITORY_PATH");
+
+        if (!string.IsNullOrWhiteSpace(configuredPath))
+        {
+            return await ResolveRepositoryRootFromAsync(configuredPath);
+        }
+
+        foreach (var candidate in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
+        {
+            var repositoryRoot = FindRepositoryRoot(candidate);
+
+            if (repositoryRoot is not null)
+            {
+                return repositoryRoot;
+            }
+        }
+
+        return (await RunGitAsync(Directory.GetCurrentDirectory(), "rev-parse", "--show-toplevel")).Trim();
+    }
+
+    private static async Task<string> ResolveRepositoryRootFromAsync(string path)
+    {
+        var repositoryRoot = FindRepositoryRoot(path);
+
+        if (repositoryRoot is not null)
+        {
+            return repositoryRoot;
+        }
+
+        return (await RunGitAsync(path, "rev-parse", "--show-toplevel")).Trim();
+    }
+
+    private static string? FindRepositoryRoot(string path)
+    {
+        var directory = new DirectoryInfo(path);
+
+        while (directory is not null)
+        {
+            if (Directory.Exists(Path.Combine(directory.FullName, ".git")) ||
+                File.Exists(Path.Combine(directory.FullName, ".git")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        return null;
     }
 }
