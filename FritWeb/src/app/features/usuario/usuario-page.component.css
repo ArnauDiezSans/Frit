@@ -214,6 +214,17 @@ h1 {
   --score-accent-soft: #f1f3f5;
 }
 
+.score-group-pending {
+  grid-column: span 2;
+}
+
+.score-group-pending .score-badge {
+  width: auto;
+  min-width: 92px;
+  padding: 0 12px;
+  font-size: 1rem;
+}
+
 .score-picker {
   position: relative;
   margin-bottom: 10px;
@@ -708,6 +719,22 @@ h1 {
     margin: 0;
     padding: 9px 10px;
     border-radius: 8px;
+  }
+
+  .score-group-pending {
+    grid-column: auto;
+  }
+
+  .score-group-pending .score-badge {
+    width: 42px;
+    min-width: 42px;
+    height: auto;
+    min-height: 42px;
+    padding: 6px 4px;
+    font-size: 0.68rem;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+    text-align: center;
   }
 
   .score-header {

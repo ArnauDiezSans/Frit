@@ -57,12 +57,13 @@
         class="score-group"
         *ngFor="let score of scoreValues; trackBy: trackByScore"
         [class.score-group-full]="isScoreFull(score)"
+        [class.score-group-pending]="score === 0"
         [class.score-group-drop]="dragOverScore() === score"
         (dragover)="onScoreDragOver(score, $event)"
         (dragleave)="onScoreDragLeave(score, $event)"
         (drop)="onScoreDrop(score, $event)">
         <header class="score-header">
-          <span class="score-badge">{{ score }}</span>
+          <span class="score-badge">{{ score === 0 ? 'Pendent' : score }}</span>
           <span class="score-count">{{ getScoreLabel(score) }}</span>
         </header>
 
