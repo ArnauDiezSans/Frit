@@ -135,8 +135,8 @@ export class PartidasPageComponent implements OnInit {
   expandedPartidaId = signal<number | null>(null);
 
   filters = signal<PartidasFilters>(this.uiState.get('ui:partidas:filters', { ...EMPTY_FILTERS }));
-  sortColumn = signal<SortColumn>(this.uiState.get('ui:partidas:sortColumn', 'fecha' as SortColumn));
-  sortDirection = signal<SortDirection>(this.uiState.get('ui:partidas:sortDirection', 'desc' as SortDirection));
+  sortColumn = signal<SortColumn | null>(this.uiState.get('ui:partidas:sortColumn', null as SortColumn | null));
+  sortDirection = signal<SortDirection | null>(this.uiState.get('ui:partidas:sortDirection', null as SortDirection | null));
   visibleColumns = signal<VisibleColumns>(this.uiState.get('ui:partidas:columns', {
     fecha: true,
     juegoNombre: true,
@@ -282,6 +282,10 @@ export class PartidasPageComponent implements OnInit {
 
       return true;
     });
+
+    if (!sortColumn || !sortDirection) {
+      return filtered;
+    }
 
     filtered.sort((a, b) => {
       const direction = sortDirection === 'asc' ? 1 : -1;
@@ -698,13 +702,27 @@ const partidaPayload: Partida = {
   }
 
   setSort(column: SortColumn): void {
-    if (this.sortColumn() === column) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    if (this.sortColumn() !== column) {
+      this.sortColumn.set(column);
+      this.sortDirection.set('desc');
       return;
     }
 
-    this.sortColumn.set(column);
-    this.sortDirection.set(column === 'fecha' ? 'desc' : 'asc');
+    if (this.sortDirection() === 'desc') {
+      this.sortDirection.set('asc');
+      return;
+    }
+
+    this.sortColumn.set(null);
+    this.sortDirection.set(null);
+  }
+
+  getSortIndicator(column: SortColumn): string {
+    if (this.sortColumn() !== column || !this.sortDirection()) {
+      return '';
+    }
+
+    return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
   }
 
   logout(): void {

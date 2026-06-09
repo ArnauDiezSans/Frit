@@ -424,12 +424,12 @@ export class RankingsPageComponent {
 
     if (currentColumn !== column) {
       this.gameSortColumn.set(column);
-      this.gameSortDirection.set(column === 'nombre' ? 'asc' : 'desc');
+      this.gameSortDirection.set('desc');
       return;
     }
 
-    if (currentDirection === 'asc') {
-      this.gameSortDirection.set('desc');
+    if (currentDirection === 'desc') {
+      this.gameSortDirection.set('asc');
       return;
     }
 
@@ -702,12 +702,12 @@ export class RankingsPageComponent {
   ): void {
     if (columnSignal() !== column) {
       columnSignal.set(column);
-      directionSignal.set(column === 'usuario' || column === 'joc' ? 'asc' : 'desc');
+      directionSignal.set('desc');
       return;
     }
 
-    if (directionSignal() === 'asc') {
-      directionSignal.set('desc');
+    if (directionSignal() === 'desc') {
+      directionSignal.set('asc');
       return;
     }
 

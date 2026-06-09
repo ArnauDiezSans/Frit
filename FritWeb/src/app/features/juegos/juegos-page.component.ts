@@ -373,12 +373,12 @@ export class JuegosPageComponent implements OnInit {
   ordenarPor(column: SortColumn): void {
     if (this.sortColumn() !== column) {
       this.sortColumn.set(column);
-      this.sortDirection.set('asc');
+      this.sortDirection.set('desc');
       return;
     }
 
-    if (this.sortDirection() === 'asc') {
-      this.sortDirection.set('desc');
+    if (this.sortDirection() === 'desc') {
+      this.sortDirection.set('asc');
       return;
     }
 

@@ -209,22 +209,22 @@
         <thead>
           <tr>
             <th *ngIf="visibleColumns().fecha" (click)="setSort('fecha')" class="sortable">
-              Data
+              Data{{ getSortIndicator('fecha') }}
             </th>
             <th *ngIf="visibleColumns().juegoNombre" (click)="setSort('juegoNombre')" class="sortable">
-              Nom joc
+              Nom joc{{ getSortIndicator('juegoNombre') }}
             </th>
             <th *ngIf="visibleColumns().duracionMinutos" (click)="setSort('duracionMinutos')" class="sortable">
-              Duració
+              Duració{{ getSortIndicator('duracionMinutos') }}
             </th>
             <th *ngIf="visibleColumns().numeroJugadores" (click)="setSort('numeroJugadores')" class="sortable">
-              Núm. jugadors
+              Núm. jugadors{{ getSortIndicator('numeroJugadores') }}
             </th>
             <th *ngIf="visibleColumns().resultadoJugadores" (click)="setSort('resultadoJugadores')" class="sortable">
-              Jugadors i punts
+              Jugadors i punts{{ getSortIndicator('resultadoJugadores') }}
             </th>
             <th *ngIf="visibleColumns().observaciones" (click)="setSort('observaciones')" class="sortable">
-              Observacions
+              Observacions{{ getSortIndicator('observaciones') }}
             </th>
           </tr>
 
