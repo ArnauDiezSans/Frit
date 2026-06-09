@@ -106,9 +106,9 @@
             <label class="column-option">
               <input
                 type="checkbox"
-                [checked]="visibleColumns().juegoBase"
-                (change)="toggleColumn('juegoBase')" />
-              <span>Joc base</span>
+                [checked]="visibleColumns().dificultadBgg"
+                (change)="toggleColumn('dificultadBgg')" />
+              <span>Pes BGG</span>
             </label>
           </div>
         </div>
@@ -188,13 +188,14 @@
         </label>
 
         <label class="filter-field">
-          <span>Joc base</span>
+          <span>Pes BGG</span>
           <input
-            type="text"
+            type="number"
+            step="0.01"
             class="filter-input"
-            placeholder="Filtra per joc base..."
-            [value]="filters().juegoBase"
-            (input)="updateFilter('juegoBase', $any($event.target).value)" />
+            placeholder="Mín."
+            [value]="filters().dificultadBgg"
+            (input)="updateFilter('dificultadBgg', $any($event.target).value)" />
         </label>
       </div>
 
@@ -253,10 +254,10 @@
             </th>
 
             <th
-              *ngIf="visibleColumns().juegoBase"
+              *ngIf="visibleColumns().dificultadBgg"
               class="sortable"
-              (click)="ordenarPor('juegoBase')">
-              <span>Joc base{{ getSortIndicator('juegoBase') }}</span>
+              (click)="ordenarPor('dificultadBgg')">
+              <span>Pes BGG{{ getSortIndicator('dificultadBgg') }}</span>
             </th>
             <th>Accions</th>
           </tr>
@@ -325,13 +326,14 @@
               </div>
             </th>
 
-            <th *ngIf="visibleColumns().juegoBase">
+            <th *ngIf="visibleColumns().dificultadBgg">
               <input
-                type="text"
+                type="number"
+                step="0.01"
                 class="filter-input"
-                placeholder="Filtra..."
-                [value]="filters().juegoBase"
-                (input)="updateFilter('juegoBase', $any($event.target).value)" />
+                placeholder="Mín."
+                [value]="filters().dificultadBgg"
+                (input)="updateFilter('dificultadBgg', $any($event.target).value)" />
             </th>
             <th></th>
           </tr>
@@ -366,8 +368,8 @@
               <span class="cell-value">{{ juego.pvp ?? '-' }}</span>
             </td>
 
-            <td *ngIf="visibleColumns().juegoBase" data-label="Joc base">
-              <span class="cell-value">{{ getNombreJuegoBase(juego.juegoBaseId) || '-' }}</span>
+            <td *ngIf="visibleColumns().dificultadBgg" data-label="Pes BGG">
+              <span class="cell-value">{{ formatDificultadBgg(juego.dificultadBgg) }}</span>
             </td>
             <td data-label="Accions">
               <div class="row-actions">

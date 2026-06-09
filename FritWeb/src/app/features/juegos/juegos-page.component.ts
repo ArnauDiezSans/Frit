@@ -24,7 +24,7 @@ type SortColumn =
   | 'propietario'
   | 'tipo'
   | 'pvp'
-  | 'juegoBase';
+  | 'dificultadBgg';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -36,7 +36,7 @@ interface JuegosFilters {
   tipo: string;
   pvpMin: string;
   pvpMax: string;
-  juegoBase: string;
+  dificultadBgg: string;
 }
 
 interface VisibleColumns {
@@ -46,7 +46,7 @@ interface VisibleColumns {
   propietario: boolean;
   tipo: boolean;
   pvp: boolean;
-  juegoBase: boolean;
+  dificultadBgg: boolean;
 }
 
 const EMPTY_FILTERS: JuegosFilters = {
@@ -57,8 +57,44 @@ const EMPTY_FILTERS: JuegosFilters = {
   tipo: '',
   pvpMin: '',
   pvpMax: '',
-  juegoBase: ''
+  dificultadBgg: ''
 };
+
+const DEFAULT_VISIBLE_COLUMNS: VisibleColumns = {
+  nombre: true,
+  numeroJugadoresMin: true,
+  numeroJugadoresMax: true,
+  propietario: true,
+  tipo: true,
+  pvp: true,
+  dificultadBgg: true
+};
+
+const SORT_COLUMNS: SortColumn[] = [
+  'nombre',
+  'numeroJugadoresMin',
+  'numeroJugadoresMax',
+  'propietario',
+  'tipo',
+  'pvp',
+  'dificultadBgg'
+];
+
+function normalizeSortColumn(value: SortColumn | string | null): SortColumn | null {
+  return SORT_COLUMNS.includes(value as SortColumn) ? value as SortColumn : null;
+}
+
+function normalizeVisibleColumns(value: Partial<VisibleColumns>): VisibleColumns {
+  return {
+    nombre: value.nombre ?? DEFAULT_VISIBLE_COLUMNS.nombre,
+    numeroJugadoresMin: value.numeroJugadoresMin ?? DEFAULT_VISIBLE_COLUMNS.numeroJugadoresMin,
+    numeroJugadoresMax: value.numeroJugadoresMax ?? DEFAULT_VISIBLE_COLUMNS.numeroJugadoresMax,
+    propietario: value.propietario ?? DEFAULT_VISIBLE_COLUMNS.propietario,
+    tipo: value.tipo ?? DEFAULT_VISIBLE_COLUMNS.tipo,
+    pvp: value.pvp ?? DEFAULT_VISIBLE_COLUMNS.pvp,
+    dificultadBgg: value.dificultadBgg ?? DEFAULT_VISIBLE_COLUMNS.dificultadBgg
+  };
+}
 
 @Component({
   selector: 'app-juegos-page',
@@ -94,20 +130,17 @@ export class JuegosPageComponent implements OnInit {
   filteredJuegosBase = signal<Juego[]>([]);
   showJuegoBaseOptions = signal(false);
 
-  sortColumn = signal<SortColumn | null>(this.uiState.get('ui:juegos:sortColumn', null as SortColumn | null));
+  sortColumn = signal<SortColumn | null>(normalizeSortColumn(this.uiState.get('ui:juegos:sortColumn', null as SortColumn | string | null)));
   sortDirection = signal<SortDirection | null>(this.uiState.get('ui:juegos:sortDirection', null as SortDirection | null));
 
-  filters = signal<JuegosFilters>(this.uiState.get('ui:juegos:filters', { ...EMPTY_FILTERS }));
+  filters = signal<JuegosFilters>({
+    ...EMPTY_FILTERS,
+    ...this.uiState.get('ui:juegos:filters', {})
+  });
 
-  visibleColumns = signal<VisibleColumns>(this.uiState.get('ui:juegos:columns', {
-    nombre: true,
-    numeroJugadoresMin: true,
-    numeroJugadoresMax: true,
-    propietario: true,
-    tipo: true,
-    pvp: true,
-    juegoBase: true
-  }));
+  visibleColumns = signal<VisibleColumns>(normalizeVisibleColumns(
+    this.uiState.get('ui:juegos:columns', {})
+  ));
 
   showFilters = signal(false);
   showColumnsPanel = signal(false);
@@ -121,7 +154,6 @@ export class JuegosPageComponent implements OnInit {
     const juegos = [...this.juegos()];
     const filters = this.filters();
     const usuarios = this.usuarios();
-    const allJuegos = this.juegos();
     const sortColumn = this.sortColumn();
     const sortDirection = this.sortDirection();
 
@@ -175,9 +207,12 @@ export class JuegosPageComponent implements OnInit {
         }
       }
 
-      if (filters.juegoBase.trim()) {
-        const juegoBaseNombre = this.getNombreJuegoBase(juego.juegoBaseId, allJuegos);
-        if (!juegoBaseNombre.toLowerCase().includes(filters.juegoBase.trim().toLowerCase())) {
+      if (filters.dificultadBgg.trim()) {
+        const dificultadFilter = Number(filters.dificultadBgg);
+        if (
+          Number.isFinite(dificultadFilter) &&
+          (juego.dificultadBgg === null || juego.dificultadBgg === undefined || juego.dificultadBgg < dificultadFilter)
+        ) {
           return false;
         }
       }
@@ -215,12 +250,8 @@ export class JuegosPageComponent implements OnInit {
         case 'pvp':
           return ((a.pvp ?? 0) - (b.pvp ?? 0)) * direction;
 
-        case 'juegoBase':
-          return (
-            this.getNombreJuegoBase(a.juegoBaseId, allJuegos).localeCompare(
-              this.getNombreJuegoBase(b.juegoBaseId, allJuegos)
-            ) * direction
-          );
+        case 'dificultadBgg':
+          return ((a.dificultadBgg ?? 0) - (b.dificultadBgg ?? 0)) * direction;
 
         default:
           return 0;
@@ -366,7 +397,7 @@ export class JuegosPageComponent implements OnInit {
       propietario: nextValue,
       tipo: nextValue,
       pvp: nextValue,
-      juegoBase: nextValue
+      dificultadBgg: nextValue
     });
   }
 
@@ -425,6 +456,10 @@ export class JuegosPageComponent implements OnInit {
       style: 'currency',
       currency: 'EUR'
     }).format(value);
+  }
+
+  formatDificultadBgg(value: number | null | undefined): string {
+    return value == null ? '-' : value.toFixed(2);
   }
 
   abrirModal(): void {
