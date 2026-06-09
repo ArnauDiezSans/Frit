@@ -3,15 +3,7 @@ import { Component, EventEmitter, HostListener, Input, Output } from '@angular/c
 import { Router, RouterLink } from '@angular/router';
 import { DataStoreService } from '../../core/data/data-store.service';
 
-export type MenuPage =
-  | 'rankings'
-  | 'partidas'
-  | 'juegos'
-  | 'laLlista'
-  | 'pendentCompra'
-  | 'aQueJuguem'
-  | 'usuario'
-  | 'versions';
+export type MenuPage = 'rankings' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'usuario';
 
 @Component({
   selector: 'app-menu',
