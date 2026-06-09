@@ -46,6 +46,10 @@ export class LaLlistaPageComponent {
       return 'row-red';
     }
 
+    if (item.estadoCaducidad === 'orange') {
+      return 'row-orange';
+    }
+
     if (item.estadoCaducidad === 'yellow') {
       return 'row-yellow';
     }

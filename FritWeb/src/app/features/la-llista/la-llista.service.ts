@@ -8,7 +8,7 @@ export interface LaLlistaItem {
   juegoId: number;
   nombre: string;
   ultimaPartida?: string | null;
-  estadoCaducidad: 'red' | 'yellow' | 'expired' | '';
+  estadoCaducidad: 'red' | 'orange' | 'yellow' | 'expired' | '';
 }
 
 @Injectable({ providedIn: 'root' })

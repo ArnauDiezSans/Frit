@@ -91,6 +91,11 @@ h1 {
   background: #fee2e2;
 }
 
+.legend-swatch-orange {
+  border-color: #fed7aa;
+  background: #ffedd5;
+}
+
 .legend-swatch-yellow {
   border-color: #fde68a;
   background: #fef3c7;
@@ -119,6 +124,10 @@ h1 {
 
 .list-table .row-red td {
   background: #fee2e2;
+}
+
+.list-table .row-orange td {
+  background: #ffedd5;
 }
 
 .list-table .row-yellow td {
@@ -239,12 +248,18 @@ h1 {
     background: #fee2e2;
   }
 
+  .list-table tr.row-orange {
+    border-color: #fed7aa;
+    background: #ffedd5;
+  }
+
   .list-table tr.row-yellow {
     border-color: #fde68a;
     background: #fef3c7;
   }
 
   .list-table tr.row-red td,
+  .list-table tr.row-orange td,
   .list-table tr.row-yellow td {
     background: transparent;
   }

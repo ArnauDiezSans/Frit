@@ -17,7 +17,8 @@ public class LaLlistaService
     {
         var startOfWeek = today.AddDays(-GetMondayBasedDayOffset(today.DayOfWeek));
         var endOfWeek = startOfWeek.AddDays(6);
-        var yellowEnd = endOfWeek.AddDays(14);
+        var orangeEnd = endOfWeek.AddDays(14);
+        var yellowEnd = endOfWeek.AddDays(28);
 
         var rows = await _context.Juegos
             .Where(juego => !juego.Tipo.ToLower().Contains("no llista"))
@@ -42,7 +43,7 @@ public class LaLlistaService
                     JuegoId = row.JuegoId,
                     Nombre = row.Nombre,
                     UltimaPartida = row.UltimaPartida,
-                    EstadoCaducidad = GetEstadoCaducidad(caducidad, startOfWeek, endOfWeek, yellowEnd)
+                    EstadoCaducidad = GetEstadoCaducidad(caducidad, endOfWeek, orangeEnd, yellowEnd)
                 };
             })
             .OrderBy(row => row.UltimaPartida.HasValue ? 1 : 0)
@@ -53,8 +54,8 @@ public class LaLlistaService
 
     private static string GetEstadoCaducidad(
         DateOnly? caducidad,
-        DateOnly startOfWeek,
         DateOnly endOfWeek,
+        DateOnly orangeEnd,
         DateOnly yellowEnd)
     {
         if (!caducidad.HasValue)
@@ -65,6 +66,11 @@ public class LaLlistaService
         if (caducidad.Value <= endOfWeek)
         {
             return "red";
+        }
+
+        if (caducidad.Value <= orangeEnd)
+        {
+            return "orange";
         }
 
         if (caducidad.Value <= yellowEnd)
