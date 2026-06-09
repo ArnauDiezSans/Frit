@@ -56,7 +56,6 @@
       <article
         class="score-group"
         *ngFor="let score of scoreValues; trackBy: trackByScore"
-        [class.score-group-full]="isScoreFull(score)"
         [class.score-group-pending]="score === 0"
         [class.score-group-drop]="dragOverScore() === score"
         (dragover)="onScoreDragOver(score, $event)"

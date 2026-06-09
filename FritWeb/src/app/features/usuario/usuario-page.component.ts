@@ -39,13 +39,6 @@ export class UsuarioPageComponent {
   dragOverScore = signal<number | null>(null);
 
   readonly scoreValues = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
-  private readonly scoreLimits = new Map<number, number>([
-    [10, 1],
-    [9, 2],
-    [8, 3],
-    [7, 4],
-    [6, 5]
-  ]);
 
   passwordForm = this.fb.group(
     {
@@ -220,20 +213,8 @@ export class UsuarioPageComponent {
       .sort((left, right) => left.nombre.localeCompare(right.nombre));
   }
 
-  getScoreLimit(score: number): number | null {
-    return this.scoreLimits.get(score) ?? null;
-  }
-
   getScoreLabel(score: number): string {
-    const count = this.getScoreGames(score).length;
-    const limit = this.getScoreLimit(score);
-
-    return limit === null ? `${count}` : `${count}/${limit}`;
-  }
-
-  isScoreFull(score: number): boolean {
-    const limit = this.getScoreLimit(score);
-    return limit !== null && this.getScoreGames(score).length >= limit;
+    return String(this.getScoreGames(score).length);
   }
 
   canShowScorePicker(score: number): boolean {
@@ -283,7 +264,7 @@ export class UsuarioPageComponent {
   onScoreDragOver(score: number, event: DragEvent): void {
     const juegoId = this.getDraggedJuegoId(event);
 
-    if (juegoId === null || !this.canMoveToScore(score, juegoId) || this.savingOrder()) {
+    if (juegoId === null || this.savingOrder()) {
       return;
     }
 
@@ -330,11 +311,6 @@ export class UsuarioPageComponent {
       return false;
     }
 
-    if (!this.canMoveToScore(score, selected.juegoId)) {
-      this.orderError.set(`La puntuacio ${score} ja esta plena.`);
-      return false;
-    }
-
     const previous = current.map(item => ({ ...item }));
     const next = current.map(item =>
       item.juegoId === selected.juegoId ? { ...item, puntuacion: score } : { ...item }
@@ -345,26 +321,12 @@ export class UsuarioPageComponent {
     return true;
   }
 
-  private canMoveToScore(score: number, juegoId: number): boolean {
-    const limit = this.getScoreLimit(score);
-
-    if (limit === null) {
-      return true;
-    }
-
-    return this.juegosOrdenados().filter(juego =>
-      juego.puntuacion === score &&
-      juego.juegoId !== juegoId
-    ).length < limit;
-  }
-
   private getFilteredGames(score: number, filter: string): UsuarioJuegoOrden[] {
     const normalized = filter.trim().toLowerCase();
 
     return this.juegosOrdenados()
       .filter(juego =>
         juego.puntuacion !== score &&
-        this.canMoveToScore(score, juego.juegoId) &&
         (!normalized || juego.nombre.toLowerCase().includes(normalized))
       )
       .sort((left, right) =>

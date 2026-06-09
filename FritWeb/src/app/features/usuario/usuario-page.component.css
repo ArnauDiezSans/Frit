@@ -143,11 +143,6 @@ h1 {
   box-shadow: 0 10px 24px rgba(23, 32, 51, 0.07);
 }
 
-.score-group-full {
-  border-color: rgba(47, 127, 122, 0.34);
-  background: linear-gradient(180deg, #ffffff 0%, var(--score-accent-soft) 100%);
-}
-
 .score-group-drop {
   border-color: var(--score-accent);
   background: var(--score-accent-soft);
