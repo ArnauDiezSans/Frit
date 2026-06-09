@@ -35,7 +35,7 @@ export class VersionControlPageComponent {
         this.loading.set(false);
       },
       error: err => {
-        this.error.set(this.getLoadErrorMessage(err));
+        this.error.set(err?.error?.message ?? "No s'ha pogut carregar l'historial de versions.");
         this.loading.set(false);
       }
     });
@@ -60,17 +60,5 @@ export class VersionControlPageComponent {
 
   trackByCommitHash(_: number, commit: VersionCommit): string {
     return commit.hash;
-  }
-
-  private getLoadErrorMessage(err: any): string {
-    if (err?.status === 404) {
-      return "No s'ha trobat l'endpoint de versions. Revisa que l'API estigui actualitzada i en marxa.";
-    }
-
-    if (err?.status === 0) {
-      return "No s'ha pogut connectar amb l'API de versions.";
-    }
-
-    return err?.error?.message ?? "No s'ha pogut carregar l'historial de versions.";
   }
 }
