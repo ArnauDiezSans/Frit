@@ -6,6 +6,7 @@ import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import {
   RankingJugador,
+  RankingJuego,
   RankingPartida,
   Rankings,
   RankingsService
@@ -110,6 +111,7 @@ export class RankingsPageComponent {
 
   gameFilters = signal<GameFilters>({ ...EMPTY_GAME_FILTERS });
   userFilters = signal<UserFilters>({ ...EMPTY_USER_FILTERS });
+  excludeNoLlistaGames = signal(true);
 
   gameColumns = signal<GameColumns>({
     nombre: true,
@@ -154,7 +156,8 @@ export class RankingsPageComponent {
       return [];
     }
 
-    return [...data.juegos].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    return this.filterRankingJuegos(data.juegos)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
 
   userOptions = computed(() => {
@@ -164,7 +167,7 @@ export class RankingsPageComponent {
     }
 
     const users = new Map<number, string>();
-    for (const jugador of data.jugadores) {
+    for (const jugador of this.filterRankingJugadores(data.jugadores)) {
       if (this.isExternalRankingJugador(jugador)) {
         continue;
       }
@@ -194,8 +197,11 @@ export class RankingsPageComponent {
       return null;
     }
 
-    return [...data.usuarios]
-      .filter(usuario => !isExternalUser({ usuarioId: usuario.usuarioId, nombre: usuario.usuarioNombre }))
+    return this.buildUserRows(
+      this.filterRankingJugadores(data.jugadores)
+        .filter(jugador => !this.isExternalRankingJugador(jugador)),
+      { ...EMPTY_USER_FILTERS }
+    )
       .sort((a, b) =>
         b.partidasTotales - a.partidasTotales ||
         b.victorias - a.victorias ||
@@ -209,12 +215,42 @@ export class RankingsPageComponent {
       return null;
     }
 
-    return [...data.usuarios]
-      .filter(usuario => !isExternalUser({ usuarioId: usuario.usuarioId, nombre: usuario.usuarioNombre }))
+    return this.buildUserRows(
+      this.filterRankingJugadores(data.jugadores)
+        .filter(jugador => !this.isExternalRankingJugador(jugador)),
+      { ...EMPTY_USER_FILTERS }
+    )
       .sort((a, b) =>
         b.porcentajeVictoria - a.porcentajeVictoria ||
         b.partidasTotales - a.partidasTotales ||
         a.usuarioNombre.localeCompare(b.usuarioNombre)
+      )[0] ?? null;
+  });
+
+  topGameByActivity = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return null;
+    }
+
+    return this.buildGameRows(this.filterRankingPartidas(data.partidas), { ...EMPTY_GAME_FILTERS })
+      .sort((a, b) =>
+        b.numeroPartidas - a.numeroPartidas ||
+        a.nombre.localeCompare(b.nombre)
+      )[0] ?? null;
+  });
+
+  longestGame = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return null;
+    }
+
+    return this.filterRankingPartidas(data.partidas)
+      .filter(partida => partida.duracionMinutos !== null && partida.duracionMinutos !== undefined)
+      .sort((a, b) =>
+        (b.duracionMinutos ?? 0) - (a.duracionMinutos ?? 0) ||
+        b.fecha.localeCompare(a.fecha)
       )[0] ?? null;
   });
 
@@ -224,7 +260,7 @@ export class RankingsPageComponent {
       return [];
     }
 
-    const rows = this.buildGameRows(data.partidas, this.gameFilters());
+    const rows = this.buildGameRows(this.filterRankingPartidas(data.partidas), this.gameFilters());
     return this.sortGameRows(rows);
   });
 
@@ -236,7 +272,8 @@ export class RankingsPageComponent {
     }
 
     const rows = this.buildUserRows(
-      data.jugadores.filter(jugador => jugador.juegoId === juegoId && !this.isExternalRankingJugador(jugador)),
+      this.filterRankingJugadores(data.jugadores)
+        .filter(jugador => jugador.juegoId === juegoId && !this.isExternalRankingJugador(jugador)),
       {
         juegoId: String(juegoId),
         fechaDesde: this.gameFilters().fechaDesde,
@@ -254,7 +291,8 @@ export class RankingsPageComponent {
     }
 
     const rows = this.buildUserRows(
-      data.jugadores.filter(jugador => !this.isExternalRankingJugador(jugador)),
+      this.filterRankingJugadores(data.jugadores)
+        .filter(jugador => !this.isExternalRankingJugador(jugador)),
       this.userFilters()
     );
     return this.sortDetailRows(rows, this.userSortColumn(), this.userSortDirection());
@@ -268,7 +306,8 @@ export class RankingsPageComponent {
     }
 
     const rows = this.buildUserGameRows(
-      data.jugadores.filter(jugador => !this.isExternalRankingJugador(jugador)),
+      this.filterRankingJugadores(data.jugadores)
+        .filter(jugador => !this.isExternalRankingJugador(jugador)),
       this.userFilters()
     );
     return this.sortUserGameRows(rows);
@@ -352,6 +391,10 @@ export class RankingsPageComponent {
 
   toggleUserFilters(): void {
     this.showUserFilters.update(value => !value);
+  }
+
+  toggleExcludeNoLlistaGames(): void {
+    this.excludeNoLlistaGames.update(value => !value);
   }
 
   toggleGameColumnsPanel(event: Event): void {
@@ -501,6 +544,34 @@ export class RankingsPageComponent {
       usuarioId: jugador.usuarioId,
       nombre: jugador.usuarioNombre
     });
+  }
+
+  private filterRankingJuegos(juegos: RankingJuego[]): RankingJuego[] {
+    if (!this.excludeNoLlistaGames()) {
+      return [...juegos];
+    }
+
+    return juegos.filter(juego => !this.isNoLlistaType(juego.tipo));
+  }
+
+  private filterRankingPartidas(partidas: RankingPartida[]): RankingPartida[] {
+    if (!this.excludeNoLlistaGames()) {
+      return [...partidas];
+    }
+
+    return partidas.filter(partida => !this.isNoLlistaType(partida.juegoTipo));
+  }
+
+  private filterRankingJugadores(jugadores: RankingJugador[]): RankingJugador[] {
+    if (!this.excludeNoLlistaGames()) {
+      return [...jugadores];
+    }
+
+    return jugadores.filter(jugador => !this.isNoLlistaType(jugador.juegoTipo));
+  }
+
+  private isNoLlistaType(value: string | null | undefined): boolean {
+    return (value ?? '').trim().toLowerCase() === 'no llista';
   }
 
   private buildGameRows(partidas: RankingPartida[], filters: GameFilters): GameRankingRow[] {

@@ -24,13 +24,13 @@
     <section class="stats-grid">
       <article class="stat-card">
         <span class="stat-label">Joc més jugat</span>
-        <strong class="stat-value stat-value-text">{{ data.resumen.juegoMasJugadoNombre || '-' }}</strong>
-        <span class="stat-detail">{{ data.resumen.juegoMasJugadoPartidas }} partides</span>
+        <strong class="stat-value stat-value-text">{{ topGameByActivity()?.nombre || '-' }}</strong>
+        <span class="stat-detail">{{ topGameByActivity()?.numeroPartidas ?? 0 }} partides</span>
       </article>
       <article class="stat-card">
         <span class="stat-label">Partida més llarga</span>
-        <strong class="stat-value">{{ formatMinutes(data.resumen.partidaMasLargaMinutos) }}</strong>
-        <span class="stat-detail">{{ data.resumen.partidaMasLargaJuegoNombre || '-' }}</span>
+        <strong class="stat-value">{{ formatMinutes(longestGame()?.duracionMinutos) }}</strong>
+        <span class="stat-detail">{{ longestGame()?.juegoNombre || '-' }}</span>
       </article>
       <article class="stat-card">
         <span class="stat-label">Jugador amb més partides</span>
@@ -74,6 +74,14 @@
         </div>
 
         <div class="toolbar">
+          <label class="toolbar-check">
+            <input
+              type="checkbox"
+              [checked]="excludeNoLlistaGames()"
+              (change)="toggleExcludeNoLlistaGames()" />
+            <span>Amaga No llista</span>
+          </label>
+
           <button
             type="button"
             class="toolbar-chip"
@@ -239,6 +247,14 @@
         </div>
 
         <div class="toolbar">
+          <label class="toolbar-check">
+            <input
+              type="checkbox"
+              [checked]="excludeNoLlistaGames()"
+              (change)="toggleExcludeNoLlistaGames()" />
+            <span>Amaga No llista</span>
+          </label>
+
           <button
             type="button"
             class="toolbar-chip"

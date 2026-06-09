@@ -26,6 +26,7 @@ public class RankingJuegoDto
 {
     public int JuegoId { get; set; }
     public string Nombre { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
     public int NumeroPartidas { get; set; }
     public int DuracionTotalMinutos { get; set; }
     public int? DuracionMediaMinutos { get; set; }
@@ -69,6 +70,7 @@ public class RankingPartidaDto
     public int PartidaId { get; set; }
     public int JuegoId { get; set; }
     public string JuegoNombre { get; set; } = string.Empty;
+    public string JuegoTipo { get; set; } = string.Empty;
     public DateOnly Fecha { get; set; }
     public int? DuracionMinutos { get; set; }
 }
@@ -78,6 +80,7 @@ public class RankingJugadorDto
     public int PartidaId { get; set; }
     public int JuegoId { get; set; }
     public string JuegoNombre { get; set; } = string.Empty;
+    public string JuegoTipo { get; set; } = string.Empty;
     public DateOnly Fecha { get; set; }
     public int UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;

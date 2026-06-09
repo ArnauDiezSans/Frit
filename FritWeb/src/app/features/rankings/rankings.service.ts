@@ -27,6 +27,7 @@ export interface RankingResumen {
 export interface RankingJuego {
   juegoId: number;
   nombre: string;
+  tipo: string;
   numeroPartidas: number;
   duracionTotalMinutos: number;
   duracionMediaMinutos?: number | null;
@@ -66,6 +67,7 @@ export interface RankingPartida {
   partidaId: number;
   juegoId: number;
   juegoNombre: string;
+  juegoTipo: string;
   fecha: string;
   duracionMinutos?: number | null;
 }
@@ -74,6 +76,7 @@ export interface RankingJugador {
   partidaId: number;
   juegoId: number;
   juegoNombre: string;
+  juegoTipo: string;
   fecha: string;
   usuarioId: number;
   usuarioNombre: string;

@@ -176,6 +176,27 @@ h1 {
   font-weight: 600;
 }
 
+.toolbar-check {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #344054;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.toolbar-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+}
+
 .toolbar-chip-active {
   border-color: #0f766e;
   background: #ecfdf5;
@@ -445,6 +466,13 @@ h1 {
 
   .toolbar > * {
     width: 100%;
+  }
+
+  .toolbar-check {
+    justify-content: center;
+    min-height: 34px;
+    padding: 5px 10px;
+    font-size: 0.9rem;
   }
 
   .columns-panel {

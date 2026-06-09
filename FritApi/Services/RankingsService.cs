@@ -105,6 +105,7 @@ public class RankingsService
                 {
                     JuegoId = juego.JuegoId,
                     Nombre = juego.Nombre,
+                    Tipo = juego.Tipo,
                     NumeroPartidas = partidasJuego.Count,
                     DuracionTotalMinutos = duraciones.Sum(),
                     DuracionMediaMinutos = duraciones.Count > 0
@@ -257,6 +258,7 @@ public class RankingsService
                         partida.PartidaId,
                         partida.JuegoId,
                         partida.Juego.Nombre,
+                        partida.Juego.Tipo,
                         partida.Fecha,
                         usuarioDetectado.UsuarioId,
                         usuarioDetectado.Nombre,
@@ -327,6 +329,7 @@ public class RankingsService
                 PartidaId = partida.PartidaId,
                 JuegoId = partida.JuegoId,
                 JuegoNombre = partida.Juego.Nombre,
+                JuegoTipo = partida.Juego.Tipo,
                 Fecha = partida.Fecha,
                 DuracionMinutos = partida.DuracionMinutos
             })
@@ -343,6 +346,7 @@ public class RankingsService
                 PartidaId = jugador.PartidaId,
                 JuegoId = jugador.JuegoId,
                 JuegoNombre = jugador.JuegoNombre,
+                JuegoTipo = jugador.JuegoTipo,
                 Fecha = jugador.Fecha,
                 UsuarioId = jugador.UsuarioId,
                 UsuarioNombre = jugador.UsuarioNombre,
@@ -357,6 +361,7 @@ public class RankingsService
         int PartidaId,
         int JuegoId,
         string JuegoNombre,
+        string JuegoTipo,
         DateOnly Fecha,
         int UsuarioId,
         string UsuarioNombre,
