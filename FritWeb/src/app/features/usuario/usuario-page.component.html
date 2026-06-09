@@ -44,11 +44,12 @@
     </div>
   </section>
 
-  <section class="content-card" *ngIf="!loading() && !error()">
+  <section class="content-card preferences-section" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>
         <h2>Els meus jocs preferits</h2>
       </div>
+      <span class="status-text">{{ juegosOrdenados().length }} jocs</span>
     </div>
 
     <div class="score-board" *ngIf="juegosOrdenados().length > 0">

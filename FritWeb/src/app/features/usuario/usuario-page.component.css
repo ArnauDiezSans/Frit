@@ -1,8 +1,9 @@
 .dashboard-page {
   min-height: 100vh;
-  padding: 24px;
-  background: #f5f6f8;
-  color: #1f2937;
+  padding: 28px 24px 40px;
+  background:
+    linear-gradient(180deg, #f7faf9 0%, #f4f6f8 42%, #eef2f4 100%);
+  color: #172033;
 }
 
 .dashboard-header {
@@ -47,8 +48,8 @@ h1 {
   margin: 0 auto 24px;
   background: #ffffff;
   border: 1px solid #e4e7ec;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(23, 32, 51, 0.07);
 }
 
 .content-card {
@@ -60,7 +61,8 @@ h1 {
   justify-content: space-between;
   align-items: center;
   gap: 20px;
-  padding: 20px;
+  padding: 18px 20px;
+  border-left: 4px solid #2f7f7a;
 }
 
 .user-info {
@@ -94,50 +96,77 @@ h1 {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .section-heading h2 {
   margin: 0;
+  color: #101828;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.status-text {
+  min-width: max-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef6f5;
+  color: #2f7f7a;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.preferences-section {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .score-board {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 14px;
+  column-count: 4;
+  column-gap: 14px;
 }
 
 .score-group {
+  --score-accent: #2f7f7a;
+  --score-accent-soft: #edf7f5;
   min-width: 0;
-  padding: 14px;
-  border: 1px solid #e4e7ec;
-  border-radius: 12px;
-  background: #ffffff;
+  display: inline-block;
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 12px;
+  break-inside: avoid;
+  border: 1px solid #d9e3e7;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+  box-shadow: 0 10px 24px rgba(23, 32, 51, 0.07);
 }
 
 .score-group-full {
-  background: #fbfcfd;
+  border-color: rgba(47, 127, 122, 0.34);
+  background: linear-gradient(180deg, #ffffff 0%, var(--score-accent-soft) 100%);
 }
 
 .score-group-drop {
-  border-color: #0f766e;
-  background: #f0fdfa;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+  border-color: var(--score-accent);
+  background: var(--score-accent-soft);
+  box-shadow: 0 0 0 4px rgba(47, 127, 122, 0.12), 0 12px 30px rgba(23, 32, 51, 0.12);
 }
 
 .score-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
 .score-badge {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #0f766e;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--score-accent);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
@@ -151,11 +180,38 @@ h1 {
   min-width: 44px;
   padding: 5px 8px;
   border-radius: 999px;
-  background: #eef4ff;
-  color: #344054;
+  background: var(--score-accent-soft);
+  color: #172033;
   font-size: 0.82rem;
   font-weight: 700;
   text-align: center;
+}
+
+.score-group:nth-child(1),
+.score-group:nth-child(2) {
+  --score-accent: #2f7f7a;
+  --score-accent-soft: #edf7f5;
+}
+
+.score-group:nth-child(3),
+.score-group:nth-child(4),
+.score-group:nth-child(5) {
+  --score-accent: #5f7f38;
+  --score-accent-soft: #f2f7eb;
+}
+
+.score-group:nth-child(6),
+.score-group:nth-child(7),
+.score-group:nth-child(8) {
+  --score-accent: #7b6b35;
+  --score-accent-soft: #faf6e8;
+}
+
+.score-group:nth-child(9),
+.score-group:nth-child(10),
+.score-group:nth-child(11) {
+  --score-accent: #6b7280;
+  --score-accent-soft: #f1f3f5;
 }
 
 .score-picker {
@@ -167,8 +223,8 @@ h1 {
   width: 100%;
   min-height: 38px;
   padding: 8px 10px;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
+  border: 1px solid #cbd5df;
+  border-radius: 8px;
   background: #ffffff;
   color: #101828;
   font: inherit;
@@ -176,8 +232,8 @@ h1 {
 
 .score-picker input:focus {
   outline: none;
-  border-color: #0f766e;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: var(--score-accent);
+  box-shadow: 0 0 0 4px rgba(47, 127, 122, 0.12);
 }
 
 .score-picker input:disabled {
@@ -196,7 +252,7 @@ h1 {
   max-height: 240px;
   overflow-y: auto;
   border: 1px solid #d0d5dd;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
 }
@@ -217,15 +273,15 @@ h1 {
 }
 
 .autocomplete-options button:hover {
-  background: #f0fdfa;
+  background: var(--score-accent-soft);
 }
 
 .autocomplete-options small {
   width: 28px;
   height: 24px;
-  border-radius: 8px;
-  background: #ecfdf3;
-  color: #0f766e;
+  border-radius: 6px;
+  background: var(--score-accent-soft);
+  color: var(--score-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -236,15 +292,15 @@ h1 {
 .score-games {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 7px;
 }
 
 .score-game {
   max-width: 100%;
-  min-height: 30px;
-  padding: 6px 9px;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
+  min-height: 31px;
+  padding: 6px 10px;
+  border: 1px solid #cbd5df;
+  border-radius: 999px;
   background: #ffffff;
   color: #101828;
   font: inherit;
@@ -256,11 +312,12 @@ h1 {
   cursor: grab;
   user-select: none;
   touch-action: manipulation;
+  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.04);
 }
 
 .score-game:hover {
-  border-color: #0f766e;
-  background: #f0fdfa;
+  border-color: var(--score-accent);
+  background: var(--score-accent-soft);
 }
 
 .score-game:active {
@@ -270,6 +327,18 @@ h1 {
 .score-game-dragging {
   opacity: 0.45;
   border-style: dashed;
+}
+
+@media (max-width: 1080px) {
+  .score-board {
+    column-count: 3;
+  }
+}
+
+@media (max-width: 920px) {
+  .score-board {
+    column-count: 2;
+  }
 }
 
 .table-wrapper {
@@ -570,6 +639,15 @@ h1 {
     border-radius: 12px;
   }
 
+  .preferences-section {
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
   .header-actions {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -616,16 +694,20 @@ h1 {
   }
 
   .score-board {
+    display: grid;
     grid-template-columns: 1fr;
     gap: 8px;
+    column-count: auto;
   }
 
   .score-group {
     display: grid;
     grid-template-columns: 54px minmax(0, 1fr);
     gap: 8px 10px;
+    width: auto;
+    margin: 0;
     padding: 9px 10px;
-    border-radius: 10px;
+    border-radius: 8px;
   }
 
   .score-header {
@@ -640,7 +722,7 @@ h1 {
   .score-badge {
     width: 42px;
     height: 42px;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1.45rem;
   }
 
