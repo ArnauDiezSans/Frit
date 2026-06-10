@@ -661,12 +661,14 @@ const partidaPayload: Partida = {
     this.filters.set({ ...EMPTY_FILTERS });
   }
 
-  limpiarFiltros(): void {
-    this.clearAllFilters();
-  }
-
   toggleFilters(): void {
-    this.showFilters.update(value => !value);
+    if (this.showFilters()) {
+      this.clearAllFilters();
+      this.showFilters.set(false);
+      return;
+    }
+
+    this.showFilters.set(true);
   }
 
   togglePartidaDetail(partidaId: number): void {
