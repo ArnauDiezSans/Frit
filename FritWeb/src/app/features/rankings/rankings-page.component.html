@@ -313,6 +313,10 @@
                 <span>Victories</span>
               </label>
               <label class="column-option">
+                <input type="checkbox" [checked]="userColumns().posicionRelativa" (change)="toggleUserColumn('posicionRelativa')" />
+                <span>Posició relativa</span>
+              </label>
+              <label class="column-option">
                 <input type="checkbox" [checked]="userColumns().porcentaje" (change)="toggleUserColumn('porcentaje')" />
                 <span>%</span>
               </label>
@@ -397,6 +401,7 @@
               <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
               <th *ngIf="userColumns().horas" class="sortable" (click)="sortUsersBy('horas')">Hores jugades{{ getUserSortIndicator('horas') }}</th>
               <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
+              <th *ngIf="userColumns().posicionRelativa" class="sortable" (click)="sortUsersBy('posicionRelativa')">Posició relativa{{ getUserSortIndicator('posicionRelativa') }}</th>
               <th *ngIf="userColumns().porcentaje" class="sortable" (click)="sortUsersBy('porcentaje')">%{{ getUserSortIndicator('porcentaje') }}</th>
             </tr>
           </thead>
@@ -407,6 +412,7 @@
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="userColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
               <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
+              <td *ngIf="userColumns().posicionRelativa" data-label="Posició relativa">{{ item.posicionRelativa }}</td>
               <td *ngIf="userColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
             </tr>
           </tbody>
@@ -422,6 +428,7 @@
               <th *ngIf="userColumns().partidas" class="sortable" (click)="sortUsersBy('partidas')">Partides{{ getUserSortIndicator('partidas') }}</th>
               <th *ngIf="userColumns().horas" class="sortable" (click)="sortUsersBy('horas')">Hores jugades{{ getUserSortIndicator('horas') }}</th>
               <th *ngIf="userColumns().victorias" class="sortable" (click)="sortUsersBy('victorias')">Victories{{ getUserSortIndicator('victorias') }}</th>
+              <th *ngIf="userColumns().posicionRelativa" class="sortable" (click)="sortUsersBy('posicionRelativa')">Posició relativa{{ getUserSortIndicator('posicionRelativa') }}</th>
               <th *ngIf="userColumns().porcentaje" class="sortable" (click)="sortUsersBy('porcentaje')">%{{ getUserSortIndicator('porcentaje') }}</th>
               <th *ngIf="userColumns().ultima" class="sortable" (click)="sortUsersBy('ultima')">Última{{ getUserSortIndicator('ultima') }}</th>
             </tr>
@@ -433,6 +440,7 @@
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="userColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
               <td *ngIf="userColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
+              <td *ngIf="userColumns().posicionRelativa" data-label="Posició relativa">{{ item.posicionRelativa }}</td>
               <td *ngIf="userColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
               <td *ngIf="userColumns().ultima" data-label="Última">{{ formatDate(item.ultimaPartida) }}</td>
             </tr>
