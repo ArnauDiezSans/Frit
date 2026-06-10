@@ -12,6 +12,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
+import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from './juegos.models';
 import { JuegosService } from './juegos.service';
@@ -99,7 +100,7 @@ function normalizeVisibleColumns(value: Partial<VisibleColumns>): VisibleColumns
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
   templateUrl: './juegos-page.component.html',
   styleUrl: './juegos-page.component.css'
 })
@@ -149,6 +150,8 @@ export class JuegosPageComponent implements OnInit {
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
+  displayJuego = (juego: Juego) => juego.nombre;
+  displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
 
   juegosFiltradosOrdenados = computed(() => {
     const juegos = [...this.juegos()];
@@ -549,8 +552,7 @@ export class JuegosPageComponent implements OnInit {
     });
   }
 
-  onPropietarioInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value ?? '';
+  onPropietarioInput(value: string): void {
     this.form.controls.propietarioSearch.setValue(value);
     this.showPropietarioOptions.set(true);
 
@@ -595,8 +597,7 @@ export class JuegosPageComponent implements OnInit {
     this.limpiarPropietarioSeleccionado();
   }
 
-  onJuegoBaseInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value ?? '';
+  onJuegoBaseInput(value: string): void {
     this.form.controls.juegoBaseSearch.setValue(value);
     this.showJuegoBaseOptions.set(true);
 
@@ -702,6 +703,10 @@ export class JuegosPageComponent implements OnInit {
 
   trackByJuegoId(_: number, juego: Juego): number {
     return juego.juegoId;
+  }
+
+  trackByUsuarioId(_: number, usuario: UsuarioOption): number {
+    return usuario.usuarioId;
   }
 
   private updateResponsiveState(): void {

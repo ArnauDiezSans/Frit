@@ -4,6 +4,7 @@ import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
@@ -16,7 +17,7 @@ import { AQueJuguemRecommendation } from './a-que-juguem.service';
 @Component({
   selector: 'app-a-que-juguem-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
   templateUrl: './a-que-juguem-page.component.html',
   styleUrl: './a-que-juguem-page.component.css'
 })
@@ -59,6 +60,7 @@ export class AQueJuguemPageComponent {
   tempsMigMesPetitQue = signal('');
   private calculationRequestId = 0;
   private lastRecommendationKey = '';
+  displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
 
   form = this.fb.group({
     numeroJugadores: [0, [Validators.required, Validators.min(1)]],
@@ -91,8 +93,7 @@ export class AQueJuguemPageComponent {
     });
   }
 
-  onUsuarioInput(index: number, event: Event): void {
-    const value = (event.target as HTMLInputElement).value ?? '';
+  onUsuarioInput(index: number, value: string): void {
     const group = this.jugadoresArray.at(index);
     const matchedUsuario = this.findExactUsuarioMatch(index, value);
 

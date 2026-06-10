@@ -1,0 +1,35 @@
+<div
+  class="autocomplete-wrapper"
+  (click)="onWrapperClick($event)"
+  (focusout)="onFocusOut($event)">
+  <input
+    type="text"
+    [value]="searchText"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    (input)="onInput($any($event.target).value)"
+    (focus)="onFocus()" />
+
+  <button
+    *ngIf="selected"
+    type="button"
+    class="clear-autocomplete"
+    (click)="clear($event)">
+    &times;
+  </button>
+
+  <div class="autocomplete-panel" *ngIf="open">
+    <button
+      type="button"
+      class="autocomplete-option"
+      *ngFor="let item of items; let i = index; trackBy: trackBy"
+      (click)="select(item)">
+      <span>{{ displayWith(item) }}</span>
+      <small *ngIf="secondaryWith">{{ secondaryWith(item) }}</small>
+    </button>
+
+    <div class="autocomplete-empty" *ngIf="items.length === 0">
+      {{ emptyText }}
+    </div>
+  </div>
+</div>

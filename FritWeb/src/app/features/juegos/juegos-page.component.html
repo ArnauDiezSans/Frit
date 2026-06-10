@@ -446,72 +446,36 @@
             <input type="number" formControlName="numeroJugadoresMax" />
           </label>
 
-          <div class="form-field autocomplete-field">
+          <div class="form-field">
             <span>Joc base</span>
-            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
-              <input
-                type="text"
-                formControlName="juegoBaseSearch"
-                placeholder="Cerca un joc base..."
-                (input)="onJuegoBaseInput($event)"
-                (focus)="onJuegoBaseFocus()" />
-
-              <button
-                *ngIf="form.controls.juegoBaseId.value"
-                type="button"
-                class="clear-autocomplete"
-                (click)="limpiarJuegoBase()">
-                ×
-              </button>
-
-              <div class="autocomplete-panel" *ngIf="showJuegoBaseOptions()">
-                <button
-                  type="button"
-                  class="autocomplete-option"
-                  *ngFor="let juego of filteredJuegosBase()"
-                  (click)="seleccionarJuegoBase(juego)">
-                  {{ juego.nombre }}
-                </button>
-
-                <div class="autocomplete-empty" *ngIf="filteredJuegosBase().length === 0">
-                  No hi ha coincidències.
-                </div>
-              </div>
-            </div>
+            <app-autocomplete-select
+              [items]="filteredJuegosBase()"
+              [searchText]="form.controls.juegoBaseSearch.value ?? ''"
+              [selected]="!!form.controls.juegoBaseId.value"
+              [displayWith]="displayJuego"
+              [trackBy]="trackByJuegoId"
+              placeholder="Cerca un joc base..."
+              emptyText="No hi ha coincidencies."
+              (searchTextChange)="onJuegoBaseInput($event)"
+              (focused)="onJuegoBaseFocus()"
+              (selectedChange)="seleccionarJuegoBase($event)"
+              (cleared)="limpiarJuegoBase()" />
           </div>
 
-          <div class="form-field autocomplete-field">
+          <div class="form-field">
             <span>Propietari *</span>
-            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
-              <input
-                type="text"
-                formControlName="propietarioSearch"
-                placeholder="Cerca un usuari..."
-                (input)="onPropietarioInput($event)"
-                (focus)="onPropietarioFocus()" />
-
-              <button
-                *ngIf="form.controls.propietarioId.value"
-                type="button"
-                class="clear-autocomplete"
-                (click)="limpiarPropietarioSeleccionado()">
-                ×
-              </button>
-
-              <div class="autocomplete-panel" *ngIf="showPropietarioOptions()">
-                <button
-                  type="button"
-                  class="autocomplete-option"
-                  *ngFor="let usuario of filteredUsuarios()"
-                  (click)="seleccionarPropietario(usuario)">
-                  {{ usuario.nombre }}
-                </button>
-
-                <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
-                  No hi ha coincidències.
-                </div>
-              </div>
-            </div>
+            <app-autocomplete-select
+              [items]="filteredUsuarios()"
+              [searchText]="form.controls.propietarioSearch.value ?? ''"
+              [selected]="!!form.controls.propietarioId.value"
+              [displayWith]="displayUsuario"
+              [trackBy]="trackByUsuarioId"
+              placeholder="Cerca un usuari..."
+              emptyText="No hi ha coincidencies."
+              (searchTextChange)="onPropietarioInput($event)"
+              (focused)="onPropietarioFocus()"
+              (selectedChange)="seleccionarPropietario($event)"
+              (cleared)="limpiarPropietarioSeleccionado()" />
           </div>
 
           <label class="form-field">
@@ -547,3 +511,4 @@
     </section>
   </div>
 </section>
+

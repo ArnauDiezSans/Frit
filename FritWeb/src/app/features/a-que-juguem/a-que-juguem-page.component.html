@@ -24,40 +24,22 @@
     <form [formGroup]="form" class="players-form">
       <div class="players-grid" formArrayName="jugadores">
         <div
-          class="form-field autocomplete-field"
+          class="form-field"
           *ngFor="let jugador of jugadoresArray.controls; let i = index; trackBy: trackByIndex"
           [formGroupName]="i">
           <span>Jugador {{ i + 1 }}</span>
-          <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
-            <input
-              type="text"
-              formControlName="usuarioSearch"
-              placeholder="Cerca usuari..."
-              (input)="onUsuarioInput(i, $event)"
-              (focus)="onUsuarioFocus(i)" />
-
-            <button
-              *ngIf="jugador.get('usuarioId')?.value"
-              type="button"
-              class="clear-autocomplete"
-              (click)="limpiarUsuario(i)">
-              ×
-            </button>
-
-            <div class="autocomplete-panel" *ngIf="showUsuarioOptions() === i">
-              <button
-                type="button"
-                class="autocomplete-option"
-                *ngFor="let usuario of filteredUsuarios(); trackBy: trackByUsuarioId"
-                (click)="seleccionarUsuario(i, usuario)">
-                {{ usuario.nombre }}
-              </button>
-
-              <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
-                Sense coincidències.
-              </div>
-            </div>
-          </div>
+          <app-autocomplete-select
+            [items]="showUsuarioOptions() === i ? filteredUsuarios() : []"
+            [searchText]="jugador.get('usuarioSearch')?.value ?? ''"
+            [selected]="!!jugador.get('usuarioId')?.value"
+            [displayWith]="displayUsuario"
+            [trackBy]="trackByUsuarioId"
+            placeholder="Cerca usuari..."
+            emptyText="Sense coincidencies."
+            (searchTextChange)="onUsuarioInput(i, $event)"
+            (focused)="onUsuarioFocus(i)"
+            (selectedChange)="seleccionarUsuario(i, $event)"
+            (cleared)="limpiarUsuario(i)" />
         </div>
       </div>
     </form>
@@ -151,4 +133,5 @@
     </div>
   </section>
 </section>
+
 

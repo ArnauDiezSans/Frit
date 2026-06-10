@@ -18,6 +18,7 @@ import { Router } from '@angular/router';
 import { forkJoin, map, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
+import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
@@ -104,7 +105,7 @@ const EMPTY_FILTERS: PartidasFilters = {
 @Component({
   selector: 'app-partidas-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
   templateUrl: './partidas-page.component.html',
   styleUrl: './partidas-page.component.css'
 })
@@ -156,6 +157,8 @@ export class PartidasPageComponent implements OnInit {
   showColumnsPanel = signal(false);
   isMobileFilters = signal(false);
   teamColors = TEAM_COLORS;
+  displayJuego = (juego: Juego) => juego.nombre;
+  displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
@@ -457,8 +460,7 @@ export class PartidasPageComponent implements OnInit {
     this.updateTeamSummary();
   }
 
-  onJuegoInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value ?? '';
+  onJuegoInput(value: string): void {
     this.form.controls.juegoSearch.setValue(value);
     this.showJuegoOptions.set(true);
 
@@ -489,8 +491,7 @@ export class PartidasPageComponent implements OnInit {
     this.showJuegoOptions.set(false);
   }
 
-  onUsuarioInput(index: number, event: Event): void {
-    const value = (event.target as HTMLInputElement).value ?? '';
+  onUsuarioInput(index: number, value: string): void {
     const group = this.jugadoresArray.at(index);
     group.patchValue({
       usuarioId: null,

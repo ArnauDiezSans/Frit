@@ -87,23 +87,18 @@
         </header>
 
         <div class="score-picker" *ngIf="canShowScorePicker(score)">
-          <input
-            type="text"
-            [value]="scoreSearch()[score] ?? ''"
-            placeholder="Afegir joc..."
+          <app-autocomplete-select
+            [items]="showScoreOptions() === score ? filteredScoreGames() : []"
+            [searchText]="scoreSearch()[score] ?? ''"
             [disabled]="savingOrder()"
-            (focus)="onScoreFocus(score)"
-            (input)="onScoreInput(score, $event)" />
-
-          <div class="autocomplete-options" *ngIf="showScoreOptions() === score && filteredScoreGames().length > 0">
-            <button
-              type="button"
-              *ngFor="let juego of filteredScoreGames(); trackBy: trackByJuego"
-              (click)="seleccionarJuegoPuntuacion(score, juego)">
-              <span>{{ juego.nombre }}</span>
-              <small>{{ juego.puntuacion }}</small>
-            </button>
-          </div>
+            [displayWith]="displayJuego"
+            [secondaryWith]="displayPuntuacion"
+            [trackBy]="trackByJuego"
+            placeholder="Afegir joc..."
+            emptyText="Sense coincidencies."
+            (searchTextChange)="onScoreInput(score, $event)"
+            (focused)="onScoreFocus(score)"
+            (selectedChange)="seleccionarJuegoPuntuacion(score, $event)" />
         </div>
 
         <div class="score-games">

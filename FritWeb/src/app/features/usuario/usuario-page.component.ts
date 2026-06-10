@@ -4,13 +4,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.service';
 
 @Component({
   selector: 'app-usuario-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
   templateUrl: './usuario-page.component.html',
   styleUrl: './usuario-page.component.css'
 })
@@ -39,6 +40,8 @@ export class UsuarioPageComponent {
   dragOverScore = signal<number | null>(null);
 
   readonly scoreValues = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+  displayJuego = (juego: UsuarioJuegoOrden) => juego.nombre;
+  displayPuntuacion = (juego: UsuarioJuegoOrden) => String(juego.puntuacion);
 
   passwordForm = this.fb.group(
     {
@@ -221,8 +224,7 @@ export class UsuarioPageComponent {
     return !this.savingOrder() && this.getFilteredGames(score, '').length > 0;
   }
 
-  onScoreInput(score: number, event: Event): void {
-    const value = (event.target as HTMLInputElement).value ?? '';
+  onScoreInput(score: number, value: string): void {
     this.scoreSearch.update(current => ({
       ...current,
       [score]: value

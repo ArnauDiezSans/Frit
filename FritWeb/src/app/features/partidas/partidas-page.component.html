@@ -349,38 +349,20 @@
 
       <form [formGroup]="form" (ngSubmit)="guardarPartida()">
         <div class="form-grid">
-          <div class="form-field autocomplete-field">
+          <div class="form-field">
             <span>Joc *</span>
-            <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
-              <input
-                type="text"
-                formControlName="juegoSearch"
-                placeholder="Cerca un joc..."
-                (input)="onJuegoInput($event)"
-                (focus)="onJuegoFocus()" />
-
-              <button
-                *ngIf="form.controls.juegoId.value"
-                type="button"
-                class="clear-autocomplete"
-                (click)="limpiarJuegoSeleccionado()">
-                ×
-              </button>
-
-              <div class="autocomplete-panel" *ngIf="showJuegoOptions()">
-                <button
-                  type="button"
-                  class="autocomplete-option"
-                  *ngFor="let juego of filteredJuegos(); trackBy: trackByJuegoId"
-                  (click)="seleccionarJuego(juego)">
-                  {{ juego.nombre }}
-                </button>
-
-                <div class="autocomplete-empty" *ngIf="filteredJuegos().length === 0">
-                  No hi ha coincidències.
-                </div>
-              </div>
-            </div>
+            <app-autocomplete-select
+              [items]="filteredJuegos()"
+              [searchText]="form.controls.juegoSearch.value ?? ''"
+              [selected]="!!form.controls.juegoId.value"
+              [displayWith]="displayJuego"
+              [trackBy]="trackByJuegoId"
+              placeholder="Cerca un joc..."
+              emptyText="No hi ha coincidencies."
+              (searchTextChange)="onJuegoInput($event)"
+              (focused)="onJuegoFocus()"
+              (selectedChange)="seleccionarJuego($event)"
+              (cleared)="limpiarJuegoSeleccionado()" />
           </div>
 
           <label class="form-field">
@@ -430,38 +412,21 @@
               *ngFor="let jugador of jugadoresArray.controls; let i = index"
               [formGroupName]="i">
               <div class="player-grid">
-                <div class="form-field autocomplete-field">
+                <div class="form-field">
                   <span>Usuari *</span>
                   <div class="player-user-row">
-                  <div class="autocomplete-wrapper" (click)="$event.stopPropagation()">
-                    <input
-                      type="text"
-                      formControlName="usuarioSearch"
-                      placeholder="Cerca usuari..."
-                      (input)="onUsuarioInput(i, $event)"
-                      (focus)="onUsuarioFocus(i)" />
-
-                    <button
-                      *ngIf="jugador.get('usuarioId')?.value"
-                      type="button"
-                      class="clear-autocomplete"
-                      (click)="limpiarUsuario(i)">
-                      ×
-                    </button>
-
-                    <div class="autocomplete-panel" *ngIf="showUsuarioOptions() === i">
-                      <button
-                        type="button"
-                        class="autocomplete-option"
-                        *ngFor="let u of filteredUsuarios(); trackBy: trackByUsuarioId"
-                        (click)="seleccionarUsuario(i, u)">
-                        {{ u.nombre }}
-                      </button>
-                      <div class="autocomplete-empty" *ngIf="filteredUsuarios().length === 0">
-                        Sense coincidències.
-                      </div>
-                    </div>
-                  </div>
+                  <app-autocomplete-select
+                    [items]="showUsuarioOptions() === i ? filteredUsuarios() : []"
+                    [searchText]="jugador.get('usuarioSearch')?.value ?? ''"
+                    [selected]="!!jugador.get('usuarioId')?.value"
+                    [displayWith]="displayUsuario"
+                    [trackBy]="trackByUsuarioId"
+                    placeholder="Cerca usuari..."
+                    emptyText="Sense coincidencies."
+                    (searchTextChange)="onUsuarioInput(i, $event)"
+                    (focused)="onUsuarioFocus(i)"
+                    (selectedChange)="seleccionarUsuario(i, $event)"
+                    (cleared)="limpiarUsuario(i)" />
                     <div
                       *ngIf="form.controls.perEquips.value"
                       class="team-color-options">
@@ -506,3 +471,5 @@
     </section>
   </div>
 </section>
+
+
