@@ -195,6 +195,23 @@ export class RankingsPageComponent {
     return this.gameOptions().find(juego => juego.juegoId === juegoId)?.nombre ?? '';
   });
 
+  selectedGameTotalPartidas = computed(() => {
+    const data = this.rankings();
+    const filters = this.gameFilters();
+    const juegoId = Number(filters.juegoId);
+
+    if (!data || !juegoId) {
+      return 0;
+    }
+
+    return this.filterPartidas(
+      this.filterRankingPartidas(data.partidas)
+        .filter(partida => partida.juegoId === juegoId),
+      filters.fechaDesde,
+      filters.fechaHasta
+    ).length;
+  });
+
   selectedUserName = computed(() => {
     const usuarioId = Number(this.userFilters().usuarioId);
     return this.userOptions().find(usuario => usuario.usuarioId === usuarioId)?.nombre ?? '';
