@@ -71,7 +71,7 @@
           <h2>Rankings per joc</h2>
           <p *ngIf="!gameFilters().juegoId">Jocs ordenats per activitat dins del periode seleccionat.</p>
           <p *ngIf="gameFilters().juegoId">
-            Victories dels usuaris a {{ selectedGameName() }}. (de {{ selectedGameTotalPartidas() }} partides totals)
+            Resultats per {{ selectedGameName() }}. ({{ selectedGameTotalPartidas() }} partides totals)
           </p>
         </div>
 
