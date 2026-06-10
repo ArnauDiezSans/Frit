@@ -177,7 +177,7 @@ h1 {
 
 .filters-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 1.45fr) minmax(170px, 1fr) minmax(170px, 0.9fr) 112px minmax(170px, 1fr) minmax(170px, 1fr);
+  grid-template-columns: minmax(260px, 1.35fr) minmax(150px, 0.9fr) minmax(160px, 0.85fr) 112px minmax(210px, 1.15fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr);
   align-items: end;
   gap: 8px;
 }
@@ -203,6 +203,31 @@ h1 {
 
 .filter-field:nth-child(4) .inline-table-filters {
   grid-template-columns: repeat(2, 52px);
+}
+
+.result-user-filter {
+  display: grid;
+  grid-template-columns: 58px 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+}
+
+.result-user-link-icon {
+  display: inline-grid;
+  width: 22px;
+  height: 34px;
+  place-items: center;
+  color: #1d2f50;
+}
+
+.result-user-link-icon svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
 }
 
 .player-icon {
@@ -588,8 +613,10 @@ h1 {
 
   .filter-field:first-child,
   .filter-field:nth-child(2),
+  .filter-field-result-user,
   .filter-field:nth-child(5),
-  .filter-field:nth-child(6) {
+  .filter-field:nth-child(6),
+  .filter-field:nth-child(7) {
     grid-column: 1 / -1;
   }
 

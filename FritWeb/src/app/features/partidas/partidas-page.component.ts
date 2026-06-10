@@ -72,6 +72,8 @@ interface PartidasFilters {
   duracionMinutosMax: string;
   numeroJugadoresMin: string;
   numeroJugadoresMax: string;
+  posicionUsuario: string;
+  usuarioPosicionId: string;
   resultadoJugadores: string;
   observaciones: string;
 }
@@ -93,6 +95,8 @@ const EMPTY_FILTERS: PartidasFilters = {
   duracionMinutosMax: '',
   numeroJugadoresMin: '',
   numeroJugadoresMax: '',
+  posicionUsuario: '',
+  usuarioPosicionId: '',
   resultadoJugadores: '',
   observaciones: ''
 };
@@ -134,7 +138,10 @@ export class PartidasPageComponent implements OnInit {
   highlightedPartidaId = signal<number | null>(null);
   expandedPartidaId = signal<number | null>(null);
 
-  filters = signal<PartidasFilters>(this.uiState.get('ui:partidas:filters', { ...EMPTY_FILTERS }));
+  filters = signal<PartidasFilters>({
+    ...EMPTY_FILTERS,
+    ...this.uiState.get('ui:partidas:filters', {} as Partial<PartidasFilters>)
+  });
   sortColumn = signal<SortColumn | null>(this.uiState.get('ui:partidas:sortColumn', null as SortColumn | null));
   sortDirection = signal<SortDirection | null>(this.uiState.get('ui:partidas:sortDirection', null as SortDirection | null));
   visibleColumns = signal<VisibleColumns>(this.uiState.get('ui:partidas:columns', {
@@ -262,6 +269,21 @@ export class PartidasPageComponent implements OnInit {
 
       if (jugadoresMax !== null && row.numeroJugadores > jugadoresMax) {
         return false;
+      }
+
+      const posicionUsuario = this.parseNumberFilter(filters.posicionUsuario);
+      const usuarioPosicionId = Number(filters.usuarioPosicionId);
+
+      if (posicionUsuario !== null && usuarioPosicionId) {
+        const hasMatchingPlayer = this.partidaJugadores().some(jugador =>
+          jugador.partidaId === row.partidaId &&
+          jugador.usuarioId === usuarioPosicionId &&
+          jugador.posicion === posicionUsuario
+        );
+
+        if (!hasMatchingPlayer) {
+          return false;
+        }
       }
 
       if (
@@ -831,8 +853,8 @@ const partidaPayload: Partida = {
     return Number.isFinite(time) ? time : null;
   }
 
-  private parseNumberFilter(value: string): number | null {
-    if (!value.trim()) {
+  private parseNumberFilter(value: string | null | undefined): number | null {
+    if (!value?.trim()) {
       return null;
     }
 
