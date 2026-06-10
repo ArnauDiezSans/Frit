@@ -48,12 +48,14 @@ interface GameFilters {
   juegoId: string;
   fechaDesde: string;
   fechaHasta: string;
+  minPartidas: string;
 }
 
 interface UserFilters {
   usuarioId: string;
   fechaDesde: string;
   fechaHasta: string;
+  minPartidas: string;
 }
 
 interface GameColumns {
@@ -83,13 +85,15 @@ interface UserColumns {
 const EMPTY_GAME_FILTERS: GameFilters = {
   juegoId: '',
   fechaDesde: '',
-  fechaHasta: ''
+  fechaHasta: '',
+  minPartidas: ''
 };
 
 const EMPTY_USER_FILTERS: UserFilters = {
   usuarioId: '',
   fechaDesde: '',
-  fechaHasta: ''
+  fechaHasta: '',
+  minPartidas: ''
 };
 
 @Component({
@@ -111,7 +115,8 @@ export class RankingsPageComponent {
 
   gameFilters = signal<GameFilters>({ ...EMPTY_GAME_FILTERS });
   userFilters = signal<UserFilters>({ ...EMPTY_USER_FILTERS });
-  excludeNoLlistaGames = signal(true);
+  showNoLlistaGames = signal(false);
+  showCooperativeGames = signal(false);
 
   gameColumns = signal<GameColumns>({
     nombre: true,
@@ -277,7 +282,8 @@ export class RankingsPageComponent {
       {
         juegoId: String(juegoId),
         fechaDesde: this.gameFilters().fechaDesde,
-        fechaHasta: this.gameFilters().fechaHasta
+        fechaHasta: this.gameFilters().fechaHasta,
+        minPartidas: this.gameFilters().minPartidas
       }
     );
 
@@ -379,22 +385,45 @@ export class RankingsPageComponent {
 
   clearGameFilters(): void {
     this.gameFilters.set({ ...EMPTY_GAME_FILTERS });
+    this.clearGameTypeFilters();
   }
 
   clearUserFilters(): void {
     this.userFilters.set({ ...EMPTY_USER_FILTERS });
+    this.clearGameTypeFilters();
   }
 
   toggleGameFilters(): void {
-    this.showGameFilters.update(value => !value);
+    if (this.showGameFilters()) {
+      this.clearGameFilters();
+      this.showGameFilters.set(false);
+      return;
+    }
+
+    this.showGameFilters.set(true);
   }
 
   toggleUserFilters(): void {
-    this.showUserFilters.update(value => !value);
+    if (this.showUserFilters()) {
+      this.clearUserFilters();
+      this.showUserFilters.set(false);
+      return;
+    }
+
+    this.showUserFilters.set(true);
   }
 
-  toggleExcludeNoLlistaGames(): void {
-    this.excludeNoLlistaGames.update(value => !value);
+  toggleShowNoLlistaGames(): void {
+    this.showNoLlistaGames.update(value => !value);
+  }
+
+  toggleShowCooperativeGames(): void {
+    this.showCooperativeGames.update(value => !value);
+  }
+
+  private clearGameTypeFilters(): void {
+    this.showNoLlistaGames.set(false);
+    this.showCooperativeGames.set(false);
   }
 
   toggleGameColumnsPanel(event: Event): void {
@@ -547,31 +576,35 @@ export class RankingsPageComponent {
   }
 
   private filterRankingJuegos(juegos: RankingJuego[]): RankingJuego[] {
-    if (!this.excludeNoLlistaGames()) {
-      return [...juegos];
-    }
-
-    return juegos.filter(juego => !this.isNoLlistaType(juego.tipo));
+    return juegos.filter(juego => this.shouldShowGameType(juego.tipo));
   }
 
   private filterRankingPartidas(partidas: RankingPartida[]): RankingPartida[] {
-    if (!this.excludeNoLlistaGames()) {
-      return [...partidas];
-    }
-
-    return partidas.filter(partida => !this.isNoLlistaType(partida.juegoTipo));
+    return partidas.filter(partida => this.shouldShowGameType(partida.juegoTipo));
   }
 
   private filterRankingJugadores(jugadores: RankingJugador[]): RankingJugador[] {
-    if (!this.excludeNoLlistaGames()) {
-      return [...jugadores];
+    return jugadores.filter(jugador => this.shouldShowGameType(jugador.juegoTipo));
+  }
+
+  private shouldShowGameType(value: string | null | undefined): boolean {
+    if (this.isNoLlistaType(value)) {
+      return this.showNoLlistaGames();
     }
 
-    return jugadores.filter(jugador => !this.isNoLlistaType(jugador.juegoTipo));
+    if (this.isCooperativeType(value)) {
+      return this.showCooperativeGames();
+    }
+
+    return true;
   }
 
   private isNoLlistaType(value: string | null | undefined): boolean {
     return (value ?? '').trim().toLowerCase() === 'no llista';
+  }
+
+  private isCooperativeType(value: string | null | undefined): boolean {
+    return (value ?? '').trim().toLowerCase() === 'cooperatiu';
   }
 
   private buildGameRows(partidas: RankingPartida[], filters: GameFilters): GameRankingRow[] {
@@ -599,7 +632,7 @@ export class RankingsPageComponent {
           .map(partida => partida.fecha)
           .sort((a, b) => b.localeCompare(a))[0] ?? null
       };
-    });
+    }).filter(row => this.matchesMinPartidas(row.numeroPartidas, filters.minPartidas));
   }
 
   private buildUserRows(jugadores: RankingJugador[], filters: UserFilters | GameFilters): UserRankingRow[] {
@@ -634,7 +667,7 @@ export class RankingsPageComponent {
         victorias,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length)
       };
-    });
+    }).filter(row => this.matchesMinPartidas(row.partidasTotales, filters.minPartidas));
   }
 
   private buildUserGameRows(jugadores: RankingJugador[], filters: UserFilters): UserGameRankingRow[] {
@@ -662,7 +695,7 @@ export class RankingsPageComponent {
           .map(row => row.fecha)
           .sort((a, b) => b.localeCompare(a))[0] ?? null
       };
-    });
+    }).filter(row => this.matchesMinPartidas(row.partidasTotales, filters.minPartidas));
   }
 
   private filterPartidas(partidas: RankingPartida[], fechaDesde: string, fechaHasta: string): RankingPartida[] {
@@ -679,6 +712,11 @@ export class RankingsPageComponent {
     }
 
     return true;
+  }
+
+  private matchesMinPartidas(partidas: number, minPartidas: string): boolean {
+    const min = Number(minPartidas);
+    return !min || partidas >= min;
   }
 
   private sortGameRows(rows: GameRankingRow[]): GameRankingRow[] {

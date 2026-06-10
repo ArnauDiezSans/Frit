@@ -74,14 +74,6 @@
         </div>
 
         <div class="toolbar">
-          <label class="toolbar-check">
-            <input
-              type="checkbox"
-              [checked]="excludeNoLlistaGames()"
-              (change)="toggleExcludeNoLlistaGames()" />
-            <span>Amaga No llista</span>
-          </label>
-
           <button
             type="button"
             class="toolbar-chip"
@@ -180,13 +172,35 @@
               [value]="gameFilters().fechaHasta"
               (input)="updateGameFilter('fechaHasta', $any($event.target).value)" />
           </label>
+
+          <label class="filter-field">
+            <span>Nº partides min</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              class="filter-input"
+              [value]="gameFilters().minPartidas"
+              (input)="updateGameFilter('minPartidas', $any($event.target).value)" />
+          </label>
+
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              [checked]="showNoLlistaGames()"
+              (change)="toggleShowNoLlistaGames()" />
+            <span>No llista</span>
+          </label>
+
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              [checked]="showCooperativeGames()"
+              (change)="toggleShowCooperativeGames()" />
+            <span>Cooperatiu</span>
+          </label>
         </div>
 
-        <div class="filters-actions">
-          <button type="button" class="ghost-button" (click)="clearGameFilters()">
-            Neteja filtres
-          </button>
-        </div>
       </div>
 
       <div class="table-wrapper" *ngIf="!gameFilters().juegoId && gameRows().length > 0">
@@ -251,14 +265,6 @@
         </div>
 
         <div class="toolbar">
-          <label class="toolbar-check">
-            <input
-              type="checkbox"
-              [checked]="excludeNoLlistaGames()"
-              (change)="toggleExcludeNoLlistaGames()" />
-            <span>Amaga No llista</span>
-          </label>
-
           <button
             type="button"
             class="toolbar-chip"
@@ -339,13 +345,35 @@
               [value]="userFilters().fechaHasta"
               (input)="updateUserFilter('fechaHasta', $any($event.target).value)" />
           </label>
+
+          <label class="filter-field">
+            <span>Nº partides min</span>
+            <input
+              type="number"
+              min="1"
+              step="1"
+              class="filter-input"
+              [value]="userFilters().minPartidas"
+              (input)="updateUserFilter('minPartidas', $any($event.target).value)" />
+          </label>
+
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              [checked]="showNoLlistaGames()"
+              (change)="toggleShowNoLlistaGames()" />
+            <span>No llista</span>
+          </label>
+
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              [checked]="showCooperativeGames()"
+              (change)="toggleShowCooperativeGames()" />
+            <span>Cooperatiu</span>
+          </label>
         </div>
 
-        <div class="filters-actions">
-          <button type="button" class="ghost-button" (click)="clearUserFilters()">
-            Neteja filtres
-          </button>
-        </div>
       </div>
 
       <div class="table-wrapper" *ngIf="!userFilters().usuarioId && userRows().length > 0">
