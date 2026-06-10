@@ -13,7 +13,7 @@ import {
 } from './rankings.service';
 
 type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
-type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'porcentaje' | 'ultima';
+type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'pesBggMig' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
 type ActiveRankingView = 'game' | 'user';
@@ -34,6 +34,7 @@ interface UserRankingRow {
   duracionTotalMinutos: number;
   victorias: number;
   posicionRelativa: number;
+  pesBggMig: number | null;
   porcentajeVictoria: number;
 }
 
@@ -44,6 +45,7 @@ interface UserGameRankingRow {
   duracionTotalMinutos: number;
   victorias: number;
   posicionRelativa: number;
+  pesBggMig: number | null;
   porcentajeVictoria: number;
   ultimaPartida: string | null;
 }
@@ -85,6 +87,7 @@ interface UserColumns {
   horas: boolean;
   victorias: boolean;
   posicionRelativa: boolean;
+  pesBggMig: boolean;
   porcentaje: boolean;
   ultima: boolean;
 }
@@ -148,6 +151,7 @@ export class RankingsPageComponent {
     horas: true,
     victorias: true,
     posicionRelativa: true,
+    pesBggMig: true,
     porcentaje: true,
     ultima: true
   });
@@ -515,6 +519,7 @@ export class RankingsPageComponent {
       horas: nextValue,
       victorias: nextValue,
       posicionRelativa: nextValue,
+      pesBggMig: nextValue,
       porcentaje: nextValue,
       ultima: nextValue
     });
@@ -577,6 +582,10 @@ export class RankingsPageComponent {
 
   formatPercent(value: number | null | undefined): string {
     return value || value === 0 ? `${value}%` : '-';
+  }
+
+  formatBggWeight(value: number | null | undefined): string {
+    return value == null ? '-' : value.toFixed(2);
   }
 
   logout(): void {
@@ -691,6 +700,7 @@ export class RankingsPageComponent {
       const victorias = rows.filter(row => row.posicion === 1).length;
       const duracionTotalMinutos = rows.reduce((total, row) => total + (row.duracionMinutos ?? 0), 0);
       const posicionRelativa = this.calculateAverageRelativePosition(rows);
+      const pesBggMig = this.calculateAverageBggWeight(rows);
 
       return {
         usuarioId,
@@ -699,6 +709,7 @@ export class RankingsPageComponent {
         duracionTotalMinutos,
         victorias,
         posicionRelativa,
+        pesBggMig,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length)
       };
     }).filter(row => this.matchesMinPartidas(row.partidasTotales, filters.minPartidas));
@@ -720,6 +731,7 @@ export class RankingsPageComponent {
       const victorias = rows.filter(row => row.posicion === 1).length;
       const duracionTotalMinutos = rows.reduce((total, row) => total + (row.duracionMinutos ?? 0), 0);
       const posicionRelativa = this.calculateAverageRelativePosition(rows);
+      const pesBggMig = this.calculateAverageBggWeight(rows);
 
       return {
         juegoId,
@@ -728,6 +740,7 @@ export class RankingsPageComponent {
         duracionTotalMinutos,
         victorias,
         posicionRelativa,
+        pesBggMig,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length),
         ultimaPartida: rows
           .map(row => row.fecha)
@@ -808,6 +821,8 @@ export class RankingsPageComponent {
           return (a.victorias - b.victorias) * multiplier;
         case 'posicionRelativa':
           return (a.posicionRelativa - b.posicionRelativa) * multiplier;
+        case 'pesBggMig':
+          return this.compareNullableNumbers(a.pesBggMig, b.pesBggMig) * multiplier;
         case 'porcentaje':
           return (a.porcentajeVictoria - b.porcentajeVictoria) * multiplier;
         case 'ultima':
@@ -840,6 +855,8 @@ export class RankingsPageComponent {
           return (a.victorias - b.victorias) * multiplier;
         case 'posicionRelativa':
           return (a.posicionRelativa - b.posicionRelativa) * multiplier;
+        case 'pesBggMig':
+          return this.compareNullableNumbers(a.pesBggMig, b.pesBggMig) * multiplier;
         case 'porcentaje':
           return (a.porcentajeVictoria - b.porcentajeVictoria) * multiplier;
         case 'ultima':
@@ -905,6 +922,34 @@ export class RankingsPageComponent {
     }
 
     return Math.floor(((numeroJugadores - posicion) * 100) / (numeroJugadores - 1));
+  }
+
+  private calculateAverageBggWeight(rows: RankingJugador[]): number | null {
+    const weights = rows
+      .map(row => row.dificultadBgg)
+      .filter((value): value is number => value !== null && value !== undefined);
+
+    if (weights.length === 0) {
+      return null;
+    }
+
+    return Math.round((weights.reduce((total, value) => total + value, 0) * 100) / weights.length) / 100;
+  }
+
+  private compareNullableNumbers(left: number | null, right: number | null): number {
+    if (left === null && right === null) {
+      return 0;
+    }
+
+    if (left === null) {
+      return -1;
+    }
+
+    if (right === null) {
+      return 1;
+    }
+
+    return left - right;
   }
 
   private updateResponsiveState(): void {

@@ -262,6 +262,7 @@ public class RankingsService
                         partida.Fecha,
                         partida.DuracionMinutos,
                         partida.NumeroJugadores,
+                        partida.Juego.DificultadBgg,
                         usuarioDetectado.UsuarioId,
                         usuarioDetectado.Nombre,
                         jugador.Posicion));
@@ -352,6 +353,7 @@ public class RankingsService
                 Fecha = jugador.Fecha,
                 DuracionMinutos = jugador.DuracionMinutos,
                 NumeroJugadores = jugador.NumeroJugadores,
+                DificultadBgg = jugador.DificultadBgg,
                 UsuarioId = jugador.UsuarioId,
                 UsuarioNombre = jugador.UsuarioNombre,
                 Posicion = jugador.Posicion
@@ -369,6 +371,7 @@ public class RankingsService
         DateOnly Fecha,
         int? DuracionMinutos,
         int NumeroJugadores,
+        decimal? DificultadBgg,
         int UsuarioId,
         string UsuarioNombre,
         int Posicion);

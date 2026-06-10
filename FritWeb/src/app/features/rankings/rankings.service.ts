@@ -80,6 +80,7 @@ export interface RankingJugador {
   fecha: string;
   duracionMinutos?: number | null;
   numeroJugadores: number;
+  dificultadBgg?: number | null;
   usuarioId: number;
   usuarioNombre: string;
   posicion: number;
