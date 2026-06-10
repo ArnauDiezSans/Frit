@@ -19,6 +19,7 @@ public class PartidaJugadorService
         return await _context.PartidaJugadores
             .OrderBy(pj => pj.PartidaId)
             .ThenBy(pj => pj.Posicion)
+            .ThenBy(pj => pj.PartidaJugadorId)
             .Select(pj => new PartidaJugadorDto
             {
                 PartidaJugadorId = pj.PartidaJugadorId,
@@ -55,6 +56,11 @@ public class PartidaJugadorService
             return (false, "L'identificador de partida indicat no existeix.", null);
         }
 
+        if (dto.Posicion < 1)
+        {
+            return (false, "La posicio ha de ser com a minim 1.", null);
+        }
+
         if (dto.UsuarioId.HasValue)
         {
             var usuarioValido = await _context.Usuarios.AnyAsync(u =>
@@ -66,14 +72,6 @@ public class PartidaJugadorService
             {
                 return (false, "L'identificador d'usuari indicat no existeix o no pot jugar.", null);
             }
-        }
-
-        var posicionDuplicada = await _context.PartidaJugadores
-            .AnyAsync(pj => pj.PartidaId == dto.PartidaId && pj.Posicion == dto.Posicion);
-
-        if (posicionDuplicada)
-        {
-            return (false, "Ja existeix un jugador amb aquesta posició a la partida.", null);
         }
 
         var item = new PartidaJugador
@@ -103,7 +101,7 @@ public class PartidaJugadorService
     {
         if (id != dto.PartidaJugadorId)
         {
-            return (false, "L'identificador de la ruta no coincideix amb el PartidaJugadorId del cos de la petició.", null);
+            return (false, "L'identificador de la ruta no coincideix amb el PartidaJugadorId del cos de la peticio.", null);
         }
 
         var item = await _context.PartidaJugadores.FirstOrDefaultAsync(pj => pj.PartidaJugadorId == id);
@@ -118,6 +116,11 @@ public class PartidaJugadorService
             return (false, "L'identificador de partida indicat no existeix.", null);
         }
 
+        if (dto.Posicion < 1)
+        {
+            return (false, "La posicio ha de ser com a minim 1.", null);
+        }
+
         if (dto.UsuarioId.HasValue)
         {
             var usuarioValido = await _context.Usuarios.AnyAsync(u =>
@@ -129,16 +132,6 @@ public class PartidaJugadorService
             {
                 return (false, "L'identificador d'usuari indicat no existeix o no pot jugar.", null);
             }
-        }
-
-        var posicionDuplicada = await _context.PartidaJugadores.AnyAsync(pj =>
-            pj.PartidaId == dto.PartidaId &&
-            pj.Posicion == dto.Posicion &&
-            pj.PartidaJugadorId != id);
-
-        if (posicionDuplicada)
-        {
-            return (false, "Ja existeix un jugador amb aquesta posició a la partida.", null);
         }
 
         item.PartidaId = dto.PartidaId;

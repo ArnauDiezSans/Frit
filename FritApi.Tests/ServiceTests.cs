@@ -202,6 +202,56 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task PartidaJugadorService_AllowsSharedPositions()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Catan",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Propietario = arnau
+        };
+        context.AddRange(arnau, anna, game);
+        await context.SaveChangesAsync();
+
+        var partida = new Partida
+        {
+            JuegoId = game.JuegoId,
+            UsuarioCreadorId = arnau.UsuarioId,
+            Fecha = new DateOnly(2026, 6, 10),
+            NumeroJugadores = 2
+        };
+        context.Partidas.Add(partida);
+        await context.SaveChangesAsync();
+
+        var service = new PartidaJugadorService(context);
+
+        var first = await service.CreateAsync(new PartidaJugadorDto
+        {
+            PartidaId = partida.PartidaId,
+            UsuarioId = arnau.UsuarioId,
+            NombreMostrado = "Arnau",
+            Posicion = 1
+        });
+        var second = await service.CreateAsync(new PartidaJugadorDto
+        {
+            PartidaId = partida.PartidaId,
+            UsuarioId = anna.UsuarioId,
+            NombreMostrado = "Anna",
+            Posicion = 1
+        });
+
+        Assert.True(first.Success);
+        Assert.True(second.Success);
+        Assert.Equal(2, await context.PartidaJugadores.CountAsync(jugador =>
+            jugador.PartidaId == partida.PartidaId &&
+            jugador.Posicion == 1));
+    }
+
+    [Fact]
     public async Task UsuarioService_UpdateProfile_DoesNotChangePasswordHash()
     {
         await using var context = CreateContext();

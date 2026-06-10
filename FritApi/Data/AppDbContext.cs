@@ -111,8 +111,7 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.UsuarioId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            entity.HasIndex(e => new { e.PartidaId, e.Posicion })
-                .IsUnique();
+            entity.HasIndex(e => new { e.PartidaId, e.Posicion });
         });
 
         modelBuilder.Entity<UsuarioJuegoOrden>(entity =>

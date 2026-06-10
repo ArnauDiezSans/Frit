@@ -618,7 +618,7 @@ export class PartidasPageComponent implements OnInit {
         usuarioSearch: ['', Validators.required],
         nombreMostrado: [''],
         equipoColor: [this.getDefaultTeamColor(posicion - 1)],
-        posicion: [posicion, Validators.required],
+        posicion: [posicion, [Validators.required, Validators.min(1)]],
         puntos: [null as number | null]
       })
     );
@@ -629,7 +629,6 @@ export class PartidasPageComponent implements OnInit {
 
   removeJugador(index: number): void {
     this.jugadoresArray.removeAt(index);
-    this.reindexJugadores();
     this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
     this.updateTeamSummary();
   }
@@ -661,7 +660,7 @@ const jugadores: PartidaJugador[] = (raw.jugadores ?? []).map(
     partidaId: 0,
     usuarioId: jugador.usuarioId ?? null,
     nombreMostrado: (jugador.usuarioSearch ?? '').trim(),
-    posicion: index + 1,
+    posicion: Number(jugador.posicion) || index + 1,
     puntos: jugador.puntos ?? null
   })
 );
@@ -964,14 +963,6 @@ const partidaPayload: Partida = {
     while (this.jugadoresArray.length > numero) {
       this.jugadoresArray.removeAt(this.jugadoresArray.length - 1);
     }
-
-    this.reindexJugadores();
-  }
-
-  private reindexJugadores(): void {
-    this.jugadoresArray.controls.forEach((control, index) => {
-      control.get('posicion')?.setValue(index + 1);
-    });
   }
 
   private createJugadorGroup(posicion: number, jugador?: PartidaJugador) {
@@ -981,7 +972,7 @@ const partidaPayload: Partida = {
       usuarioSearch: [jugador?.nombreMostrado ?? '', Validators.required],
       nombreMostrado: [jugador?.nombreMostrado ?? ''],
       equipoColor: [this.getDefaultTeamColor(posicion - 1)],
-      posicion: [jugador?.posicion ?? posicion, Validators.required],
+      posicion: [jugador?.posicion ?? posicion, [Validators.required, Validators.min(1)]],
       puntos: [jugador?.puntos ?? null as number | null]
     });
   }
