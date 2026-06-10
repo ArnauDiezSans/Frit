@@ -83,6 +83,7 @@ public class RankingJugadorDto
     public string JuegoTipo { get; set; } = string.Empty;
     public DateOnly Fecha { get; set; }
     public int? DuracionMinutos { get; set; }
+    public int NumeroJugadores { get; set; }
     public int UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
     public int Posicion { get; set; }

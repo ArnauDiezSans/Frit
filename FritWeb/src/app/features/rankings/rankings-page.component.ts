@@ -14,7 +14,7 @@ import {
 
 type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'porcentaje' | 'ultima';
-type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'porcentaje';
+type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
 type ActiveRankingView = 'game' | 'user';
 
@@ -33,6 +33,7 @@ interface UserRankingRow {
   partidasTotales: number;
   duracionTotalMinutos: number;
   victorias: number;
+  posicionRelativa: number;
   porcentajeVictoria: number;
 }
 
@@ -72,6 +73,7 @@ interface DetailColumns {
   usuario: boolean;
   partidas: boolean;
   victorias: boolean;
+  posicionRelativa: boolean;
   porcentaje: boolean;
 }
 
@@ -133,6 +135,7 @@ export class RankingsPageComponent {
     usuario: true,
     partidas: true,
     victorias: true,
+    posicionRelativa: true,
     porcentaje: true
   });
 
@@ -495,6 +498,7 @@ export class RankingsPageComponent {
       usuario: nextValue,
       partidas: nextValue,
       victorias: nextValue,
+      posicionRelativa: nextValue,
       porcentaje: nextValue
     });
   }
@@ -682,6 +686,7 @@ export class RankingsPageComponent {
     return Array.from(grouped.entries()).map(([usuarioId, rows]) => {
       const victorias = rows.filter(row => row.posicion === 1).length;
       const duracionTotalMinutos = rows.reduce((total, row) => total + (row.duracionMinutos ?? 0), 0);
+      const posicionRelativa = this.calculateAverageRelativePosition(rows);
 
       return {
         usuarioId,
@@ -689,6 +694,7 @@ export class RankingsPageComponent {
         partidasTotales: rows.length,
         duracionTotalMinutos,
         victorias,
+        posicionRelativa,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length)
       };
     }).filter(row => this.matchesMinPartidas(row.partidasTotales, filters.minPartidas));
@@ -794,6 +800,8 @@ export class RankingsPageComponent {
           return (a.duracionTotalMinutos - b.duracionTotalMinutos) * multiplier;
         case 'victorias':
           return (a.victorias - b.victorias) * multiplier;
+        case 'posicionRelativa':
+          return (a.posicionRelativa - b.posicionRelativa) * multiplier;
         case 'porcentaje':
           return (a.porcentajeVictoria - b.porcentajeVictoria) * multiplier;
         case 'ultima':
@@ -868,6 +876,27 @@ export class RankingsPageComponent {
     }
 
     return Math.round((victorias * 1000) / partidas) / 10;
+  }
+
+  private calculateAverageRelativePosition(rows: RankingJugador[]): number {
+    if (rows.length === 0) {
+      return 0;
+    }
+
+    const total = rows.reduce((sum, row) =>
+      sum + this.calculateRelativePosition(row.posicion, row.numeroJugadores),
+      0
+    );
+
+    return Math.round((total * 10) / rows.length) / 10;
+  }
+
+  private calculateRelativePosition(posicion: number, numeroJugadores: number): number {
+    if (numeroJugadores <= 1) {
+      return 100;
+    }
+
+    return Math.floor(((numeroJugadores - posicion) * 100) / (numeroJugadores - 1));
   }
 
   private updateResponsiveState(): void {

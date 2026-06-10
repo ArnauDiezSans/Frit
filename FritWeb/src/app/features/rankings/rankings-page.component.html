@@ -133,6 +133,10 @@
                   <span>Victories</span>
                 </label>
                 <label class="column-option">
+                  <input type="checkbox" [checked]="detailColumns().posicionRelativa" (change)="toggleDetailColumn('posicionRelativa')" />
+                  <span>Posició relativa</span>
+                </label>
+                <label class="column-option">
                   <input type="checkbox" [checked]="detailColumns().porcentaje" (change)="toggleDetailColumn('porcentaje')" />
                   <span>%</span>
                 </label>
@@ -238,6 +242,7 @@
               <th *ngIf="detailColumns().usuario" class="sortable" (click)="sortGameDetailBy('usuario')">Usuari{{ getGameDetailSortIndicator('usuario') }}</th>
               <th *ngIf="detailColumns().partidas" class="sortable" (click)="sortGameDetailBy('partidas')">Partides{{ getGameDetailSortIndicator('partidas') }}</th>
               <th *ngIf="detailColumns().victorias" class="sortable" (click)="sortGameDetailBy('victorias')">Victories{{ getGameDetailSortIndicator('victorias') }}</th>
+              <th *ngIf="detailColumns().posicionRelativa" class="sortable" (click)="sortGameDetailBy('posicionRelativa')">Posició relativa{{ getGameDetailSortIndicator('posicionRelativa') }}</th>
               <th *ngIf="detailColumns().porcentaje" class="sortable" (click)="sortGameDetailBy('porcentaje')">%{{ getGameDetailSortIndicator('porcentaje') }}</th>
             </tr>
           </thead>
@@ -247,6 +252,7 @@
               <td *ngIf="detailColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
               <td *ngIf="detailColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
               <td *ngIf="detailColumns().victorias" data-label="Victories">{{ item.victorias }}</td>
+              <td *ngIf="detailColumns().posicionRelativa" data-label="Posició relativa">{{ item.posicionRelativa }}</td>
               <td *ngIf="detailColumns().porcentaje" data-label="%">{{ formatPercent(item.porcentajeVictoria) }}</td>
             </tr>
           </tbody>
