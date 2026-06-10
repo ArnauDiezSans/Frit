@@ -176,10 +176,38 @@ h1 {
 }
 
 .filters-grid {
-  display: grid;
-  grid-template-columns: minmax(260px, 1.35fr) minmax(150px, 0.9fr) minmax(160px, 0.85fr) 112px minmax(210px, 1.15fr) minmax(160px, 0.9fr) minmax(160px, 0.9fr);
+  display: flex;
+  flex-wrap: wrap;
   align-items: end;
   gap: 8px;
+}
+
+.filters-grid .filter-field:nth-child(1) {
+  flex: 1 1 250px;
+}
+
+.filters-grid .filter-field:nth-child(2) {
+  flex: 1 1 145px;
+}
+
+.filters-grid .filter-field:nth-child(3) {
+  flex: 1 1 144px;
+}
+
+.filters-grid .filter-field:nth-child(4) {
+  flex: 0 0 108px;
+}
+
+.filters-grid .filter-field:nth-child(5) {
+  flex: 1 1 185px;
+}
+
+.filters-grid .filter-field:nth-child(6) {
+  flex: 1 1 150px;
+}
+
+.filters-grid .filter-field:nth-child(7) {
+  flex: 1 1 130px;
 }
 
 .filter-field {
@@ -206,18 +234,24 @@ h1 {
 }
 
 .result-user-filter {
+  position: relative;
   display: grid;
-  grid-template-columns: 58px 22px minmax(0, 1fr);
+  grid-template-columns: 58px minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
+  column-gap: 18px;
 }
 
 .result-user-link-icon {
+  position: absolute;
+  left: 67px;
+  z-index: 1;
   display: inline-grid;
   width: 22px;
   height: 34px;
   place-items: center;
   color: #1d2f50;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
 
 .result-user-link-icon svg {
@@ -291,6 +325,7 @@ h1 {
 }
 
 .filter-input {
+  box-sizing: border-box;
   width: 100%;
   min-height: 36px;
   padding: 7px 10px;
