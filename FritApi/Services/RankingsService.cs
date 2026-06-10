@@ -260,6 +260,7 @@ public class RankingsService
                         partida.Juego.Nombre,
                         partida.Juego.Tipo,
                         partida.Fecha,
+                        partida.DuracionMinutos,
                         usuarioDetectado.UsuarioId,
                         usuarioDetectado.Nombre,
                         jugador.Posicion));
@@ -348,6 +349,7 @@ public class RankingsService
                 JuegoNombre = jugador.JuegoNombre,
                 JuegoTipo = jugador.JuegoTipo,
                 Fecha = jugador.Fecha,
+                DuracionMinutos = jugador.DuracionMinutos,
                 UsuarioId = jugador.UsuarioId,
                 UsuarioNombre = jugador.UsuarioNombre,
                 Posicion = jugador.Posicion
@@ -363,6 +365,7 @@ public class RankingsService
         string JuegoNombre,
         string JuegoTipo,
         DateOnly Fecha,
+        int? DuracionMinutos,
         int UsuarioId,
         string UsuarioNombre,
         int Posicion);

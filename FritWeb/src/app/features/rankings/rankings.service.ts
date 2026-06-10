@@ -78,6 +78,7 @@ export interface RankingJugador {
   juegoNombre: string;
   juegoTipo: string;
   fecha: string;
+  duracionMinutos?: number | null;
   usuarioId: number;
   usuarioNombre: string;
   posicion: number;

@@ -13,7 +13,7 @@ import {
 } from './rankings.service';
 
 type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
-type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'victorias' | 'porcentaje' | 'ultima';
+type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
 type ActiveRankingView = 'game' | 'user';
@@ -31,6 +31,7 @@ interface UserRankingRow {
   usuarioId: number;
   usuarioNombre: string;
   partidasTotales: number;
+  duracionTotalMinutos: number;
   victorias: number;
   porcentajeVictoria: number;
 }
@@ -39,6 +40,7 @@ interface UserGameRankingRow {
   juegoId: number;
   juegoNombre: string;
   partidasTotales: number;
+  duracionTotalMinutos: number;
   victorias: number;
   porcentajeVictoria: number;
   ultimaPartida: string | null;
@@ -77,6 +79,7 @@ interface UserColumns {
   usuario: boolean;
   joc: boolean;
   partidas: boolean;
+  horas: boolean;
   victorias: boolean;
   porcentaje: boolean;
   ultima: boolean;
@@ -137,6 +140,7 @@ export class RankingsPageComponent {
     usuario: true,
     joc: true,
     partidas: true,
+    horas: true,
     victorias: true,
     porcentaje: true,
     ultima: true
@@ -484,6 +488,7 @@ export class RankingsPageComponent {
       usuario: nextValue,
       joc: nextValue,
       partidas: nextValue,
+      horas: nextValue,
       victorias: nextValue,
       porcentaje: nextValue,
       ultima: nextValue
@@ -659,11 +664,13 @@ export class RankingsPageComponent {
 
     return Array.from(grouped.entries()).map(([usuarioId, rows]) => {
       const victorias = rows.filter(row => row.posicion === 1).length;
+      const duracionTotalMinutos = rows.reduce((total, row) => total + (row.duracionMinutos ?? 0), 0);
 
       return {
         usuarioId,
         usuarioNombre: rows[0].usuarioNombre,
         partidasTotales: rows.length,
+        duracionTotalMinutos,
         victorias,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length)
       };
@@ -684,11 +691,13 @@ export class RankingsPageComponent {
 
     return Array.from(grouped.entries()).map(([juegoId, rows]) => {
       const victorias = rows.filter(row => row.posicion === 1).length;
+      const duracionTotalMinutos = rows.reduce((total, row) => total + (row.duracionMinutos ?? 0), 0);
 
       return {
         juegoId,
         juegoNombre: rows[0].juegoNombre,
         partidasTotales: rows.length,
+        duracionTotalMinutos,
         victorias,
         porcentajeVictoria: this.calculatePercentage(victorias, rows.length),
         ultimaPartida: rows
@@ -764,6 +773,8 @@ export class RankingsPageComponent {
           return a.usuarioNombre.localeCompare(b.usuarioNombre) * multiplier;
         case 'partidas':
           return (a.partidasTotales - b.partidasTotales) * multiplier;
+        case 'horas':
+          return (a.duracionTotalMinutos - b.duracionTotalMinutos) * multiplier;
         case 'victorias':
           return (a.victorias - b.victorias) * multiplier;
         case 'porcentaje':
@@ -792,6 +803,8 @@ export class RankingsPageComponent {
           return a.juegoNombre.localeCompare(b.juegoNombre) * multiplier;
         case 'partidas':
           return (a.partidasTotales - b.partidasTotales) * multiplier;
+        case 'horas':
+          return (a.duracionTotalMinutos - b.duracionTotalMinutos) * multiplier;
         case 'victorias':
           return (a.victorias - b.victorias) * multiplier;
         case 'porcentaje':
