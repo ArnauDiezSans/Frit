@@ -1,5 +1,7 @@
+using System.Security.Claims;
 using FritApi.Dtos;
 using FritApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FritApi.Controllers;
@@ -49,8 +51,14 @@ public class PartidasController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize]
     public async Task<ActionResult<PartidaDto>> Update(int id, [FromBody] PartidaDto dto)
     {
+        if (!CanEditPartidas(User))
+        {
+            return Forbid();
+        }
+
         var result = await _partidaService.UpdateAsync(id, dto);
 
         if (!result.Success)
@@ -67,8 +75,14 @@ public class PartidasController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> Delete(int id)
     {
+        if (!CanEditPartidas(User))
+        {
+            return Forbid();
+        }
+
         var deleted = await _partidaService.DeleteAsync(id);
 
         if (!deleted)
@@ -77,5 +91,11 @@ public class PartidasController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    private static bool CanEditPartidas(ClaimsPrincipal user)
+    {
+        var name = user.FindFirstValue(ClaimTypes.Name);
+        return string.Equals(name, "Arnau", StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -31,4 +31,30 @@ export class PartidaJugadoresService {
       })
     );
   }
+
+  update(id: number, data: PartidaJugador): Observable<PartidaJugador> {
+    return this.http.put<PartidaJugador>(`${this.baseUrl}/${id}`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(jugador => {
+        this.dataStore.update<PartidaJugador[]>(this.cacheKey, current =>
+          (current ?? []).map(item => item.partidaJugadorId === id ? jugador : item)
+        );
+        this.dataStore.invalidate('rankings');
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.dataStore.update<PartidaJugador[]>(this.cacheKey, current =>
+          (current ?? []).filter(item => item.partidaJugadorId !== id)
+        );
+        this.dataStore.invalidate('rankings');
+      })
+    );
+  }
 }

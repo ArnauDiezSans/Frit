@@ -31,4 +31,30 @@ export class PartidasService {
       })
     );
   }
+
+  update(id: number, data: Partida): Observable<Partida> {
+    return this.http.put<Partida>(`${this.baseUrl}/${id}`, data, {
+      withCredentials: true
+    }).pipe(
+      tap(partida => {
+        this.dataStore.update<Partida[]>(this.cacheKey, current =>
+          (current ?? []).map(item => item.partidaId === id ? partida : item)
+        );
+        this.dataStore.invalidateMany(['la-llista', 'rankings']);
+      })
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.dataStore.update<Partida[]>(this.cacheKey, current =>
+          (current ?? []).filter(item => item.partidaId !== id)
+        );
+        this.dataStore.invalidateMany(['la-llista', 'rankings']);
+      })
+    );
+  }
 }

@@ -15,7 +15,7 @@ import {
   Validators
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, map, switchMap } from 'rxjs';
+import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
@@ -32,6 +32,7 @@ import { PartidasService } from './partidas.service';
 import { PartidaJugadoresService } from './partida-jugadores.service';
 
 type FormJugador = {
+  partidaJugadorId: number;
   usuarioId: number | null;
   usuarioSearch: string;
   nombreMostrado: string;
@@ -125,6 +126,7 @@ export class PartidasPageComponent implements OnInit {
   formError = signal('');
   success = signal('');
   modalOpen = signal(false);
+  editingPartidaId = signal<number | null>(null);
 
   partidas = signal<Partida[]>([]);
   juegos = signal<Juego[]>([]);
@@ -161,6 +163,20 @@ export class PartidasPageComponent implements OnInit {
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
+  canEditPartidas = computed(() => this.userName().trim().toLowerCase() === 'arnau');
+  modalTitle = computed(() => this.editingPartidaId() ? 'Editar partida' : 'Nova partida');
+  modalDescription = computed(() =>
+    this.editingPartidaId()
+      ? 'Actualitza el joc, la data i els jugadors de la partida.'
+      : 'Selecciona el joc, la data i afegeix els jugadors de la partida.'
+  );
+  saveButtonText = computed(() => {
+    if (this.saving()) {
+      return this.editingPartidaId() ? 'Actualitzant...' : 'Desant...';
+    }
+
+    return this.editingPartidaId() ? 'Actualitzar partida' : 'Desar partida';
+  });
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
 
   partidasGrid = computed<PartidaGridRow[]>(() => {
@@ -423,6 +439,7 @@ export class PartidasPageComponent implements OnInit {
   }
 
   abrirModal(): void {
+    this.editingPartidaId.set(null);
     this.form.reset({
       juegoId: null,
       juegoSearch: '',
@@ -443,8 +460,55 @@ export class PartidasPageComponent implements OnInit {
     this.modalOpen.set(true);
   }
 
+  abrirEditarPartida(partidaId: number, event: Event): void {
+    event.stopPropagation();
+
+    if (!this.canEditPartidas()) {
+      return;
+    }
+
+    const partida = this.partidas().find(item => item.partidaId === partidaId);
+    if (!partida) {
+      this.error.set('No s\'ha trobat la partida seleccionada.');
+      return;
+    }
+
+    const juego = this.juegos().find(item => item.juegoId === partida.juegoId);
+    const jugadores = this.partidaJugadores()
+      .filter(jugador => jugador.partidaId === partidaId)
+      .sort((a, b) => a.posicion - b.posicion);
+
+    this.form.reset({
+      juegoId: partida.juegoId,
+      juegoSearch: juego?.nombre ?? '',
+      fecha: partida.fecha,
+      duracionMinutos: partida.duracionMinutos ?? null,
+      numeroJugadores: partida.numeroJugadores,
+      perEquips: false,
+      observaciones: partida.observaciones ?? ''
+    });
+
+    this.jugadoresArray.clear();
+
+    if (jugadores.length > 0) {
+      jugadores.forEach((jugador, index) => {
+        this.jugadoresArray.push(this.createJugadorGroup(index + 1, jugador));
+      });
+    } else {
+      this.syncJugadoresWithNumero(partida.numeroJugadores);
+    }
+
+    this.filteredJuegos.set(this.juegos());
+    this.filteredUsuarios.set(this.usuarios());
+    this.formError.set('');
+    this.success.set('');
+    this.editingPartidaId.set(partidaId);
+    this.modalOpen.set(true);
+  }
+
   cerrarModal(): void {
     this.modalOpen.set(false);
+    this.editingPartidaId.set(null);
     this.formError.set('');
     this.success.set('');
   }
@@ -549,6 +613,7 @@ export class PartidasPageComponent implements OnInit {
     const posicion = this.jugadoresArray.length + 1;
     this.jugadoresArray.push(
       this.fb.group({
+        partidaJugadorId: [0],
         usuarioId: [null as number | null],
         usuarioSearch: ['', Validators.required],
         nombreMostrado: [''],
@@ -592,7 +657,7 @@ const raw = this.form.getRawValue() as {
 
 const jugadores: PartidaJugador[] = (raw.jugadores ?? []).map(
   (jugador: FormJugador, index: number) => ({
-    partidaJugadorId: 0,
+    partidaJugadorId: jugador.partidaJugadorId ?? 0,
     partidaId: 0,
     usuarioId: jugador.usuarioId ?? null,
     nombreMostrado: (jugador.usuarioSearch ?? '').trim(),
@@ -623,47 +688,63 @@ if (!currentUser) {
   return;
 }
 
+const existingPartida = this.partidas().find(partida => partida.partidaId === this.editingPartidaId());
 const partidaPayload: Partida = {
-  partidaId: 0,
+  partidaId: this.editingPartidaId() ?? 0,
   juegoId: raw.juegoId,
-  usuarioCreadorId: currentUser.usuarioId,
+  usuarioCreadorId: existingPartida?.usuarioCreadorId ?? currentUser.usuarioId,
   fecha: raw.fecha ?? this.getTodayDate(),
   duracionMinutos: raw.duracionMinutos ?? null,
   numeroJugadores: raw.numeroJugadores ?? jugadores.length,
   observaciones: raw.observaciones?.trim() || null,
-  createdAt: new Date().toISOString()
+  createdAt: existingPartida?.createdAt ?? new Date().toISOString()
 };
 
     this.saving.set(true);
 
-    this.partidasService
-      .create(partidaPayload)
-      .pipe(
-        switchMap(partidaCreada => {
-          const requests = jugadores.map(jugador =>
-            this.partidaJugadoresService.create({
-              ...jugador,
-              partidaId: partidaCreada.partidaId
-            })
-          );
+    const editingPartidaId = this.editingPartidaId();
+    const saveRequest = editingPartidaId
+      ? this.partidasService.update(editingPartidaId, partidaPayload).pipe(
+          switchMap(partidaActualizada =>
+            this.syncPartidaJugadores(editingPartidaId, jugadores).pipe(
+              map(jugadoresActualizados => ({
+                partida: partidaActualizada,
+                jugadores: jugadoresActualizados
+              }))
+            )
+          )
+        )
+      : this.partidasService.create(partidaPayload).pipe(
+          switchMap(partidaCreada =>
+            this.createPartidaJugadores(partidaCreada.partidaId, jugadores).pipe(
+              map(jugadoresCreados => ({
+                partida: partidaCreada,
+                jugadores: jugadoresCreados
+              }))
+            )
+          )
+        );
 
-          return forkJoin(requests).pipe(
-            map(jugadoresCreados => ({
-              partida: partidaCreada,
-              jugadores: jugadoresCreados
-            }))
-          );
-        })
-      )
-      .subscribe({
+    saveRequest.subscribe({
         next: result => {
-          this.partidas.update(current => [result.partida, ...current]);
-          this.partidaJugadores.update(current => [...current, ...result.jugadores]);
+          if (editingPartidaId) {
+            this.partidas.update(current =>
+              current.map(partida => partida.partidaId === editingPartidaId ? result.partida : partida)
+            );
+            this.partidaJugadores.update(current => [
+              ...current.filter(jugador => jugador.partidaId !== editingPartidaId),
+              ...result.jugadores
+            ]);
+          } else {
+            this.partidas.update(current => [result.partida, ...current]);
+            this.partidaJugadores.update(current => [...current, ...result.jugadores]);
+          }
+
           this.highlightedPartidaId.set(result.partida.partidaId);
           window.setTimeout(() => this.highlightedPartidaId.set(null), 2500);
 
           this.saving.set(false);
-          this.success.set('Partida desada correctament.');
+          this.success.set(editingPartidaId ? 'Partida actualitzada correctament.' : 'Partida desada correctament.');
           this.cerrarModal();
         },
         error: err => {
@@ -877,16 +958,7 @@ const partidaPayload: Partida = {
   private syncJugadoresWithNumero(numero: number): void {
     while (this.jugadoresArray.length < numero) {
       const posicion = this.jugadoresArray.length + 1;
-      this.jugadoresArray.push(
-        this.fb.group({
-          usuarioId: [null as number | null],
-          usuarioSearch: ['', Validators.required],
-          nombreMostrado: [''],
-          equipoColor: [this.getDefaultTeamColor(posicion - 1)],
-          posicion: [posicion, Validators.required],
-          puntos: [null as number | null]
-        })
-      );
+      this.jugadoresArray.push(this.createJugadorGroup(posicion));
     }
 
     while (this.jugadoresArray.length > numero) {
@@ -900,6 +972,65 @@ const partidaPayload: Partida = {
     this.jugadoresArray.controls.forEach((control, index) => {
       control.get('posicion')?.setValue(index + 1);
     });
+  }
+
+  private createJugadorGroup(posicion: number, jugador?: PartidaJugador) {
+    return this.fb.group({
+      partidaJugadorId: [jugador?.partidaJugadorId ?? 0],
+      usuarioId: [jugador?.usuarioId ?? null as number | null],
+      usuarioSearch: [jugador?.nombreMostrado ?? '', Validators.required],
+      nombreMostrado: [jugador?.nombreMostrado ?? ''],
+      equipoColor: [this.getDefaultTeamColor(posicion - 1)],
+      posicion: [jugador?.posicion ?? posicion, Validators.required],
+      puntos: [jugador?.puntos ?? null as number | null]
+    });
+  }
+
+  private createPartidaJugadores(partidaId: number, jugadores: PartidaJugador[]): Observable<PartidaJugador[]> {
+    const requests = jugadores.map(jugador =>
+      this.partidaJugadoresService.create({
+        ...jugador,
+        partidaJugadorId: 0,
+        partidaId
+      })
+    );
+
+    return requests.length > 0 ? forkJoin(requests) : of([]);
+  }
+
+  private syncPartidaJugadores(partidaId: number, jugadores: PartidaJugador[]): Observable<PartidaJugador[]> {
+    const currentJugadores = this.partidaJugadores().filter(jugador => jugador.partidaId === partidaId);
+    const nextIds = jugadores
+      .map(jugador => jugador.partidaJugadorId)
+      .filter(id => id > 0);
+
+    const requests: Observable<PartidaJugador | null>[] = jugadores.map(jugador => {
+      const payload = {
+        ...jugador,
+        partidaId
+      };
+
+      if (jugador.partidaJugadorId > 0) {
+        return this.partidaJugadoresService.update(jugador.partidaJugadorId, payload);
+      }
+
+      return this.partidaJugadoresService.create({
+        ...payload,
+        partidaJugadorId: 0
+      });
+    });
+
+    currentJugadores
+      .filter(jugador => !nextIds.includes(jugador.partidaJugadorId))
+      .forEach(jugador => {
+        requests.push(this.partidaJugadoresService.delete(jugador.partidaJugadorId).pipe(map(() => null)));
+      });
+
+    return requests.length > 0
+      ? forkJoin(requests).pipe(
+          map(items => items.filter((item): item is PartidaJugador => item !== null))
+        )
+      : of([]);
   }
 
   private getUsuariosDisponibles(index: number, filter: string): UsuarioOption[] {
