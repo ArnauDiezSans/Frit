@@ -33,6 +33,13 @@ FritWeb/build/
 # ASP.NET Core generated static assets
 FritApi/wwwroot/
 
+# Local database exports and diagnosis reports
+frit-db-export*.json
+partida-jugadores-multipersona.csv
+split-player-names.txt
+team-*-candidates.*
+*scored-team-games.txt
+
 # OS files
 .DS_Store
 Thumbs.db
