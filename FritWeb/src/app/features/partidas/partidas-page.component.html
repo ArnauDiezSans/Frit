@@ -396,6 +396,7 @@
               type="number"
               formControlName="numeroJugadores"
               min="1"
+              [readonly]="form.controls.perEquips.value"
               (input)="onNumeroJugadoresChange($event)" />
           </label>
 
@@ -415,13 +416,24 @@
 
         <div class="players-section">
           <div class="players-header">
-            <h3>Jugadors</h3>
-            <button type="button" class="secondary-button add-player-button" (click)="addJugador()">
+            <h3>{{ form.controls.perEquips.value ? 'Equips' : 'Jugadors' }}</h3>
+            <button
+              *ngIf="!form.controls.perEquips.value"
+              type="button"
+              class="secondary-button add-player-button"
+              (click)="addJugador()">
               Afegir jugador
+            </button>
+            <button
+              *ngIf="form.controls.perEquips.value"
+              type="button"
+              class="secondary-button add-player-button"
+              (click)="addEquipo()">
+              Afegir equip
             </button>
           </div>
 
-          <div class="players-list" formArrayName="jugadores">
+          <div class="players-list" formArrayName="jugadores" *ngIf="!form.controls.perEquips.value">
             <div
               class="player-card"
               *ngFor="let jugador of jugadoresArray.controls; let i = index"
@@ -431,7 +443,7 @@
                   <span>Usuari *</span>
                   <div class="player-user-row">
                   <app-autocomplete-select
-                    [items]="showUsuarioOptions() === i ? filteredUsuarios() : []"
+                    [items]="showUsuarioOptions() === getJugadorOptionKey(i) ? filteredUsuarios() : []"
                     [searchText]="jugador.get('usuarioSearch')?.value ?? ''"
                     [selected]="!!jugador.get('usuarioId')?.value"
                     [displayWith]="displayUsuario"
@@ -473,6 +485,107 @@
               <div class="player-actions" *ngIf="jugadoresArray.length > 1">
                 <button type="button" class="ghost-button remove-player-button" (click)="removeJugador(i)">
                   Treure jugador
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="teams-list" formArrayName="equipos" *ngIf="form.controls.perEquips.value">
+            <div
+              class="team-card"
+              *ngFor="let equipo of equiposArray.controls; let equipoIndex = index"
+              [formGroupName]="equipoIndex">
+              <div class="team-card-header">
+                <div class="team-title-row">
+                  <span
+                    class="team-color-dot"
+                    [style.background]="equipo.get('color')?.value">
+                  </span>
+                  <label class="form-field team-name-field">
+                    <span>Equip</span>
+                    <input type="text" formControlName="nombre" />
+                  </label>
+                </div>
+
+                <div class="team-color-options">
+                  <button
+                    *ngFor="let color of teamColors"
+                    type="button"
+                    class="team-color-option"
+                    [class.team-color-option-active]="equipo.get('color')?.value === color.value"
+                    [style.background]="color.value"
+                    [attr.aria-label]="'Equip ' + color.name"
+                    [title]="color.name"
+                    (click)="onEquipoCardColorChange(equipoIndex, color.value)">
+                  </button>
+                </div>
+              </div>
+
+              <div class="team-default-grid">
+                <label class="form-field">
+                  <span>Jugadors</span>
+                  <input
+                    type="number"
+                    min="1"
+                    formControlName="numeroJugadores"
+                    (input)="onEquipoNumeroJugadoresChange(equipoIndex, $event)" />
+                </label>
+
+                <label class="form-field">
+                  <span>Posicio equip</span>
+                  <input
+                    type="number"
+                    min="1"
+                    formControlName="posicion"
+                    (input)="onEquipoDefaultsChange(equipoIndex)" />
+                </label>
+
+                <label class="form-field">
+                  <span>Punts equip</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    formControlName="puntos"
+                    (input)="onEquipoDefaultsChange(equipoIndex)" />
+                </label>
+              </div>
+
+              <div class="team-players-list" formArrayName="jugadores">
+                <div
+                  class="team-player-row"
+                  *ngFor="let jugador of equipoJugadoresArray(equipoIndex).controls; let jugadorIndex = index"
+                  [formGroupName]="jugadorIndex">
+                  <div class="form-field">
+                    <span>Usuari *</span>
+                    <app-autocomplete-select
+                      [items]="showUsuarioOptions() === getEquipoJugadorOptionKey(equipoIndex, jugadorIndex) ? filteredUsuarios() : []"
+                      [searchText]="jugador.get('usuarioSearch')?.value ?? ''"
+                      [selected]="!!jugador.get('usuarioId')?.value"
+                      [displayWith]="displayUsuario"
+                      [trackBy]="trackByUsuarioId"
+                      placeholder="Cerca usuari..."
+                      emptyText="Sense coincidencies."
+                      (searchTextChange)="onEquipoUsuarioInput(equipoIndex, jugadorIndex, $event)"
+                      (focused)="onEquipoUsuarioFocus(equipoIndex, jugadorIndex)"
+                      (selectedChange)="seleccionarEquipoUsuario(equipoIndex, jugadorIndex, $event)"
+                      (cleared)="limpiarEquipoUsuario(equipoIndex, jugadorIndex)" />
+                  </div>
+
+                  <label class="form-field">
+                    <span>Posicio</span>
+                    <input type="number" min="1" formControlName="posicion" />
+                  </label>
+
+                  <label class="form-field">
+                    <span>Punts</span>
+                    <input type="number" step="0.01" formControlName="puntos" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="team-actions" *ngIf="equiposArray.length > 1">
+                <button type="button" class="ghost-button remove-player-button" (click)="removeEquipo(equipoIndex)">
+                  Treure equip
                 </button>
               </div>
             </div>

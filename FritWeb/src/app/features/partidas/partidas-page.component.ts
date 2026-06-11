@@ -41,6 +41,15 @@ type FormJugador = {
   puntos: number | null;
 };
 
+type FormEquipo = {
+  nombre: string;
+  color: string;
+  numeroJugadores: number;
+  posicion: number;
+  puntos: number | null;
+  jugadores: FormJugador[];
+};
+
 const TEAM_COLORS = [
   { name: 'verd', value: '#16a34a' },
   { name: 'vermell', value: '#dc2626' },
@@ -135,7 +144,7 @@ export class PartidasPageComponent implements OnInit {
 
   usuarios = signal<UsuarioOption[]>([]);
   filteredUsuarios = signal<UsuarioOption[]>([]);
-  showUsuarioOptions = signal<number | null>(null);
+  showUsuarioOptions = signal<string | null>(null);
 
   partidaJugadores = signal<PartidaJugador[]>([]);
   highlightedPartidaId = signal<number | null>(null);
@@ -373,7 +382,8 @@ export class PartidasPageComponent implements OnInit {
     numeroJugadores: [2, [Validators.required, Validators.min(1)]],
     perEquips: [false],
     observaciones: [''],
-    jugadores: this.fb.array([])
+    jugadores: this.fb.array([]),
+    equipos: this.fb.array([])
   });
 
   constructor() {
@@ -394,6 +404,14 @@ export class PartidasPageComponent implements OnInit {
 
   get jugadoresArray(): FormArray {
     return this.form.get('jugadores') as FormArray;
+  }
+
+  get equiposArray(): FormArray {
+    return this.form.get('equipos') as FormArray;
+  }
+
+  equipoJugadoresArray(equipoIndex: number): FormArray {
+    return this.equiposArray.at(equipoIndex).get('jugadores') as FormArray;
   }
 
   ngOnInit(): void {
@@ -451,6 +469,7 @@ export class PartidasPageComponent implements OnInit {
     });
 
     this.jugadoresArray.clear();
+    this.equiposArray.clear();
     this.filteredJuegos.set(this.juegos());
     this.filteredUsuarios.set(this.usuarios());
     this.syncJugadoresWithNumero(2);
@@ -489,6 +508,7 @@ export class PartidasPageComponent implements OnInit {
     });
 
     this.jugadoresArray.clear();
+    this.equiposArray.clear();
 
     if (jugadores.length > 0) {
       jugadores.forEach((jugador, index) => {
@@ -520,6 +540,10 @@ export class PartidasPageComponent implements OnInit {
     }
 
     this.form.controls.numeroJugadores.setValue(value);
+    if (this.form.controls.perEquips.value) {
+      return;
+    }
+
     this.syncJugadoresWithNumero(value);
     this.updateTeamSummary();
   }
@@ -562,13 +586,13 @@ export class PartidasPageComponent implements OnInit {
       usuarioSearch: value,
       nombreMostrado: ''
     });
-    this.showUsuarioOptions.set(index);
+    this.showUsuarioOptions.set(this.getJugadorOptionKey(index));
     this.filteredUsuarios.set(this.getUsuariosDisponibles(index, value));
     this.updateTeamSummary();
   }
 
   onUsuarioFocus(index: number): void {
-    this.showUsuarioOptions.set(index);
+    this.showUsuarioOptions.set(this.getJugadorOptionKey(index));
     const value = this.jugadoresArray.at(index).get('usuarioSearch')?.value ?? '';
     this.filteredUsuarios.set(this.getUsuariosDisponibles(index, value));
   }
@@ -597,15 +621,103 @@ export class PartidasPageComponent implements OnInit {
 
   onPerEquipsChange(): void {
     if (!this.form.controls.perEquips.value) {
+      this.buildJugadoresFromEquipos();
+      this.equiposArray.clear();
       this.form.controls.observaciones.setValue('');
       return;
     }
 
+    this.buildEquiposFromJugadores();
     this.updateTeamSummary();
   }
 
   onEquipoColorChange(index: number, color: string): void {
     this.jugadoresArray.at(index).get('equipoColor')?.setValue(color);
+    this.updateTeamSummary();
+  }
+
+  onEquipoCardColorChange(equipoIndex: number, color: string): void {
+    const equipo = this.equiposArray.at(equipoIndex);
+    equipo.get('color')?.setValue(color);
+    this.equipoJugadoresArray(equipoIndex).controls.forEach(jugador => {
+      jugador.get('equipoColor')?.setValue(color);
+    });
+    this.updateTeamSummary();
+  }
+
+  onEquipoNumeroJugadoresChange(equipoIndex: number, event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    if (!Number.isFinite(value) || value < 1) {
+      return;
+    }
+
+    this.syncEquipoJugadoresWithNumero(equipoIndex, value);
+    this.syncNumeroJugadoresFromEquipos();
+    this.updateTeamSummary();
+  }
+
+  onEquipoDefaultsChange(equipoIndex: number): void {
+    const equipo = this.equiposArray.at(equipoIndex);
+    const posicion = Number(equipo.get('posicion')?.value) || equipoIndex + 1;
+    const puntosValue = equipo.get('puntos')?.value;
+    const puntos = puntosValue === null || puntosValue === undefined || puntosValue === '' ? null : Number(puntosValue);
+
+    this.equipoJugadoresArray(equipoIndex).controls.forEach(jugador => {
+      jugador.get('posicion')?.setValue(posicion);
+      jugador.get('puntos')?.setValue(Number.isFinite(puntos) ? puntos : null);
+    });
+  }
+
+  onEquipoUsuarioInput(equipoIndex: number, jugadorIndex: number, value: string): void {
+    const group = this.equipoJugadoresArray(equipoIndex).at(jugadorIndex);
+    group.patchValue({
+      usuarioId: null,
+      usuarioSearch: value,
+      nombreMostrado: ''
+    });
+    this.showUsuarioOptions.set(this.getEquipoJugadorOptionKey(equipoIndex, jugadorIndex));
+    this.filteredUsuarios.set(this.getEquipoUsuariosDisponibles(equipoIndex, jugadorIndex, value));
+    this.updateTeamSummary();
+  }
+
+  onEquipoUsuarioFocus(equipoIndex: number, jugadorIndex: number): void {
+    const value = this.equipoJugadoresArray(equipoIndex).at(jugadorIndex).get('usuarioSearch')?.value ?? '';
+    this.showUsuarioOptions.set(this.getEquipoJugadorOptionKey(equipoIndex, jugadorIndex));
+    this.filteredUsuarios.set(this.getEquipoUsuariosDisponibles(equipoIndex, jugadorIndex, value));
+  }
+
+  seleccionarEquipoUsuario(equipoIndex: number, jugadorIndex: number, usuario: UsuarioOption): void {
+    const group = this.equipoJugadoresArray(equipoIndex).at(jugadorIndex);
+    group.patchValue({
+      usuarioId: usuario.usuarioId,
+      usuarioSearch: usuario.nombre,
+      nombreMostrado: usuario.nombre
+    });
+    this.showUsuarioOptions.set(null);
+    this.updateTeamSummary();
+  }
+
+  limpiarEquipoUsuario(equipoIndex: number, jugadorIndex: number): void {
+    const group = this.equipoJugadoresArray(equipoIndex).at(jugadorIndex);
+    group.patchValue({
+      usuarioId: null,
+      usuarioSearch: '',
+      nombreMostrado: ''
+    });
+    this.showUsuarioOptions.set(null);
+    this.updateTeamSummary();
+  }
+
+  addEquipo(): void {
+    const posicion = this.equiposArray.length + 1;
+    this.equiposArray.push(this.createEquipoGroup(posicion, 1));
+    this.syncNumeroJugadoresFromEquipos();
+    this.updateTeamSummary();
+  }
+
+  removeEquipo(index: number): void {
+    this.equiposArray.removeAt(index);
+    this.syncNumeroJugadoresFromEquipos();
     this.updateTeamSummary();
   }
 
@@ -652,9 +764,14 @@ const raw = this.form.getRawValue() as {
   perEquips: boolean | null;
   observaciones: string | null;
   jugadores: FormJugador[];
+  equipos: FormEquipo[];
 };
 
-const jugadores: PartidaJugador[] = (raw.jugadores ?? []).map(
+const rawJugadores = raw.perEquips
+  ? (raw.equipos ?? []).flatMap(equipo => equipo.jugadores ?? [])
+  : (raw.jugadores ?? []);
+
+const jugadores: PartidaJugador[] = rawJugadores.map(
   (jugador: FormJugador, index: number) => ({
     partidaJugadorId: jugador.partidaJugadorId ?? 0,
     partidaId: 0,
@@ -897,21 +1014,36 @@ const partidaPayload: Partida = {
 
     const groups = new Map<string, string[]>();
 
-    this.jugadoresArray.controls.forEach((control, index) => {
-      const color = control.get('equipoColor')?.value || this.getDefaultTeamColor(index);
-      const name = (control.get('usuarioSearch')?.value ?? '').trim();
+    if (this.form.controls.perEquips.value && this.equiposArray.length > 0) {
+      this.equiposArray.controls.forEach((equipo, equipoIndex) => {
+        const color = equipo.get('color')?.value || this.getDefaultTeamColor(equipoIndex);
+        const equipoName = (equipo.get('nombre')?.value ?? '').trim() || `Equip ${this.getTeamColorName(color)}`;
+        const names = this.equipoJugadoresArray(equipoIndex).controls
+          .map(control => (control.get('usuarioSearch')?.value ?? '').trim())
+          .filter(Boolean);
 
-      if (!name) {
-        return;
-      }
+        if (names.length > 0) {
+          groups.set(equipoName, names);
+        }
+      });
+    } else {
+      this.jugadoresArray.controls.forEach((control, index) => {
+        const color = control.get('equipoColor')?.value || this.getDefaultTeamColor(index);
+        const name = (control.get('usuarioSearch')?.value ?? '').trim();
 
-      const current = groups.get(color) ?? [];
-      current.push(name);
-      groups.set(color, current);
-    });
+        if (!name) {
+          return;
+        }
+
+        const groupName = `Equip ${this.getTeamColorName(color)}`;
+        const current = groups.get(groupName) ?? [];
+        current.push(name);
+        groups.set(groupName, current);
+      });
+    }
 
     const summary = Array.from(groups.entries())
-      .map(([color, names]) => `Equip ${this.getTeamColorName(color)}: ${names.join(', ')}.`)
+      .map(([name, names]) => `${name}: ${names.join(', ')}.`)
       .join(' ');
 
     this.form.controls.observaciones.setValue(summary);
@@ -977,6 +1109,127 @@ const partidaPayload: Partida = {
     });
   }
 
+  private createEquipoGroup(posicion: number, numeroJugadores: number, jugadores: PartidaJugador[] = []) {
+    const color = this.getDefaultTeamColor(posicion - 1);
+    const equipo = this.fb.group({
+      nombre: [`Equip ${posicion}`],
+      color: [color],
+      numeroJugadores: [Math.max(numeroJugadores, jugadores.length, 1), [Validators.required, Validators.min(1)]],
+      posicion: [jugadores[0]?.posicion ?? posicion, [Validators.required, Validators.min(1)]],
+      puntos: [jugadores[0]?.puntos ?? null as number | null],
+      jugadores: this.fb.array([])
+    });
+
+    const jugadoresArray = equipo.get('jugadores') as FormArray;
+    const target = Math.max(numeroJugadores, jugadores.length, 1);
+
+    for (let index = 0; index < target; index += 1) {
+      jugadoresArray.push(this.createEquipoJugadorGroup(posicion, color, jugadores[index]));
+    }
+
+    return equipo;
+  }
+
+  private createEquipoJugadorGroup(posicion: number, color: string, jugador?: PartidaJugador) {
+    return this.fb.group({
+      partidaJugadorId: [jugador?.partidaJugadorId ?? 0],
+      usuarioId: [jugador?.usuarioId ?? null as number | null],
+      usuarioSearch: [jugador?.nombreMostrado ?? '', Validators.required],
+      nombreMostrado: [jugador?.nombreMostrado ?? ''],
+      equipoColor: [color],
+      posicion: [jugador?.posicion ?? posicion, [Validators.required, Validators.min(1)]],
+      puntos: [jugador?.puntos ?? null as number | null]
+    });
+  }
+
+  private buildEquiposFromJugadores(): void {
+    if (this.equiposArray.length > 0) {
+      return;
+    }
+
+    const current = this.jugadoresArray.getRawValue() as FormJugador[];
+    const source = current.length > 0
+      ? current
+      : [
+          { partidaJugadorId: 0, usuarioId: null, usuarioSearch: '', nombreMostrado: '', equipoColor: this.getDefaultTeamColor(0), posicion: 1, puntos: null },
+          { partidaJugadorId: 0, usuarioId: null, usuarioSearch: '', nombreMostrado: '', equipoColor: this.getDefaultTeamColor(1), posicion: 2, puntos: null }
+        ];
+
+    source.forEach((jugador, index) => {
+      this.equiposArray.push(this.createEquipoGroup(index + 1, 1, [{
+        partidaJugadorId: jugador.partidaJugadorId,
+        partidaId: 0,
+        usuarioId: jugador.usuarioId,
+        nombreMostrado: jugador.usuarioSearch,
+        posicion: Number(jugador.posicion) || index + 1,
+        puntos: jugador.puntos
+      }]));
+    });
+
+    this.syncNumeroJugadoresFromEquipos();
+  }
+
+  private syncEquipoJugadoresWithNumero(equipoIndex: number, numero: number): void {
+    const equipo = this.equiposArray.at(equipoIndex);
+    const jugadores = this.equipoJugadoresArray(equipoIndex);
+    const posicion = Number(equipo.get('posicion')?.value) || equipoIndex + 1;
+    const puntosValue = equipo.get('puntos')?.value;
+    const puntos = puntosValue === null || puntosValue === undefined || puntosValue === '' ? null : Number(puntosValue);
+    const color = equipo.get('color')?.value || this.getDefaultTeamColor(equipoIndex);
+
+    while (jugadores.length < numero) {
+      const jugador = this.createEquipoJugadorGroup(posicion, color);
+      jugador.get('puntos')?.setValue(Number.isFinite(puntos) ? puntos : null);
+      jugadores.push(jugador);
+    }
+
+    while (jugadores.length > numero) {
+      jugadores.removeAt(jugadores.length - 1);
+    }
+
+    equipo.get('numeroJugadores')?.setValue(jugadores.length);
+  }
+
+  private syncNumeroJugadoresFromEquipos(): void {
+    const total = this.equiposArray.controls.reduce(
+      (sum, _equipo, index) => sum + this.equipoJugadoresArray(index).length,
+      0
+    );
+    this.form.controls.numeroJugadores.setValue(Math.max(total, 1));
+  }
+
+  private buildJugadoresFromEquipos(): void {
+    if (this.equiposArray.length === 0) {
+      return;
+    }
+
+    const raw = this.form.getRawValue() as { equipos: FormEquipo[] };
+    const jugadores = (raw.equipos ?? [])
+      .flatMap((equipo: FormEquipo) => equipo.jugadores ?? []);
+
+    this.jugadoresArray.clear();
+    jugadores.forEach((jugador: FormJugador, index: number) => {
+      this.jugadoresArray.push(this.createJugadorGroup(index + 1, {
+        partidaJugadorId: jugador.partidaJugadorId,
+        partidaId: 0,
+        usuarioId: jugador.usuarioId,
+        nombreMostrado: jugador.usuarioSearch,
+        posicion: Number(jugador.posicion) || index + 1,
+        puntos: jugador.puntos
+      }));
+    });
+
+    this.form.controls.numeroJugadores.setValue(Math.max(this.jugadoresArray.length, 1));
+  }
+
+  getJugadorOptionKey(index: number): string {
+    return `jugador:${index}`;
+  }
+
+  getEquipoJugadorOptionKey(equipoIndex: number, jugadorIndex: number): string {
+    return `equipo:${equipoIndex}:${jugadorIndex}`;
+  }
+
   private createPartidaJugadores(partidaId: number, jugadores: PartidaJugador[]): Observable<PartidaJugador[]> {
     const requests = jugadores.map(jugador =>
       this.partidaJugadoresService.create({
@@ -1027,6 +1280,25 @@ const partidaPayload: Partida = {
   private getUsuariosDisponibles(index: number, filter: string): UsuarioOption[] {
     const selectedIds = this.jugadoresArray.controls
       .map((control, controlIndex) => controlIndex === index ? null : Number(control.get('usuarioId')?.value))
+      .filter((id): id is number => id !== null && Number.isFinite(id) && id > 0);
+
+    const normalized = filter.trim().toLowerCase();
+
+    return this.usuarios().filter(usuario =>
+      !selectedIds.includes(usuario.usuarioId) &&
+      usuario.nombre.toLowerCase().includes(normalized)
+    );
+  }
+
+  private getEquipoUsuariosDisponibles(equipoIndex: number, jugadorIndex: number, filter: string): UsuarioOption[] {
+    const selectedIds = this.equiposArray.controls
+      .flatMap((_, currentEquipoIndex) =>
+        this.equipoJugadoresArray(currentEquipoIndex).controls.map((control, currentJugadorIndex) =>
+          currentEquipoIndex === equipoIndex && currentJugadorIndex === jugadorIndex
+            ? null
+            : Number(control.get('usuarioId')?.value)
+        )
+      )
       .filter((id): id is number => id !== null && Number.isFinite(id) && id > 0);
 
     const normalized = filter.trim().toLowerCase();

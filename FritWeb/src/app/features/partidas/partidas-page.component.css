@@ -536,11 +536,81 @@ h1 {
   gap: 12px;
 }
 
+.teams-list {
+  display: grid;
+  gap: 14px;
+}
+
 .player-card {
   padding: 16px;
   border: 1px solid #e4e7ec;
   border-radius: 12px;
   background: #fcfcfd;
+}
+
+.team-card {
+  padding: 16px;
+  border: 1px solid #d9e2ec;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.team-card-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.team-title-row {
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1fr);
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+}
+
+.team-color-dot {
+  width: 18px;
+  height: 18px;
+  margin-bottom: 12px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #d0d5dd;
+}
+
+.team-name-field {
+  min-width: 0;
+}
+
+.team-default-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.team-players-list {
+  display: grid;
+  gap: 10px;
+}
+
+.team-player-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(96px, 120px) minmax(110px, 140px);
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #eef2f6;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.team-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
 }
 
 .player-grid {
@@ -876,6 +946,17 @@ h1 {
   }
 
   .form-grid, .player-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-card-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .team-title-row,
+  .team-default-grid,
+  .team-player-row {
     grid-template-columns: 1fr;
   }
 
