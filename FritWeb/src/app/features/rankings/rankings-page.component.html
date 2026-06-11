@@ -63,6 +63,15 @@
         (click)="selectRankingView('user')">
         Ranking per usuari
       </button>
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="activeRankingView() === 'charts'"
+        [class.ranking-view-option-active]="activeRankingView() === 'charts'"
+        class="ranking-view-option"
+        (click)="selectRankingView('charts')">
+        Gràfiques
+      </button>
     </div>
 
     <section class="content-card" *ngIf="activeRankingView() === 'game'">
@@ -458,6 +467,152 @@
 
       <div class="empty-state" *ngIf="(!userFilters().usuarioId && userRows().length === 0) || (userFilters().usuarioId && selectedUserGameRows().length === 0)">
         <h3>No hi ha dades amb aquests filtres</h3>
+      </div>
+    </section>
+
+    <section class="charts-layout" *ngIf="activeRankingView() === 'charts'">
+      <div class="charts-header">
+        <div>
+          <h2>Gràfiques</h2>
+          <p>{{ selectedChartGameName() || 'Tots els jocs' }} · {{ chartPartidas().length }} partides</p>
+        </div>
+
+        <button type="button" class="ghost-button compact-button" (click)="clearChartFilters()">
+          Netejar filtres
+        </button>
+      </div>
+
+      <div class="charts-filters-panel">
+        <div class="charts-filters-grid">
+          <label class="filter-field">
+            <span>Joc</span>
+            <select
+              class="filter-input"
+              [value]="chartFilters().juegoId"
+              (change)="updateChartFilter('juegoId', $any($event.target).value)">
+              <option value="">Tots els jocs</option>
+              <option *ngFor="let juego of gameOptions()" [value]="juego.juegoId">
+                {{ juego.nombre }}
+              </option>
+            </select>
+          </label>
+
+          <label class="filter-field">
+            <span>Data des de</span>
+            <input
+              type="date"
+              class="filter-input"
+              [value]="chartFilters().fechaDesde"
+              (input)="updateChartFilter('fechaDesde', $any($event.target).value)" />
+          </label>
+
+          <label class="filter-field">
+            <span>Data fins</span>
+            <input
+              type="date"
+              class="filter-input"
+              [value]="chartFilters().fechaHasta"
+              (input)="updateChartFilter('fechaHasta', $any($event.target).value)" />
+          </label>
+
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              [checked]="showNoLlistaGames()"
+              (change)="toggleShowNoLlistaGames()" />
+            <span>No llista</span>
+          </label>
+
+          <label class="filter-check">
+            <input
+              type="checkbox"
+              [checked]="showCooperativeGames()"
+              (change)="toggleShowCooperativeGames()" />
+            <span>Cooperatiu</span>
+          </label>
+        </div>
+
+        <div class="chart-users-heading">
+          <span>Usuaris</span>
+          <div>
+            <button type="button" class="link-button" (click)="selectAllChartUsers()">Tots</button>
+            <button type="button" class="link-button" (click)="clearChartUsers()">Cap</button>
+          </div>
+        </div>
+
+        <div class="chart-user-list">
+          <button
+            type="button"
+            class="chart-user-option"
+            [class.chart-user-option-active]="usuario.selected"
+            *ngFor="let usuario of chartUserOptions(); trackBy: trackByChartUser"
+            (click)="toggleChartUser(usuario.usuarioId)">
+            <span class="chart-color-swatch" [style.background]="usuario.color"></span>
+            <span>{{ usuario.nombre }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <article class="chart-card">
+          <div class="chart-card-heading">
+            <h3>% de victòries</h3>
+          </div>
+
+          <div class="chart-bars" *ngIf="victoryChartRows().length > 0; else noVictoryChartData">
+            <div class="chart-bar-row" *ngFor="let row of victoryChartRows(); trackBy: trackByChartMetricRow">
+              <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
+              <span class="chart-bar-track">
+                <span
+                  class="chart-bar-fill"
+                  [style.width]="getChartBarWidth(row.percentage)"
+                  [style.background]="row.color">
+                </span>
+              </span>
+              <strong class="chart-bar-value">{{ formatPercent(row.percentage) }}</strong>
+              <span class="chart-bar-detail">{{ row.detail }}</span>
+            </div>
+          </div>
+
+          <ng-template #noVictoryChartData>
+            <div class="chart-placeholder">Sense dades</div>
+          </ng-template>
+        </article>
+
+        <article class="chart-card">
+          <div class="chart-card-heading">
+            <h3>% de partides jugades</h3>
+          </div>
+
+          <div class="chart-bars" *ngIf="playedChartRows().length > 0; else noPlayedChartData">
+            <div class="chart-bar-row" *ngFor="let row of playedChartRows(); trackBy: trackByChartMetricRow">
+              <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
+              <span class="chart-bar-track">
+                <span
+                  class="chart-bar-fill"
+                  [style.width]="getChartBarWidth(row.percentage)"
+                  [style.background]="row.color">
+                </span>
+              </span>
+              <strong class="chart-bar-value">{{ formatPercent(row.percentage) }}</strong>
+              <span class="chart-bar-detail">{{ row.detail }}</span>
+            </div>
+          </div>
+
+          <ng-template #noPlayedChartData>
+            <div class="chart-placeholder">Sense dades</div>
+          </ng-template>
+        </article>
+
+        <article class="chart-card chart-card-empty">
+          <h3>Gràfica 3</h3>
+          <div class="chart-placeholder">Per definir</div>
+        </article>
+
+        <article class="chart-card chart-card-empty">
+          <h3>Gràfica 4</h3>
+          <div class="chart-placeholder">Per definir</div>
+        </article>
       </div>
     </section>
   </ng-container>

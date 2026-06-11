@@ -16,7 +16,7 @@ type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'pesBggMig' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
-type ActiveRankingView = 'game' | 'user';
+type ActiveRankingView = 'game' | 'user' | 'charts';
 
 interface GameRankingRow {
   juegoId: number;
@@ -64,6 +64,27 @@ interface UserFilters {
   minPartidas: string;
 }
 
+interface ChartFilters {
+  juegoId: string;
+  fechaDesde: string;
+  fechaHasta: string;
+}
+
+interface ChartUserOption {
+  usuarioId: number;
+  nombre: string;
+  color: string;
+  selected: boolean;
+}
+
+interface ChartMetricRow {
+  usuarioId: number;
+  usuarioNombre: string;
+  color: string;
+  percentage: number;
+  detail: string;
+}
+
 interface GameColumns {
   nombre: boolean;
   partidas: boolean;
@@ -106,6 +127,29 @@ const EMPTY_USER_FILTERS: UserFilters = {
   minPartidas: ''
 };
 
+const EMPTY_CHART_FILTERS: ChartFilters = {
+  juegoId: '',
+  fechaDesde: '',
+  fechaHasta: ''
+};
+
+const CHART_COLORS = [
+  '#0f766e',
+  '#2563eb',
+  '#db2777',
+  '#ca8a04',
+  '#7c3aed',
+  '#dc2626',
+  '#059669',
+  '#ea580c',
+  '#0891b2',
+  '#4f46e5',
+  '#be123c',
+  '#65a30d',
+  '#9333ea',
+  '#0284c7'
+];
+
 @Component({
   selector: 'app-rankings-page',
   standalone: true,
@@ -125,6 +169,8 @@ export class RankingsPageComponent {
 
   gameFilters = signal<GameFilters>({ ...EMPTY_GAME_FILTERS });
   userFilters = signal<UserFilters>({ ...EMPTY_USER_FILTERS });
+  chartFilters = signal<ChartFilters>({ ...EMPTY_CHART_FILTERS });
+  selectedChartUserIds = signal<number[]>([]);
   showNoLlistaGames = signal(false);
   showCooperativeGames = signal(false);
 
@@ -200,6 +246,20 @@ export class RankingsPageComponent {
       .sort((a, b) => a.nombre.localeCompare(b.nombre));
   });
 
+  chartUserOptions = computed<ChartUserOption[]>(() => {
+    const selectedIds = new Set(this.selectedChartUserIds());
+
+    return this.userOptions().map((usuario, index) => ({
+      ...usuario,
+      color: CHART_COLORS[index % CHART_COLORS.length],
+      selected: selectedIds.has(usuario.usuarioId)
+    }));
+  });
+
+  selectedChartUsers = computed(() =>
+    this.chartUserOptions().filter(usuario => usuario.selected)
+  );
+
   selectedGameName = computed(() => {
     const juegoId = Number(this.gameFilters().juegoId);
     return this.gameOptions().find(juego => juego.juegoId === juegoId)?.nombre ?? '';
@@ -225,6 +285,11 @@ export class RankingsPageComponent {
   selectedUserName = computed(() => {
     const usuarioId = Number(this.userFilters().usuarioId);
     return this.userOptions().find(usuario => usuario.usuarioId === usuarioId)?.nombre ?? '';
+  });
+
+  selectedChartGameName = computed(() => {
+    const juegoId = Number(this.chartFilters().juegoId);
+    return this.gameOptions().find(juego => juego.juegoId === juegoId)?.nombre ?? '';
   });
 
   topUserByGames = computed(() => {
@@ -350,6 +415,79 @@ export class RankingsPageComponent {
     return this.sortUserGameRows(rows);
   });
 
+  chartPartidas = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return [];
+    }
+
+    const filters = this.chartFilters();
+    const juegoId = Number(filters.juegoId);
+
+    return this.filterRankingPartidas(data.partidas)
+      .filter(partida => !juegoId || partida.juegoId === juegoId)
+      .filter(partida => this.matchesDateRange(partida.fecha, filters.fechaDesde, filters.fechaHasta));
+  });
+
+  chartJugadores = computed(() => {
+    const data = this.rankings();
+    if (!data) {
+      return [];
+    }
+
+    const filters = this.chartFilters();
+    const juegoId = Number(filters.juegoId);
+    const selectedIds = new Set(this.selectedChartUserIds());
+
+    return this.filterRankingJugadores(data.jugadores)
+      .filter(jugador => !this.isExternalRankingJugador(jugador))
+      .filter(jugador => selectedIds.has(jugador.usuarioId))
+      .filter(jugador => !juegoId || jugador.juegoId === juegoId)
+      .filter(jugador => this.matchesDateRange(jugador.fecha, filters.fechaDesde, filters.fechaHasta));
+  });
+
+  victoryChartRows = computed(() => {
+    const jugadores = this.chartJugadores();
+
+    return this.selectedChartUsers()
+      .map(usuario => {
+        const rows = jugadores.filter(jugador => jugador.usuarioId === usuario.usuarioId);
+        const victorias = rows.filter(row => row.posicion === 1).length;
+
+        return {
+          usuarioId: usuario.usuarioId,
+          usuarioNombre: usuario.nombre,
+          color: usuario.color,
+          percentage: this.calculatePercentage(victorias, rows.length),
+          detail: `${victorias}/${rows.length}`
+        };
+      })
+      .sort((a, b) => b.percentage - a.percentage || a.usuarioNombre.localeCompare(b.usuarioNombre));
+  });
+
+  playedChartRows = computed(() => {
+    const jugadores = this.chartJugadores();
+    const totalPartidas = new Set(this.chartPartidas().map(partida => partida.partidaId)).size;
+
+    return this.selectedChartUsers()
+      .map(usuario => {
+        const userPartidas = new Set(
+          jugadores
+            .filter(jugador => jugador.usuarioId === usuario.usuarioId)
+            .map(jugador => jugador.partidaId)
+        ).size;
+
+        return {
+          usuarioId: usuario.usuarioId,
+          usuarioNombre: usuario.nombre,
+          color: usuario.color,
+          percentage: this.calculatePercentage(userPartidas, totalPartidas),
+          detail: `${userPartidas}/${totalPartidas}`
+        };
+      })
+      .sort((a, b) => b.percentage - a.percentage || a.usuarioNombre.localeCompare(b.usuarioNombre));
+  });
+
   allGameColumnsSelected = computed(() => Object.values(this.gameColumns()).every(Boolean));
   allDetailColumnsSelected = computed(() => Object.values(this.detailColumns()).every(Boolean));
   allUserColumnsSelected = computed(() => Object.values(this.userColumns()).every(Boolean));
@@ -380,6 +518,7 @@ export class RankingsPageComponent {
     this.rankingsService.get().subscribe({
       next: rankings => {
         this.rankings.set(rankings);
+        this.initializeChartUsers(rankings);
         this.loading.set(false);
       },
       error: () => {
@@ -408,10 +547,22 @@ export class RankingsPageComponent {
     }
   }
 
+  updateChartFilter<K extends keyof ChartFilters>(key: K, value: string): void {
+    this.chartFilters.update(current => ({
+      ...current,
+      [key]: value
+    }));
+  }
+
   selectRankingView(view: ActiveRankingView): void {
     this.activeRankingView.set(view);
     this.showGameColumnsPanel.set(false);
     this.showUserColumnsPanel.set(false);
+  }
+
+  clearChartFilters(): void {
+    this.chartFilters.set({ ...EMPTY_CHART_FILTERS });
+    this.clearGameTypeFilters();
   }
 
   clearGameFilters(): void {
@@ -450,6 +601,22 @@ export class RankingsPageComponent {
 
   toggleShowCooperativeGames(): void {
     this.showCooperativeGames.update(value => !value);
+  }
+
+  toggleChartUser(usuarioId: number): void {
+    this.selectedChartUserIds.update(current =>
+      current.includes(usuarioId)
+        ? current.filter(id => id !== usuarioId)
+        : [...current, usuarioId]
+    );
+  }
+
+  selectAllChartUsers(): void {
+    this.selectedChartUserIds.set(this.userOptions().map(usuario => usuario.usuarioId));
+  }
+
+  clearChartUsers(): void {
+    this.selectedChartUserIds.set([]);
   }
 
   private clearGameTypeFilters(): void {
@@ -605,6 +772,41 @@ export class RankingsPageComponent {
 
   trackByUserGameRow(_: number, item: UserGameRankingRow): number {
     return item.juegoId;
+  }
+
+  trackByChartUser(_: number, item: ChartUserOption): number {
+    return item.usuarioId;
+  }
+
+  trackByChartMetricRow(_: number, item: ChartMetricRow): number {
+    return item.usuarioId;
+  }
+
+  getChartBarWidth(value: number): string {
+    return `${Math.max(0, Math.min(value, 100))}%`;
+  }
+
+  private initializeChartUsers(rankings: Rankings): void {
+    if (this.selectedChartUserIds().length > 0) {
+      return;
+    }
+
+    const users = new Map<number, string>();
+    for (const jugador of rankings.jugadores) {
+      if (this.isExternalRankingJugador(jugador)) {
+        continue;
+      }
+
+      users.set(jugador.usuarioId, jugador.usuarioNombre);
+    }
+
+    const userIds = Array.from(users.entries())
+      .map(([usuarioId, nombre]) => ({ usuarioId, nombre }))
+      .filter(usuario => !isExternalUser(usuario))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre))
+      .map(usuario => usuario.usuarioId);
+
+    this.selectedChartUserIds.set(userIds);
   }
 
   private isExternalRankingJugador(jugador: RankingJugador): boolean {
