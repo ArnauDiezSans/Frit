@@ -64,7 +64,24 @@
     </div>
   </section>
 
-  <section class="content-card medals-section" *ngIf="!loading() && !error() && canViewMedals()">
+  <div class="user-section-switch" *ngIf="!loading() && !error() && canViewMedals()">
+    <button
+      type="button"
+      [class.user-section-switch-active]="activeUserPanel() === 'medals'"
+      (click)="setActiveUserPanel('medals')">
+      Medalles
+    </button>
+    <button
+      type="button"
+      [class.user-section-switch-active]="activeUserPanel() === 'favorites'"
+      (click)="setActiveUserPanel('favorites')">
+      Jocs preferits
+    </button>
+  </div>
+
+  <section
+    class="content-card medals-section"
+    *ngIf="!loading() && !error() && canViewMedals() && activeUserPanel() === 'medals'">
     <div class="section-heading">
       <div>
         <h2>Medalles</h2>
@@ -115,7 +132,9 @@
     </ng-template>
   </section>
 
-  <section class="content-card preferences-section" *ngIf="!loading() && !error()">
+  <section
+    class="content-card preferences-section"
+    *ngIf="!loading() && !error() && (!canViewMedals() || activeUserPanel() === 'favorites')">
     <div class="section-heading">
       <div>
         <h2>Els meus jocs preferits</h2>

@@ -32,6 +32,7 @@ export class UsuarioPageComponent {
   success = signal('');
   modalOpen = signal(false);
   profileModalOpen = signal(false);
+  activeUserPanel = signal<'medals' | 'favorites'>('medals');
 
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
@@ -430,6 +431,10 @@ export class UsuarioPageComponent {
 
   canViewMedals(): boolean {
     return this.authService.canViewHallOfFame();
+  }
+
+  setActiveUserPanel(panel: 'medals' | 'favorites'): void {
+    this.activeUserPanel.set(panel);
   }
 
   private sortJuegos(juegos: UsuarioJuegoOrden[]): UsuarioJuegoOrden[] {
