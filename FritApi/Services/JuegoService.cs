@@ -21,7 +21,9 @@ public class JuegoService
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
         _bggApplicationToken = configuration["Bgg:ApplicationToken"]
-            ?? configuration["BGG_APPLICATION_TOKEN"];
+            ?? configuration["BGG_APPLICATION_TOKEN"]
+            ?? Environment.GetEnvironmentVariable("BGG_APPLICATION_TOKEN")
+            ?? Environment.GetEnvironmentVariable("Bgg__ApplicationToken");
     }
 
     public async Task<List<JuegoDto>> GetAllAsync()
