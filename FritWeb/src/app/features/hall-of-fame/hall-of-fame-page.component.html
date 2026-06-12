@@ -36,7 +36,11 @@
       </div>
 
       <div class="medal-grid" *ngIf="data.entries.length > 0; else emptyHall">
-        <article class="medal-card" *ngFor="let entry of data.entries; trackBy: trackByEntry">
+        <article
+          class="medal-card"
+          *ngFor="let entry of data.entries; trackBy: trackByEntry"
+          [class.medal-card-filled]="entry.medal.rankFilled"
+          [style.--medal-color]="entry.medal.rankColor">
           <div
             class="medal-icon-frame"
             [class.medal-icon-frame-filled]="entry.medal.rankFilled"

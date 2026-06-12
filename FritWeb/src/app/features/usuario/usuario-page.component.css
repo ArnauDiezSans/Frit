@@ -181,6 +181,11 @@ h1 {
   background: #fbfcfd;
 }
 
+.user-medal-card-filled {
+  border-color: color-mix(in srgb, var(--medal-color) 36%, #e4e7ec);
+  background: color-mix(in srgb, var(--medal-color) 10%, #ffffff);
+}
+
 .user-medal-card-pending {
   opacity: 0.72;
 }
