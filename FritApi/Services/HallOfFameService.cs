@@ -178,7 +178,7 @@ public class HallOfFameService
                         $"game:{juego.JuegoId}",
                         $"Medalla {juego.Nombre}",
                         $"Guanya partides a {juego.Nombre}.",
-                        DefaultIconPath,
+                        GetGameIconPath(juego.JuegoId),
                         "GameWins",
                         winsForGame)));
             }
@@ -375,6 +375,11 @@ public class HallOfFameService
     {
         return usuario.UsuarioId == ExternalUserPolicy.ExternalUserId ||
             usuario.Nombre == ExternalUserPolicy.ExternalUserName;
+    }
+
+    private static string GetGameIconPath(int juegoId)
+    {
+        return $"/assets/medallas/jocs/{juegoId}.png";
     }
 
     private sealed record MedalRank(string Name, int Threshold, string Color);

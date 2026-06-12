@@ -95,7 +95,10 @@
         *ngFor="let medal of medals(); trackBy: trackByMedal"
         [class.user-medal-card-pending]="medal.rankLevel === 0">
         <div class="medal-icon-frame" [style.borderColor]="medal.rankColor">
-          <img [src]="medal.iconPath" [alt]="medal.nombre" />
+          <img
+            [src]="medal.iconPath"
+            [alt]="medal.nombre"
+            (error)="useDefaultMedalIcon($event)" />
         </div>
 
         <div class="user-medal-content">

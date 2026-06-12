@@ -437,6 +437,14 @@ export class UsuarioPageComponent {
     this.activeUserPanel.set(panel);
   }
 
+  useDefaultMedalIcon(event: Event): void {
+    const image = event.target as HTMLImageElement | null;
+
+    if (image && !image.src.endsWith('/assets/medallas/default-medal.svg')) {
+      image.src = '/assets/medallas/default-medal.svg';
+    }
+  }
+
   private sortJuegos(juegos: UsuarioJuegoOrden[]): UsuarioJuegoOrden[] {
     return juegos
       .map(juego => ({ ...juego }))

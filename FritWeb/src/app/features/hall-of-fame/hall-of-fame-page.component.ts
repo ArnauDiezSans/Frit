@@ -127,6 +127,14 @@ export class HallOfFamePageComponent {
     return usuario.usuarioId;
   }
 
+  useDefaultMedalIcon(event: Event): void {
+    const image = event.target as HTMLImageElement | null;
+
+    if (image && !image.src.endsWith('/assets/medallas/default-medal.svg')) {
+      image.src = '/assets/medallas/default-medal.svg';
+    }
+  }
+
   logout(): void {
     this.authService.logout().subscribe({
       next: () => this.router.navigateByUrl('/login'),
