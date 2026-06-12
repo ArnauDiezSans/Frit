@@ -15,6 +15,95 @@ public class JuegoService
     private readonly AppDbContext _context;
     private readonly HttpClient _httpClient;
     private readonly string? _bggApplicationToken;
+    private static readonly IReadOnlyDictionary<string, string> BggCategoryTranslations =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Abstract Strategy"] = "Estratègia abstracta",
+            ["Action / Dexterity"] = "Acció / Destresa",
+            ["Adventure"] = "Aventura",
+            ["Age of Reason"] = "Era de la Raó",
+            ["American Civil War"] = "Guerra Civil Americana",
+            ["American Indian Wars"] = "Guerres índies americanes",
+            ["American Revolutionary War"] = "Guerra d'Independència Americana",
+            ["American West"] = "Oest americà",
+            ["Ancient"] = "Antiguitat",
+            ["Animals"] = "Animals",
+            ["Arabian"] = "Àrab",
+            ["Aviation / Flight"] = "Aviació / Vol",
+            ["Bluffing"] = "Engany",
+            ["Book"] = "Llibre",
+            ["Card Game"] = "Joc de cartes",
+            ["Children's Game"] = "Joc infantil",
+            ["City Building"] = "Construcció de ciutats",
+            ["Civil War"] = "Guerra civil",
+            ["Civilization"] = "Civilització",
+            ["Collectible Components"] = "Components col·leccionables",
+            ["Comic Book / Strip"] = "Còmic",
+            ["Deduction"] = "Deducció",
+            ["Dice"] = "Daus",
+            ["Economic"] = "Econòmic",
+            ["Educational"] = "Educatiu",
+            ["Electronic"] = "Electrònic",
+            ["Environmental"] = "Medi ambient",
+            ["Expansion for Base-game"] = "Expansió d'un joc base",
+            ["Exploration"] = "Exploració",
+            ["Fan Expansion"] = "Expansió fan",
+            ["Fantasy"] = "Fantasia",
+            ["Farming"] = "Agricultura",
+            ["Fighting"] = "Combat",
+            ["Game System"] = "Sistema de joc",
+            ["Horror"] = "Terror",
+            ["Humor"] = "Humor",
+            ["Industry / Manufacturing"] = "Indústria / Fabricació",
+            ["Korean War"] = "Guerra de Corea",
+            ["Mafia"] = "Màfia",
+            ["Math"] = "Matemàtiques",
+            ["Mature / Adult"] = "Adults",
+            ["Maze"] = "Laberint",
+            ["Medical"] = "Medicina",
+            ["Medieval"] = "Medieval",
+            ["Memory"] = "Memòria",
+            ["Miniatures"] = "Miniatures",
+            ["Modern Warfare"] = "Guerra moderna",
+            ["Movies / TV / Radio theme"] = "Tema de cinema / TV / ràdio",
+            ["Murder / Mystery"] = "Assassinat / Misteri",
+            ["Music"] = "Música",
+            ["Mythology"] = "Mitologia",
+            ["Napoleonic"] = "Napoleònic",
+            ["Nautical"] = "Nàutic",
+            ["Negotiation"] = "Negociació",
+            ["Novel-based"] = "Basat en novel·la",
+            ["Number"] = "Números",
+            ["Party Game"] = "Joc de festa",
+            ["Pike and Shot"] = "Pica i mosquet",
+            ["Pirates"] = "Pirates",
+            ["Political"] = "Polític",
+            ["Post-Napoleonic"] = "Postnapoleònic",
+            ["Prehistoric"] = "Prehistòria",
+            ["Print & Play"] = "Imprimeix i juga",
+            ["Puzzle"] = "Trencaclosques",
+            ["Racing"] = "Curses",
+            ["Real-time"] = "Temps real",
+            ["Religious"] = "Religiós",
+            ["Renaissance"] = "Renaixement",
+            ["Science Fiction"] = "Ciència-ficció",
+            ["Space Exploration"] = "Exploració espacial",
+            ["Spies / Secret Agents"] = "Espies / Agents secrets",
+            ["Sports"] = "Esports",
+            ["Territory Building"] = "Construcció de territori",
+            ["Third-party Expansion"] = "Expansió de tercers",
+            ["Trains"] = "Trens",
+            ["Transportation"] = "Transport",
+            ["Travel"] = "Viatges",
+            ["Trivia"] = "Preguntes i respostes",
+            ["Video Game Theme"] = "Tema de videojoc",
+            ["Vietnam War"] = "Guerra del Vietnam",
+            ["Wargame"] = "Joc de guerra",
+            ["Word Game"] = "Joc de paraules",
+            ["World War I"] = "Primera Guerra Mundial",
+            ["World War II"] = "Segona Guerra Mundial",
+            ["Zombies"] = "Zombis"
+        };
 
     public JuegoService(AppDbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
@@ -247,9 +336,10 @@ public class JuegoService
                 .Where(x => string.Equals((string?)x.Attribute("type"), "boardgamecategory", StringComparison.OrdinalIgnoreCase))
                 .Select(x => x.Attribute("value")?.Value)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => TranslateBggCategory(x!))
                 .ToList();
 
-            var tipo = categories.FirstOrDefault() ?? string.Empty;
+            var tipo = string.Join(", ", categories);
 
             if (!minPlayers.HasValue || !maxPlayers.HasValue)
             {
@@ -291,5 +381,12 @@ public class JuegoService
     private static string? FirstConfiguredValue(params string?[] values)
     {
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+    }
+
+    private static string TranslateBggCategory(string category)
+    {
+        return BggCategoryTranslations.TryGetValue(category, out var translated)
+            ? translated
+            : category;
     }
 }

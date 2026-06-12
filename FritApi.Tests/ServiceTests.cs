@@ -288,6 +288,8 @@ public class ServiceTests
                     <name type="primary" value="Catan" />
                     <minplayers value="3" />
                     <maxplayers value="4" />
+                    <link type="boardgamecategory" value="Economic" />
+                    <link type="boardgamecategory" value="Negotiation" />
                     <statistics>
                       <ratings>
                         <averageweight value="2.31" />
@@ -310,6 +312,7 @@ public class ServiceTests
         var result = await service.GetFromBggAsync(13);
 
         Assert.True(result.Success);
+        Assert.Equal("Econòmic, Negociació", result.Juego?.Tipo);
         Assert.NotNull(handler.LastRequest);
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization?.Scheme);
         Assert.Equal("test-token", handler.LastRequest.Headers.Authorization?.Parameter);
