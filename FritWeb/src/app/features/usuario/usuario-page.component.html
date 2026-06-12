@@ -64,6 +64,57 @@
     </div>
   </section>
 
+  <section class="content-card medals-section" *ngIf="!loading() && !error() && canViewMedals()">
+    <div class="section-heading">
+      <div>
+        <h2>Medalles</h2>
+      </div>
+      <span class="status-text">{{ medals().length }} medalles</span>
+    </div>
+
+    <div class="user-medal-grid" *ngIf="medals().length > 0; else emptyMedals">
+      <article
+        class="user-medal-card"
+        *ngFor="let medal of medals(); trackBy: trackByMedal"
+        [class.user-medal-card-pending]="medal.rankLevel === 0">
+        <div class="medal-icon-frame" [style.borderColor]="medal.rankColor">
+          <img [src]="medal.iconPath" [alt]="medal.nombre" />
+        </div>
+
+        <div class="user-medal-content">
+          <div class="user-medal-header">
+            <h3>{{ medal.nombre }}</h3>
+            <span class="rank-pill" [style.background]="medal.rankColor">
+              {{ medal.rankName }}
+            </span>
+          </div>
+
+          <p>{{ medal.descripcion }}</p>
+
+          <div class="medal-progress-row">
+            <div class="medal-progress-track">
+              <span
+                class="medal-progress-fill"
+                [style.width]="getMedalProgressWidth(medal)"
+                [style.background]="medal.rankColor"></span>
+            </div>
+            <strong>{{ medal.currentValue }}/{{ medal.targetValue }}</strong>
+          </div>
+
+          <span class="next-rank" *ngIf="medal.nextRankName">
+            Seguent: {{ medal.nextRankName }}
+          </span>
+        </div>
+      </article>
+    </div>
+
+    <ng-template #emptyMedals>
+      <div class="empty-state">
+        <h3>Encara no hi ha medalles disponibles</h3>
+      </div>
+    </ng-template>
+  </section>
+
   <section class="content-card preferences-section" *ngIf="!loading() && !error()">
     <div class="section-heading">
       <div>

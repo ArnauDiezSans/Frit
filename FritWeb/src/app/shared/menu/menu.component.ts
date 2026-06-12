@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
 import { DataStoreService } from '../../core/data/data-store.service';
 
-export type MenuPage = 'rankings' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'usuario';
+export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'usuario';
 
 @Component({
   selector: 'app-menu',
@@ -14,6 +15,7 @@ export type MenuPage = 'rankings' | 'partidas' | 'juegos' | 'laLlista' | 'penden
 })
 export class MenuComponent {
   constructor(
+    private authService: AuthService,
     private dataStore: DataStoreService,
     private router: Router
   ) {}
@@ -38,6 +40,10 @@ export class MenuComponent {
 
   closeMenu(): void {
     this.menuOpen = false;
+  }
+
+  canViewHallOfFame(): boolean {
+    return this.authService.canViewHallOfFame();
   }
 
   onPrimaryAction(): void {

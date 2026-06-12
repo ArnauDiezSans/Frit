@@ -10,3 +10,16 @@ export const authGuard: CanActivateFn = () => {
     ? true
     : router.createUrlTree(['/login']);
 };
+
+export const hallOfFameGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    return router.createUrlTree(['/login']);
+  }
+
+  return authService.canViewHallOfFame()
+    ? true
+    : router.createUrlTree(['/app/rankings']);
+};

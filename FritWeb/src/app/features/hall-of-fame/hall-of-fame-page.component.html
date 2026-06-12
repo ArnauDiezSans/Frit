@@ -1,0 +1,118 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Saló de la fama</h1>
+      <p class="subtitle">Els millors registres de cada medalla activa.</p>
+    </div>
+
+    <app-menu activePage="hallOfFame" (logout)="logout()" />
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant medalles...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarDatos()">Tornar-ho a provar</button>
+  </section>
+
+  <ng-container *ngIf="!loading() && !error() && hallOfFame() as data">
+    <section class="content-card">
+      <div class="section-heading">
+        <div>
+          <h2>Medalles destacades</h2>
+          <p>{{ data.entries.length }} medalles amb progrés</p>
+        </div>
+
+        <button
+          type="button"
+          class="primary-button"
+          *ngIf="data.canManageManualMedals"
+          (click)="abrirModal()">
+          Nova medalla
+        </button>
+      </div>
+
+      <div class="medal-grid" *ngIf="data.entries.length > 0; else emptyHall">
+        <article class="medal-card" *ngFor="let entry of data.entries; trackBy: trackByEntry">
+          <div class="medal-icon-frame" [style.borderColor]="entry.medal.rankColor">
+            <img [src]="entry.medal.iconPath" [alt]="entry.medal.nombre" />
+          </div>
+
+          <div class="medal-content">
+            <div class="medal-title-row">
+              <h3>{{ entry.medal.nombre }}</h3>
+              <span class="rank-pill" [style.background]="entry.medal.rankColor">{{ entry.bestUser.rankName }}</span>
+            </div>
+            <p>{{ entry.medal.descripcion }}</p>
+            <strong>{{ entry.bestUser.usuarioNombre }}</strong>
+            <div class="progress-track">
+              <span class="progress-fill" [style.width]="getProgressWidth(entry)" [style.background]="entry.medal.rankColor"></span>
+            </div>
+            <span class="progress-detail">{{ entry.bestUser.currentValue }}/{{ entry.medal.targetValue }}</span>
+          </div>
+        </article>
+      </div>
+
+      <ng-template #emptyHall>
+        <div class="empty-state">
+          <h3>Encara no hi ha cap medalla amb progrés</h3>
+        </div>
+      </ng-template>
+    </section>
+  </ng-container>
+
+  <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
+    <section class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>Nova medalla manual</h2>
+        </div>
+        <button type="button" class="ghost-button" (click)="cerrarModal()">Tancar</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="crearMedallaManual()">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Nom</span>
+            <input type="text" formControlName="nombre" />
+          </label>
+
+          <label class="form-field">
+            <span>Descripció</span>
+            <input type="text" formControlName="descripcion" />
+          </label>
+
+          <label class="form-field">
+            <span>Icona</span>
+            <input type="text" formControlName="iconPath" />
+          </label>
+        </div>
+
+        <div class="users-panel">
+          <span class="users-title">Usuaris que la tenen</span>
+          <div class="user-list">
+            <label class="user-option" *ngFor="let usuario of usuarios(); trackBy: trackByUsuario">
+              <input
+                type="checkbox"
+                [checked]="selectedUsuarioIds().includes(usuario.usuarioId)"
+                (change)="toggleUsuario(usuario.usuarioId)" />
+              <span>{{ usuario.nombre }}</span>
+            </label>
+          </div>
+        </div>
+
+        <p class="field-error" *ngIf="formError()">{{ formError() }}</p>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button" (click)="cerrarModal()">Cancel·lar</button>
+          <button type="submit" class="primary-button" [disabled]="saving()">
+            {{ saving() ? 'Desant...' : 'Crear medalla' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>

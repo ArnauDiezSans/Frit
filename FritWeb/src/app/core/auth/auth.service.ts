@@ -80,4 +80,8 @@ export class AuthService {
   isAuthenticated(): boolean {
     return this.currentUser !== null;
   }
+
+  canViewHallOfFame(): boolean {
+    return this.currentUser?.nombre === 'Arnau';
+  }
 }

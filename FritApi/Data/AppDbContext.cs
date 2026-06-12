@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
     public DbSet<UsuarioJuegoOrden> UsuarioJuegoOrdenes => Set<UsuarioJuegoOrden>();
     public DbSet<PendentCompra> PendentsCompra => Set<PendentCompra>();
+    public DbSet<ManualMedalla> ManualMedallas => Set<ManualMedalla>();
+    public DbSet<ManualMedallaUsuario> ManualMedallaUsuarios => Set<ManualMedallaUsuario>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +154,42 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<ManualMedalla>(entity =>
+        {
+            entity.HasKey(e => e.ManualMedallaId);
+
+            entity.Property(e => e.Nombre)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(800);
+
+            entity.Property(e => e.IconPath)
+                .HasMaxLength(500);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+        });
+
+        modelBuilder.Entity<ManualMedallaUsuario>(entity =>
+        {
+            entity.HasKey(e => e.ManualMedallaUsuarioId);
+
+            entity.HasOne(e => e.ManualMedalla)
+                .WithMany(e => e.Usuarios)
+                .HasForeignKey(e => e.ManualMedallaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.ManualMedallaId, e.UsuarioId })
+                .IsUnique();
         });
     }
 }

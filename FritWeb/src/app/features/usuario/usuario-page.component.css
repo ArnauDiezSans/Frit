@@ -123,6 +123,121 @@ h1 {
   padding: 0;
 }
 
+.medals-section {
+  padding: 20px;
+}
+
+.user-medal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.user-medal-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.user-medal-card-pending {
+  opacity: 0.72;
+}
+
+.medal-icon-frame {
+  width: 58px;
+  height: 58px;
+  border: 3px solid #98a2b3;
+  border-radius: 8px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.medal-icon-frame img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.user-medal-content {
+  min-width: 0;
+}
+
+.user-medal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.user-medal-header h3 {
+  margin: 0;
+  color: #101828;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.user-medal-content p {
+  margin: 0 0 10px;
+  color: #667085;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.rank-pill {
+  flex: 0 0 auto;
+  max-width: 120px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.medal-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.medal-progress-track {
+  height: 9px;
+  border-radius: 999px;
+  background: #eef2f6;
+  overflow: hidden;
+}
+
+.medal-progress-fill {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+}
+
+.medal-progress-row strong {
+  color: #101828;
+  font-size: 0.86rem;
+}
+
+.next-rank {
+  display: block;
+  margin-top: 6px;
+  color: #475467;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .score-board {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -682,6 +797,31 @@ h1 {
   .score-board {
     grid-template-columns: 1fr;
     gap: 8px;
+  }
+
+  .user-medal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-medal-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .medal-icon-frame {
+    width: 48px;
+    height: 48px;
+  }
+
+  .medal-icon-frame img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .user-medal-header {
+    flex-direction: column;
+    gap: 6px;
   }
 
   .score-group {

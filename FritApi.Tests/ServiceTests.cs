@@ -246,6 +246,91 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task HallOfFameService_AwardsGameWinMedal()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Catan",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Propietario = arnau
+        };
+        context.AddRange(arnau, anna, game);
+        await context.SaveChangesAsync();
+
+        var partida = new Partida
+        {
+            JuegoId = game.JuegoId,
+            UsuarioCreadorId = arnau.UsuarioId,
+            Fecha = new DateOnly(2026, 6, 5),
+            NumeroJugadores = 2
+        };
+        context.Partidas.Add(partida);
+        await context.SaveChangesAsync();
+
+        context.PartidaJugadores.AddRange(
+            new PartidaJugador
+            {
+                PartidaId = partida.PartidaId,
+                UsuarioId = arnau.UsuarioId,
+                NombreMostrado = "Arnau",
+                Posicion = 1
+            },
+            new PartidaJugador
+            {
+                PartidaId = partida.PartidaId,
+                UsuarioId = anna.UsuarioId,
+                NombreMostrado = "Anna",
+                Posicion = 2
+            });
+        await context.SaveChangesAsync();
+
+        var service = new HallOfFameService(context);
+
+        var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+
+        Assert.NotNull(medals);
+        var gameMedal = medals.Medals.Single(row => row.MedalId == $"game:{game.JuegoId}");
+        Assert.Equal("Medalla Catan", gameMedal.Nombre);
+        Assert.Equal(1, gameMedal.CurrentValue);
+        Assert.Equal("Iniciat", gameMedal.RankName);
+        Assert.Equal(1, gameMedal.RankLevel);
+    }
+
+    [Fact]
+    public async Task HallOfFameService_CreatesManualMedalForSelectedUsers()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        context.AddRange(arnau, anna);
+        await context.SaveChangesAsync();
+
+        var service = new HallOfFameService(context);
+
+        var result = await service.CreateManualMedalAsync(new ManualMedallaCreateDto
+        {
+            Nombre = "Organitzador",
+            Descripcion = "Ha organitzat una jornada.",
+            UsuarioIds = [anna.UsuarioId]
+        });
+        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var annaMedals = await service.GetUserMedalsAsync(anna.UsuarioId);
+        var arnauMedals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+
+        Assert.True(result.Success);
+        Assert.True(hallOfFame.CanManageManualMedals);
+        var entry = Assert.Single(hallOfFame.Entries);
+        Assert.Equal("Organitzador", entry.Medal.Nombre);
+        Assert.Equal(anna.UsuarioId, entry.BestUser.UsuarioId);
+        Assert.Equal("Completada", annaMedals?.Medals.Single(row => row.Nombre == "Organitzador").RankName);
+        Assert.Equal("Pendent", arnauMedals?.Medals.Single(row => row.Nombre == "Organitzador").RankName);
+    }
+
+    [Fact]
     public async Task PartidaJugadorService_AllowsSharedPositions()
     {
         await using var context = CreateContext();

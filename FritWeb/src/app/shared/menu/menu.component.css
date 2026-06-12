@@ -25,40 +25,44 @@
   order: 2;
 }
 
-.menu-la-llista {
-  order: 4;
-}
-
-.menu-pendent-compra {
-  order: 5;
-}
-
-.menu-a-que-juguem {
-  order: 6;
-}
-
-.menu-juegos {
+.menu-hall-of-fame {
   order: 3;
 }
 
-.menu-primary-action {
+.menu-la-llista {
+  order: 5;
+}
+
+.menu-pendent-compra {
+  order: 6;
+}
+
+.menu-a-que-juguem {
   order: 7;
 }
 
-.session-actions {
+.menu-juegos {
+  order: 4;
+}
+
+.menu-primary-action {
   order: 8;
 }
 
-.refresh-icon-button {
+.session-actions {
   order: 9;
 }
 
+.refresh-icon-button {
+  order: 10;
+}
+
 .menu-usuario {
-  order: 8;
+  order: 9;
 }
 
 .logout-button {
-  order: 10;
+  order: 11;
 }
 
 .menu-button {
@@ -205,40 +209,45 @@
     order: 2;
   }
 
-  .menu-la-llista {
+  .menu-hall-of-fame {
     order: 3;
   }
 
-  .menu-pendent-compra {
+  .menu-la-llista {
     order: 4;
   }
 
-  .menu-a-que-juguem {
+  .menu-pendent-compra {
     order: 5;
   }
 
-  .menu-juegos {
+  .menu-a-que-juguem {
     order: 6;
   }
 
-  .menu-primary-action {
+  .menu-juegos {
     order: 7;
   }
 
-  .refresh-icon-button {
+  .menu-primary-action {
     order: 8;
   }
 
-  .menu-usuario {
+  .refresh-icon-button {
     order: 9;
   }
 
-  .logout-button {
+  .menu-usuario {
     order: 10;
+  }
+
+  .logout-button {
+    order: 11;
   }
 
   .menu-partidas,
   .menu-rankings,
+  .menu-hall-of-fame,
   .menu-a-que-juguem,
   .menu-juegos,
   .menu-primary-action {

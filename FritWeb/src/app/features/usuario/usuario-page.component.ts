@@ -2,10 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
+import { HallOfFameService, MedalProgress } from '../hall-of-fame/hall-of-fame.service';
 import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.service';
 
 @Component({
@@ -19,6 +20,7 @@ export class UsuarioPageComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private usuarioService = inject(UsuarioService);
+  private hallOfFameService = inject(HallOfFameService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -33,6 +35,7 @@ export class UsuarioPageComponent {
 
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
+  medals = signal<MedalProgress[]>([]);
   scoreSearch = signal<Partial<Record<number, string>>>({});
   filteredScoreGames = signal<UsuarioJuegoOrden[]>([]);
   showScoreOptions = signal<number | null>(null);
@@ -81,11 +84,15 @@ export class UsuarioPageComponent {
 
     forkJoin({
       usuario: this.usuarioService.getById(currentUser.usuarioId),
-      juegos: this.usuarioService.getJuegosOrden(currentUser.usuarioId)
+      juegos: this.usuarioService.getJuegosOrden(currentUser.usuarioId),
+      medals: this.authService.canViewHallOfFame()
+        ? this.hallOfFameService.getUserMedals(currentUser.usuarioId)
+        : of({ usuarioId: currentUser.usuarioId, usuarioNombre: currentUser.nombre, medals: [] })
     }).subscribe({
       next: result => {
         this.usuario.set(result.usuario);
         this.juegosOrdenados.set(this.sortJuegos(result.juegos));
+        this.medals.set(result.medals.medals);
         this.loading.set(false);
       },
       error: () => {
@@ -407,6 +414,22 @@ export class UsuarioPageComponent {
 
   trackByScore(_: number, score: number): number {
     return score;
+  }
+
+  trackByMedal(_: number, medal: MedalProgress): string {
+    return medal.medalId;
+  }
+
+  getMedalProgressWidth(medal: MedalProgress): string {
+    if (medal.targetValue <= 0) {
+      return '0%';
+    }
+
+    return `${Math.min(100, Math.round((medal.currentValue / medal.targetValue) * 100))}%`;
+  }
+
+  canViewMedals(): boolean {
+    return this.authService.canViewHallOfFame();
   }
 
   private sortJuegos(juegos: UsuarioJuegoOrden[]): UsuarioJuegoOrden[] {
