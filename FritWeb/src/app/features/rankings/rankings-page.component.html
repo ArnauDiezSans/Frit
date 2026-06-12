@@ -559,18 +559,45 @@
             <h3>% de victòries</h3>
           </div>
 
-          <div class="chart-bars" *ngIf="victoryChartRows().length > 0; else noVictoryChartData">
-            <div class="chart-bar-row" *ngFor="let row of victoryChartRows(); trackBy: trackByChartMetricRow">
-              <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
-              <span class="chart-bar-track">
-                <span
-                  class="chart-bar-fill"
-                  [style.width]="getChartBarWidth(row.percentage)"
-                  [style.background]="row.color">
-                </span>
+          <div class="line-chart-wrap" *ngIf="hasLineChartData(victoryTimeChartSeries()); else noVictoryChartData">
+            <svg class="line-chart" [attr.viewBox]="lineChartViewBox" role="img" aria-label="Evolució del percentatge de victòries">
+              <g class="line-chart-grid">
+                <g *ngFor="let tick of lineChartYAxisTicks; trackBy: trackByChartAxisTick">
+                  <line x1="44" x2="622" [attr.y1]="tick.y" [attr.y2]="tick.y"></line>
+                  <text x="36" [attr.y]="tick.y + 4">{{ tick.label }}</text>
+                </g>
+              </g>
+
+              <g class="line-chart-x-axis">
+                <g *ngFor="let tick of chartDateTicks(); trackBy: trackByChartDateTick">
+                  <line [attr.x1]="tick.x" [attr.x2]="tick.x" y1="222" y2="228"></line>
+                  <text [attr.x]="tick.x" y="247">{{ tick.label }}</text>
+                </g>
+              </g>
+
+              <g *ngFor="let serie of victoryTimeChartSeries(); trackBy: trackByChartLineSeries">
+                <polyline
+                  class="line-chart-line"
+                  [attr.points]="serie.polylinePoints"
+                  [attr.stroke]="serie.color">
+                </polyline>
+                <circle
+                  class="line-chart-point"
+                  *ngFor="let point of serie.points; trackBy: trackByChartLinePoint"
+                  r="4"
+                  [attr.cx]="point.x"
+                  [attr.cy]="point.y"
+                  [attr.fill]="serie.color">
+                  <title>{{ serie.usuarioNombre }} · {{ point.label }} · {{ formatPercent(point.value) }} ({{ point.detail }})</title>
+                </circle>
+              </g>
+            </svg>
+
+            <div class="line-chart-summary">
+              <span *ngFor="let serie of victoryTimeChartSeries(); trackBy: trackByChartLineSeries">
+                <span class="chart-color-swatch" [style.background]="serie.color"></span>
+                {{ serie.usuarioNombre }} {{ formatPercent(serie.lastValue) }} <small>{{ serie.lastDetail }}</small>
               </span>
-              <strong class="chart-bar-value">{{ formatPercent(row.percentage) }}</strong>
-              <span class="chart-bar-detail">{{ row.detail }}</span>
             </div>
           </div>
 
@@ -584,18 +611,45 @@
             <h3>% de partides jugades</h3>
           </div>
 
-          <div class="chart-bars" *ngIf="playedChartRows().length > 0; else noPlayedChartData">
-            <div class="chart-bar-row" *ngFor="let row of playedChartRows(); trackBy: trackByChartMetricRow">
-              <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
-              <span class="chart-bar-track">
-                <span
-                  class="chart-bar-fill"
-                  [style.width]="getChartBarWidth(row.percentage)"
-                  [style.background]="row.color">
-                </span>
+          <div class="line-chart-wrap" *ngIf="hasLineChartData(playedTimeChartSeries()); else noPlayedChartData">
+            <svg class="line-chart" [attr.viewBox]="lineChartViewBox" role="img" aria-label="Evolució del percentatge de partides jugades">
+              <g class="line-chart-grid">
+                <g *ngFor="let tick of lineChartYAxisTicks; trackBy: trackByChartAxisTick">
+                  <line x1="44" x2="622" [attr.y1]="tick.y" [attr.y2]="tick.y"></line>
+                  <text x="36" [attr.y]="tick.y + 4">{{ tick.label }}</text>
+                </g>
+              </g>
+
+              <g class="line-chart-x-axis">
+                <g *ngFor="let tick of chartDateTicks(); trackBy: trackByChartDateTick">
+                  <line [attr.x1]="tick.x" [attr.x2]="tick.x" y1="222" y2="228"></line>
+                  <text [attr.x]="tick.x" y="247">{{ tick.label }}</text>
+                </g>
+              </g>
+
+              <g *ngFor="let serie of playedTimeChartSeries(); trackBy: trackByChartLineSeries">
+                <polyline
+                  class="line-chart-line"
+                  [attr.points]="serie.polylinePoints"
+                  [attr.stroke]="serie.color">
+                </polyline>
+                <circle
+                  class="line-chart-point"
+                  *ngFor="let point of serie.points; trackBy: trackByChartLinePoint"
+                  r="4"
+                  [attr.cx]="point.x"
+                  [attr.cy]="point.y"
+                  [attr.fill]="serie.color">
+                  <title>{{ serie.usuarioNombre }} · {{ point.label }} · {{ formatPercent(point.value) }} ({{ point.detail }})</title>
+                </circle>
+              </g>
+            </svg>
+
+            <div class="line-chart-summary">
+              <span *ngFor="let serie of playedTimeChartSeries(); trackBy: trackByChartLineSeries">
+                <span class="chart-color-swatch" [style.background]="serie.color"></span>
+                {{ serie.usuarioNombre }} {{ formatPercent(serie.lastValue) }} <small>{{ serie.lastDetail }}</small>
               </span>
-              <strong class="chart-bar-value">{{ formatPercent(row.percentage) }}</strong>
-              <span class="chart-bar-detail">{{ row.detail }}</span>
             </div>
           </div>
 

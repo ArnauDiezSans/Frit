@@ -85,6 +85,37 @@ interface ChartMetricRow {
   detail: string;
 }
 
+interface ChartLinePoint {
+  fecha: string;
+  label: string;
+  value: number;
+  detail: string;
+  x: number;
+  y: number;
+}
+
+interface ChartLineSeries {
+  usuarioId: number;
+  usuarioNombre: string;
+  color: string;
+  points: ChartLinePoint[];
+  polylinePoints: string;
+  lastValue: number;
+  lastDetail: string;
+}
+
+interface ChartAxisTick {
+  value: number;
+  label: string;
+  y: number;
+}
+
+interface ChartDateTick {
+  fecha: string;
+  label: string;
+  x: number;
+}
+
 interface GameColumns {
   nombre: boolean;
   partidas: boolean;
@@ -150,6 +181,15 @@ const CHART_COLORS = [
   '#0284c7'
 ];
 
+const LINE_CHART_WIDTH = 640;
+const LINE_CHART_HEIGHT = 260;
+const LINE_CHART_PADDING = {
+  top: 18,
+  right: 18,
+  bottom: 38,
+  left: 44
+};
+
 @Component({
   selector: 'app-rankings-page',
   standalone: true,
@@ -161,6 +201,8 @@ export class RankingsPageComponent {
   private authService = inject(AuthService);
   private rankingsService = inject(RankingsService);
   private router = inject(Router);
+  protected readonly lineChartViewBox = `0 0 ${LINE_CHART_WIDTH} ${LINE_CHART_HEIGHT}`;
+  protected readonly lineChartYAxisTicks = this.buildYAxisTicks();
 
   loading = signal(true);
   error = signal('');
@@ -488,6 +530,18 @@ export class RankingsPageComponent {
       .sort((a, b) => b.percentage - a.percentage || a.usuarioNombre.localeCompare(b.usuarioNombre));
   });
 
+  chartDateTicks = computed(() =>
+    this.buildDateTicks(this.chartTimelineDates())
+  );
+
+  victoryTimeChartSeries = computed(() =>
+    this.buildTimeChartSeries('victory')
+  );
+
+  playedTimeChartSeries = computed(() =>
+    this.buildTimeChartSeries('played')
+  );
+
   allGameColumnsSelected = computed(() => Object.values(this.gameColumns()).every(Boolean));
   allDetailColumnsSelected = computed(() => Object.values(this.detailColumns()).every(Boolean));
   allUserColumnsSelected = computed(() => Object.values(this.userColumns()).every(Boolean));
@@ -782,8 +836,28 @@ export class RankingsPageComponent {
     return item.usuarioId;
   }
 
+  trackByChartLineSeries(_: number, item: ChartLineSeries): number {
+    return item.usuarioId;
+  }
+
+  trackByChartLinePoint(_: number, item: ChartLinePoint): string {
+    return `${item.fecha}-${item.value}-${item.detail}`;
+  }
+
+  trackByChartAxisTick(_: number, item: ChartAxisTick): number {
+    return item.value;
+  }
+
+  trackByChartDateTick(_: number, item: ChartDateTick): string {
+    return item.fecha;
+  }
+
   getChartBarWidth(value: number): string {
     return `${Math.max(0, Math.min(value, 100))}%`;
+  }
+
+  hasLineChartData(series: ChartLineSeries[]): boolean {
+    return series.some(item => item.points.length > 0);
   }
 
   private initializeChartUsers(rankings: Rankings): void {
@@ -953,6 +1027,114 @@ export class RankingsPageComponent {
 
   private filterPartidas(partidas: RankingPartida[], fechaDesde: string, fechaHasta: string): RankingPartida[] {
     return partidas.filter(partida => this.matchesDateRange(partida.fecha, fechaDesde, fechaHasta));
+  }
+
+  private chartTimelineDates(): string[] {
+    return Array.from(new Set(this.chartPartidas().map(partida => partida.fecha)))
+      .sort((a, b) => a.localeCompare(b));
+  }
+
+  private buildTimeChartSeries(kind: 'victory' | 'played'): ChartLineSeries[] {
+    const dates = this.chartTimelineDates();
+    if (dates.length === 0) {
+      return [];
+    }
+
+    const jugadores = this.chartJugadores();
+    const partidas = this.chartPartidas();
+    const lastDateIndex = Math.max(dates.length - 1, 1);
+
+    return this.selectedChartUsers().map(usuario => {
+      const userRows = jugadores
+        .filter(jugador => jugador.usuarioId === usuario.usuarioId)
+        .sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+      const points = dates.map((fecha, index) => {
+        const x = this.getChartX(index, lastDateIndex);
+        const rowsUntilDate = userRows.filter(jugador => jugador.fecha <= fecha);
+        let value = 0;
+        let detail = '0/0';
+
+        if (kind === 'victory') {
+          const wins = rowsUntilDate.filter(jugador => jugador.posicion === 1).length;
+          value = this.calculatePercentage(wins, rowsUntilDate.length);
+          detail = `${wins}/${rowsUntilDate.length}`;
+        } else {
+          const totalPartidas = new Set(
+            partidas
+              .filter(partida => partida.fecha <= fecha)
+              .map(partida => partida.partidaId)
+          ).size;
+          const userPartidas = new Set(rowsUntilDate.map(jugador => jugador.partidaId)).size;
+          value = this.calculatePercentage(userPartidas, totalPartidas);
+          detail = `${userPartidas}/${totalPartidas}`;
+        }
+
+        return {
+          fecha,
+          label: this.formatDate(fecha),
+          value,
+          detail,
+          x,
+          y: this.getChartY(value)
+        };
+      });
+
+      const lastPoint = points[points.length - 1];
+
+      return {
+        usuarioId: usuario.usuarioId,
+        usuarioNombre: usuario.nombre,
+        color: usuario.color,
+        points,
+        polylinePoints: points.map(point => `${point.x},${point.y}`).join(' '),
+        lastValue: lastPoint?.value ?? 0,
+        lastDetail: lastPoint?.detail ?? '0/0'
+      };
+    });
+  }
+
+  private buildYAxisTicks(): ChartAxisTick[] {
+    return [100, 75, 50, 25, 0].map(value => ({
+      value,
+      label: `${value}%`,
+      y: this.getChartY(value)
+    }));
+  }
+
+  private buildDateTicks(dates: string[]): ChartDateTick[] {
+    if (dates.length === 0) {
+      return [];
+    }
+
+    const lastDateIndex = Math.max(dates.length - 1, 1);
+    const tickIndexes = new Set<number>([0, dates.length - 1]);
+    if (dates.length > 2) {
+      tickIndexes.add(Math.floor((dates.length - 1) / 2));
+    }
+    if (dates.length > 8) {
+      tickIndexes.add(Math.floor((dates.length - 1) / 4));
+      tickIndexes.add(Math.floor(((dates.length - 1) * 3) / 4));
+    }
+
+    return Array.from(tickIndexes)
+      .sort((a, b) => a - b)
+      .map(index => ({
+        fecha: dates[index],
+        label: this.formatDate(dates[index]),
+        x: this.getChartX(index, lastDateIndex)
+      }));
+  }
+
+  private getChartX(index: number, lastDateIndex: number): number {
+    const plotWidth = LINE_CHART_WIDTH - LINE_CHART_PADDING.left - LINE_CHART_PADDING.right;
+    return LINE_CHART_PADDING.left + (plotWidth * index) / lastDateIndex;
+  }
+
+  private getChartY(value: number): number {
+    const plotHeight = LINE_CHART_HEIGHT - LINE_CHART_PADDING.top - LINE_CHART_PADDING.bottom;
+    const safeValue = Math.max(0, Math.min(value, 100));
+    return LINE_CHART_PADDING.top + plotHeight - (plotHeight * safeValue) / 100;
   }
 
   private matchesDateRange(fecha: string, fechaDesde: string, fechaHasta: string): boolean {
