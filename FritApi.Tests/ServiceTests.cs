@@ -1,8 +1,10 @@
+using System.Net;
 using FritApi.Data;
 using FritApi.Dtos;
 using FritApi.Models;
 using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace FritApi.Tests;
@@ -274,6 +276,45 @@ public class ServiceTests
         Assert.Equal("Arnau Nou", updated.Nombre);
     }
 
+    [Fact]
+    public async Task JuegoService_GetFromBgg_SendsBearerToken()
+    {
+        await using var context = CreateContext();
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""
+                <items>
+                  <item id="13" type="boardgame">
+                    <name type="primary" value="Catan" />
+                    <minplayers value="3" />
+                    <maxplayers value="4" />
+                    <statistics>
+                      <ratings>
+                        <averageweight value="2.31" />
+                      </ratings>
+                    </statistics>
+                  </item>
+                </items>
+                """)
+        });
+        var service = new JuegoService(
+            context,
+            new TestHttpClientFactory(new HttpClient(handler)),
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Bgg:ApplicationToken"] = "test-token"
+                })
+                .Build());
+
+        var result = await service.GetFromBggAsync(13);
+
+        Assert.True(result.Success);
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization?.Scheme);
+        Assert.Equal("test-token", handler.LastRequest.Headers.Authorization?.Parameter);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
@@ -281,5 +322,38 @@ public class ServiceTests
             .Options;
 
         return new AppDbContext(options);
+    }
+
+    private sealed class TestHttpClientFactory : IHttpClientFactory
+    {
+        private readonly HttpClient _httpClient;
+
+        public TestHttpClientFactory(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+        }
+
+        public HttpClient CreateClient(string name)
+        {
+            return _httpClient;
+        }
+    }
+
+    private sealed class RecordingHttpMessageHandler : HttpMessageHandler
+    {
+        private readonly Func<HttpRequestMessage, HttpResponseMessage> _responseFactory;
+
+        public RecordingHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responseFactory)
+        {
+            _responseFactory = responseFactory;
+        }
+
+        public HttpRequestMessage? LastRequest { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastRequest = request;
+            return Task.FromResult(_responseFactory(request));
+        }
     }
 }

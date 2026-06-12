@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Xml.Linq;
 using FritApi.Data;
 using FritApi.Dtos;
 using FritApi.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 
 namespace FritApi.Services;
@@ -12,11 +14,14 @@ public class JuegoService
 {
     private readonly AppDbContext _context;
     private readonly HttpClient _httpClient;
+    private readonly string? _bggApplicationToken;
 
-    public JuegoService(AppDbContext context, IHttpClientFactory httpClientFactory)
+    public JuegoService(AppDbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
+        _bggApplicationToken = configuration["Bgg:ApplicationToken"]
+            ?? configuration["BGG_APPLICATION_TOKEN"];
     }
 
     public async Task<List<JuegoDto>> GetAllAsync()
@@ -181,10 +186,17 @@ public class JuegoService
         }
 
         var url = $"https://boardgamegeek.com/xmlapi2/thing?id={bggId}&stats=1";
+        if (string.IsNullOrWhiteSpace(_bggApplicationToken))
+        {
+            return (false, "El token de BoardGameGeek no estÃ  configurat.", null);
+        }
 
         for (var attempt = 1; attempt <= 5; attempt++)
         {
-            using var response = await _httpClient.GetAsync(url);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _bggApplicationToken.Trim());
+
+            using var response = await _httpClient.SendAsync(request);
 
             if (response.StatusCode == HttpStatusCode.Accepted)
             {
