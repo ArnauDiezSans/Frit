@@ -208,6 +208,17 @@
 
     <div class="table-wrapper" *ngIf="juegosFiltradosOrdenados().length > 0">
       <table class="games-table">
+        <colgroup>
+          <col class="col-row-number" />
+          <col *ngIf="visibleColumns().nombre" class="col-name" />
+          <col *ngIf="visibleColumns().numeroJugadoresMin" class="col-players" />
+          <col *ngIf="visibleColumns().numeroJugadoresMax" class="col-players" />
+          <col *ngIf="visibleColumns().propietario" class="col-owner" />
+          <col *ngIf="visibleColumns().tipo" class="col-type" />
+          <col *ngIf="visibleColumns().pvp" class="col-price" />
+          <col *ngIf="visibleColumns().dificultadBgg" class="col-weight" />
+          <col class="col-actions" />
+        </colgroup>
         <thead>
           <tr>
             <th class="row-number-column">#</th>
@@ -222,14 +233,14 @@
               *ngIf="visibleColumns().numeroJugadoresMin"
               class="sortable"
               (click)="ordenarPor('numeroJugadoresMin')">
-              <span>Jugadors mín.{{ getSortIndicator('numeroJugadoresMin') }}</span>
+              <span>Jug. mín.{{ getSortIndicator('numeroJugadoresMin') }}</span>
             </th>
 
             <th
               *ngIf="visibleColumns().numeroJugadoresMax"
               class="sortable"
               (click)="ordenarPor('numeroJugadoresMax')">
-              <span>Jugadors màx.{{ getSortIndicator('numeroJugadoresMax') }}</span>
+              <span>Jug. màx.{{ getSortIndicator('numeroJugadoresMax') }}</span>
             </th>
 
             <th
@@ -259,7 +270,7 @@
               (click)="ordenarPor('dificultadBgg')">
               <span>Pes BGG{{ getSortIndicator('dificultadBgg') }}</span>
             </th>
-            <th>Accions</th>
+            <th class="actions-column" aria-label="Accions"></th>
           </tr>
 
           <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
@@ -348,11 +359,11 @@
               <span class="cell-value cell-title">{{ juego.nombre }}</span>
             </td>
 
-            <td *ngIf="visibleColumns().numeroJugadoresMin" data-label="Jugadors mín.">
+            <td *ngIf="visibleColumns().numeroJugadoresMin" data-label="Jug. mín.">
               <span class="cell-value">{{ juego.numeroJugadoresMin }}</span>
             </td>
 
-            <td *ngIf="visibleColumns().numeroJugadoresMax" data-label="Jugadors màx.">
+            <td *ngIf="visibleColumns().numeroJugadoresMax" data-label="Jug. màx.">
               <span class="cell-value">{{ juego.numeroJugadoresMax }}</span>
             </td>
 
@@ -361,7 +372,7 @@
             </td>
 
             <td *ngIf="visibleColumns().tipo" data-label="Tipus">
-              <span class="cell-value">{{ juego.tipo || '-' }}</span>
+              <span class="cell-value type-value">{{ juego.tipo || '-' }}</span>
             </td>
 
             <td *ngIf="visibleColumns().pvp" data-label="PVP">
@@ -371,7 +382,7 @@
             <td *ngIf="visibleColumns().dificultadBgg" data-label="Pes BGG">
               <span class="cell-value">{{ formatDificultadBgg(juego.dificultadBgg) }}</span>
             </td>
-            <td data-label="Accions">
+            <td class="actions-cell" data-label="Accions">
               <div class="row-actions">
                 <button
                   type="button"

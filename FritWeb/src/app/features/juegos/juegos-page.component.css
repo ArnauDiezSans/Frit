@@ -93,6 +93,7 @@ h1 {
   gap: 8px;
   flex-wrap: nowrap;
   align-items: center;
+  justify-content: center;
 }
 
 .small-button {
@@ -278,62 +279,57 @@ h1 {
 
 .games-table {
   width: 100%;
-  min-width: 980px;
+  min-width: 1040px;
   border-collapse: collapse;
-  table-layout: auto;
+  table-layout: fixed;
+}
+
+.col-row-number {
+  width: 34px;
+}
+
+.col-name {
+  width: 230px;
+}
+
+.col-players {
+  width: 72px;
+}
+
+.col-owner {
+  width: 118px;
+}
+
+.col-type {
+  width: 340px;
+}
+
+.col-price {
+  width: 64px;
+}
+
+.col-weight {
+  width: 82px;
+}
+
+.col-actions {
+  width: 48px;
 }
 
 .games-table th,
 .games-table td {
-  padding: 14px 12px;
+  padding: 14px 10px;
   text-align: left;
   border-bottom: 1px solid #e4e7ec;
   vertical-align: top;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .games-table th {
   white-space: nowrap;
   overflow-wrap: normal;
   word-break: normal;
-}
-
-.games-table th:nth-child(2),
-.games-table td:nth-child(2) {
-  min-width: 240px;
-}
-
-.games-table th:nth-child(3),
-.games-table th:nth-child(4),
-.games-table td:nth-child(3),
-.games-table td:nth-child(4) {
-  min-width: 116px;
-}
-
-.games-table th:nth-child(5),
-.games-table td:nth-child(5) {
-  min-width: 128px;
-}
-
-.games-table th:nth-child(6),
-.games-table td:nth-child(6) {
-  min-width: 96px;
-}
-
-.games-table th:nth-child(7),
-.games-table td:nth-child(7) {
-  min-width: 72px;
-}
-
-.games-table th:nth-child(8),
-.games-table td:nth-child(8) {
-  min-width: 128px;
-}
-
-.games-table th:last-child,
-.games-table td:last-child {
-  width: 104px;
-  min-width: 104px;
 }
 
 .games-table th {
@@ -377,6 +373,25 @@ h1 {
 
 .cell-value {
   display: inline-block;
+}
+
+.type-value {
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.actions-column,
+.actions-cell {
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  text-align: center !important;
+}
+
+.actions-cell .icon-action-button {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
 }
 
 .empty-state {
