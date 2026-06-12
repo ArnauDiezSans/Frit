@@ -20,10 +20,11 @@ public class JuegoService
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
-        _bggApplicationToken = configuration["Bgg:ApplicationToken"]
-            ?? configuration["BGG_APPLICATION_TOKEN"]
-            ?? Environment.GetEnvironmentVariable("BGG_APPLICATION_TOKEN")
-            ?? Environment.GetEnvironmentVariable("Bgg__ApplicationToken");
+        _bggApplicationToken = FirstConfiguredValue(
+            configuration["Bgg:ApplicationToken"],
+            configuration["BGG_APPLICATION_TOKEN"],
+            Environment.GetEnvironmentVariable("BGG_APPLICATION_TOKEN"),
+            Environment.GetEnvironmentVariable("Bgg__ApplicationToken"));
     }
 
     public async Task<List<JuegoDto>> GetAllAsync()
@@ -285,5 +286,10 @@ public class JuegoService
         return decimal.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var number)
             ? decimal.Round(number, 2)
             : null;
+    }
+
+    private static string? FirstConfiguredValue(params string?[] values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
     }
 }

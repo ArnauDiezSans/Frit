@@ -353,6 +353,48 @@ public class ServiceTests
         }
     }
 
+    [Fact]
+    public async Task JuegoService_GetFromBgg_IgnoresEmptyConfiguredToken()
+    {
+        await using var context = CreateContext();
+        var handler = new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""
+                <items>
+                  <item id="13" type="boardgame">
+                    <name type="primary" value="Catan" />
+                    <minplayers value="3" />
+                    <maxplayers value="4" />
+                  </item>
+                </items>
+                """)
+        });
+        Environment.SetEnvironmentVariable("BGG_APPLICATION_TOKEN", "env-token");
+
+        try
+        {
+            var service = new JuegoService(
+                context,
+                new TestHttpClientFactory(new HttpClient(handler)),
+                new ConfigurationBuilder()
+                    .AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Bgg:ApplicationToken"] = ""
+                    })
+                    .Build());
+
+            var result = await service.GetFromBggAsync(13);
+
+            Assert.True(result.Success);
+            Assert.NotNull(handler.LastRequest);
+            Assert.Equal("env-token", handler.LastRequest.Headers.Authorization?.Parameter);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("BGG_APPLICATION_TOKEN", null);
+        }
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
