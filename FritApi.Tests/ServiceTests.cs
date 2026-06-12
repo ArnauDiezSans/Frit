@@ -331,6 +331,115 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task HallOfFameService_MastermindCountsDistinctHeavyBggWins()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(arnau);
+        await context.SaveChangesAsync();
+
+        var games = Enumerable.Range(1, 9)
+            .Select(index => new Juego
+            {
+                Nombre = $"Heavy {index}",
+                DificultadBgg = index <= 8 ? 4.00m : 3.99m,
+                NumeroJugadoresMin = 1,
+                NumeroJugadoresMax = 4,
+                PropietarioId = arnau.UsuarioId
+            })
+            .ToList();
+        context.Juegos.AddRange(games);
+        await context.SaveChangesAsync();
+
+        foreach (var game in games)
+        {
+            var partida = new Partida
+            {
+                JuegoId = game.JuegoId,
+                UsuarioCreadorId = arnau.UsuarioId,
+                Fecha = new DateOnly(2026, 6, 12),
+                NumeroJugadores = 1
+            };
+            context.Partidas.Add(partida);
+            await context.SaveChangesAsync();
+            context.PartidaJugadores.Add(new PartidaJugador
+            {
+                PartidaId = partida.PartidaId,
+                UsuarioId = arnau.UsuarioId,
+                NombreMostrado = "Arnau",
+                Posicion = 1
+            });
+        }
+
+        await context.SaveChangesAsync();
+        var service = new HallOfFameService(context);
+
+        var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+
+        Assert.NotNull(medals);
+        var mastermind = medals.Medals.Single(row => row.Nombre == "Mastermind");
+        Assert.Equal(8, mastermind.CurrentValue);
+        Assert.Equal(8, mastermind.TargetValue);
+        Assert.Equal("Completada", mastermind.RankName);
+    }
+
+    [Fact]
+    public async Task HallOfFameService_OneMenArmyCountsPlayedGamesWithoutVictory()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Catan",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Propietario = arnau
+        };
+        context.AddRange(arnau, anna, game);
+        await context.SaveChangesAsync();
+
+        for (var index = 0; index < 2; index++)
+        {
+            var partida = new Partida
+            {
+                JuegoId = game.JuegoId,
+                UsuarioCreadorId = arnau.UsuarioId,
+                Fecha = new DateOnly(2026, 6, 12),
+                NumeroJugadores = 2
+            };
+            context.Partidas.Add(partida);
+            await context.SaveChangesAsync();
+            context.PartidaJugadores.AddRange(
+                new PartidaJugador
+                {
+                    PartidaId = partida.PartidaId,
+                    UsuarioId = anna.UsuarioId,
+                    NombreMostrado = "Anna",
+                    Posicion = 1
+                },
+                new PartidaJugador
+                {
+                    PartidaId = partida.PartidaId,
+                    UsuarioId = arnau.UsuarioId,
+                    NombreMostrado = "Arnau",
+                    Posicion = 2
+                });
+        }
+
+        await context.SaveChangesAsync();
+        var service = new HallOfFameService(context);
+
+        var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+
+        Assert.NotNull(medals);
+        var oneMenArmy = medals.Medals.Single(row => row.Nombre == "One men army");
+        Assert.Equal(2, oneMenArmy.CurrentValue);
+        Assert.Equal(1000, oneMenArmy.TargetValue);
+        Assert.Equal("Pendent", oneMenArmy.RankName);
+    }
+
+    [Fact]
     public async Task PartidaJugadorService_AllowsSharedPositions()
     {
         await using var context = CreateContext();

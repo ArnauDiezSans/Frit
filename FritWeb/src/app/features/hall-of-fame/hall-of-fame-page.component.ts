@@ -145,6 +145,10 @@ export class HallOfFamePageComponent {
     return user.usuarioId;
   }
 
+  shouldShowRankTarget(entry: HallOfFameEntry): boolean {
+    return entry.medal.tipo !== 'HeavyBggWins' && entry.medal.tipo !== 'TotalPlays';
+  }
+
   trackByUsuario(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;
   }
