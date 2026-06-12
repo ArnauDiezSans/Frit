@@ -14,6 +14,7 @@ public class JuegoService
 {
     private readonly AppDbContext _context;
     private readonly HttpClient _httpClient;
+    private readonly IBggMedalImageService _bggMedalImageService;
     private readonly string? _bggApplicationToken;
     private static readonly IReadOnlyDictionary<string, string> BggCategoryTranslations =
         new Dictionary<string, string>(StringComparer.Ordinal)
@@ -105,10 +106,15 @@ public class JuegoService
             ["Zombies"] = "Zombis"
         };
 
-    public JuegoService(AppDbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public JuegoService(
+        AppDbContext context,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration,
+        IBggMedalImageService bggMedalImageService)
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient();
+        _bggMedalImageService = bggMedalImageService;
         _bggApplicationToken = FirstConfiguredValue(
             configuration["Bgg:ApplicationToken"],
             configuration["BGG_APPLICATION_TOKEN"],
@@ -197,6 +203,11 @@ public class JuegoService
         _context.Juegos.Add(juego);
         await _context.SaveChangesAsync();
 
+        if (juego.BggId.HasValue)
+        {
+            await _bggMedalImageService.EnsureGameMedalImageAsync(juego.JuegoId, juego.BggId.Value);
+        }
+
         dto.JuegoId = juego.JuegoId;
         return (true, null, dto);
     }
@@ -239,6 +250,8 @@ public class JuegoService
             }
         }
 
+        var previousBggId = juego.BggId;
+
         juego.Nombre = dto.Nombre.Trim();
         juego.BggId = dto.BggId;
         juego.DificultadBgg = dto.DificultadBgg;
@@ -251,6 +264,11 @@ public class JuegoService
         juego.JuegoBaseId = dto.JuegoBaseId;
 
         await _context.SaveChangesAsync();
+
+        if (juego.BggId.HasValue && juego.BggId != previousBggId)
+        {
+            await _bggMedalImageService.EnsureGameMedalImageAsync(juego.JuegoId, juego.BggId.Value);
+        }
 
         return (true, null, dto);
     }

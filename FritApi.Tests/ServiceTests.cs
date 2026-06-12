@@ -404,6 +404,36 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task JuegoService_CreateAsync_GeneratesMedalImageWhenBggIdIsSet()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(user);
+        await context.SaveChangesAsync();
+        var medalImageService = new FakeBggMedalImageService();
+        var service = new JuegoService(
+            context,
+            new TestHttpClientFactory(new HttpClient(new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)))),
+            new ConfigurationBuilder().Build(),
+            medalImageService);
+
+        var result = await service.CreateAsync(new JuegoDto
+        {
+            Nombre = "Catan",
+            BggId = 13,
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            PropietarioId = user.UsuarioId,
+            Tipo = "Economic"
+        });
+
+        Assert.True(result.Success);
+        var call = Assert.Single(medalImageService.Calls);
+        Assert.Equal(result.Juego!.JuegoId, call.JuegoId);
+        Assert.Equal(13, call.BggId);
+    }
+
+    [Fact]
     public async Task JuegoService_GetFromBgg_SendsBearerToken()
     {
         await using var context = CreateContext();
@@ -434,7 +464,8 @@ public class ServiceTests
                 {
                     ["Bgg:ApplicationToken"] = "test-token"
                 })
-                .Build());
+                .Build(),
+            new FakeBggMedalImageService());
 
         var result = await service.GetFromBggAsync(13);
 
@@ -468,7 +499,8 @@ public class ServiceTests
             var service = new JuegoService(
                 context,
                 new TestHttpClientFactory(new HttpClient(handler)),
-                new ConfigurationBuilder().Build());
+                new ConfigurationBuilder().Build(),
+                new FakeBggMedalImageService());
 
             var result = await service.GetFromBggAsync(13);
 
@@ -511,7 +543,8 @@ public class ServiceTests
                     {
                         ["Bgg:ApplicationToken"] = ""
                     })
-                    .Build());
+                    .Build(),
+                new FakeBggMedalImageService());
 
             var result = await service.GetFromBggAsync(13);
 
@@ -546,6 +579,17 @@ public class ServiceTests
         public HttpClient CreateClient(string name)
         {
             return _httpClient;
+        }
+    }
+
+    private sealed class FakeBggMedalImageService : IBggMedalImageService
+    {
+        public List<(int JuegoId, int BggId)> Calls { get; } = new();
+
+        public Task EnsureGameMedalImageAsync(int juegoId, int bggId)
+        {
+            Calls.Add((juegoId, bggId));
+            return Task.CompletedTask;
         }
     }
 

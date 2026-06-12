@@ -50,6 +50,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<UsuarioJuegoOrdenService>();
+builder.Services.AddScoped<IBggMedalImageService, BggMedalImageService>();
 builder.Services.AddScoped<JuegoService>();
 builder.Services.AddScoped<PartidaService>();
 builder.Services.AddScoped<PartidaJugadorService>();
