@@ -15,6 +15,7 @@ export interface MedalProgress {
   targetValue: number;
   rankName: string;
   rankLevel: number;
+  rankTargetValue: number;
   rankColor: string;
   rankFilled: boolean;
   nextRankName?: string | null;
@@ -32,8 +33,10 @@ export interface MedalUserProgress {
 }
 
 export interface HallOfFameEntry {
+  entryId: string;
   medal: MedalProgress;
   bestUser: MedalUserProgress;
+  users: MedalUserProgress[];
 }
 
 export interface HallOfFame {

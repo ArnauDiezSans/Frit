@@ -8,8 +8,10 @@ public class HallOfFameDto
 
 public class HallOfFameEntryDto
 {
+    public string EntryId { get; set; } = string.Empty;
     public MedalProgressDto Medal { get; set; } = new();
     public MedalUserProgressDto BestUser { get; set; } = new();
+    public List<MedalUserProgressDto> Users { get; set; } = new();
 }
 
 public class UserMedalsDto
@@ -30,6 +32,7 @@ public class MedalProgressDto
     public int TargetValue { get; set; }
     public string RankName { get; set; } = string.Empty;
     public int RankLevel { get; set; }
+    public int RankTargetValue { get; set; }
     public string RankColor { get; set; } = string.Empty;
     public bool RankFilled { get; set; }
     public string? NextRankName { get; set; }

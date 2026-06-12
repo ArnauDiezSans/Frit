@@ -92,14 +92,17 @@
           <div class="medal-content">
             <div class="medal-title-row">
               <h3>{{ entry.medal.nombre }}</h3>
-              <span class="rank-pill" [style.background]="entry.medal.rankColor">{{ entry.bestUser.rankName }}</span>
+              <div class="rank-stack">
+                <span class="rank-pill" [style.background]="entry.medal.rankColor">{{ entry.bestUser.rankName }}</span>
+                <span class="rank-target">{{ entry.medal.rankTargetValue }}</span>
+              </div>
             </div>
-            <p>{{ entry.medal.descripcion }}</p>
-            <strong>{{ entry.bestUser.usuarioNombre }}</strong>
-            <div class="progress-track">
-              <span class="progress-fill" [style.width]="getProgressWidth(entry)" [style.background]="entry.medal.rankColor"></span>
+            <p *ngIf="entry.medal.tipo !== 'GameWins'">{{ entry.medal.descripcion }}</p>
+            <div class="medal-users">
+              <span *ngFor="let user of entry.users; trackBy: trackByEntryUser">
+                {{ user.usuarioNombre }}
+              </span>
             </div>
-            <span class="progress-detail">{{ entry.bestUser.currentValue }}/{{ entry.medal.targetValue }}</span>
           </div>
         </article>
       </ng-template>

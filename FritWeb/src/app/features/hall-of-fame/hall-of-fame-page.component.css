@@ -49,8 +49,7 @@ h1 {
 
 .subtitle,
 .section-heading p,
-.medal-card p,
-.progress-detail {
+.medal-card p {
   color: #667085;
 }
 
@@ -182,16 +181,39 @@ h1 {
   font-weight: 800;
 }
 
-.progress-track {
-  height: 7px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #eef2f6;
+.rank-stack {
+  flex: 0 0 auto;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
 }
 
-.progress-fill {
-  display: block;
-  height: 100%;
+.rank-target {
+  color: #475467;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.medal-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.medal-users span {
+  max-width: 100%;
+  padding: 3px 7px;
+  border: 1px solid #d9e3e7;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #172033;
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .primary-button,

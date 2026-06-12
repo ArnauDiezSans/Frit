@@ -114,11 +114,6 @@ export class HallOfFamePageComponent {
     });
   }
 
-  getProgressWidth(entry: HallOfFameEntry): string {
-    const target = Math.max(entry.medal.targetValue, 1);
-    return `${Math.min(100, Math.round((entry.bestUser.currentValue * 1000) / target) / 10)}%`;
-  }
-
   getFritEntries(): HallOfFameEntry[] {
     return this.hallOfFame()?.entries.filter(entry => entry.medal.tipo !== 'GameWins') ?? [];
   }
@@ -128,7 +123,11 @@ export class HallOfFamePageComponent {
   }
 
   trackByEntry(_: number, entry: HallOfFameEntry): string {
-    return entry.medal.medalId;
+    return entry.entryId;
+  }
+
+  trackByEntryUser(_: number, user: { usuarioId: number }): number {
+    return user.usuarioId;
   }
 
   trackByUsuario(_: number, usuario: UsuarioOption): number {

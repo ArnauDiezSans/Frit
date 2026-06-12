@@ -45,17 +45,19 @@ public class HallOfFameService
         var progress = await BuildAllProgressAsync();
         var entries = progress
             .Where(row => row.Progress.CurrentValue > 0)
-            .GroupBy(row => row.Progress.MedalId)
+            .GroupBy(row => GetHallOfFameEntryKey(row.Progress))
             .Select(group =>
             {
-                var best = group
+                var orderedUsers = group
                     .OrderByDescending(row => row.Progress.RankLevel)
                     .ThenByDescending(row => row.Progress.CurrentValue)
                     .ThenBy(row => row.UsuarioNombre)
-                    .First();
+                    .ToList();
+                var best = orderedUsers.First();
 
                 return new HallOfFameEntryDto
                 {
+                    EntryId = group.Key,
                     Medal = best.Progress,
                     BestUser = new MedalUserProgressDto
                     {
@@ -64,7 +66,17 @@ public class HallOfFameService
                         CurrentValue = best.Progress.CurrentValue,
                         RankName = best.Progress.RankName,
                         RankLevel = best.Progress.RankLevel
-                    }
+                    },
+                    Users = orderedUsers
+                        .Select(row => new MedalUserProgressDto
+                        {
+                            UsuarioId = row.UsuarioId,
+                            UsuarioNombre = row.UsuarioNombre,
+                            CurrentValue = row.Progress.CurrentValue,
+                            RankName = row.Progress.RankName,
+                            RankLevel = row.Progress.RankLevel
+                        })
+                        .ToList()
                 };
             })
             .OrderByDescending(row => row.Medal.EpicScore)
@@ -291,6 +303,7 @@ public class HallOfFameService
             TargetValue = target,
             RankName = currentRank?.Name ?? "Pendent",
             RankLevel = rankLevel,
+            RankTargetValue = currentRank?.Threshold ?? 0,
             RankColor = currentRank?.Color ?? "#98a2b3",
             RankFilled = currentRank?.Filled ?? false,
             NextRankName = nextRank?.Name,
@@ -322,6 +335,7 @@ public class HallOfFameService
             TargetValue = targetValue,
             RankName = completed ? "Completada" : "Pendent",
             RankLevel = completed ? 5 : 0,
+            RankTargetValue = completed ? targetValue : 0,
             RankColor = completed ? "#7c3aed" : "#98a2b3",
             RankFilled = completed,
             NextRankName = completed ? null : "Completada",
@@ -382,6 +396,13 @@ public class HallOfFameService
     {
         return usuario.UsuarioId == ExternalUserPolicy.ExternalUserId ||
             usuario.Nombre == ExternalUserPolicy.ExternalUserName;
+    }
+
+    private static string GetHallOfFameEntryKey(MedalProgressDto progress)
+    {
+        return progress.Tipo == "GameWins"
+            ? $"{progress.MedalId}:rank:{progress.RankLevel}"
+            : progress.MedalId;
     }
 
     private static string GetGameIconPath(int juegoId)
