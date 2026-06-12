@@ -161,21 +161,21 @@ h1 {
 }
 
 .medals-section {
-  padding: 20px;
+  padding: 18px;
 }
 
 .user-medal-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .user-medal-card {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 10px;
   min-width: 0;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid #e4e7ec;
   border-radius: 8px;
   background: #fbfcfd;
@@ -186,8 +186,8 @@ h1 {
 }
 
 .medal-icon-frame {
-  width: 58px;
-  height: 58px;
+  width: 50px;
+  height: 50px;
   border: 3px solid #98a2b3;
   border-radius: 8px;
   background: #ffffff;
@@ -198,9 +198,15 @@ h1 {
 }
 
 .medal-icon-frame img {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
+}
+
+.medal-icon-frame-filled img {
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .user-medal-content {
@@ -211,31 +217,31 @@ h1 {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 5px;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
 .user-medal-header h3 {
   margin: 0;
   color: #101828;
-  font-size: 1rem;
+  font-size: 0.92rem;
   line-height: 1.2;
 }
 
 .user-medal-content p {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: #667085;
-  font-size: 0.88rem;
-  line-height: 1.35;
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .rank-pill {
   flex: 0 0 auto;
-  max-width: 120px;
-  padding: 4px 8px;
+  max-width: 96px;
+  padding: 3px 7px;
   border-radius: 999px;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 800;
   line-height: 1.1;
   text-align: center;
@@ -245,11 +251,11 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .medal-progress-track {
-  height: 9px;
+  height: 7px;
   border-radius: 999px;
   background: #eef2f6;
   overflow: hidden;
@@ -264,14 +270,14 @@ h1 {
 
 .medal-progress-row strong {
   color: #101828;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
 }
 
 .next-rank {
   display: block;
-  margin-top: 6px;
+  margin-top: 5px;
   color: #475467;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -443,6 +449,10 @@ h1 {
 @media (max-width: 1080px) {
   .score-board {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .user-medal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

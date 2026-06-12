@@ -94,7 +94,11 @@
         class="user-medal-card"
         *ngFor="let medal of medals(); trackBy: trackByMedal"
         [class.user-medal-card-pending]="medal.rankLevel === 0">
-        <div class="medal-icon-frame" [style.borderColor]="medal.rankColor">
+        <div
+          class="medal-icon-frame"
+          [class.medal-icon-frame-filled]="medal.rankFilled"
+          [style.borderColor]="medal.rankColor"
+          [style.background]="medal.rankFilled ? medal.rankColor : null">
           <img
             [src]="medal.iconPath"
             [alt]="medal.nombre"

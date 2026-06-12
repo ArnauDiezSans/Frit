@@ -294,9 +294,9 @@ public class ServiceTests
 
         Assert.NotNull(medals);
         var gameMedal = medals.Medals.Single(row => row.MedalId == $"game:{game.JuegoId}");
-        Assert.Equal("Medalla Catan", gameMedal.Nombre);
+        Assert.Equal("Catan", gameMedal.Nombre);
         Assert.Equal(1, gameMedal.CurrentValue);
-        Assert.Equal("Iniciat", gameMedal.RankName);
+        Assert.Equal("Debutant", gameMedal.RankName);
         Assert.Equal(1, gameMedal.RankLevel);
     }
 

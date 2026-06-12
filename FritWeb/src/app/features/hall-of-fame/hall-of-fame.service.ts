@@ -16,6 +16,7 @@ export interface MedalProgress {
   rankName: string;
   rankLevel: number;
   rankColor: string;
+  rankFilled: boolean;
   nextRankName?: string | null;
   nextTargetValue?: number | null;
   completed: boolean;

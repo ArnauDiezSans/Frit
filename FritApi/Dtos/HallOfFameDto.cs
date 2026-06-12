@@ -31,6 +31,7 @@ public class MedalProgressDto
     public string RankName { get; set; } = string.Empty;
     public int RankLevel { get; set; }
     public string RankColor { get; set; } = string.Empty;
+    public bool RankFilled { get; set; }
     public string? NextRankName { get; set; }
     public int? NextTargetValue { get; set; }
     public bool Completed { get; set; }

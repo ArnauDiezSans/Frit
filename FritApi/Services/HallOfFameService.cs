@@ -14,11 +14,16 @@ public class HallOfFameService
 
     private static readonly MedalRank[] GameWinRanks =
     [
-        new("Iniciat", 1, "#8a6f45"),
-        new("Veterà", 10, "#b7791f"),
-        new("Expert", 25, "#64748b"),
-        new("Gurú", 50, "#ca8a04"),
-        new("Llegenda", 100, "#7c3aed")
+        new("Debutant", 1, "#6b7280", false),
+        new("Aprenent", 2, "#8a5a32", false),
+        new("Iniciat", 3, "#2f7f52", false),
+        new("Habitual", 5, "#2563a9", false),
+        new("Veterà", 10, "#7c3aed", false),
+        new("Especialista", 15, "#6b7280", true),
+        new("Expert", 25, "#8a5a32", true),
+        new("Mestre", 50, "#2f7f52", true),
+        new("Gurú", 80, "#2563a9", true),
+        new("Llegenda", 100, "#7c3aed", true)
     ];
 
     private static readonly CodedSetMedal[] CodedSetMedals =
@@ -176,7 +181,7 @@ public class HallOfFameService
                     usuario.Nombre,
                     BuildRankedProgress(
                         $"game:{juego.JuegoId}",
-                        $"Medalla {juego.Nombre}",
+                        juego.Nombre,
                         $"Guanya partides a {juego.Nombre}.",
                         GetGameIconPath(juego.JuegoId),
                         "GameWins",
@@ -287,6 +292,7 @@ public class HallOfFameService
             RankName = currentRank?.Name ?? "Pendent",
             RankLevel = rankLevel,
             RankColor = currentRank?.Color ?? "#98a2b3",
+            RankFilled = currentRank?.Filled ?? false,
             NextRankName = nextRank?.Name,
             NextTargetValue = nextRank?.Threshold,
             Completed = currentValue >= GameWinRanks[^1].Threshold,
@@ -317,6 +323,7 @@ public class HallOfFameService
             RankName = completed ? "Completada" : "Pendent",
             RankLevel = completed ? 5 : 0,
             RankColor = completed ? "#7c3aed" : "#98a2b3",
+            RankFilled = completed,
             NextRankName = completed ? null : "Completada",
             NextTargetValue = completed ? null : targetValue,
             Completed = completed,
@@ -382,7 +389,7 @@ public class HallOfFameService
         return $"/assets/medallas/jocs/{juegoId}.png";
     }
 
-    private sealed record MedalRank(string Name, int Threshold, string Color);
+    private sealed record MedalRank(string Name, int Threshold, string Color, bool Filled);
     private sealed record CodedSetMedal(string MedalId, string Nombre, string Descripcion, int[] JuegoIds);
     private sealed record RegisteredUserRow(int UsuarioId, string Nombre, string NormalizedNombre);
     private sealed record UserMedalProgressRow(int UsuarioId, string UsuarioNombre, MedalProgressDto Progress);
