@@ -149,6 +149,10 @@ export class HallOfFamePageComponent {
     return entry.medal.tipo !== 'HeavyBggWins' && entry.medal.tipo !== 'TotalPlays';
   }
 
+  getHallRankName(entry: HallOfFameEntry): string {
+    return this.shouldShowRankTarget(entry) ? entry.bestUser.rankName : 'Llegenda';
+  }
+
   trackByUsuario(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;
   }

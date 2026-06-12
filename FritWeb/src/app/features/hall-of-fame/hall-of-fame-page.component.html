@@ -100,7 +100,7 @@
             <div class="medal-title-row">
               <h3>{{ entry.medal.nombre }}</h3>
               <div class="rank-stack">
-                <span class="rank-pill" [style.background]="entry.medal.rankColor">{{ entry.bestUser.rankName }}</span>
+                <span class="rank-pill" [style.background]="entry.medal.rankColor">{{ getHallRankName(entry) }}</span>
                 <span class="rank-target" *ngIf="shouldShowRankTarget(entry)">{{ entry.medal.rankTargetValue }}</span>
               </div>
             </div>

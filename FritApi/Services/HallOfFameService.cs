@@ -80,7 +80,7 @@ public class HallOfFameService
     {
         var progress = await BuildAllProgressAsync();
         var entries = progress
-            .Where(row => row.Progress.CurrentValue > 0)
+            .Where(row => ShouldShowInHallOfFame(row.Progress))
             .GroupBy(row => GetHallOfFameEntryKey(row.Progress))
             .Select(group =>
             {
@@ -500,6 +500,13 @@ public class HallOfFameService
     {
         return usuario.UsuarioId == ExternalUserPolicy.ExternalUserId ||
             usuario.Nombre == ExternalUserPolicy.ExternalUserName;
+    }
+
+    private static bool ShouldShowInHallOfFame(MedalProgressDto progress)
+    {
+        return progress.Tipo is "HeavyBggWins" or "TotalPlays"
+            ? progress.Completed
+            : progress.CurrentValue > 0;
     }
 
     private static string GetHallOfFameEntryKey(MedalProgressDto progress)

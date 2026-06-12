@@ -431,12 +431,14 @@ public class ServiceTests
         var service = new HallOfFameService(context);
 
         var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
 
         Assert.NotNull(medals);
         var oneMenArmy = medals.Medals.Single(row => row.Nombre == "One men army");
         Assert.Equal(2, oneMenArmy.CurrentValue);
         Assert.Equal(1000, oneMenArmy.TargetValue);
         Assert.Equal("Pendent", oneMenArmy.RankName);
+        Assert.DoesNotContain(hallOfFame.Entries, row => row.Medal.Nombre == "One men army");
     }
 
     [Fact]
