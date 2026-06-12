@@ -92,6 +92,7 @@ interface ChartValueRow {
   value: number;
   width: number;
   detail: string;
+  sourceLabel: string;
 }
 
 interface ChartLinePoint {
@@ -543,11 +544,16 @@ export class RankingsPageComponent {
     const jugadores = this.chartJugadores();
     const rows = this.selectedChartUsers()
       .map(usuario => {
-        const puntuaciones = jugadores
+        const scoreRows = jugadores
           .filter(jugador => jugador.usuarioId === usuario.usuarioId)
-          .map(jugador => jugador.puntos)
-          .filter((value): value is number => value !== null && value !== undefined);
-        const maxScore = puntuaciones.length > 0 ? Math.max(...puntuaciones) : 0;
+          .filter(jugador => jugador.puntos !== null && jugador.puntos !== undefined)
+          .sort((a, b) =>
+            (b.puntos ?? 0) - (a.puntos ?? 0) ||
+            b.fecha.localeCompare(a.fecha) ||
+            a.juegoNombre.localeCompare(b.juegoNombre)
+          );
+        const bestScoreRow = scoreRows[0];
+        const maxScore = bestScoreRow?.puntos ?? 0;
 
         return {
           usuarioId: usuario.usuarioId,
@@ -555,8 +561,11 @@ export class RankingsPageComponent {
           color: usuario.color,
           value: maxScore,
           width: 0,
-          detail: `${puntuaciones.length} puntuacions`,
-          hasScores: puntuaciones.length > 0
+          detail: `${scoreRows.length} puntuacions`,
+          sourceLabel: bestScoreRow
+            ? `${bestScoreRow.juegoNombre} · ${this.formatDate(bestScoreRow.fecha)}`
+            : '',
+          hasScores: scoreRows.length > 0
         };
       })
       .filter(row => row.hasScores)

@@ -663,7 +663,7 @@
             <h3>Puntuació màxima</h3>
           </div>
 
-          <div class="chart-bars" *ngIf="maxScoreChartRows().length > 0; else noMaxScoreChartData">
+          <div class="chart-bars chart-score-bars" *ngIf="maxScoreChartRows().length > 0; else noMaxScoreChartData">
             <div class="chart-bar-row" *ngFor="let row of maxScoreChartRows(); trackBy: trackByChartValueRow">
               <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
               <span class="chart-bar-track">
@@ -671,6 +671,7 @@
                   class="chart-bar-fill"
                   [style.width]="getChartBarWidth(row.width)"
                   [style.background]="row.color">
+                  <span class="chart-bar-fill-label" [title]="row.sourceLabel">{{ row.sourceLabel }}</span>
                 </span>
               </span>
               <strong class="chart-bar-value">{{ formatScore(row.value) }}</strong>

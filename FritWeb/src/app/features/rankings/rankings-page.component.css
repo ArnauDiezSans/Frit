@@ -547,6 +547,29 @@ h1 {
   border-radius: inherit;
 }
 
+.chart-score-bars .chart-bar-track {
+  height: 22px;
+}
+
+.chart-score-bars .chart-bar-fill {
+  display: flex;
+  align-items: center;
+  min-width: 18px;
+  padding: 0 7px;
+}
+
+.chart-bar-fill-label {
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 1px rgba(15, 23, 42, 0.28);
+  white-space: nowrap;
+}
+
 .chart-bar-value {
   color: #101828;
   font-size: 0.86rem;
