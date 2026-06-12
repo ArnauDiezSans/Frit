@@ -72,6 +72,7 @@ public class RankingPartidaDto
     public string JuegoNombre { get; set; } = string.Empty;
     public string JuegoTipo { get; set; } = string.Empty;
     public DateOnly Fecha { get; set; }
+    public int NumeroJugadores { get; set; }
     public int? DuracionMinutos { get; set; }
 }
 

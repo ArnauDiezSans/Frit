@@ -145,6 +145,46 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task RankingsService_CalculatesPricePerGameByTotalPlayers()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Catan",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Pvp = 10,
+            Propietario = user
+        };
+        context.AddRange(user, game);
+        await context.SaveChangesAsync();
+
+        context.Partidas.AddRange(
+            new Partida
+            {
+                JuegoId = game.JuegoId,
+                UsuarioCreadorId = user.UsuarioId,
+                Fecha = new DateOnly(2026, 6, 1),
+                NumeroJugadores = 2
+            },
+            new Partida
+            {
+                JuegoId = game.JuegoId,
+                UsuarioCreadorId = user.UsuarioId,
+                Fecha = new DateOnly(2026, 6, 2),
+                NumeroJugadores = 3
+            });
+        await context.SaveChangesAsync();
+
+        var service = new RankingsService(context);
+
+        var rankings = await service.GetAsync();
+
+        Assert.Equal(2, rankings.Juegos.Single(row => row.Nombre == "Catan").PrecioPorPartida);
+    }
+
+    [Fact]
     public async Task RankingsService_CountsPlayersMentionedInTeamDisplayedName()
     {
         await using var context = CreateContext();

@@ -122,6 +122,10 @@
                   <span>Mitjana</span>
                 </label>
                 <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().preuPerPartida" (change)="toggleGameColumn('preuPerPartida')" />
+                  <span>Preu per partida</span>
+                </label>
+                <label class="column-option">
                   <input type="checkbox" [checked]="gameColumns().ultima" (change)="toggleGameColumn('ultima')" />
                   <span>Última</span>
                 </label>
@@ -227,6 +231,7 @@
               <th *ngIf="gameColumns().partidas" class="sortable" (click)="sortGamesBy('partidas')">Partides{{ getGameSortIndicator('partidas') }}</th>
               <th *ngIf="gameColumns().horas" class="sortable" (click)="sortGamesBy('horas')">Hores{{ getGameSortIndicator('horas') }}</th>
               <th *ngIf="gameColumns().mitjana" class="sortable" (click)="sortGamesBy('mitjana')">Mitjana{{ getGameSortIndicator('mitjana') }}</th>
+              <th *ngIf="gameColumns().preuPerPartida" class="sortable" (click)="sortGamesBy('preuPerPartida')">Preu/partida{{ getGameSortIndicator('preuPerPartida') }}</th>
               <th *ngIf="gameColumns().ultima" class="sortable" (click)="sortGamesBy('ultima')">Última{{ getGameSortIndicator('ultima') }}</th>
             </tr>
           </thead>
@@ -237,6 +242,7 @@
               <td *ngIf="gameColumns().partidas" data-label="Partides">{{ item.numeroPartidas }}</td>
               <td *ngIf="gameColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
               <td *ngIf="gameColumns().mitjana" data-label="Mitjana">{{ formatMinutes(item.duracionMediaMinutos) }}</td>
+              <td *ngIf="gameColumns().preuPerPartida" data-label="Preu/partida">{{ formatCurrency(item.precioPorPartida) }}</td>
               <td *ngIf="gameColumns().ultima" data-label="Última">{{ formatDate(item.ultimaPartida) }}</td>
             </tr>
           </tbody>

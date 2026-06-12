@@ -12,7 +12,7 @@ import {
   RankingsService
 } from './rankings.service';
 
-type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'ultima';
+type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'preuPerPartida' | 'ultima';
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'pesBggMig' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
@@ -24,6 +24,7 @@ interface GameRankingRow {
   numeroPartidas: number;
   duracionTotalMinutos: number;
   duracionMediaMinutos: number | null;
+  precioPorPartida: number | null;
   ultimaPartida: string | null;
 }
 
@@ -131,6 +132,7 @@ interface GameColumns {
   partidas: boolean;
   horas: boolean;
   mitjana: boolean;
+  preuPerPartida: boolean;
   ultima: boolean;
 }
 
@@ -231,6 +233,7 @@ export class RankingsPageComponent {
     partidas: true,
     horas: true,
     mitjana: true,
+    preuPerPartida: false,
     ultima: true
   });
 
@@ -386,7 +389,7 @@ export class RankingsPageComponent {
       return null;
     }
 
-    return this.buildGameRows(this.filterRankingPartidas(data.partidas), { ...EMPTY_GAME_FILTERS })
+    return this.buildGameRows(this.filterRankingPartidas(data.partidas), { ...EMPTY_GAME_FILTERS }, data.juegos)
       .sort((a, b) =>
         b.numeroPartidas - a.numeroPartidas ||
         a.nombre.localeCompare(b.nombre)
@@ -413,7 +416,7 @@ export class RankingsPageComponent {
       return [];
     }
 
-    const rows = this.buildGameRows(this.filterRankingPartidas(data.partidas), this.gameFilters());
+    const rows = this.buildGameRows(this.filterRankingPartidas(data.partidas), this.gameFilters(), data.juegos);
     return this.sortGameRows(rows);
   });
 
@@ -764,6 +767,7 @@ export class RankingsPageComponent {
       partidas: nextValue,
       horas: nextValue,
       mitjana: nextValue,
+      preuPerPartida: nextValue,
       ultima: nextValue
     });
   }
@@ -851,6 +855,17 @@ export class RankingsPageComponent {
 
   formatPercent(value: number | null | undefined): string {
     return value || value === 0 ? `${value}%` : '-';
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    if (value == null) {
+      return '-';
+    }
+
+    return new Intl.NumberFormat('ca-ES', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(value);
   }
 
   formatScore(value: number | null | undefined): string {
@@ -982,9 +997,10 @@ export class RankingsPageComponent {
     return (value ?? '').trim().toLowerCase() === 'cooperatiu';
   }
 
-  private buildGameRows(partidas: RankingPartida[], filters: GameFilters): GameRankingRow[] {
+  private buildGameRows(partidas: RankingPartida[], filters: GameFilters, juegos: RankingJuego[]): GameRankingRow[] {
     const filtered = this.filterPartidas(partidas, filters.fechaDesde, filters.fechaHasta);
     const grouped = new Map<number, RankingPartida[]>();
+    const juegosById = new Map(juegos.map(juego => [juego.juegoId, juego]));
 
     for (const partida of filtered) {
       grouped.set(partida.juegoId, [...(grouped.get(partida.juegoId) ?? []), partida]);
@@ -994,6 +1010,8 @@ export class RankingsPageComponent {
       const duraciones = partidasJuego
         .map(partida => partida.duracionMinutos)
         .filter((value): value is number => value != null);
+      const juego = juegosById.get(juegoId);
+      const totalJugadores = partidasJuego.reduce((total, partida) => total + partida.numeroJugadores, 0);
 
       return {
         juegoId,
@@ -1002,6 +1020,9 @@ export class RankingsPageComponent {
         duracionTotalMinutos: duraciones.reduce((total, value) => total + value, 0),
         duracionMediaMinutos: duraciones.length > 0
           ? Math.round(duraciones.reduce((total, value) => total + value, 0) / duraciones.length)
+          : null,
+        precioPorPartida: juego?.pvp != null && totalJugadores > 0
+          ? Math.round((juego.pvp / totalJugadores) * 100) / 100
           : null,
         ultimaPartida: partidasJuego
           .map(partida => partida.fecha)
@@ -1234,6 +1255,8 @@ export class RankingsPageComponent {
           return (a.duracionTotalMinutos - b.duracionTotalMinutos) * multiplier;
         case 'mitjana':
           return ((a.duracionMediaMinutos ?? 0) - (b.duracionMediaMinutos ?? 0)) * multiplier;
+        case 'preuPerPartida':
+          return this.compareNullableNumbers(a.precioPorPartida, b.precioPorPartida) * multiplier;
         case 'ultima':
           return ((a.ultimaPartida ?? '').localeCompare(b.ultimaPartida ?? '')) * multiplier;
         default:

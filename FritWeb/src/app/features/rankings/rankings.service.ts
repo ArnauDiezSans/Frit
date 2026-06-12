@@ -69,6 +69,7 @@ export interface RankingPartida {
   juegoNombre: string;
   juegoTipo: string;
   fecha: string;
+  numeroJugadores: number;
   duracionMinutos?: number | null;
 }
 

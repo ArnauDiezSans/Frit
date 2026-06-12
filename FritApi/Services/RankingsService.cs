@@ -112,8 +112,8 @@ public class RankingsService
                         ? (int)Math.Round(duraciones.Average())
                         : null,
                     Pvp = juego.Pvp,
-                    PrecioPorPartida = juego.Pvp.HasValue && partidasJuego.Count > 0
-                        ? Math.Round(juego.Pvp.Value / partidasJuego.Count, 2)
+                    PrecioPorPartida = juego.Pvp.HasValue && partidasJuego.Sum(partida => partida.NumeroJugadores) > 0
+                        ? Math.Round(juego.Pvp.Value / partidasJuego.Sum(partida => partida.NumeroJugadores), 2)
                         : null,
                     UltimaPartida = partidasJuego
                         .OrderByDescending(partida => partida.Fecha)
@@ -335,6 +335,7 @@ public class RankingsService
                 JuegoNombre = partida.Juego.Nombre,
                 JuegoTipo = partida.Juego.Tipo,
                 Fecha = partida.Fecha,
+                NumeroJugadores = partida.NumeroJugadores,
                 DuracionMinutos = partida.DuracionMinutos
             })
             .OrderByDescending(partida => partida.Fecha)
