@@ -265,7 +265,8 @@ public class RankingsService
                         partida.Juego.DificultadBgg,
                         usuarioDetectado.UsuarioId,
                         usuarioDetectado.Nombre,
-                        jugador.Posicion));
+                        jugador.Posicion,
+                        jugador.Puntos));
                 }
             }
         }
@@ -356,7 +357,8 @@ public class RankingsService
                 DificultadBgg = jugador.DificultadBgg,
                 UsuarioId = jugador.UsuarioId,
                 UsuarioNombre = jugador.UsuarioNombre,
-                Posicion = jugador.Posicion
+                Posicion = jugador.Posicion,
+                Puntos = jugador.Puntos
             })
             .OrderBy(jugador => jugador.JuegoNombre)
             .ThenBy(jugador => jugador.UsuarioNombre)
@@ -374,7 +376,8 @@ public class RankingsService
         decimal? DificultadBgg,
         int UsuarioId,
         string UsuarioNombre,
-        int Posicion);
+        int Posicion,
+        decimal? Puntos);
 
     private sealed record RegisteredUserRow(
         int UsuarioId,

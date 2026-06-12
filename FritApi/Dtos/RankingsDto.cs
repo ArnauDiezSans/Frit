@@ -88,4 +88,5 @@ public class RankingJugadorDto
     public int UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
     public int Posicion { get; set; }
+    public decimal? Puntos { get; set; }
 }

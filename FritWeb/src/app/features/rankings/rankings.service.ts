@@ -84,6 +84,7 @@ export interface RankingJugador {
   usuarioId: number;
   usuarioNombre: string;
   posicion: number;
+  puntos?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })

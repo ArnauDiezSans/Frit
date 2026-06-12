@@ -85,6 +85,15 @@ interface ChartMetricRow {
   detail: string;
 }
 
+interface ChartValueRow {
+  usuarioId: number;
+  usuarioNombre: string;
+  color: string;
+  value: number;
+  width: number;
+  detail: string;
+}
+
 interface ChartLinePoint {
   fecha: string;
   label: string;
@@ -530,6 +539,36 @@ export class RankingsPageComponent {
       .sort((a, b) => b.percentage - a.percentage || a.usuarioNombre.localeCompare(b.usuarioNombre));
   });
 
+  maxScoreChartRows = computed<ChartValueRow[]>(() => {
+    const jugadores = this.chartJugadores();
+    const rows = this.selectedChartUsers()
+      .map(usuario => {
+        const puntuaciones = jugadores
+          .filter(jugador => jugador.usuarioId === usuario.usuarioId)
+          .map(jugador => jugador.puntos)
+          .filter((value): value is number => value !== null && value !== undefined);
+        const maxScore = puntuaciones.length > 0 ? Math.max(...puntuaciones) : 0;
+
+        return {
+          usuarioId: usuario.usuarioId,
+          usuarioNombre: usuario.nombre,
+          color: usuario.color,
+          value: maxScore,
+          width: 0,
+          detail: `${puntuaciones.length} puntuacions`,
+          hasScores: puntuaciones.length > 0
+        };
+      })
+      .filter(row => row.hasScores)
+      .sort((a, b) => b.value - a.value || a.usuarioNombre.localeCompare(b.usuarioNombre));
+    const maxValue = Math.max(...rows.map(row => row.value), 0);
+
+    return rows.map(row => ({
+      ...row,
+      width: maxValue > 0 ? Math.round((row.value * 1000) / maxValue) / 10 : 0
+    }));
+  });
+
   chartDateTicks = computed(() =>
     this.buildDateTicks(this.chartTimelineDates())
   );
@@ -805,6 +844,14 @@ export class RankingsPageComponent {
     return value || value === 0 ? `${value}%` : '-';
   }
 
+  formatScore(value: number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+
+    return Number.isInteger(value) ? String(value) : value.toFixed(2);
+  }
+
   formatBggWeight(value: number | null | undefined): string {
     return value == null ? '-' : value.toFixed(2);
   }
@@ -833,6 +880,10 @@ export class RankingsPageComponent {
   }
 
   trackByChartMetricRow(_: number, item: ChartMetricRow): number {
+    return item.usuarioId;
+  }
+
+  trackByChartValueRow(_: number, item: ChartValueRow): number {
     return item.usuarioId;
   }
 

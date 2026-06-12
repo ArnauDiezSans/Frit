@@ -658,9 +658,29 @@
           </ng-template>
         </article>
 
-        <article class="chart-card chart-card-empty">
-          <h3>Gràfica 3</h3>
-          <div class="chart-placeholder">Per definir</div>
+        <article class="chart-card">
+          <div class="chart-card-heading">
+            <h3>Puntuació màxima</h3>
+          </div>
+
+          <div class="chart-bars" *ngIf="maxScoreChartRows().length > 0; else noMaxScoreChartData">
+            <div class="chart-bar-row" *ngFor="let row of maxScoreChartRows(); trackBy: trackByChartValueRow">
+              <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
+              <span class="chart-bar-track">
+                <span
+                  class="chart-bar-fill"
+                  [style.width]="getChartBarWidth(row.width)"
+                  [style.background]="row.color">
+                </span>
+              </span>
+              <strong class="chart-bar-value">{{ formatScore(row.value) }}</strong>
+              <span class="chart-bar-detail">{{ row.detail }}</span>
+            </div>
+          </div>
+
+          <ng-template #noMaxScoreChartData>
+            <div class="chart-placeholder">Sense dades</div>
+          </ng-template>
         </article>
 
         <article class="chart-card chart-card-empty">

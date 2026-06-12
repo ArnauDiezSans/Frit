@@ -121,7 +121,8 @@ public class ServiceTests
                 PartidaId = partida.PartidaId,
                 UsuarioId = arnau.UsuarioId,
                 NombreMostrado = "Arnau",
-                Posicion = 1
+                Posicion = 1,
+                Puntos = 42
             },
             new PartidaJugador
             {
@@ -140,6 +141,7 @@ public class ServiceTests
         var annaRanking = rankings.Usuarios.Single(row => row.UsuarioNombre == "Anna");
         Assert.Equal(1, arnauRanking.Victorias);
         Assert.Equal(0, annaRanking.Victorias);
+        Assert.Equal(42, rankings.Jugadores.Single(row => row.UsuarioNombre == "Arnau").Puntos);
     }
 
     [Fact]
