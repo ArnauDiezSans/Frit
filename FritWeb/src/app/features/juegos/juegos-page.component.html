@@ -217,7 +217,7 @@
           <col *ngIf="visibleColumns().tipo" class="col-type" />
           <col *ngIf="visibleColumns().pvp" class="col-price" />
           <col *ngIf="visibleColumns().dificultadBgg" class="col-weight" />
-          <col *ngIf="canEditJuegos()" class="col-actions" />
+          <col class="col-actions" />
         </colgroup>
         <thead>
           <tr>
@@ -270,7 +270,7 @@
               (click)="ordenarPor('dificultadBgg')">
               <span>Pes BGG{{ getSortIndicator('dificultadBgg') }}</span>
             </th>
-            <th *ngIf="canEditJuegos()" class="actions-column" aria-label="Accions"></th>
+            <th class="actions-column" aria-label="Accions"></th>
           </tr>
 
           <tr class="filters-row" [class.filters-row-hidden]="!showFilters() && !isMobileFilters()">
@@ -346,7 +346,7 @@
                 [value]="filters().dificultadBgg"
                 (input)="updateFilter('dificultadBgg', $any($event.target).value)" />
             </th>
-            <th *ngIf="canEditJuegos()"></th>
+            <th></th>
           </tr>
         </thead>
 
@@ -382,7 +382,7 @@
             <td *ngIf="visibleColumns().dificultadBgg" data-label="Pes BGG">
               <span class="cell-value">{{ formatDificultadBgg(juego.dificultadBgg) }}</span>
             </td>
-            <td *ngIf="canEditJuegos()" class="actions-cell" data-label="Accions">
+            <td class="actions-cell" data-label="Accions">
               <div class="row-actions">
                 <button
                   type="button"

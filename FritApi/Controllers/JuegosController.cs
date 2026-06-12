@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using FritApi.Dtos;
 using FritApi.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -65,11 +64,6 @@ public class JuegosController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<JuegoDto>> Update(int id, [FromBody] JuegoDto dto)
     {
-        if (!CanEditJuegos())
-        {
-            return Forbid();
-        }
-
         var result = await _juegoService.UpdateAsync(id, dto);
 
         if (!result.Success)
@@ -96,13 +90,5 @@ public class JuegosController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    private bool CanEditJuegos()
-    {
-        return string.Equals(
-            User.FindFirstValue(ClaimTypes.Name),
-            "Arnau",
-            StringComparison.Ordinal);
     }
 }
