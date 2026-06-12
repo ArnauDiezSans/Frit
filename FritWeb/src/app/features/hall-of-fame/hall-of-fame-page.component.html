@@ -55,9 +55,16 @@
         </section>
 
         <section class="medal-category">
-          <div class="medal-category-heading">
+          <div class="medal-category-heading medal-category-heading-with-filter">
             <h3>Medalles jocs</h3>
-            <span>{{ getGameEntries().length }}</span>
+            <div class="medal-game-filter">
+              <input
+                type="search"
+                [value]="gameMedalFilter()"
+                placeholder="Filtra joc o usuari"
+                (input)="onGameMedalFilterInput($any($event.target).value)" />
+              <span>{{ getGameEntries().length }}</span>
+            </div>
           </div>
 
           <div class="medal-grid" *ngIf="getGameEntries().length > 0; else emptyGameEntries">

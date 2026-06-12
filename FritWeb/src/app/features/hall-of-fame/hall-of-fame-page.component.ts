@@ -30,6 +30,7 @@ export class HallOfFamePageComponent {
   hallOfFame = signal<HallOfFame | null>(null);
   usuarios = signal<UsuarioOption[]>([]);
   selectedUsuarioIds = signal<number[]>([]);
+  gameMedalFilter = signal('');
 
   form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
@@ -119,7 +120,21 @@ export class HallOfFamePageComponent {
   }
 
   getGameEntries(): HallOfFameEntry[] {
-    return this.hallOfFame()?.entries.filter(entry => entry.medal.tipo === 'GameWins') ?? [];
+    const filter = this.normalizeFilter(this.gameMedalFilter());
+    const entries = this.hallOfFame()?.entries.filter(entry => entry.medal.tipo === 'GameWins') ?? [];
+
+    if (!filter) {
+      return entries;
+    }
+
+    return entries.filter(entry =>
+      this.normalizeFilter(entry.medal.nombre).includes(filter) ||
+      entry.users.some(user => this.normalizeFilter(user.usuarioNombre).includes(filter))
+    );
+  }
+
+  onGameMedalFilterInput(value: string): void {
+    this.gameMedalFilter.set(value);
   }
 
   trackByEntry(_: number, entry: HallOfFameEntry): string {
@@ -158,5 +173,13 @@ export class HallOfFamePageComponent {
       next: usuarios => this.usuarios.set(usuarios),
       error: () => this.usuarios.set([])
     });
+  }
+
+  private normalizeFilter(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 }
