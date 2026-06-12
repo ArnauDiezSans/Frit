@@ -429,6 +429,14 @@ export class UsuarioPageComponent {
     return `${Math.min(100, Math.round((medal.currentValue / medal.targetValue) * 100))}%`;
   }
 
+  getFritMedals(): MedalProgress[] {
+    return this.medals().filter(medal => medal.tipo !== 'GameWins');
+  }
+
+  getGameMedals(): MedalProgress[] {
+    return this.medals().filter(medal => medal.tipo === 'GameWins');
+  }
+
   canViewMedals(): boolean {
     return this.authService.canViewHallOfFame();
   }

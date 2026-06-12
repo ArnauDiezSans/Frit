@@ -35,10 +35,47 @@
         </button>
       </div>
 
-      <div class="medal-grid" *ngIf="data.entries.length > 0; else emptyHall">
+      <div class="medal-category-stack" *ngIf="data.entries.length > 0; else emptyHall">
+        <section class="medal-category">
+          <div class="medal-category-heading">
+            <h3>Medalles frites</h3>
+            <span>{{ getFritEntries().length }}</span>
+          </div>
+
+          <div class="medal-grid" *ngIf="getFritEntries().length > 0; else emptyFritEntries">
+            <ng-container
+              *ngFor="let entry of getFritEntries(); trackBy: trackByEntry"
+              [ngTemplateOutlet]="medalEntryCard"
+              [ngTemplateOutletContext]="{ entry: entry }"></ng-container>
+          </div>
+
+          <ng-template #emptyFritEntries>
+            <p class="medal-category-empty">Encara no hi ha medalles frites amb progrés.</p>
+          </ng-template>
+        </section>
+
+        <section class="medal-category">
+          <div class="medal-category-heading">
+            <h3>Medalles jocs</h3>
+            <span>{{ getGameEntries().length }}</span>
+          </div>
+
+          <div class="medal-grid" *ngIf="getGameEntries().length > 0; else emptyGameEntries">
+            <ng-container
+              *ngFor="let entry of getGameEntries(); trackBy: trackByEntry"
+              [ngTemplateOutlet]="medalEntryCard"
+              [ngTemplateOutletContext]="{ entry: entry }"></ng-container>
+          </div>
+
+          <ng-template #emptyGameEntries>
+            <p class="medal-category-empty">Encara no hi ha medalles de jocs amb progrés.</p>
+          </ng-template>
+        </section>
+      </div>
+
+      <ng-template #medalEntryCard let-entry="entry">
         <article
           class="medal-card"
-          *ngFor="let entry of data.entries; trackBy: trackByEntry"
           [class.medal-card-filled]="entry.medal.rankFilled"
           [style.--medal-color]="entry.medal.rankColor">
           <div
@@ -65,7 +102,7 @@
             <span class="progress-detail">{{ entry.bestUser.currentValue }}/{{ entry.medal.targetValue }}</span>
           </div>
         </article>
-      </div>
+      </ng-template>
 
       <ng-template #emptyHall>
         <div class="empty-state">

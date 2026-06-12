@@ -89,10 +89,47 @@
       <span class="status-text">{{ medals().length }} medalles</span>
     </div>
 
-    <div class="user-medal-grid" *ngIf="medals().length > 0; else emptyMedals">
+    <div class="medal-category-stack" *ngIf="medals().length > 0; else emptyMedals">
+      <section class="medal-category">
+        <div class="medal-category-heading">
+          <h3>Medalles frites</h3>
+          <span>{{ getFritMedals().length }}</span>
+        </div>
+
+        <div class="user-medal-grid" *ngIf="getFritMedals().length > 0; else emptyFritMedals">
+          <ng-container
+            *ngFor="let medal of getFritMedals(); trackBy: trackByMedal"
+            [ngTemplateOutlet]="medalCard"
+            [ngTemplateOutletContext]="{ medal: medal }"></ng-container>
+        </div>
+
+        <ng-template #emptyFritMedals>
+          <p class="medal-category-empty">Encara no hi ha medalles frites.</p>
+        </ng-template>
+      </section>
+
+      <section class="medal-category">
+        <div class="medal-category-heading">
+          <h3>Medalles jocs</h3>
+          <span>{{ getGameMedals().length }}</span>
+        </div>
+
+        <div class="user-medal-grid" *ngIf="getGameMedals().length > 0; else emptyGameMedals">
+          <ng-container
+            *ngFor="let medal of getGameMedals(); trackBy: trackByMedal"
+            [ngTemplateOutlet]="medalCard"
+            [ngTemplateOutletContext]="{ medal: medal }"></ng-container>
+        </div>
+
+        <ng-template #emptyGameMedals>
+          <p class="medal-category-empty">Encara no hi ha medalles de jocs.</p>
+        </ng-template>
+      </section>
+    </div>
+
+    <ng-template #medalCard let-medal="medal">
       <article
         class="user-medal-card"
-        *ngFor="let medal of medals(); trackBy: trackByMedal"
         [class.user-medal-card-pending]="medal.rankLevel === 0"
         [class.user-medal-card-filled]="medal.rankFilled"
         [style.--medal-color]="medal.rankColor">
@@ -132,7 +169,7 @@
           </span>
         </div>
       </article>
-    </div>
+    </ng-template>
 
     <ng-template #emptyMedals>
       <div class="empty-state">

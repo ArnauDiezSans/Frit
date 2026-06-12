@@ -119,6 +119,14 @@ export class HallOfFamePageComponent {
     return `${Math.min(100, Math.round((entry.bestUser.currentValue * 1000) / target) / 10)}%`;
   }
 
+  getFritEntries(): HallOfFameEntry[] {
+    return this.hallOfFame()?.entries.filter(entry => entry.medal.tipo !== 'GameWins') ?? [];
+  }
+
+  getGameEntries(): HallOfFameEntry[] {
+    return this.hallOfFame()?.entries.filter(entry => entry.medal.tipo === 'GameWins') ?? [];
+  }
+
   trackByEntry(_: number, entry: HallOfFameEntry): string {
     return entry.medal.medalId;
   }

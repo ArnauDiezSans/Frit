@@ -68,6 +68,47 @@ h1 {
   margin-bottom: 18px;
 }
 
+.medal-category-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.medal-category {
+  display: grid;
+  gap: 10px;
+}
+
+.medal-category-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e4e7ec;
+}
+
+.medal-category-heading h3 {
+  color: #101828;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.medal-category-heading span {
+  min-width: 32px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #eef6f5;
+  color: #2f7f7a;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.medal-category-empty {
+  color: #667085;
+  font-size: 0.9rem;
+}
+
 .medal-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
