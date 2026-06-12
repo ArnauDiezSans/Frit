@@ -148,6 +148,7 @@ export class JuegosPageComponent implements OnInit {
   isMobileFilters = signal(false);
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
+  canEditJuegos = computed(() => this.authService.currentUser?.nombre === 'Arnau');
   totalJuegos = computed(() => this.juegos().length);
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
   displayJuego = (juego: Juego) => juego.nombre;
@@ -491,6 +492,10 @@ export class JuegosPageComponent implements OnInit {
   }
 
   editarJuego(juego: Juego): void {
+    if (!this.canEditJuegos()) {
+      return;
+    }
+
     this.form.reset({
       juegoId: juego.juegoId,
       nombre: juego.nombre,
