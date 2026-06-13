@@ -164,7 +164,7 @@
             <strong>{{ medal.currentValue }}/{{ medal.targetValue }}</strong>
           </div>
 
-          <span class="next-rank" *ngIf="medal.nextRankName">
+          <span class="next-rank" *ngIf="shouldShowNextRank(medal)">
             Seguent: {{ medal.nextRankName }}
           </span>
         </div>

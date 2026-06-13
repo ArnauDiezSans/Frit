@@ -429,6 +429,10 @@ export class UsuarioPageComponent {
     return `${Math.min(100, Math.round((medal.currentValue / medal.targetValue) * 100))}%`;
   }
 
+  shouldShowNextRank(medal: MedalProgress): boolean {
+    return medal.tipo !== 'Manual' && Boolean(medal.nextRankName);
+  }
+
   getFritMedals(): MedalProgress[] {
     return this.medals().filter(medal => medal.tipo !== 'GameWins');
   }
