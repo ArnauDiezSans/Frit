@@ -228,11 +228,16 @@ h1 {
 .medal-users {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 5px;
 }
 
 .medal-users span {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 auto;
   max-width: 100%;
+  min-height: 20px;
   padding: 3px 7px;
   border: 1px solid #d9e3e7;
   border-radius: 999px;

@@ -59,6 +59,10 @@ h1 {
   box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
 }
 
+.ranking-view-switch-with-hall {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .ranking-view-option {
   min-height: 42px;
   padding: 8px 16px;

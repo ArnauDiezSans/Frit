@@ -1,5 +1,5 @@
-<section class="dashboard-page">
-  <header class="dashboard-header">
+<section [class.dashboard-page]="!embedded" [class.hall-of-fame-embedded]="embedded">
+  <header class="dashboard-header" *ngIf="!embedded">
     <div>
       <p class="eyebrow">Frit</p>
       <h1>Saló de la fama</h1>

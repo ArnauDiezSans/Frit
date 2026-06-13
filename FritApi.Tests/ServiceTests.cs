@@ -331,6 +331,51 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task HallOfFameService_DoesNotShowIncompleteSetMedalsInHallOfFame()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(arnau);
+        context.Juegos.AddRange(
+            new Juego { JuegoId = 2, Nombre = "Wonder 1", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4, Propietario = arnau },
+            new Juego { JuegoId = 3, Nombre = "Wonder 2", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4, Propietario = arnau },
+            new Juego { JuegoId = 4, Nombre = "Wonder 3", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4, Propietario = arnau },
+            new Juego { JuegoId = 5, Nombre = "Wonder 4", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4, Propietario = arnau },
+            new Juego { JuegoId = 96, Nombre = "Wonder 5", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4, Propietario = arnau },
+            new Juego { JuegoId = 97, Nombre = "Wonder 6", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4, Propietario = arnau });
+        await context.SaveChangesAsync();
+
+        var partida = new Partida
+        {
+            JuegoId = 2,
+            UsuarioCreadorId = arnau.UsuarioId,
+            Fecha = new DateOnly(2026, 6, 12),
+            NumeroJugadores = 1
+        };
+        context.Partidas.Add(partida);
+        await context.SaveChangesAsync();
+        context.PartidaJugadores.Add(new PartidaJugador
+        {
+            PartidaId = partida.PartidaId,
+            UsuarioId = arnau.UsuarioId,
+            NombreMostrado = "Arnau",
+            Posicion = 1
+        });
+        await context.SaveChangesAsync();
+
+        var service = new HallOfFameService(context);
+
+        var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+
+        Assert.NotNull(medals);
+        var wonderFrit = medals.Medals.Single(row => row.Nombre == "WonderFrit");
+        Assert.Equal(1, wonderFrit.CurrentValue);
+        Assert.Equal("Pendent", wonderFrit.RankName);
+        Assert.DoesNotContain(hallOfFame.Entries, row => row.Medal.Nombre == "WonderFrit");
+    }
+
+    [Fact]
     public async Task HallOfFameService_MastermindCountsDistinctHeavyBggWins()
     {
         await using var context = CreateContext();

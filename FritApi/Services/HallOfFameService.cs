@@ -31,7 +31,7 @@ public class HallOfFameService
         new(
             "set:wonderfrit",
             "WonderFrit",
-            "Guanya almenys una partida a tots els jocs Wonder.",
+            "Es tracta d'haver-los guanyat tots!",
             [2, 3, 4, 5, 96, 97]),
         new(
             "set:chino-aqui",
@@ -65,7 +65,7 @@ public class HallOfFameService
             8),
         new(
             "dynamic:one-men-army",
-            "One men army",
+            "One man army",
             "Haver jugat 1000 partides.",
             "TotalPlays",
             1000)
@@ -504,9 +504,12 @@ public class HallOfFameService
 
     private static bool ShouldShowInHallOfFame(MedalProgressDto progress)
     {
-        return progress.Tipo is "HeavyBggWins" or "TotalPlays"
-            ? progress.Completed
-            : progress.CurrentValue > 0;
+        return progress.Tipo switch
+        {
+            "GameWins" => progress.CurrentValue > 0,
+            "GameSetWins" or "HeavyBggWins" or "TotalPlays" => progress.Completed,
+            _ => progress.CurrentValue > 0
+        };
     }
 
     private static string GetHallOfFameEntryKey(MedalProgressDto progress)

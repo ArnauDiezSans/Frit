@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -31,6 +31,7 @@ export class HallOfFamePageComponent {
   usuarios = signal<UsuarioOption[]>([]);
   selectedUsuarioIds = signal<number[]>([]);
   gameMedalFilter = signal('');
+  @Input() embedded = false;
 
   form = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
@@ -146,7 +147,9 @@ export class HallOfFamePageComponent {
   }
 
   shouldShowRankTarget(entry: HallOfFameEntry): boolean {
-    return entry.medal.tipo !== 'HeavyBggWins' && entry.medal.tipo !== 'TotalPlays';
+    return entry.medal.tipo !== 'HeavyBggWins' &&
+      entry.medal.tipo !== 'TotalPlays' &&
+      entry.medal.rankTargetValue > 0;
   }
 
   getHallRankName(entry: HallOfFameEntry): string {

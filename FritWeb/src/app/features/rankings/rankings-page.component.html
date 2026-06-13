@@ -21,7 +21,7 @@
   </section>
 
   <ng-container *ngIf="!loading() && !error() && rankings() as data">
-    <section class="stats-grid">
+    <section class="stats-grid" *ngIf="activeRankingView() !== 'hallOfFame'">
       <article class="stat-card">
         <span class="stat-label">Joc més jugat</span>
         <strong class="stat-value stat-value-text">{{ topGameByActivity()?.nombre || '-' }}</strong>
@@ -44,7 +44,11 @@
       </article>
     </section>
 
-    <div class="ranking-view-switch" role="tablist" aria-label="Selector de ranking">
+    <div
+      class="ranking-view-switch"
+      [class.ranking-view-switch-with-hall]="canViewHallOfFame()"
+      role="tablist"
+      aria-label="Selector de ranking">
       <button
         type="button"
         role="tab"
@@ -71,6 +75,16 @@
         class="ranking-view-option"
         (click)="selectRankingView('charts')">
         Gràfiques
+      </button>
+      <button
+        type="button"
+        role="tab"
+        *ngIf="canViewHallOfFame()"
+        [attr.aria-selected]="activeRankingView() === 'hallOfFame'"
+        [class.ranking-view-option-active]="activeRankingView() === 'hallOfFame'"
+        class="ranking-view-option"
+        (click)="selectRankingView('hallOfFame')">
+        Saló de la fama
       </button>
     </div>
 
@@ -696,5 +710,7 @@
         </article>
       </div>
     </section>
+
+    <app-hall-of-fame-page *ngIf="activeRankingView() === 'hallOfFame'" [embedded]="true"></app-hall-of-fame-page>
   </ng-container>
 </section>

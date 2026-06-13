@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
+import { HallOfFamePageComponent } from '../hall-of-fame/hall-of-fame-page.component';
 import {
   RankingJugador,
   RankingJuego,
@@ -16,7 +17,7 @@ type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'preuPerPart
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'pesBggMig' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
-type ActiveRankingView = 'game' | 'user' | 'charts';
+type ActiveRankingView = 'game' | 'user' | 'charts' | 'hallOfFame';
 
 interface GameRankingRow {
   juegoId: number;
@@ -205,7 +206,7 @@ const LINE_CHART_PADDING = {
 @Component({
   selector: 'app-rankings-page',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [CommonModule, MenuComponent, HallOfFamePageComponent],
   templateUrl: './rankings-page.component.html',
   styleUrl: './rankings-page.component.css'
 })
@@ -660,9 +661,17 @@ export class RankingsPageComponent {
   }
 
   selectRankingView(view: ActiveRankingView): void {
+    if (view === 'hallOfFame' && !this.canViewHallOfFame()) {
+      return;
+    }
+
     this.activeRankingView.set(view);
     this.showGameColumnsPanel.set(false);
     this.showUserColumnsPanel.set(false);
+  }
+
+  canViewHallOfFame(): boolean {
+    return this.authService.canViewHallOfFame();
   }
 
   clearChartFilters(): void {
