@@ -57,6 +57,7 @@ export class CineService {
     }).pipe(
       tap(pelicula => {
         this.dataStore.update<CinePelicula[]>(this.cacheKey, current => [pelicula, ...(current ?? [])]);
+        this.invalidateHallOfFame();
       })
     );
   }
@@ -69,7 +70,13 @@ export class CineService {
         this.dataStore.update<CinePelicula[]>(this.cacheKey, current =>
           (current ?? []).map(pelicula => pelicula.cinePeliculaId === peliculaId ? updated : pelicula)
         );
+        this.invalidateHallOfFame();
       })
     );
+  }
+
+  private invalidateHallOfFame(): void {
+    this.dataStore.invalidate('hall-of-fame');
+    this.dataStore.invalidateByPrefix('hall-of-fame:user:');
   }
 }

@@ -53,6 +53,7 @@
             <th class="row-number-column">#</th>
             <th>Data</th>
             <th>Pel·lícula</th>
+            <th *ngIf="showObservacions()">Publicada per</th>
             <th>Puntuació</th>
             <th>Acció</th>
             <th *ngIf="showObservacions()">Observacions</th>
@@ -66,7 +67,9 @@
               <td data-label="Data">{{ formatDate(pelicula.createdAt) }}</td>
               <td data-label="Pel·lícula">
                 <span class="movie-title">{{ pelicula.titulo }}</span>
-                <span class="movie-meta">{{ pelicula.usuarioCreadorNombre }}</span>
+              </td>
+              <td *ngIf="showObservacions()" data-label="Publicada per">
+                {{ pelicula.usuarioCreadorNombre }}
               </td>
               <td data-label="Puntuació">{{ formatMedia(pelicula) }}</td>
               <td data-label="Acció">
@@ -87,11 +90,11 @@
             </tr>
 
             <tr class="rating-row" *ngIf="ratingOpenId() === pelicula.cinePeliculaId">
-              <td [attr.colspan]="showObservacions() ? 6 : 5">
+              <td [attr.colspan]="showObservacions() ? 7 : 5">
                 <form [formGroup]="ratingForm" (ngSubmit)="guardarValoracion(pelicula)" class="rating-form">
                   <label class="form-field rating-score">
                     <span>Nota</span>
-                    <input type="number" formControlName="nota" min="0" max="10" step="1" />
+                    <input type="text" formControlName="nota" inputmode="decimal" />
                   </label>
 
                   <label class="form-field rating-observation">

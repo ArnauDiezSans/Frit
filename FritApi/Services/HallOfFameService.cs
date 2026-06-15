@@ -215,9 +215,17 @@ public class HallOfFameService
             .Include(medalla => medalla.Usuarios)
             .OrderBy(medalla => medalla.Nombre)
             .ToListAsync();
+        var cinePeliculas = await _context.CinePeliculas
+            .AsNoTracking()
+            .Include(pelicula => pelicula.Valoraciones)
+            .ToListAsync();
 
         var wins = BuildWinLookup(partidas, usuarios);
         var plays = BuildPlayCountLookup(partidas, usuarios);
+        var cineTotals = BuildCineTotalRatingsLookup(cinePeliculas);
+        var cineTotalTarget = cineTotals.Count > 0 ? cineTotals.Values.Max() : 0;
+        var cineSundayStreaks = BuildCineSundayStreakLookup(cinePeliculas, usuarios, GetFritToday(DateTime.UtcNow));
+        var cineSundayTarget = cineSundayStreaks.Count > 0 ? cineSundayStreaks.Values.Max() : 0;
         var rows = new List<UserMedalProgressRow>();
 
         foreach (var usuario in usuarios)
@@ -293,9 +301,86 @@ public class HallOfFameService
                         completed ? 1 : 0,
                         1)));
             }
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildWinnerProgress(
+                    "cine:total-ratings",
+                    "Cinèfil Frit",
+                    "Ha valorat més pel·lícules que ningú.",
+                    DefaultIconPath,
+                    "CineTotalRatings",
+                    cineTotals.GetValueOrDefault(usuario.UsuarioId),
+                    cineTotalTarget,
+                    false)));
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildWinnerProgress(
+                    "cine:sunday-streak",
+                    "Diumenge infal·lible",
+                    "Ratxa de diumenges consecutius valorant pel·lícules publicades en diumenge.",
+                    DefaultIconPath,
+                    "CineSundayStreak",
+                    cineSundayStreaks.GetValueOrDefault(usuario.UsuarioId),
+                    cineSundayTarget,
+                    true)));
         }
 
         return rows;
+    }
+
+    private static Dictionary<int, int> BuildCineTotalRatingsLookup(List<CinePelicula> peliculas)
+    {
+        return peliculas
+            .SelectMany(pelicula => pelicula.Valoraciones)
+            .GroupBy(valoracion => valoracion.UsuarioId)
+            .ToDictionary(group => group.Key, group => group.Count());
+    }
+
+    private static Dictionary<int, int> BuildCineSundayStreakLookup(
+        List<CinePelicula> peliculas,
+        List<Usuario> usuarios,
+        DateOnly today)
+    {
+        var peliculasBySunday = peliculas
+            .Select(pelicula => new
+            {
+                Dia = GetFritDate(pelicula.CreatedAt),
+                Pelicula = pelicula
+            })
+            .Where(row => row.Dia.DayOfWeek == DayOfWeek.Sunday)
+            .GroupBy(row => row.Dia)
+            .ToDictionary(group => group.Key, group => group.Select(row => row.Pelicula).ToList());
+        var latestSunday = GetLatestSunday(today);
+        var result = new Dictionary<int, int>();
+
+        foreach (var usuario in usuarios)
+        {
+            var streak = 0;
+
+            for (var day = latestSunday; ; day = day.AddDays(-7))
+            {
+                if (!peliculasBySunday.TryGetValue(day, out var sundayMovies))
+                {
+                    break;
+                }
+
+                if (!sundayMovies.Any(pelicula =>
+                    pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuario.UsuarioId)))
+                {
+                    break;
+                }
+
+                streak++;
+            }
+
+            result[usuario.UsuarioId] = streak;
+        }
+
+        return result;
     }
 
     private static Dictionary<(int UsuarioId, int JuegoId), int> BuildWinLookup(
@@ -449,6 +534,79 @@ public class HallOfFameService
         };
     }
 
+    private static MedalProgressDto BuildWinnerProgress(
+        string medalId,
+        string nombre,
+        string descripcion,
+        string iconPath,
+        string tipo,
+        int currentValue,
+        int targetValue,
+        bool showValueInHallOfFame)
+    {
+        var completed = targetValue > 0 && currentValue == targetValue;
+
+        return new MedalProgressDto
+        {
+            MedalId = medalId,
+            Nombre = nombre,
+            Descripcion = descripcion,
+            IconPath = iconPath,
+            Tipo = tipo,
+            CurrentValue = currentValue,
+            TargetValue = targetValue,
+            RankName = completed ? "Llegenda" : "Pendent",
+            RankLevel = completed ? 5 : 0,
+            RankTargetValue = completed && showValueInHallOfFame ? currentValue : 0,
+            RankColor = completed ? "#7c3aed" : "#98a2b3",
+            RankFilled = completed,
+            NextRankName = completed ? null : "Llegenda",
+            NextTargetValue = completed ? null : targetValue,
+            Completed = completed,
+            EpicScore = (completed ? 5000 : 0) + currentValue
+        };
+    }
+
+    private static DateOnly GetLatestSunday(DateOnly today)
+    {
+        var daysSinceSunday = (int)today.DayOfWeek;
+        return today.AddDays(-daysSinceSunday);
+    }
+
+    private static DateOnly GetFritToday(DateTime utcNow)
+    {
+        return DateOnly.FromDateTime(ConvertFromUtcToFritTime(utcNow));
+    }
+
+    private static DateOnly GetFritDate(DateTime value)
+    {
+        return DateOnly.FromDateTime(ConvertFromUtcToFritTime(value));
+    }
+
+    private static DateTime ConvertFromUtcToFritTime(DateTime value)
+    {
+        var utcValue = value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
+
+        return TimeZoneInfo.ConvertTimeFromUtc(utcValue, GetFritTimeZone());
+    }
+
+    private static TimeZoneInfo GetFritTimeZone()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        }
+        catch (Exception error) when (error is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time");
+        }
+    }
+
     private static IEnumerable<RegisteredUserRow> MatchUsuariosByNombreMostrado(
         string nombreMostrado,
         List<RegisteredUserRow> usuariosRegistrados)
@@ -507,7 +665,7 @@ public class HallOfFameService
         return progress.Tipo switch
         {
             "GameWins" => progress.CurrentValue > 0,
-            "GameSetWins" or "HeavyBggWins" or "TotalPlays" => progress.Completed,
+            "GameSetWins" or "HeavyBggWins" or "TotalPlays" or "CineTotalRatings" or "CineSundayStreak" => progress.Completed,
             _ => progress.CurrentValue > 0
         };
     }

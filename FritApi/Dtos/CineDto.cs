@@ -21,7 +21,7 @@ public class CineValoracionDto
     public int CineValoracionId { get; set; }
     public int UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
-    public int Nota { get; set; }
+    public decimal Nota { get; set; }
     public string? Observacion { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -37,7 +37,7 @@ public class CineValoracionCreateDto
 {
     [Required]
     [Range(0, 10)]
-    public int? Nota { get; set; }
+    public decimal? Nota { get; set; }
 
     [MaxLength(200)]
     public string? Observacion { get; set; }

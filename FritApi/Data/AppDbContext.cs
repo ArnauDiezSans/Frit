@@ -181,6 +181,9 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.CineValoracionId);
 
+            entity.Property(e => e.Nota)
+                .HasPrecision(4, 2);
+
             entity.Property(e => e.Observacion)
                 .HasMaxLength(200);
 

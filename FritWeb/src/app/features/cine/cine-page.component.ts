@@ -41,7 +41,7 @@ export class CinePageComponent {
   });
 
   ratingForm = this.fb.group({
-    nota: [null as number | null, [Validators.required, Validators.min(0), Validators.max(10)]],
+    nota: ['', Validators.required],
     observacion: ['', Validators.maxLength(200)]
   });
 
@@ -102,7 +102,7 @@ export class CinePageComponent {
     }
 
     this.ratingForm.reset({
-      nota: null,
+      nota: '',
       observacion: ''
     });
     this.ratingFormError.set('');
@@ -115,19 +115,20 @@ export class CinePageComponent {
   }
 
   guardarValoracion(pelicula: CinePelicula): void {
-    if (this.ratingForm.invalid) {
+    const raw = this.ratingForm.getRawValue();
+    const nota = this.parseNota(raw.nota ?? '');
+
+    if (this.ratingForm.invalid || nota === null) {
       this.ratingForm.markAllAsTouched();
       this.ratingFormError.set('La nota és obligatòria i ha d\'anar de 0 a 10.');
       return;
     }
 
-    const raw = this.ratingForm.getRawValue();
-
     this.savingRatingId.set(pelicula.cinePeliculaId);
     this.ratingFormError.set('');
 
     this.cineService.valorar(pelicula.cinePeliculaId, {
-      nota: Number(raw.nota),
+      nota,
       observacion: raw.observacion?.trim() || null
     }).subscribe({
       next: updated => {
@@ -197,7 +198,14 @@ export class CinePageComponent {
 
   private formatNumber(value: number): string {
     return new Intl.NumberFormat('ca-ES', {
-      maximumFractionDigits: 1
+      maximumFractionDigits: 2
     }).format(value);
+  }
+
+  private parseNota(value: string): number | null {
+    const normalized = value.trim().replace(',', '.');
+    const parsed = Number(normalized);
+
+    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10 ? parsed : null;
   }
 }

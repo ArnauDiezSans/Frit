@@ -593,6 +593,96 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task CineService_AllowsDecimalRatings()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(arnau);
+        await context.SaveChangesAsync();
+        var service = new CineService(context);
+        var created = await service.CreateAsync(arnau.UsuarioId, new CinePeliculaCreateDto
+        {
+            Titulo = "Noche de bodas"
+        });
+
+        var result = await service.ValorarAsync(created.Pelicula!.CinePeliculaId, arnau.UsuarioId, new CineValoracionCreateDto
+        {
+            Nota = 4.5m
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal(4.5m, result.Pelicula!.MediaNota);
+        Assert.Equal(4.5m, Assert.Single(result.Pelicula.Valoraciones).Nota);
+    }
+
+    [Fact]
+    public async Task HallOfFameService_CinefilFritAwardsUsersWithMostMovieRatings()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        var xumi = new Usuario { Nombre = "Xumi", PasswordHash = "hash" };
+        context.Usuarios.AddRange(arnau, anna, xumi);
+        await context.SaveChangesAsync();
+        context.CinePeliculas.AddRange(
+            new CinePelicula
+            {
+                Titulo = "Matrix",
+                UsuarioCreadorId = arnau.UsuarioId,
+                Valoraciones =
+                [
+                    new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 9 },
+                    new CineValoracion { UsuarioId = anna.UsuarioId, Nota = 8 },
+                    new CineValoracion { UsuarioId = xumi.UsuarioId, Nota = 7 }
+                ]
+            },
+            new CinePelicula
+            {
+                Titulo = "Alien",
+                UsuarioCreadorId = arnau.UsuarioId,
+                Valoraciones =
+                [
+                    new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 10 },
+                    new CineValoracion { UsuarioId = anna.UsuarioId, Nota = 9 }
+                ]
+            });
+        await context.SaveChangesAsync();
+        var service = new HallOfFameService(context);
+
+        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+
+        var entry = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Cinèfil Frit");
+        Assert.Equal(2, entry.Medal.TargetValue);
+        Assert.Equal(["Anna", "Arnau"], entry.Users.Select(user => user.UsuarioNombre).Order());
+        Assert.DoesNotContain(entry.Users, user => user.UsuarioNombre == "Xumi");
+    }
+
+    [Fact]
+    public async Task HallOfFameService_DiumengeInfalibleCountsCurrentConsecutiveSundayStreak()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        context.Usuarios.AddRange(arnau, anna);
+        await context.SaveChangesAsync();
+        var latestSunday = GetLatestSundayForTest();
+        context.CinePeliculas.AddRange(
+            CreateSundayMovie("Diumenge 1", arnau.UsuarioId, latestSunday, arnau.UsuarioId, anna.UsuarioId),
+            CreateSundayMovie("Diumenge 2", arnau.UsuarioId, latestSunday.AddDays(-7), arnau.UsuarioId),
+            CreateSundayMovie("Diumenge 4", arnau.UsuarioId, latestSunday.AddDays(-21), arnau.UsuarioId));
+        await context.SaveChangesAsync();
+        var service = new HallOfFameService(context);
+
+        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+
+        var entry = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Diumenge infal·lible");
+        var user = Assert.Single(entry.Users);
+        Assert.Equal("Arnau", user.UsuarioNombre);
+        Assert.Equal(2, user.CurrentValue);
+        Assert.Equal(2, entry.Medal.RankTargetValue);
+    }
+
+    [Fact]
     public async Task UsuarioService_UpdateProfile_DoesNotChangePasswordHash()
     {
         await using var context = CreateContext();
@@ -777,6 +867,46 @@ public class ServiceTests
             .Options;
 
         return new AppDbContext(options);
+    }
+
+    private static CinePelicula CreateSundayMovie(
+        string titulo,
+        int usuarioCreadorId,
+        DateOnly sunday,
+        params int[] usuarioIds)
+    {
+        return new CinePelicula
+        {
+            Titulo = titulo,
+            UsuarioCreadorId = usuarioCreadorId,
+            CreatedAt = sunday.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc),
+            Valoraciones = usuarioIds
+                .Select((usuarioId, index) => new CineValoracion
+                {
+                    UsuarioId = usuarioId,
+                    Nota = 10 - index
+                })
+                .ToList()
+        };
+    }
+
+    private static DateOnly GetLatestSundayForTest()
+    {
+        var madridNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetMadridTimeZoneForTest());
+        var today = DateOnly.FromDateTime(madridNow);
+        return today.AddDays(-(int)today.DayOfWeek);
+    }
+
+    private static TimeZoneInfo GetMadridTimeZoneForTest()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
+        }
+        catch (Exception error) when (error is TimeZoneNotFoundException or InvalidTimeZoneException)
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Romance Standard Time");
+        }
     }
 
     private sealed class TestHttpClientFactory : IHttpClientFactory

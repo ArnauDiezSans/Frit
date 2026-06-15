@@ -51,6 +51,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .section-heading {
@@ -149,7 +150,6 @@ h1 {
   color: #101828;
 }
 
-.movie-meta,
 .status-text {
   display: block;
   margin-top: 4px;
@@ -324,18 +324,25 @@ h1 {
     grid-row: 2;
   }
 
-  .cine-table td[data-label="Acció"] {
+  .cine-table td[data-label="Publicada per"] {
     grid-column: 1 / -1;
     grid-row: 3;
+    color: #667085;
+  }
+
+  .cine-table td[data-label="Acció"] {
+    grid-column: 1 / -1;
+    grid-row: 4;
   }
 
   .cine-table td[data-label="Observacions"] {
     grid-column: 1 / -1;
-    grid-row: 4;
+    grid-row: 5;
     color: #344054;
   }
 
   .cine-table td[data-label="Puntuació"]::before,
+  .cine-table td[data-label="Publicada per"]::before,
   .cine-table td[data-label="Observacions"]::before {
     content: attr(data-label);
     display: block;
