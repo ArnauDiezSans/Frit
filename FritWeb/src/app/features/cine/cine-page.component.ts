@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { isExternalUser } from '../../core/users/external-user';
@@ -41,7 +41,7 @@ export class CinePageComponent {
   });
 
   ratingForm = this.fb.group({
-    nota: ['', Validators.required],
+    nota: ['', [Validators.required, this.notaValidator]],
     observacion: ['', Validators.maxLength(200)]
   });
 
@@ -207,5 +207,19 @@ export class CinePageComponent {
     const parsed = Number(normalized);
 
     return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10 ? parsed : null;
+  }
+
+  private notaValidator(control: AbstractControl): ValidationErrors | null {
+    const value = String(control.value ?? '').trim();
+
+    if (!value) {
+      return null;
+    }
+
+    const parsed = Number(value.replace(',', '.'));
+
+    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10
+      ? null
+      : { notaRange: true };
   }
 }
