@@ -1,0 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace FritApi.Models;
+
+public class CineValoracion
+{
+    public int CineValoracionId { get; set; }
+
+    public int CinePeliculaId { get; set; }
+    public CinePelicula CinePelicula { get; set; } = null!;
+
+    public int UsuarioId { get; set; }
+    public Usuario Usuario { get; set; } = null!;
+
+    public int Nota { get; set; }
+
+    [MaxLength(200)]
+    public string? Observacion { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}

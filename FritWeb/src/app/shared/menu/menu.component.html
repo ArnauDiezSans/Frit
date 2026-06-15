@@ -45,6 +45,14 @@
 
   <button
     type="button"
+    class="menu-button menu-cine"
+    [class.menu-button-active]="activePage === 'cine'"
+    routerLink="/app/cine">
+    Cine
+  </button>
+
+  <button
+    type="button"
     class="menu-button menu-partidas"
     [class.menu-button-active]="activePage === 'partidas'"
     routerLink="/app/partidas">

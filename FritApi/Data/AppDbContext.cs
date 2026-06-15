@@ -15,6 +15,8 @@ public class AppDbContext : DbContext
     public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
     public DbSet<UsuarioJuegoOrden> UsuarioJuegoOrdenes => Set<UsuarioJuegoOrden>();
     public DbSet<PendentCompra> PendentsCompra => Set<PendentCompra>();
+    public DbSet<CinePelicula> CinePeliculas => Set<CinePelicula>();
+    public DbSet<CineValoracion> CineValoraciones => Set<CineValoracion>();
     public DbSet<ManualMedalla> ManualMedallas => Set<ManualMedalla>();
     public DbSet<ManualMedallaUsuario> ManualMedallaUsuarios => Set<ManualMedallaUsuario>();
 
@@ -154,6 +156,49 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<CinePelicula>(entity =>
+        {
+            entity.HasKey(e => e.CinePeliculaId);
+
+            entity.Property(e => e.Titulo)
+                .IsRequired()
+                .HasMaxLength(300);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.UsuarioCreador)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioCreadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<CineValoracion>(entity =>
+        {
+            entity.HasKey(e => e.CineValoracionId);
+
+            entity.Property(e => e.Observacion)
+                .HasMaxLength(200);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.CinePelicula)
+                .WithMany(e => e.Valoraciones)
+                .HasForeignKey(e => e.CinePeliculaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.CinePeliculaId, e.UsuarioId })
+                .IsUnique();
         });
 
         modelBuilder.Entity<ManualMedalla>(entity =>

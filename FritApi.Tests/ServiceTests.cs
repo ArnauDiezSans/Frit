@@ -537,6 +537,62 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task CineService_AllowsOneRatingPerUser()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(arnau);
+        await context.SaveChangesAsync();
+        var service = new CineService(context);
+        var created = await service.CreateAsync(arnau.UsuarioId, new CinePeliculaCreateDto
+        {
+            Titulo = "Matrix"
+        });
+
+        var first = await service.ValorarAsync(created.Pelicula!.CinePeliculaId, arnau.UsuarioId, new CineValoracionCreateDto
+        {
+            Nota = 9,
+            Observacion = "Funciona sempre."
+        });
+        var second = await service.ValorarAsync(created.Pelicula.CinePeliculaId, arnau.UsuarioId, new CineValoracionCreateDto
+        {
+            Nota = 8
+        });
+
+        Assert.True(first.Success);
+        Assert.False(second.Success);
+        Assert.Equal("Ja has valorat aquesta pel·lícula.", second.Error);
+        Assert.Single(context.CineValoraciones);
+    }
+
+    [Fact]
+    public async Task CineService_BlocksRatingsAfterTwentyFourHours()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(arnau);
+        await context.SaveChangesAsync();
+        var pelicula = new CinePelicula
+        {
+            Titulo = "Alien",
+            UsuarioCreadorId = arnau.UsuarioId,
+            CreatedAt = DateTime.UtcNow.AddHours(-25)
+        };
+        context.CinePeliculas.Add(pelicula);
+        await context.SaveChangesAsync();
+        var service = new CineService(context);
+
+        var result = await service.ValorarAsync(pelicula.CinePeliculaId, arnau.UsuarioId, new CineValoracionCreateDto
+        {
+            Nota = 10
+        });
+
+        Assert.False(result.Success);
+        Assert.Equal("Aquesta pel·lícula ja no es pot valorar.", result.Error);
+        Assert.Empty(context.CineValoraciones);
+    }
+
+    [Fact]
     public async Task UsuarioService_UpdateProfile_DoesNotChangePasswordHash()
     {
         await using var context = CreateContext();

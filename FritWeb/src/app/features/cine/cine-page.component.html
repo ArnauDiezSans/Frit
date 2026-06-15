@@ -1,0 +1,122 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Cine</h1>
+      <p class="subtitle">Pel·lícules del grup i valoracions obertes durant 24 hores.</p>
+    </div>
+
+    <app-menu activePage="cine" (logout)="logout()" />
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant Cine...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarPeliculas()">
+      Tornar-ho a provar
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error() && canPublish()">
+    <form [formGroup]="movieForm" (ngSubmit)="publicarPelicula()" class="movie-form">
+      <label class="form-field">
+        <span>Pel·lícula</span>
+        <input type="text" formControlName="titulo" maxlength="300" autocomplete="off" />
+      </label>
+
+      <button type="submit" class="primary-button" [disabled]="savingMovie()">
+        {{ savingMovie() ? 'Publicant...' : 'Publicar' }}
+      </button>
+    </form>
+
+    <p class="field-error" *ngIf="movieFormError()">{{ movieFormError() }}</p>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="section-heading">
+      <div>
+        <h2>Resultats</h2>
+      </div>
+
+      <button type="button" class="secondary-button" (click)="toggleObservacions()">
+        {{ showObservacions() ? 'Amagar observacions' : 'Mostrar observacions' }}
+      </button>
+    </div>
+
+    <div class="table-wrapper" *ngIf="peliculas().length > 0">
+      <table class="cine-table">
+        <thead>
+          <tr>
+            <th class="row-number-column">#</th>
+            <th>Data</th>
+            <th>Pel·lícula</th>
+            <th>Puntuació</th>
+            <th>Acció</th>
+            <th *ngIf="showObservacions()">Observacions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <ng-container *ngFor="let pelicula of peliculas(); let i = index; trackBy: trackByPeliculaId">
+            <tr [class.row-highlight]="highlightedPeliculaId() === pelicula.cinePeliculaId">
+              <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
+              <td data-label="Data">{{ formatDate(pelicula.createdAt) }}</td>
+              <td data-label="Pel·lícula">
+                <span class="movie-title">{{ pelicula.titulo }}</span>
+                <span class="movie-meta">{{ pelicula.usuarioCreadorNombre }}</span>
+              </td>
+              <td data-label="Puntuació">{{ formatMedia(pelicula) }}</td>
+              <td data-label="Acció">
+                <button
+                  *ngIf="pelicula.puedeValorar; else noAction"
+                  type="button"
+                  class="secondary-button small-button"
+                  (click)="abrirValoracion(pelicula)">
+                  Valorar
+                </button>
+                <ng-template #noAction>
+                  <span class="status-text">-</span>
+                </ng-template>
+              </td>
+              <td *ngIf="showObservacions()" data-label="Observacions">
+                {{ formatObservacions(pelicula) }}
+              </td>
+            </tr>
+
+            <tr class="rating-row" *ngIf="ratingOpenId() === pelicula.cinePeliculaId">
+              <td [attr.colspan]="showObservacions() ? 6 : 5">
+                <form [formGroup]="ratingForm" (ngSubmit)="guardarValoracion(pelicula)" class="rating-form">
+                  <label class="form-field rating-score">
+                    <span>Nota</span>
+                    <input type="number" formControlName="nota" min="0" max="10" step="1" />
+                  </label>
+
+                  <label class="form-field rating-observation">
+                    <span>Observació</span>
+                    <input type="text" formControlName="observacion" maxlength="200" />
+                  </label>
+
+                  <div class="rating-actions">
+                    <button type="button" class="ghost-button" (click)="cancelarValoracion()">Cancel·lar</button>
+                    <button type="submit" class="primary-button" [disabled]="savingRatingId() === pelicula.cinePeliculaId">
+                      {{ savingRatingId() === pelicula.cinePeliculaId ? 'Desant...' : 'Desar' }}
+                    </button>
+                  </div>
+                </form>
+
+                <p class="field-error" *ngIf="ratingFormError()">{{ ratingFormError() }}</p>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="peliculas().length === 0">
+      <h3>No hi ha pel·lícules publicades</h3>
+    </div>
+  </section>
+</section>
