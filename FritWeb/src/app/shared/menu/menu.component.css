@@ -1,6 +1,6 @@
 :host {
-  flex: 0 0 50%;
-  max-width: 50%;
+  flex: 1 1 auto;
+  max-width: 76%;
   min-width: 0;
   position: relative;
 }
