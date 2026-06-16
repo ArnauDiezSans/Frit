@@ -82,6 +82,6 @@ export class AuthService {
   }
 
   canViewHallOfFame(): boolean {
-    return this.currentUser?.nombre === 'Arnau';
+    return this.isAuthenticated();
   }
 }

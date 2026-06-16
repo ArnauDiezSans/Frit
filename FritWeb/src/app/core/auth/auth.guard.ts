@@ -15,11 +15,7 @@ export const hallOfFameGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
-    return router.createUrlTree(['/login']);
-  }
-
-  return authService.canViewHallOfFame()
+  return authService.isAuthenticated()
     ? true
-    : router.createUrlTree(['/app/rankings']);
+    : router.createUrlTree(['/login']);
 };
