@@ -89,6 +89,7 @@ interface ChartMetricRow {
 }
 
 interface ChartValueRow {
+  rowId: string;
   usuarioId: number;
   usuarioNombre: string;
   color: string;
@@ -235,6 +236,7 @@ export class RankingsPageComponent {
   userFilters = signal<UserFilters>({ ...EMPTY_USER_FILTERS });
   chartFilters = signal<ChartFilters>({ ...EMPTY_CHART_FILTERS });
   selectedChartUserIds = signal<number[]>([]);
+  showRepeatedMaxScores = signal(false);
   showNoLlistaGames = signal(false);
   showCooperativeGames = signal(false);
 
@@ -555,7 +557,37 @@ export class RankingsPageComponent {
 
   maxScoreChartRows = computed<ChartValueRow[]>(() => {
     const jugadores = this.chartJugadores();
-    const rows = this.selectedChartUsers()
+    const selectedUsers = this.selectedChartUsers();
+    const colorByUserId = new Map(selectedUsers.map(usuario => [usuario.usuarioId, usuario.color]));
+
+    if (this.chartFilters().juegoId && this.showRepeatedMaxScores()) {
+      const rows = jugadores
+        .filter(jugador => jugador.puntos !== null && jugador.puntos !== undefined)
+        .map(jugador => ({
+          rowId: `score:${jugador.partidaId}:${jugador.usuarioId}:${jugador.puntos}`,
+          usuarioId: jugador.usuarioId,
+          usuarioNombre: jugador.usuarioNombre,
+          color: colorByUserId.get(jugador.usuarioId) ?? '#667085',
+          value: jugador.puntos ?? 0,
+          width: 0,
+          detail: jugador.juegoNombre,
+          sourceLabel: this.formatDate(jugador.fecha),
+          dateKey: jugador.fecha
+        }))
+        .sort((a, b) =>
+          b.value - a.value ||
+          b.dateKey.localeCompare(a.dateKey) ||
+          a.usuarioNombre.localeCompare(b.usuarioNombre)
+        );
+      const maxValue = Math.max(...rows.map(row => row.value), 0);
+
+      return rows.map(row => ({
+        ...row,
+        width: maxValue > 0 ? Math.round((row.value * 1000) / maxValue) / 10 : 0
+      }));
+    }
+
+    const rows = selectedUsers
       .map(usuario => {
         const scoreRows = jugadores
           .filter(jugador => jugador.usuarioId === usuario.usuarioId)
@@ -569,6 +601,7 @@ export class RankingsPageComponent {
         const maxScore = bestScoreRow?.puntos ?? 0;
 
         return {
+          rowId: `user:${usuario.usuarioId}`,
           usuarioId: usuario.usuarioId,
           usuarioNombre: usuario.nombre,
           color: usuario.color,
@@ -667,6 +700,10 @@ export class RankingsPageComponent {
       ...current,
       [key]: value
     }));
+
+    if (key === 'juegoId' && !value) {
+      this.showRepeatedMaxScores.set(false);
+    }
   }
 
   selectRankingView(view: ActiveRankingView): void {
@@ -724,6 +761,10 @@ export class RankingsPageComponent {
 
   toggleShowCooperativeGames(): void {
     this.showCooperativeGames.update(value => !value);
+  }
+
+  toggleShowRepeatedMaxScores(): void {
+    this.showRepeatedMaxScores.update(value => !value);
   }
 
   toggleChartUser(usuarioId: number): void {
@@ -925,8 +966,8 @@ export class RankingsPageComponent {
     return item.usuarioId;
   }
 
-  trackByChartValueRow(_: number, item: ChartValueRow): number {
-    return item.usuarioId;
+  trackByChartValueRow(_: number, item: ChartValueRow): string {
+    return item.rowId;
   }
 
   trackByChartLineSeries(_: number, item: ChartLineSeries): number {

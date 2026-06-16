@@ -679,6 +679,13 @@
         <article class="chart-card">
           <div class="chart-card-heading">
             <h3>Puntuació màxima</h3>
+            <label class="filter-check" *ngIf="chartFilters().juegoId">
+              <input
+                type="checkbox"
+                [checked]="showRepeatedMaxScores()"
+                (change)="toggleShowRepeatedMaxScores()" />
+              <span>Repetits</span>
+            </label>
           </div>
 
           <div class="chart-bars chart-score-bars" *ngIf="maxScoreChartRows().length > 0; else noMaxScoreChartData">
