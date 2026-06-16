@@ -16,6 +16,7 @@ interface CineFilters {
   fechaDesde: string;
   fechaHasta: string;
   usuarioId: string;
+  tipo: string;
   scoreUsuarioId: string;
 }
 
@@ -28,6 +29,7 @@ const EMPTY_CINE_FILTERS: CineFilters = {
   fechaDesde: '',
   fechaHasta: '',
   usuarioId: '',
+  tipo: '',
   scoreUsuarioId: ''
 };
 
@@ -89,9 +91,11 @@ export class CinePageComponent {
   filteredPeliculas = computed(() => {
     const filters = this.filters();
     const usuarioId = Number(filters.usuarioId);
+    const grupoPelicula = Number(filters.tipo);
     const filtered = this.peliculas().filter(pelicula =>
       this.matchesDateRange(pelicula.createdAt, filters.fechaDesde, filters.fechaHasta) &&
-      (!usuarioId || this.matchesUser(pelicula, usuarioId))
+      (!usuarioId || this.matchesUser(pelicula, usuarioId)) &&
+      (!grupoPelicula || pelicula.grupoPelicula === grupoPelicula)
     );
 
     return this.sortPeliculas(filtered);
@@ -368,9 +372,15 @@ export class CinePageComponent {
 
   formatValoraciones(pelicula: CinePelicula): string {
     return pelicula.valoraciones
-      .map(valoracion => valoracion.nota === null || valoracion.nota === undefined
-        ? `${valoracion.usuarioNombre} assistit`
-        : `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota)}`)
+      .filter(valoracion => valoracion.nota !== null && valoracion.nota !== undefined)
+      .map(valoracion => `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota!)}`)
+      .join(', ');
+  }
+
+  formatAssistenciesSenseNota(pelicula: CinePelicula): string {
+    return pelicula.valoraciones
+      .filter(valoracion => valoracion.nota === null || valoracion.nota === undefined)
+      .map(valoracion => valoracion.usuarioNombre)
       .join(', ');
   }
 

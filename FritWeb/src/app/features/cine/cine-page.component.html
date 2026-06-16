@@ -107,6 +107,18 @@
         </label>
 
         <label class="filter-field">
+          <span>Tipus</span>
+          <select
+            class="filter-input"
+            [value]="filters().tipo"
+            (change)="updateFilter('tipo', $any($event.target).value)">
+            <option value="">Totes</option>
+            <option value="2">Por</option>
+            <option value="1">Diumenges</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
           <span>Ordenar per nota de</span>
           <select
             class="filter-input"
