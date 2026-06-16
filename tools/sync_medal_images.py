@@ -11,8 +11,8 @@ import requests
 from PIL import Image, ImageOps
 
 
-DEFAULT_SIZE = 512
-DEFAULT_PADDING = 24
+DEFAULT_SIZE = 160
+DEFAULT_PADDING = 8
 DEFAULT_BATCH_SIZE = 20
 DEFAULT_OUTPUT_DIR = Path("FritWeb/src/assets/medallas/jocs")
 

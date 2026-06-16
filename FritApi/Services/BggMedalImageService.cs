@@ -11,8 +11,8 @@ namespace FritApi.Services;
 
 public class BggMedalImageService : IBggMedalImageService
 {
-    private const int MedalSize = 512;
-    private const int MedalPadding = 24;
+    private const int MedalSize = 160;
+    private const int MedalPadding = 8;
     private readonly HttpClient _httpClient;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<BggMedalImageService> _logger;
