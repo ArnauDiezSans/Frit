@@ -75,6 +75,32 @@ export class CsopaService {
     );
   }
 
+  deleteActivitat(activitatId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${activitatId}`, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.dataStore.update<CsopaActivitat[]>(this.cacheKey, current =>
+          (current ?? []).filter(activitat => activitat.csopaActivitatId !== activitatId)
+        );
+        this.invalidateHallOfFame();
+      })
+    );
+  }
+
+  deleteAssistencia(activitatId: number, assistenciaId: number): Observable<CsopaActivitat> {
+    return this.http.delete<CsopaActivitat>(`${this.baseUrl}/${activitatId}/assistencies/${assistenciaId}`, {
+      withCredentials: true
+    }).pipe(
+      tap(updated => {
+        this.dataStore.update<CsopaActivitat[]>(this.cacheKey, current =>
+          (current ?? []).map(activitat => activitat.csopaActivitatId === activitatId ? updated : activitat)
+        );
+        this.invalidateHallOfFame();
+      })
+    );
+  }
+
   private invalidateHallOfFame(): void {
     this.dataStore.invalidate('hall-of-fame');
     this.dataStore.invalidateByPrefix('hall-of-fame:user:');

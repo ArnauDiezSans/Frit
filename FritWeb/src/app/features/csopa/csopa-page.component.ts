@@ -56,13 +56,17 @@ export class CsopaPageComponent {
   loading = signal(true);
   savingActivity = signal(false);
   savingAttendanceId = signal<number | null>(null);
+  deletingActivityId = signal<number | null>(null);
+  deletingAttendanceId = signal<number | null>(null);
   error = signal('');
   activityFormError = signal('');
   attendanceFormError = signal('');
+  editFormError = signal('');
   activitats = signal<CsopaActivitat[]>([]);
   usuarios = signal<UsuarioOption[]>([]);
   highlightedActivitatId = signal<number | null>(null);
   attendanceOpenId = signal<number | null>(null);
+  editOpenId = signal<number | null>(null);
   filters = signal<CsopaFilters>({ ...EMPTY_CSOPA_FILTERS });
   showFilters = signal(false);
   sortColumn = signal<CsopaSortColumn>('createdAt');
@@ -72,6 +76,8 @@ export class CsopaPageComponent {
     const currentUser = this.authService.currentUser;
     return currentUser ? !isExternalUser(currentUser) : false;
   });
+
+  canEdit = computed(() => this.authService.currentUser?.nombre === 'Arnau');
 
   userOptions = computed<CsopaUserOption[]>(() => {
     const users = new Map<number, string>();
@@ -188,6 +194,7 @@ export class CsopaPageComponent {
       return;
     }
 
+    this.editOpenId.set(null);
     this.attendanceForm.reset({ usuarioId: '' });
     this.attendanceFormError.set('');
     this.attendanceOpenId.set(activitat.csopaActivitatId);
@@ -196,6 +203,65 @@ export class CsopaPageComponent {
   cancelarAssistencia(): void {
     this.attendanceOpenId.set(null);
     this.attendanceFormError.set('');
+  }
+
+  toggleEditar(activitat: CsopaActivitat): void {
+    if (!this.canEdit()) {
+      return;
+    }
+
+    this.attendanceOpenId.set(null);
+    this.editFormError.set('');
+    this.editOpenId.update(current => current === activitat.csopaActivitatId ? null : activitat.csopaActivitatId);
+  }
+
+  eliminarActivitat(activitat: CsopaActivitat): void {
+    if (!this.canEdit()) {
+      return;
+    }
+
+    if (!window.confirm(`Eliminar ${this.getTipusLabel(activitat.tipus)} del ${this.formatDate(activitat.createdAt)}?`)) {
+      return;
+    }
+
+    this.deletingActivityId.set(activitat.csopaActivitatId);
+    this.editFormError.set('');
+
+    this.csopaService.deleteActivitat(activitat.csopaActivitatId).subscribe({
+      next: () => {
+        this.activitats.update(current =>
+          current.filter(item => item.csopaActivitatId !== activitat.csopaActivitatId)
+        );
+        this.editOpenId.set(null);
+        this.deletingActivityId.set(null);
+      },
+      error: err => {
+        this.editFormError.set(err?.error?.message ?? "No s'ha pogut eliminar l'activitat.");
+        this.deletingActivityId.set(null);
+      }
+    });
+  }
+
+  eliminarAssistencia(activitat: CsopaActivitat, assistenciaId: number): void {
+    if (!this.canEdit()) {
+      return;
+    }
+
+    this.deletingAttendanceId.set(assistenciaId);
+    this.editFormError.set('');
+
+    this.csopaService.deleteAssistencia(activitat.csopaActivitatId, assistenciaId).subscribe({
+      next: updated => {
+        this.activitats.update(current =>
+          current.map(item => item.csopaActivitatId === updated.csopaActivitatId ? updated : item)
+        );
+        this.deletingAttendanceId.set(null);
+      },
+      error: err => {
+        this.editFormError.set(err?.error?.message ?? "No s'ha pogut treure l'assistencia.");
+        this.deletingAttendanceId.set(null);
+      }
+    });
   }
 
   guardarAssistencia(activitat: CsopaActivitat): void {

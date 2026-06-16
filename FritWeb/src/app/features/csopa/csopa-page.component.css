@@ -246,8 +246,43 @@ h1 {
   line-height: 1.35;
 }
 
-.attendance-row td {
+.attendance-row td,
+.edit-row td {
   background: #f9fafb;
+}
+
+.edit-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.edit-attendance-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.edit-label {
+  color: #344054;
+  font-weight: 700;
+}
+
+.edit-empty {
+  color: #667085;
+  font-size: 0.9rem;
+}
+
+.edit-attendance-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .field-error {
@@ -265,7 +300,8 @@ h1 {
 
 .primary-button,
 .secondary-button,
-.ghost-button {
+.ghost-button,
+.danger-button {
   height: 44px;
   padding: 0 16px;
   border-radius: 12px;
@@ -313,8 +349,20 @@ h1 {
   background: #f9fafb;
 }
 
+.danger-button {
+  border: 1px solid #b42318;
+  background: #ffffff;
+  color: #b42318;
+}
+
+.danger-button:hover {
+  background: #fef3f2;
+}
+
 .primary-button:disabled,
-.secondary-button:disabled {
+.secondary-button:disabled,
+.ghost-button:disabled,
+.danger-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -344,7 +392,8 @@ h1 {
   .error-card,
   .section-heading,
   .activity-form,
-  .attendance-form {
+  .attendance-form,
+  .edit-panel {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
@@ -450,7 +499,8 @@ h1 {
     color: #667085;
   }
 
-  .attendance-row td {
+  .attendance-row td,
+  .edit-row td {
     display: block;
     padding: 12px;
     border: 1px solid #e4e7ec;
@@ -459,9 +509,19 @@ h1 {
 
   .primary-button,
   .secondary-button,
-  .ghost-button {
+  .ghost-button,
+  .danger-button {
     width: 100%;
     min-height: 38px;
+  }
+
+  .edit-attendance-list {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .edit-attendance-item {
+    justify-content: space-between;
   }
 }
 

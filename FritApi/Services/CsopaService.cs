@@ -139,6 +139,65 @@ public class CsopaService
         return (true, null, ToDto(activitat, currentUsuarioId));
     }
 
+    public async Task<(bool Success, string? Error)> DeleteActivitatAsync(int activitatId, int currentUsuarioId)
+    {
+        var currentUsuario = await _context.Usuarios.FirstOrDefaultAsync(usuario => usuario.UsuarioId == currentUsuarioId);
+
+        if (!IsCsopaAdmin(currentUsuario))
+        {
+            return (false, "No tens permisos per editar C sopa/Gymfrit.");
+        }
+
+        var activitat = await _context.CsopaActivitats.FirstOrDefaultAsync(item => item.CsopaActivitatId == activitatId);
+
+        if (activitat is null)
+        {
+            return (false, "Activitat no trobada.");
+        }
+
+        _context.CsopaActivitats.Remove(activitat);
+        await _context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? Error, CsopaActivitatDto? Activitat)> DeleteAssistenciaAsync(
+        int activitatId,
+        int assistenciaId,
+        int currentUsuarioId)
+    {
+        var currentUsuario = await _context.Usuarios.FirstOrDefaultAsync(usuario => usuario.UsuarioId == currentUsuarioId);
+
+        if (!IsCsopaAdmin(currentUsuario))
+        {
+            return (false, "No tens permisos per editar C sopa/Gymfrit.", null);
+        }
+
+        var activitat = await _context.CsopaActivitats
+            .Include(item => item.UsuarioCreador)
+            .Include(item => item.Assistencies)
+                .ThenInclude(assistencia => assistencia.Usuario)
+            .FirstOrDefaultAsync(item => item.CsopaActivitatId == activitatId);
+
+        if (activitat is null)
+        {
+            return (false, "Activitat no trobada.", null);
+        }
+
+        var assistencia = activitat.Assistencies.FirstOrDefault(item => item.CsopaAssistenciaId == assistenciaId);
+
+        if (assistencia is null)
+        {
+            return (false, "Assistència no trobada.", null);
+        }
+
+        _context.CsopaAssistencies.Remove(assistencia);
+        await _context.SaveChangesAsync();
+        activitat.Assistencies.Remove(assistencia);
+
+        return (true, null, ToDto(activitat, currentUsuarioId));
+    }
+
     private static CsopaActivitatDto ToDto(CsopaActivitat activitat, int usuarioId)
     {
         return new CsopaActivitatDto
@@ -171,5 +230,10 @@ public class CsopaService
     private static string GetDefaultTitol(int tipus)
     {
         return tipus == TipusGymfrit ? "Gymfrit" : "Sopar";
+    }
+
+    private static bool IsCsopaAdmin(Usuario? usuario)
+    {
+        return usuario is not null && string.Equals(usuario.Nombre, "Arnau", StringComparison.Ordinal);
     }
 }

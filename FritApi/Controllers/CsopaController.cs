@@ -78,6 +78,56 @@ public class CsopaController : ControllerBase
         return Ok(result.Activitat);
     }
 
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteActivitat(int id)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _csopaService.DeleteActivitatAsync(id, userId.Value);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Activitat no trobada.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}/assistencies/{assistenciaId:int}")]
+    public async Task<ActionResult<CsopaActivitatDto>> DeleteAssistencia(int id, int assistenciaId)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _csopaService.DeleteAssistenciaAsync(id, assistenciaId, userId.Value);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Activitat no trobada." || result.Error == "Assistència no trobada.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Activitat);
+    }
+
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
