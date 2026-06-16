@@ -68,7 +68,7 @@ namespace FritApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
 
-                    b.Property<decimal>("Nota")
+                    b.Property<decimal?>("Nota")
                         .HasPrecision(4, 2)
                         .HasColumnType("numeric(4,2)");
 

@@ -115,16 +115,22 @@ h1 {
 }
 
 .movie-form,
-.rating-form {
+.rating-form,
+.attendance-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 16px;
   align-items: end;
 }
 
-.rating-form {
+.rating-form,
+.attendance-form {
   grid-template-columns: 110px minmax(0, 1fr) auto;
   align-items: end;
+}
+
+.attendance-form {
+  grid-template-columns: minmax(180px, 1fr) auto;
 }
 
 .form-field {
@@ -139,7 +145,8 @@ h1 {
   color: #344054;
 }
 
-.form-field input {
+.form-field input,
+.form-field select {
   width: 100%;
   min-height: 42px;
   padding: 10px 12px;
@@ -150,7 +157,8 @@ h1 {
   font: inherit;
 }
 
-.form-field input:focus {
+.form-field input:focus,
+.form-field select:focus {
   outline: none;
   border-color: #0f766e;
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
@@ -212,6 +220,12 @@ h1 {
   margin-top: 4px;
   color: #667085;
   font-size: 0.88rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .rating-row td {
@@ -317,7 +331,8 @@ h1 {
   .error-card,
   .section-heading,
   .movie-form,
-  .rating-form {
+  .rating-form,
+  .attendance-form {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;

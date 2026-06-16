@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
+import { UsuarioOption } from '../juegos/juegos.models';
+import { UsuariosService } from '../juegos/usuarios.service';
 import { CinePelicula, CineService } from './cine.service';
 
 type CineSortColumn = 'createdAt' | 'titulo' | 'usuario' | 'mediaNota' | 'userNota';
@@ -40,18 +42,23 @@ export class CinePageComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private cineService = inject(CineService);
+  private usuariosService = inject(UsuariosService);
   private router = inject(Router);
 
   loading = signal(true);
   savingMovie = signal(false);
   savingRatingId = signal<number | null>(null);
+  savingAttendanceId = signal<number | null>(null);
   error = signal('');
   movieFormError = signal('');
   ratingFormError = signal('');
+  attendanceFormError = signal('');
   showObservacions = signal(false);
   peliculas = signal<CinePelicula[]>([]);
+  usuarios = signal<UsuarioOption[]>([]);
   highlightedPeliculaId = signal<number | null>(null);
   ratingOpenId = signal<number | null>(null);
+  attendanceOpenId = signal<number | null>(null);
   filters = signal<CineFilters>({ ...EMPTY_CINE_FILTERS });
   showFilters = signal(false);
   sortColumn = signal<CineSortColumn>('createdAt');
@@ -99,8 +106,13 @@ export class CinePageComponent {
     observacion: ['', Validators.maxLength(200)]
   });
 
+  attendanceForm = this.fb.group({
+    usuarioId: ['', Validators.required]
+  });
+
   ngOnInit(): void {
     this.cargarPeliculas();
+    this.cargarUsuarios();
   }
 
   cargarPeliculas(): void {
@@ -116,6 +128,13 @@ export class CinePageComponent {
         this.error.set("No s'ha pogut carregar Cine.");
         this.loading.set(false);
       }
+    });
+  }
+
+  cargarUsuarios(): void {
+    this.usuariosService.getJugadores().subscribe({
+      next: usuarios => this.usuarios.set(usuarios),
+      error: () => this.usuarios.set([])
     });
   }
 
@@ -166,6 +185,52 @@ export class CinePageComponent {
   cancelarValoracion(): void {
     this.ratingOpenId.set(null);
     this.ratingFormError.set('');
+  }
+
+  abrirAsistencia(pelicula: CinePelicula): void {
+    if (!this.canPublish()) {
+      return;
+    }
+
+    this.attendanceForm.reset({ usuarioId: '' });
+    this.attendanceFormError.set('');
+    this.attendanceOpenId.set(pelicula.cinePeliculaId);
+  }
+
+  cancelarAsistencia(): void {
+    this.attendanceOpenId.set(null);
+    this.attendanceFormError.set('');
+  }
+
+  guardarAsistencia(pelicula: CinePelicula): void {
+    if (this.attendanceForm.invalid) {
+      this.attendanceForm.markAllAsTouched();
+      this.attendanceFormError.set('Selecciona un usuari.');
+      return;
+    }
+
+    const usuarioId = Number(this.attendanceForm.controls.usuarioId.value);
+    if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
+      this.attendanceFormError.set('Selecciona un usuari.');
+      return;
+    }
+
+    this.savingAttendanceId.set(pelicula.cinePeliculaId);
+    this.attendanceFormError.set('');
+
+    this.cineService.marcarAsistencia(pelicula.cinePeliculaId, { usuarioId }).subscribe({
+      next: updated => {
+        this.peliculas.update(current =>
+          current.map(item => item.cinePeliculaId === updated.cinePeliculaId ? updated : item)
+        );
+        this.attendanceOpenId.set(null);
+        this.savingAttendanceId.set(null);
+      },
+      error: err => {
+        this.attendanceFormError.set(err?.error?.message ?? "No s'ha pogut marcar l'assistència.");
+        this.savingAttendanceId.set(null);
+      }
+    });
   }
 
   guardarValoracion(pelicula: CinePelicula): void {
@@ -285,7 +350,9 @@ export class CinePageComponent {
 
   formatValoraciones(pelicula: CinePelicula): string {
     return pelicula.valoraciones
-      .map(valoracion => `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota)}`)
+      .map(valoracion => valoracion.nota === null || valoracion.nota === undefined
+        ? `${valoracion.usuarioNombre} assistit`
+        : `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota)}`)
       .join(', ');
   }
 

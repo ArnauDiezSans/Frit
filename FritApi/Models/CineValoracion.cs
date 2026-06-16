@@ -12,7 +12,7 @@ public class CineValoracion
     public int UsuarioId { get; set; }
     public Usuario Usuario { get; set; } = null!;
 
-    public decimal Nota { get; set; }
+    public decimal? Nota { get; set; }
 
     [MaxLength(200)]
     public string? Observacion { get; set; }

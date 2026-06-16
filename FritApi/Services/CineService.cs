@@ -83,6 +83,11 @@ public class CineService
             return (false, "L'usuari Extern no pot valorar pel·lícules.", null);
         }
 
+        if (!dto.Nota.HasValue)
+        {
+            return (false, "La nota és obligatòria.", null);
+        }
+
         var pelicula = await _context.CinePeliculas
             .Include(item => item.UsuarioCreador)
             .Include(item => item.Valoraciones)
@@ -99,17 +104,28 @@ public class CineService
             return (false, "Aquesta pel·lícula ja no es pot valorar.", null);
         }
 
-        if (pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuarioId))
+        var existing = pelicula.Valoraciones.FirstOrDefault(valoracion => valoracion.UsuarioId == usuarioId);
+
+        if (existing?.Nota.HasValue == true)
         {
             return (false, "Ja has valorat aquesta pel·lícula.", null);
         }
 
         var observacion = string.IsNullOrWhiteSpace(dto.Observacion) ? null : dto.Observacion.Trim();
+        if (existing is not null)
+        {
+            existing.Nota = dto.Nota.Value;
+            existing.Observacion = observacion;
+            await _context.SaveChangesAsync();
+
+            return (true, null, ToDto(pelicula, usuarioId, now));
+        }
+
         var valoracion = new CineValoracion
         {
             CinePeliculaId = peliculaId,
             UsuarioId = usuarioId,
-            Nota = dto.Nota!.Value,
+            Nota = dto.Nota.Value,
             Observacion = observacion
         };
 
@@ -126,10 +142,80 @@ public class CineService
         return (true, null, ToDto(pelicula, usuarioId, now));
     }
 
+    public async Task<(bool Success, string? Error, CinePeliculaDto? Pelicula)> MarcarAsistenciaAsync(
+        int peliculaId,
+        int currentUsuarioId,
+        CineAsistenciaCreateDto dto)
+    {
+        var currentUsuario = await _context.Usuarios.FirstOrDefaultAsync(usuario => usuario.UsuarioId == currentUsuarioId);
+
+        if (currentUsuario is null)
+        {
+            return (false, "Usuari no trobat.", null);
+        }
+
+        if (ExternalUserPolicy.IsExternal(currentUsuario))
+        {
+            return (false, "L'usuari Extern no pot marcar assistències.", null);
+        }
+
+        if (!dto.UsuarioId.HasValue)
+        {
+            return (false, "L'usuari és obligatori.", null);
+        }
+
+        var usuario = await _context.Usuarios.FirstOrDefaultAsync(item => item.UsuarioId == dto.UsuarioId.Value);
+
+        if (usuario is null || ExternalUserPolicy.IsExternal(usuario))
+        {
+            return (false, "Usuari no trobat.", null);
+        }
+
+        var pelicula = await _context.CinePeliculas
+            .Include(item => item.UsuarioCreador)
+            .Include(item => item.Valoraciones)
+                .ThenInclude(valoracion => valoracion.Usuario)
+            .FirstOrDefaultAsync(item => item.CinePeliculaId == peliculaId);
+
+        if (pelicula is null)
+        {
+            return (false, "Pel·lícula no trobada.", null);
+        }
+
+        if (pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuario.UsuarioId))
+        {
+            return (false, "Aquest usuari ja consta com a assistent.", null);
+        }
+
+        var asistencia = new CineValoracion
+        {
+            CinePeliculaId = peliculaId,
+            UsuarioId = usuario.UsuarioId,
+            Nota = null
+        };
+
+        _context.CineValoraciones.Add(asistencia);
+        await _context.SaveChangesAsync();
+
+        asistencia.Usuario = usuario;
+        if (!pelicula.Valoraciones.Any(item => item.CineValoracionId == asistencia.CineValoracionId))
+        {
+            pelicula.Valoraciones.Add(asistencia);
+        }
+
+        return (true, null, ToDto(pelicula, currentUsuarioId, DateTime.UtcNow));
+    }
+
     private static CinePeliculaDto ToDto(CinePelicula pelicula, int usuarioId, DateTime now)
     {
         var cierraAt = pelicula.CreatedAt.Add(VotingWindow);
-        var yaValorada = pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuarioId);
+        var yaValorada = pelicula.Valoraciones.Any(valoracion =>
+            valoracion.UsuarioId == usuarioId && valoracion.Nota.HasValue);
+        var yaAsistida = pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuarioId);
+        var notas = pelicula.Valoraciones
+            .Where(valoracion => valoracion.Nota.HasValue)
+            .Select(valoracion => valoracion.Nota!.Value)
+            .ToList();
 
         return new CinePeliculaDto
         {
@@ -141,8 +227,9 @@ public class CineService
             CierraAt = cierraAt,
             PuedeValorar = cierraAt > now && !yaValorada,
             YaValoradaPorUsuario = yaValorada,
-            MediaNota = pelicula.Valoraciones.Count > 0
-                ? Math.Round((decimal)pelicula.Valoraciones.Average(valoracion => valoracion.Nota), 1)
+            YaAsistidaPorUsuario = yaAsistida,
+            MediaNota = notas.Count > 0
+                ? Math.Round(notas.Average(), 1)
                 : null,
             Valoraciones = pelicula.Valoraciones
                 .OrderBy(valoracion => valoracion.Usuario.Nombre)

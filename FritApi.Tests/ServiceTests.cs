@@ -616,6 +616,43 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task CineService_AttendanceWithoutRatingDoesNotChangeAverage()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        context.Usuarios.AddRange(arnau, anna);
+        await context.SaveChangesAsync();
+        var service = new CineService(context);
+        var created = await service.CreateAsync(arnau.UsuarioId, new CinePeliculaCreateDto
+        {
+            Titulo = "Arrival"
+        });
+
+        var attendance = await service.MarcarAsistenciaAsync(created.Pelicula!.CinePeliculaId, arnau.UsuarioId, new CineAsistenciaCreateDto
+        {
+            UsuarioId = anna.UsuarioId
+        });
+        var rating = await service.ValorarAsync(created.Pelicula.CinePeliculaId, arnau.UsuarioId, new CineValoracionCreateDto
+        {
+            Nota = 8
+        });
+        var annaRating = await service.ValorarAsync(created.Pelicula.CinePeliculaId, anna.UsuarioId, new CineValoracionCreateDto
+        {
+            Nota = 6
+        });
+
+        Assert.True(attendance.Success);
+        Assert.Null(attendance.Pelicula!.MediaNota);
+        Assert.Null(attendance.Pelicula.Valoraciones.Single(row => row.UsuarioId == anna.UsuarioId).Nota);
+        Assert.True(rating.Success);
+        Assert.Equal(8m, rating.Pelicula!.MediaNota);
+        Assert.True(annaRating.Success);
+        Assert.Equal(7m, annaRating.Pelicula!.MediaNota);
+        Assert.Equal(2, context.CineValoraciones.Count());
+    }
+
+    [Fact]
     public async Task HallOfFameService_CinefilFritAwardsUsersWithMostMovieRatings()
     {
         await using var context = CreateContext();

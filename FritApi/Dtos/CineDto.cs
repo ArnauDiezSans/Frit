@@ -12,6 +12,7 @@ public class CinePeliculaDto
     public DateTime CierraAt { get; set; }
     public bool PuedeValorar { get; set; }
     public bool YaValoradaPorUsuario { get; set; }
+    public bool YaAsistidaPorUsuario { get; set; }
     public decimal? MediaNota { get; set; }
     public List<CineValoracionDto> Valoraciones { get; set; } = [];
 }
@@ -21,7 +22,7 @@ public class CineValoracionDto
     public int CineValoracionId { get; set; }
     public int UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
-    public decimal Nota { get; set; }
+    public decimal? Nota { get; set; }
     public string? Observacion { get; set; }
     public DateTime CreatedAt { get; set; }
 }
@@ -41,4 +42,10 @@ public class CineValoracionCreateDto
 
     [MaxLength(200)]
     public string? Observacion { get; set; }
+}
+
+public class CineAsistenciaCreateDto
+{
+    [Required]
+    public int? UsuarioId { get; set; }
 }

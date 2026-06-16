@@ -132,16 +132,23 @@
               <td data-label="Puntuació">{{ formatMedia(pelicula) }}</td>
               <td *ngIf="filters().scoreUsuarioId" data-label="Nota usuari">{{ formatUserNota(pelicula) }}</td>
               <td data-label="Acció">
-                <button
-                  *ngIf="pelicula.puedeValorar; else noAction"
-                  type="button"
-                  class="secondary-button small-button"
-                  (click)="abrirValoracion(pelicula)">
-                  Valorar
-                </button>
-                <ng-template #noAction>
-                  <span class="status-text">-</span>
-                </ng-template>
+                <div class="row-actions">
+                  <button
+                    *ngIf="pelicula.puedeValorar"
+                    type="button"
+                    class="secondary-button small-button"
+                    (click)="abrirValoracion(pelicula)">
+                    Valorar
+                  </button>
+                  <button
+                    *ngIf="canPublish()"
+                    type="button"
+                    class="ghost-button small-button"
+                    (click)="abrirAsistencia(pelicula)">
+                    Assistència
+                  </button>
+                  <span class="status-text" *ngIf="!pelicula.puedeValorar && !canPublish()">-</span>
+                </div>
               </td>
               <td *ngIf="showObservacions()" data-label="Observacions">
                 {{ formatObservacions(pelicula) }}
@@ -170,6 +177,31 @@
                 </form>
 
                 <p class="field-error" *ngIf="ratingFormError()">{{ ratingFormError() }}</p>
+              </td>
+            </tr>
+
+            <tr class="rating-row" *ngIf="attendanceOpenId() === pelicula.cinePeliculaId">
+              <td [attr.colspan]="(showObservacions() ? 7 : 5) + (filters().scoreUsuarioId ? 1 : 0)">
+                <form [formGroup]="attendanceForm" (ngSubmit)="guardarAsistencia(pelicula)" class="attendance-form">
+                  <label class="form-field attendance-user">
+                    <span>Usuari</span>
+                    <select formControlName="usuarioId">
+                      <option value="">Selecciona usuari</option>
+                      <option *ngFor="let usuario of usuarios()" [value]="usuario.usuarioId">
+                        {{ usuario.nombre }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <div class="rating-actions">
+                    <button type="button" class="ghost-button" (click)="cancelarAsistencia()">Cancel·lar</button>
+                    <button type="submit" class="primary-button" [disabled]="savingAttendanceId() === pelicula.cinePeliculaId">
+                      {{ savingAttendanceId() === pelicula.cinePeliculaId ? 'Desant...' : 'Marcar assistència' }}
+                    </button>
+                  </div>
+                </form>
+
+                <p class="field-error" *ngIf="attendanceFormError()">{{ attendanceFormError() }}</p>
               </td>
             </tr>
           </ng-container>
