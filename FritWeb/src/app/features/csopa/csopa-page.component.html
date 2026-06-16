@@ -23,8 +23,8 @@
   <section class="content-card" *ngIf="!loading() && !error() && canPublish()">
     <form [formGroup]="activityForm" (ngSubmit)="publicarActivitat()" class="activity-form">
       <label class="form-field">
-        <span>Activitat</span>
-        <input type="text" formControlName="titol" maxlength="300" autocomplete="off" placeholder="Sopar o Gymfrit" />
+        <span>Data</span>
+        <input type="date" formControlName="fecha" />
       </label>
 
       <div class="type-options">
@@ -118,7 +118,6 @@
             <th class="activity-type-column" aria-label="Tipus"></th>
             <th class="row-number-column">#</th>
             <th class="sortable" (click)="sortBy('createdAt')">Data{{ getSortIndicator('createdAt') }}</th>
-            <th class="sortable" (click)="sortBy('titol')">Activitat{{ getSortIndicator('titol') }}</th>
             <th class="sortable" (click)="sortBy('usuario')">Publicada per{{ getSortIndicator('usuario') }}</th>
             <th class="sortable" (click)="sortBy('assistencies')">Assistents{{ getSortIndicator('assistencies') }}</th>
             <th>Accio</th>
@@ -137,10 +136,6 @@
               </td>
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td data-label="Data">{{ formatDate(activitat.createdAt) }}</td>
-              <td data-label="Activitat">
-                <span class="activity-title">{{ activitat.titol }}</span>
-                <span class="type-subline">{{ getTipusLabel(activitat.tipus) }}</span>
-              </td>
               <td data-label="Publicada per">
                 {{ activitat.usuarioCreadorNombre }}
               </td>
@@ -163,7 +158,7 @@
             </tr>
 
             <tr class="attendance-row" *ngIf="attendanceOpenId() === activitat.csopaActivitatId">
-              <td colspan="7">
+              <td colspan="6">
                 <form [formGroup]="attendanceForm" (ngSubmit)="guardarAssistencia(activitat)" class="attendance-form">
                   <label class="form-field attendance-user">
                     <span>Usuari</span>

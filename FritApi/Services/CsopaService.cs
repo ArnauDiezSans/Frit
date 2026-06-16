@@ -51,6 +51,11 @@ public class CsopaService
             return (false, "El tipus d'activitat és obligatori.", null);
         }
 
+        if (!dto.Fecha.HasValue)
+        {
+            return (false, "La data és obligatòria.", null);
+        }
+
         var titol = string.IsNullOrWhiteSpace(dto.Titol)
             ? GetDefaultTitol(dto.Tipus.Value)
             : dto.Titol.Trim();
@@ -59,7 +64,8 @@ public class CsopaService
         {
             Titol = titol,
             Tipus = dto.Tipus.Value,
-            UsuarioCreadorId = usuarioId
+            UsuarioCreadorId = usuarioId,
+            CreatedAt = dto.Fecha.Value.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc)
         };
 
         _context.CsopaActivitats.Add(activitat);

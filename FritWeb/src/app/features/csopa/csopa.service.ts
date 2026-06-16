@@ -29,6 +29,7 @@ export interface CsopaActivitat {
 export interface CsopaActivitatCreate {
   titol?: string | null;
   tipus: number;
+  fecha: string;
 }
 
 export interface CsopaAssistenciaCreate {

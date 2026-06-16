@@ -30,6 +30,9 @@ public class CsopaActivitatCreateDto
     [Required]
     [Range(1, 2)]
     public int? Tipus { get; set; }
+
+    [Required]
+    public DateOnly? Fecha { get; set; }
 }
 
 public class CsopaAssistenciaCreateDto

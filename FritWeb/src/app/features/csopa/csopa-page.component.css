@@ -114,7 +114,7 @@ h1 {
 
 .activity-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(160px, 220px) auto auto;
   gap: 16px;
   align-items: end;
 }
@@ -231,14 +231,12 @@ h1 {
   100% { background: #ecfdf5; }
 }
 
-.activity-title,
 .attendance-count {
   display: block;
   font-weight: 700;
   color: #101828;
 }
 
-.type-subline,
 .attendance-subline,
 .status-text {
   display: block;
@@ -419,15 +417,11 @@ h1 {
   }
 
   .csopa-table td[data-label="Data"] {
-    grid-column: 4;
+    grid-column: 3 / -1;
     grid-row: 1;
     white-space: nowrap;
     color: #667085;
-  }
-
-  .csopa-table td[data-label="Activitat"] {
-    grid-column: 3;
-    grid-row: 1;
+    text-align: right;
   }
 
   .csopa-table td[data-label="Assistents"] {

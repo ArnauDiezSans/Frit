@@ -14,7 +14,7 @@ import {
   CsopaService
 } from './csopa.service';
 
-type CsopaSortColumn = 'createdAt' | 'titol' | 'usuario' | 'assistencies';
+type CsopaSortColumn = 'createdAt' | 'usuario' | 'assistencies';
 type SortDirection = 'asc' | 'desc';
 
 interface CsopaFilters {
@@ -104,7 +104,7 @@ export class CsopaPageComponent {
   });
 
   activityForm = this.fb.group({
-    titol: ['', Validators.maxLength(300)],
+    fecha: [this.getTodayInputValue(), Validators.required],
     tipus: [CSOPA_TIPUS_SOPAR, [Validators.required]]
   });
 
@@ -153,8 +153,9 @@ export class CsopaPageComponent {
 
     const raw = this.activityForm.getRawValue();
     const tipus = Number(raw.tipus);
+    const fecha = raw.fecha ?? this.getTodayInputValue();
 
-    if (!this.confirmActivityDate(tipus)) {
+    if (!this.confirmActivityDate(tipus, fecha)) {
       return;
     }
 
@@ -162,15 +163,15 @@ export class CsopaPageComponent {
     this.activityFormError.set('');
 
     this.csopaService.create({
-      titol: raw.titol?.trim() || null,
-      tipus
+      tipus,
+      fecha
     }).subscribe({
       next: activitat => {
         this.activitats.update(current => [activitat, ...current]);
         this.highlightedActivitatId.set(activitat.csopaActivitatId);
         window.setTimeout(() => this.highlightedActivitatId.set(null), 2500);
         this.activityForm.reset({
-          titol: '',
+          fecha: this.getTodayInputValue(),
           tipus
         });
         this.savingActivity.set(false);
@@ -254,7 +255,7 @@ export class CsopaPageComponent {
   sortBy(column: CsopaSortColumn): void {
     if (this.sortColumn() !== column) {
       this.sortColumn.set(column);
-      this.sortDirection.set(column === 'titol' || column === 'usuario' ? 'asc' : 'desc');
+      this.sortDirection.set(column === 'usuario' ? 'asc' : 'desc');
       return;
     }
 
@@ -322,8 +323,6 @@ export class CsopaPageComponent {
 
     return [...activitats].sort((left, right) => {
       switch (column) {
-        case 'titol':
-          return left.titol.localeCompare(right.titol) * multiplier;
         case 'usuario':
           return left.usuarioCreadorNombre.localeCompare(right.usuarioCreadorNombre) * multiplier;
         case 'assistencies':
@@ -336,8 +335,8 @@ export class CsopaPageComponent {
     });
   }
 
-  private confirmActivityDate(tipus: number): boolean {
-    const day = new Date().getDay();
+  private confirmActivityDate(tipus: number, fecha: string): boolean {
+    const day = new Date(`${fecha}T12:00:00`).getDay();
 
     if (tipus === CSOPA_TIPUS_SOPAR && day !== 2) {
       return window.confirm("Estas publicant un sopar en una data que no es dimarts. Vols continuar?");
@@ -348,5 +347,14 @@ export class CsopaPageComponent {
     }
 
     return true;
+  }
+
+  private getTodayInputValue(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 }
