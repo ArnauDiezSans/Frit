@@ -189,48 +189,55 @@
     </div>
 
     <div class="score-board" *ngIf="juegosOrdenados().length > 0">
-      <article
-        class="score-group"
-        *ngFor="let score of scoreValues; trackBy: trackByScore"
-        [class.score-group-pending]="score === 0"
-        [class.score-group-drop]="dragOverScore() === score"
-        (dragover)="onScoreDragOver(score, $event)"
-        (dragleave)="onScoreDragLeave(score, $event)"
-        (drop)="onScoreDrop(score, $event)">
-        <header class="score-header">
-          <span class="score-badge">{{ score === 0 ? 'Pendent' : score }}</span>
-          <span class="score-count">{{ getScoreLabel(score) }}</span>
-        </header>
+      <div class="score-row" *ngFor="let row of getScoreRows(); trackBy: trackByScoreRow">
+        <article
+          class="score-group"
+          *ngFor="let score of row; trackBy: trackByScore"
+          [style.flex-grow]="getScoreWidthWeight(score)"
+          [class.score-group-pending]="score === 0"
+          [class.score-group-high]="score >= 9"
+          [class.score-group-good]="score >= 6 && score <= 8"
+          [class.score-group-mid]="score >= 3 && score <= 5"
+          [class.score-group-low]="score <= 2"
+          [class.score-group-drop]="dragOverScore() === score"
+          (dragover)="onScoreDragOver(score, $event)"
+          (dragleave)="onScoreDragLeave(score, $event)"
+          (drop)="onScoreDrop(score, $event)">
+          <header class="score-header">
+            <span class="score-badge">{{ score === 0 ? 'Pendent' : score }}</span>
+            <span class="score-count">{{ getScoreLabel(score) }}</span>
+          </header>
 
-        <div class="score-picker" *ngIf="canShowScorePicker(score)">
-          <app-autocomplete-select
-            [items]="showScoreOptions() === score ? filteredScoreGames() : []"
-            [searchText]="scoreSearch()[score] ?? ''"
-            [disabled]="savingOrder()"
-            [displayWith]="displayJuego"
-            [secondaryWith]="displayPuntuacion"
-            [trackBy]="trackByJuego"
-            placeholder="Afegir joc..."
-            emptyText="Sense coincidencies."
-            (searchTextChange)="onScoreInput(score, $event)"
-            (focused)="onScoreFocus(score)"
-            (selectedChange)="seleccionarJuegoPuntuacion(score, $event)" />
-        </div>
+          <div class="score-picker" *ngIf="canShowScorePicker(score)">
+            <app-autocomplete-select
+              [items]="showScoreOptions() === score ? filteredScoreGames() : []"
+              [searchText]="scoreSearch()[score] ?? ''"
+              [disabled]="savingOrder()"
+              [displayWith]="displayJuego"
+              [secondaryWith]="displayPuntuacion"
+              [trackBy]="trackByJuego"
+              placeholder="Afegir joc..."
+              emptyText="Sense coincidencies."
+              (searchTextChange)="onScoreInput(score, $event)"
+              (focused)="onScoreFocus(score)"
+              (selectedChange)="seleccionarJuegoPuntuacion(score, $event)" />
+          </div>
 
-        <div class="score-games">
-          <button
-            type="button"
-            class="score-game"
-            *ngFor="let juego of getScoreGames(score); trackBy: trackByJuego"
-            [class.score-game-dragging]="draggedJuegoId() === juego.juegoId"
-            [attr.draggable]="savingOrder() ? null : true"
-            (click)="onScoreFocus(score)"
-            (dragstart)="onJuegoDragStart($event, juego)"
-            (dragend)="onJuegoDragEnd()">
-            {{ juego.nombre }}
-          </button>
-        </div>
-      </article>
+          <div class="score-games">
+            <button
+              type="button"
+              class="score-game"
+              *ngFor="let juego of getScoreGames(score); trackBy: trackByJuego"
+              [class.score-game-dragging]="draggedJuegoId() === juego.juegoId"
+              [attr.draggable]="savingOrder() ? null : true"
+              (click)="onScoreFocus(score)"
+              (dragstart)="onJuegoDragStart($event, juego)"
+              (dragend)="onJuegoDragEnd()">
+              {{ juego.nombre }}
+            </button>
+          </div>
+        </article>
+      </div>
     </div>
 
     <p class="field-error" *ngIf="orderError()">{{ orderError() }}</p>

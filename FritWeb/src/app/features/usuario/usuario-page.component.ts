@@ -228,6 +228,23 @@ export class UsuarioPageComponent {
     return String(this.getScoreGames(score).length);
   }
 
+  getScoreRows(): number[][] {
+    const rows: number[][] = [];
+    const rowSize = 4;
+
+    for (let index = 0; index < this.scoreValues.length; index += rowSize) {
+      rows.push(this.scoreValues.slice(index, index + rowSize));
+    }
+
+    return rows;
+  }
+
+  getScoreWidthWeight(score: number): number {
+    const gameCount = this.getScoreGames(score).length;
+
+    return 1 + Math.min(1.4, gameCount / 14);
+  }
+
   canShowScorePicker(score: number): boolean {
     return !this.savingOrder() && this.getFilteredGames(score, '').length > 0;
   }
@@ -415,6 +432,10 @@ export class UsuarioPageComponent {
 
   trackByScore(_: number, score: number): number {
     return score;
+  }
+
+  trackByScoreRow(_: number, row: number[]): string {
+    return row.join('-');
   }
 
   trackByMedal(_: number, medal: MedalProgress): string {
