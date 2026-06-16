@@ -237,6 +237,7 @@ export class RankingsPageComponent {
   chartFilters = signal<ChartFilters>({ ...EMPTY_CHART_FILTERS });
   selectedChartUserIds = signal<number[]>([]);
   showRepeatedMaxScores = signal(false);
+  showOnlyDistinctGameWins = signal(false);
   maxScorePlayerCount = signal('');
   showNoLlistaGames = signal(false);
   showCooperativeGames = signal(false);
@@ -641,6 +642,40 @@ export class RankingsPageComponent {
     }));
   });
 
+  distinctGamesChartRows = computed<ChartValueRow[]>(() => {
+    const jugadores = this.showOnlyDistinctGameWins()
+      ? this.chartJugadores().filter(jugador => jugador.posicion === 1)
+      : this.chartJugadores();
+
+    const rows = this.selectedChartUsers()
+      .map(usuario => {
+        const gameIds = new Set(
+          jugadores
+            .filter(jugador => jugador.usuarioId === usuario.usuarioId)
+            .map(jugador => jugador.juegoId)
+        );
+
+        return {
+          rowId: `distinct-games:${usuario.usuarioId}`,
+          usuarioId: usuario.usuarioId,
+          usuarioNombre: usuario.nombre,
+          color: usuario.color,
+          value: gameIds.size,
+          width: 0,
+          detail: `${gameIds.size} jocs`,
+          sourceLabel: ''
+        };
+      })
+      .filter(row => row.value > 0)
+      .sort((a, b) => b.value - a.value || a.usuarioNombre.localeCompare(b.usuarioNombre));
+    const maxValue = Math.max(...rows.map(row => row.value), 0);
+
+    return rows.map(row => ({
+      ...row,
+      width: maxValue > 0 ? Math.round((row.value * 1000) / maxValue) / 10 : 0
+    }));
+  });
+
   chartDateTicks = computed(() =>
     this.buildDateTicks(this.chartTimelineDates())
   );
@@ -783,6 +818,10 @@ export class RankingsPageComponent {
 
   toggleShowRepeatedMaxScores(): void {
     this.showRepeatedMaxScores.update(value => !value);
+  }
+
+  toggleShowOnlyDistinctGameWins(): void {
+    this.showOnlyDistinctGameWins.update(value => !value);
   }
 
   updateMaxScorePlayerCount(value: string): void {

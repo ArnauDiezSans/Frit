@@ -722,9 +722,36 @@
           </ng-template>
         </article>
 
-        <article class="chart-card chart-card-empty">
-          <h3>Gràfica 4</h3>
-          <div class="chart-placeholder">Per definir</div>
+        <article class="chart-card">
+          <div class="chart-card-heading">
+            <h3>Jocs diferents jugats</h3>
+            <label class="filter-check">
+              <input
+                type="checkbox"
+                [checked]="showOnlyDistinctGameWins()"
+                (change)="toggleShowOnlyDistinctGameWins()" />
+              <span>Només victòries</span>
+            </label>
+          </div>
+
+          <div class="chart-bars" *ngIf="distinctGamesChartRows().length > 0; else noDistinctGamesChartData">
+            <div class="chart-bar-row" *ngFor="let row of distinctGamesChartRows(); trackBy: trackByChartValueRow">
+              <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
+              <span class="chart-bar-track">
+                <span
+                  class="chart-bar-fill"
+                  [style.width]="getChartBarWidth(row.width)"
+                  [style.background]="row.color">
+                </span>
+              </span>
+              <strong class="chart-bar-value">{{ row.value }}</strong>
+              <span class="chart-bar-detail">{{ row.detail }}</span>
+            </div>
+          </div>
+
+          <ng-template #noDistinctGamesChartData>
+            <div class="chart-placeholder">Sense dades</div>
+          </ng-template>
         </article>
       </div>
     </section>
