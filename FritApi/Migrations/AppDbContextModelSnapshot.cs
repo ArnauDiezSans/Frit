@@ -35,6 +35,10 @@ namespace FritApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<int?>("GrupoPelicula")
+                        .HasColumnType("integer")
+                        .HasColumnName("Grupo_pelicula");
+
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasMaxLength(300)

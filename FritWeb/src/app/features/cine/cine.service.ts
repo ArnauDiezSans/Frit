@@ -20,6 +20,7 @@ export interface CinePelicula {
   usuarioCreadorId: number;
   usuarioCreadorNombre: string;
   createdAt: string;
+  grupoPelicula?: number | null;
   cierraAt: string;
   puedeValorar: boolean;
   yaValoradaPorUsuario: boolean;
@@ -30,6 +31,7 @@ export interface CinePelicula {
 
 export interface CinePeliculaCreate {
   titulo: string;
+  grupoPelicula?: number | null;
 }
 
 export interface CineValoracionCreate {

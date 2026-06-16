@@ -98,7 +98,9 @@ export class CinePageComponent {
   });
 
   movieForm = this.fb.group({
-    titulo: ['', [Validators.required, Validators.maxLength(300)]]
+    titulo: ['', [Validators.required, Validators.maxLength(300)]],
+    estirarLaSetmana: [false],
+    creepyjous: [false]
   });
 
   ratingForm = this.fb.group({
@@ -150,22 +152,38 @@ export class CinePageComponent {
     }
 
     const titulo = this.movieForm.controls.titulo.value?.trim() ?? '';
+    const grupoPelicula = this.getMovieGroup();
+
+    if (!this.confirmMovieGroupDate(grupoPelicula)) {
+      return;
+    }
 
     this.savingMovie.set(true);
     this.movieFormError.set('');
 
-    this.cineService.create({ titulo }).subscribe({
+    this.cineService.create({ titulo, grupoPelicula }).subscribe({
       next: pelicula => {
         this.peliculas.update(current => [pelicula, ...current]);
         this.highlightedPeliculaId.set(pelicula.cinePeliculaId);
         window.setTimeout(() => this.highlightedPeliculaId.set(null), 2500);
-        this.movieForm.reset({ titulo: '' });
+        this.movieForm.reset({
+          titulo: '',
+          estirarLaSetmana: false,
+          creepyjous: false
+        });
         this.savingMovie.set(false);
       },
       error: err => {
         this.movieFormError.set(err?.error?.message ?? "No s'ha pogut publicar la pel·lícula.");
         this.savingMovie.set(false);
       }
+    });
+  }
+
+  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous', checked: boolean): void {
+    this.movieForm.patchValue({
+      estirarLaSetmana: group === 'estirarLaSetmana' ? checked : false,
+      creepyjous: group === 'creepyjous' ? checked : false
     });
   }
 
@@ -456,6 +474,32 @@ export class CinePageComponent {
     const parsed = Number(normalized);
 
     return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10 ? parsed : null;
+  }
+
+  private getMovieGroup(): number | null {
+    if (this.movieForm.controls.estirarLaSetmana.value) {
+      return 1;
+    }
+
+    if (this.movieForm.controls.creepyjous.value) {
+      return 2;
+    }
+
+    return null;
+  }
+
+  private confirmMovieGroupDate(grupoPelicula: number | null): boolean {
+    const day = new Date().getDay();
+
+    if (grupoPelicula === 1 && day !== 0) {
+      return window.confirm("Estàs publicant un 'Estirar la setmana' en una data que no és diumenge. Vols continuar?");
+    }
+
+    if (grupoPelicula === 2 && day !== 4) {
+      return window.confirm("Estàs publicant un 'Creepyjous' en una data que no és dijous. Vols continuar?");
+    }
+
+    return true;
   }
 
   private notaValidator(control: AbstractControl): ValidationErrors | null {

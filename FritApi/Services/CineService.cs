@@ -54,7 +54,8 @@ public class CineService
         var pelicula = new CinePelicula
         {
             Titulo = titulo,
-            UsuarioCreadorId = usuarioId
+            UsuarioCreadorId = usuarioId,
+            GrupoPelicula = dto.GrupoPelicula
         };
 
         _context.CinePeliculas.Add(pelicula);
@@ -224,6 +225,7 @@ public class CineService
             UsuarioCreadorId = pelicula.UsuarioCreadorId,
             UsuarioCreadorNombre = pelicula.UsuarioCreador.Nombre,
             CreatedAt = pelicula.CreatedAt,
+            GrupoPelicula = pelicula.GrupoPelicula,
             CierraAt = cierraAt,
             PuedeValorar = cierraAt > now && !yaValorada,
             YaValoradaPorUsuario = yaValorada,

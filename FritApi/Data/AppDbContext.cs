@@ -169,6 +169,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
 
+            entity.Property(e => e.GrupoPelicula)
+                .HasColumnName("Grupo_pelicula");
+
             entity.HasOne(e => e.UsuarioCreador)
                 .WithMany()
                 .HasForeignKey(e => e.UsuarioCreadorId)

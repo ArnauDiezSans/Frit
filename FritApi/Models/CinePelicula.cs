@@ -15,5 +15,7 @@ public class CinePelicula
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    public int? GrupoPelicula { get; set; }
+
     public List<CineValoracion> Valoraciones { get; set; } = [];
 }

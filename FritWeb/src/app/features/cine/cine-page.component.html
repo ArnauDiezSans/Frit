@@ -27,6 +27,24 @@
         <input type="text" formControlName="titulo" maxlength="300" autocomplete="off" />
       </label>
 
+      <div class="movie-group-options">
+        <label class="checkbox-field">
+          <input
+            type="checkbox"
+            formControlName="creepyjous"
+            (change)="updateMovieGroup('creepyjous', $any($event.target).checked)" />
+          <span>Creepyjous</span>
+        </label>
+
+        <label class="checkbox-field">
+          <input
+            type="checkbox"
+            formControlName="estirarLaSetmana"
+            (change)="updateMovieGroup('estirarLaSetmana', $any($event.target).checked)" />
+          <span>Estirar la setmana</span>
+        </label>
+      </div>
+
       <button type="submit" class="primary-button" [disabled]="savingMovie()">
         {{ savingMovie() ? 'Publicant...' : 'Publicar' }}
       </button>

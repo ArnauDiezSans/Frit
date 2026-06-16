@@ -133,6 +133,33 @@ h1 {
   grid-template-columns: minmax(180px, 1fr) auto;
 }
 
+.movie-form {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.movie-group-options {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 42px;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #344054;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.checkbox-field input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+}
+
 .form-field {
   display: flex;
   flex-direction: column;

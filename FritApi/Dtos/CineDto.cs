@@ -9,6 +9,7 @@ public class CinePeliculaDto
     public int UsuarioCreadorId { get; set; }
     public string UsuarioCreadorNombre { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public int? GrupoPelicula { get; set; }
     public DateTime CierraAt { get; set; }
     public bool PuedeValorar { get; set; }
     public bool YaValoradaPorUsuario { get; set; }
@@ -32,6 +33,9 @@ public class CinePeliculaCreateDto
     [Required]
     [MaxLength(300)]
     public string Titulo { get; set; } = string.Empty;
+
+    [Range(1, 2)]
+    public int? GrupoPelicula { get; set; }
 }
 
 public class CineValoracionCreateDto

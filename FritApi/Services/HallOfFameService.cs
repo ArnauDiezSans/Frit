@@ -346,6 +346,7 @@ public class HallOfFameService
         DateOnly today)
     {
         var peliculasBySunday = peliculas
+            .Where(pelicula => pelicula.GrupoPelicula == 1)
             .Select(pelicula => new
             {
                 Dia = GetFritDate(pelicula.CreatedAt),

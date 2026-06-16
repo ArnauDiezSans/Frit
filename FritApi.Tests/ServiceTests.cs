@@ -677,6 +677,7 @@ public class ServiceTests
             {
                 Titulo = "Alien",
                 UsuarioCreadorId = arnau.UsuarioId,
+                GrupoPelicula = 2,
                 Valoraciones =
                 [
                     new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 10 },
@@ -706,6 +707,16 @@ public class ServiceTests
         context.CinePeliculas.AddRange(
             CreateSundayMovie("Diumenge 1", arnau.UsuarioId, latestSunday, arnau.UsuarioId, anna.UsuarioId),
             CreateSundayMovie("Diumenge 2", arnau.UsuarioId, latestSunday.AddDays(-7), arnau.UsuarioId),
+            new CinePelicula
+            {
+                Titulo = "Diumenge normal",
+                UsuarioCreadorId = arnau.UsuarioId,
+                CreatedAt = latestSunday.AddDays(-14).ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc),
+                Valoraciones =
+                [
+                    new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 8 }
+                ]
+            },
             CreateSundayMovie("Diumenge 4", arnau.UsuarioId, latestSunday.AddDays(-21), arnau.UsuarioId));
         await context.SaveChangesAsync();
         var service = new HallOfFameService(context);
@@ -917,6 +928,7 @@ public class ServiceTests
             Titulo = titulo,
             UsuarioCreadorId = usuarioCreadorId,
             CreatedAt = sunday.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc),
+            GrupoPelicula = 1,
             Valoraciones = usuarioIds
                 .Select((usuarioId, index) => new CineValoracion
                 {
