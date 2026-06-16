@@ -321,7 +321,7 @@ public class HallOfFameService
                 BuildWinnerProgress(
                     "cine:sunday-streak",
                     "Diumenge infal·lible",
-                    "Ratxa de diumenges consecutius valorant pel·lícules publicades en diumenge.",
+                    "Ratxa de diumenges consecutius veient pel·lícules.",
                     DefaultIconPath,
                     "CineSundayStreak",
                     cineSundayStreaks.GetValueOrDefault(usuario.UsuarioId),
