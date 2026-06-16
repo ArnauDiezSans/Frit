@@ -501,6 +501,11 @@ h1 {
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
+.chart-card-timeline {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
 .chart-card h3 {
   margin: 0;
   color: #101828;
@@ -588,12 +593,12 @@ h1 {
 
 .line-chart-wrap {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .line-chart {
   width: 100%;
-  min-height: 220px;
+  min-height: 340px;
   overflow: visible;
 }
 
@@ -623,19 +628,23 @@ h1 {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-width: 3;
+  stroke-width: 2.4;
+  opacity: 0.88;
 }
 
 .line-chart-point {
-  r: 4;
+  r: 5;
   stroke: #ffffff;
-  stroke-width: 2;
+  stroke-width: 2.5;
 }
 
 .line-chart-summary {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 8px;
+  max-height: 124px;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .line-chart-summary > span {
@@ -650,9 +659,13 @@ h1 {
   color: #344054;
   font-size: 0.78rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .line-chart-summary small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #667085;
   font-size: 0.72rem;
 }
@@ -809,20 +822,20 @@ h1 {
   }
 
   .line-chart {
-    min-height: 190px;
+    min-height: 240px;
   }
 
   .line-chart-line {
-    stroke-width: 3.5;
+    stroke-width: 2.8;
   }
 
   .line-chart-point {
-    r: 4.5;
+    r: 5.5;
   }
 
   .line-chart-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     max-height: 110px;
-    overflow: auto;
   }
 
   .line-chart-summary > span {

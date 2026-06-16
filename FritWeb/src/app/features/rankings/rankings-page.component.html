@@ -574,7 +574,7 @@
       </div>
 
       <div class="charts-grid">
-        <article class="chart-card">
+        <article class="chart-card chart-card-timeline">
           <div class="chart-card-heading">
             <h3>% de victòries</h3>
           </div>
@@ -583,15 +583,15 @@
             <svg class="line-chart" [attr.viewBox]="lineChartViewBox" role="img" aria-label="Evolució del percentatge de victòries">
               <g class="line-chart-grid">
                 <g *ngFor="let tick of lineChartYAxisTicks; trackBy: trackByChartAxisTick">
-                  <line x1="44" x2="622" [attr.y1]="tick.y" [attr.y2]="tick.y"></line>
-                  <text x="36" [attr.y]="tick.y + 4">{{ tick.label }}</text>
+                  <line [attr.x1]="lineChartGridX1" [attr.x2]="lineChartGridX2" [attr.y1]="tick.y" [attr.y2]="tick.y"></line>
+                  <text [attr.x]="lineChartLabelX" [attr.y]="tick.y + 4">{{ tick.label }}</text>
                 </g>
               </g>
 
               <g class="line-chart-x-axis">
                 <g *ngFor="let tick of chartDateTicks(); trackBy: trackByChartDateTick">
-                  <line [attr.x1]="tick.x" [attr.x2]="tick.x" y1="222" y2="228"></line>
-                  <text [attr.x]="tick.x" y="247">{{ tick.label }}</text>
+                  <line [attr.x1]="tick.x" [attr.x2]="tick.x" [attr.y1]="lineChartAxisY1" [attr.y2]="lineChartAxisY2"></line>
+                  <text [attr.x]="tick.x" [attr.y]="lineChartDateLabelY">{{ tick.label }}</text>
                 </g>
               </g>
 
@@ -603,8 +603,7 @@
                 </polyline>
                 <circle
                   class="line-chart-point"
-                  *ngFor="let point of serie.points; trackBy: trackByChartLinePoint"
-                  r="4"
+                  *ngFor="let point of serie.markerPoints; trackBy: trackByChartLinePoint"
                   [attr.cx]="point.x"
                   [attr.cy]="point.y"
                   [attr.fill]="serie.color">
@@ -626,7 +625,7 @@
           </ng-template>
         </article>
 
-        <article class="chart-card">
+        <article class="chart-card chart-card-timeline">
           <div class="chart-card-heading">
             <h3>% de partides jugades</h3>
           </div>
@@ -635,15 +634,15 @@
             <svg class="line-chart" [attr.viewBox]="lineChartViewBox" role="img" aria-label="Evolució del percentatge de partides jugades">
               <g class="line-chart-grid">
                 <g *ngFor="let tick of lineChartYAxisTicks; trackBy: trackByChartAxisTick">
-                  <line x1="44" x2="622" [attr.y1]="tick.y" [attr.y2]="tick.y"></line>
-                  <text x="36" [attr.y]="tick.y + 4">{{ tick.label }}</text>
+                  <line [attr.x1]="lineChartGridX1" [attr.x2]="lineChartGridX2" [attr.y1]="tick.y" [attr.y2]="tick.y"></line>
+                  <text [attr.x]="lineChartLabelX" [attr.y]="tick.y + 4">{{ tick.label }}</text>
                 </g>
               </g>
 
               <g class="line-chart-x-axis">
                 <g *ngFor="let tick of chartDateTicks(); trackBy: trackByChartDateTick">
-                  <line [attr.x1]="tick.x" [attr.x2]="tick.x" y1="222" y2="228"></line>
-                  <text [attr.x]="tick.x" y="247">{{ tick.label }}</text>
+                  <line [attr.x1]="tick.x" [attr.x2]="tick.x" [attr.y1]="lineChartAxisY1" [attr.y2]="lineChartAxisY2"></line>
+                  <text [attr.x]="tick.x" [attr.y]="lineChartDateLabelY">{{ tick.label }}</text>
                 </g>
               </g>
 
@@ -655,8 +654,7 @@
                 </polyline>
                 <circle
                   class="line-chart-point"
-                  *ngFor="let point of serie.points; trackBy: trackByChartLinePoint"
-                  r="4"
+                  *ngFor="let point of serie.markerPoints; trackBy: trackByChartLinePoint"
                   [attr.cx]="point.x"
                   [attr.cy]="point.y"
                   [attr.fill]="serie.color">

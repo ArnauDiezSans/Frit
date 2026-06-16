@@ -112,6 +112,7 @@ interface ChartLineSeries {
   usuarioNombre: string;
   color: string;
   points: ChartLinePoint[];
+  markerPoints: ChartLinePoint[];
   polylinePoints: string;
   lastValue: number;
   lastDetail: string;
@@ -195,13 +196,14 @@ const CHART_COLORS = [
   '#0284c7'
 ];
 
-const LINE_CHART_WIDTH = 640;
-const LINE_CHART_HEIGHT = 260;
+const LINE_CHART_WIDTH = 920;
+const LINE_CHART_HEIGHT = 340;
+const LINE_CHART_MAX_POINTS = 120;
 const LINE_CHART_PADDING = {
-  top: 18,
-  right: 18,
-  bottom: 38,
-  left: 44
+  top: 22,
+  right: 24,
+  bottom: 48,
+  left: 48
 };
 
 @Component({
@@ -216,6 +218,12 @@ export class RankingsPageComponent {
   private rankingsService = inject(RankingsService);
   private router = inject(Router);
   protected readonly lineChartViewBox = `0 0 ${LINE_CHART_WIDTH} ${LINE_CHART_HEIGHT}`;
+  protected readonly lineChartGridX1 = LINE_CHART_PADDING.left;
+  protected readonly lineChartGridX2 = LINE_CHART_WIDTH - LINE_CHART_PADDING.right;
+  protected readonly lineChartLabelX = LINE_CHART_PADDING.left - 8;
+  protected readonly lineChartAxisY1 = LINE_CHART_HEIGHT - LINE_CHART_PADDING.bottom;
+  protected readonly lineChartAxisY2 = LINE_CHART_HEIGHT - LINE_CHART_PADDING.bottom + 6;
+  protected readonly lineChartDateLabelY = LINE_CHART_HEIGHT - 14;
   protected readonly lineChartYAxisTicks = this.buildYAxisTicks();
 
   loading = signal(true);
@@ -1125,6 +1133,7 @@ export class RankingsPageComponent {
 
     const jugadores = this.chartJugadores();
     const partidas = this.chartPartidas();
+    const dateIndexes = this.getDisplayChartDateIndexes(dates);
     const lastDateIndex = Math.max(dates.length - 1, 1);
 
     return this.selectedChartUsers().map(usuario => {
@@ -1132,7 +1141,8 @@ export class RankingsPageComponent {
         .filter(jugador => jugador.usuarioId === usuario.usuarioId)
         .sort((a, b) => a.fecha.localeCompare(b.fecha));
 
-      const points = dates.map((fecha, index) => {
+      const points = dateIndexes.map(index => {
+        const fecha = dates[index];
         const x = this.getChartX(index, lastDateIndex);
         const rowsUntilDate = userRows.filter(jugador => jugador.fecha <= fecha);
         let value = 0;
@@ -1164,12 +1174,14 @@ export class RankingsPageComponent {
       });
 
       const lastPoint = points[points.length - 1];
+      const markerPoints = lastPoint ? [lastPoint] : [];
 
       return {
         usuarioId: usuario.usuarioId,
         usuarioNombre: usuario.nombre,
         color: usuario.color,
         points,
+        markerPoints,
         polylinePoints: points.map(point => `${point.x},${point.y}`).join(' '),
         lastValue: lastPoint?.value ?? 0,
         lastDetail: lastPoint?.detail ?? '0/0'
@@ -1207,6 +1219,21 @@ export class RankingsPageComponent {
         label: this.formatDate(dates[index]),
         x: this.getChartX(index, lastDateIndex)
       }));
+  }
+
+  private getDisplayChartDateIndexes(dates: string[]): number[] {
+    if (dates.length <= LINE_CHART_MAX_POINTS) {
+      return dates.map((_, index) => index);
+    }
+
+    const lastIndex = dates.length - 1;
+    const indexes = new Set<number>([0, lastIndex]);
+
+    for (let step = 1; step < LINE_CHART_MAX_POINTS - 1; step++) {
+      indexes.add(Math.round((step * lastIndex) / (LINE_CHART_MAX_POINTS - 1)));
+    }
+
+    return Array.from(indexes).sort((a, b) => a - b);
   }
 
   private getChartX(index: number, lastDateIndex: number): number {
