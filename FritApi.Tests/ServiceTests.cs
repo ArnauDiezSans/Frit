@@ -653,6 +653,35 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task CsopaService_AllowsAttendanceAfterTwentyFourHours()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        context.Usuarios.AddRange(arnau, anna);
+        await context.SaveChangesAsync();
+        var activitat = new CsopaActivitat
+        {
+            Titol = "Sopar antic",
+            Tipus = CsopaService.TipusSopar,
+            UsuarioCreadorId = arnau.UsuarioId,
+            CreatedAt = DateTime.UtcNow.AddDays(-5)
+        };
+        context.CsopaActivitats.Add(activitat);
+        await context.SaveChangesAsync();
+        var service = new CsopaService(context);
+
+        var result = await service.MarcarAssistenciaAsync(activitat.CsopaActivitatId, arnau.UsuarioId, new CsopaAssistenciaCreateDto
+        {
+            UsuarioId = anna.UsuarioId
+        });
+
+        Assert.True(result.Success);
+        Assert.Contains(result.Activitat!.Assistencies, assistencia => assistencia.UsuarioId == anna.UsuarioId);
+        Assert.Single(context.CsopaAssistencies);
+    }
+
+    [Fact]
     public async Task HallOfFameService_CinefilFritAwardsUsersWithMostMovieRatings()
     {
         await using var context = CreateContext();
@@ -728,6 +757,37 @@ public class ServiceTests
         Assert.Equal("Arnau", user.UsuarioNombre);
         Assert.Equal(2, user.CurrentValue);
         Assert.Equal(2, entry.Medal.RankTargetValue);
+    }
+
+    [Fact]
+    public async Task HallOfFameService_CsopaAwardsTotalsAndWeekdayStreaks()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        context.Usuarios.AddRange(arnau, anna);
+        await context.SaveChangesAsync();
+        var latestTuesday = GetLatestWeekdayForTest(DayOfWeek.Tuesday);
+        var latestThursday = GetLatestWeekdayForTest(DayOfWeek.Thursday);
+        context.CsopaActivitats.AddRange(
+            CreateCsopaActivity("Sopar 1", CsopaService.TipusSopar, arnau.UsuarioId, latestTuesday, arnau.UsuarioId, anna.UsuarioId),
+            CreateCsopaActivity("Sopar 2", CsopaService.TipusSopar, arnau.UsuarioId, latestTuesday.AddDays(-7), arnau.UsuarioId),
+            CreateCsopaActivity("Gymfrit 1", CsopaService.TipusGymfrit, arnau.UsuarioId, latestThursday, anna.UsuarioId),
+            CreateCsopaActivity("Gymfrit 2", CsopaService.TipusGymfrit, arnau.UsuarioId, latestThursday.AddDays(-7), anna.UsuarioId));
+        await context.SaveChangesAsync();
+        var service = new HallOfFameService(context);
+
+        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+
+        var soparTotal = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Soparista Frit");
+        Assert.Contains(soparTotal.Users, user => user.UsuarioNombre == "Arnau" && user.CurrentValue == 2);
+        var soparStreak = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Dimarts de cullera");
+        Assert.Contains(soparStreak.Users, user => user.UsuarioNombre == "Arnau" && user.CurrentValue == 2);
+        var gymfritTotal = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Gymfriter");
+        Assert.Single(gymfritTotal.Users);
+        Assert.Equal("Anna", gymfritTotal.Users[0].UsuarioNombre);
+        var gymfritStreak = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Dijous de ferro");
+        Assert.Equal(2, Assert.Single(gymfritStreak.Users).CurrentValue);
     }
 
     [Fact]
@@ -939,11 +999,41 @@ public class ServiceTests
         };
     }
 
+    private static CsopaActivitat CreateCsopaActivity(
+        string titol,
+        int tipus,
+        int usuarioCreadorId,
+        DateOnly day,
+        params int[] usuarioIds)
+    {
+        return new CsopaActivitat
+        {
+            Titol = titol,
+            Tipus = tipus,
+            UsuarioCreadorId = usuarioCreadorId,
+            CreatedAt = day.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc),
+            Assistencies = usuarioIds
+                .Select(usuarioId => new CsopaAssistencia
+                {
+                    UsuarioId = usuarioId
+                })
+                .ToList()
+        };
+    }
+
     private static DateOnly GetLatestSundayForTest()
     {
         var madridNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetMadridTimeZoneForTest());
         var today = DateOnly.FromDateTime(madridNow);
         return today.AddDays(-(int)today.DayOfWeek);
+    }
+
+    private static DateOnly GetLatestWeekdayForTest(DayOfWeek weekday)
+    {
+        var madridNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetMadridTimeZoneForTest());
+        var today = DateOnly.FromDateTime(madridNow);
+        var daysSinceWeekday = ((int)today.DayOfWeek - (int)weekday + 7) % 7;
+        return today.AddDays(-daysSinceWeekday);
     }
 
     private static TimeZoneInfo GetMadridTimeZoneForTest()

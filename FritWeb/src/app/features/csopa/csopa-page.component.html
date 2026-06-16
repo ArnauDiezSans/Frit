@@ -1,0 +1,198 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>C sopa/Gymfrit</h1>
+      <p class="subtitle">Sopars, sessions de Gymfrit i assistencies del grup.</p>
+    </div>
+
+    <app-menu activePage="csopa" (logout)="logout()" />
+  </header>
+
+  <section class="content-card" *ngIf="loading()">
+    <p>Carregant C sopa/Gymfrit...</p>
+  </section>
+
+  <section class="content-card error-card" *ngIf="error()">
+    <p>{{ error() }}</p>
+    <button type="button" class="primary-button" (click)="cargarActivitats()">
+      Tornar-ho a provar
+    </button>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error() && canPublish()">
+    <form [formGroup]="activityForm" (ngSubmit)="publicarActivitat()" class="activity-form">
+      <label class="form-field">
+        <span>Activitat</span>
+        <input type="text" formControlName="titol" maxlength="300" autocomplete="off" placeholder="Sopar o Gymfrit" />
+      </label>
+
+      <div class="type-options">
+        <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusSopar">
+          <input type="radio" formControlName="tipus" [value]="tipusSopar" />
+          <img src="assets/sopar.png" alt="" />
+          <span>Sopar</span>
+        </label>
+
+        <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusGymfrit">
+          <input type="radio" formControlName="tipus" [value]="tipusGymfrit" />
+          <img src="assets/gymfrit.png" alt="" />
+          <span>Gymfrit</span>
+        </label>
+      </div>
+
+      <button type="submit" class="primary-button" [disabled]="savingActivity()">
+        {{ savingActivity() ? 'Publicant...' : 'Publicar' }}
+      </button>
+    </form>
+
+    <p class="field-error" *ngIf="activityFormError()">{{ activityFormError() }}</p>
+  </section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="section-heading">
+      <div>
+        <h2>Resultats</h2>
+      </div>
+
+      <button
+        type="button"
+        class="secondary-button"
+        [class.toolbar-chip-active]="showFilters()"
+        (click)="toggleFilters()">
+        Filtres
+      </button>
+    </div>
+
+    <div class="filters-panel" *ngIf="showFilters()">
+      <div class="filters-grid">
+        <label class="filter-field">
+          <span>Data des de</span>
+          <input
+            type="date"
+            class="filter-input"
+            [value]="filters().fechaDesde"
+            (input)="updateFilter('fechaDesde', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Data fins</span>
+          <input
+            type="date"
+            class="filter-input"
+            [value]="filters().fechaHasta"
+            (input)="updateFilter('fechaHasta', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Usuari</span>
+          <select
+            class="filter-input"
+            [value]="filters().usuarioId"
+            (change)="updateFilter('usuarioId', $any($event.target).value)">
+            <option value="">Tots</option>
+            <option *ngFor="let usuario of userOptions()" [value]="usuario.usuarioId">
+              {{ usuario.nombre }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Tipus</span>
+          <select
+            class="filter-input"
+            [value]="filters().tipus"
+            (change)="updateFilter('tipus', $any($event.target).value)">
+            <option value="">Tots</option>
+            <option [value]="tipusSopar">Sopars</option>
+            <option [value]="tipusGymfrit">Gymfrits</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="filteredActivitats().length > 0">
+      <table class="csopa-table">
+        <thead>
+          <tr>
+            <th class="activity-type-column" aria-label="Tipus"></th>
+            <th class="row-number-column">#</th>
+            <th class="sortable" (click)="sortBy('createdAt')">Data{{ getSortIndicator('createdAt') }}</th>
+            <th class="sortable" (click)="sortBy('titol')">Activitat{{ getSortIndicator('titol') }}</th>
+            <th class="sortable" (click)="sortBy('usuario')">Publicada per{{ getSortIndicator('usuario') }}</th>
+            <th class="sortable" (click)="sortBy('assistencies')">Assistents{{ getSortIndicator('assistencies') }}</th>
+            <th>Accio</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <ng-container *ngFor="let activitat of filteredActivitats(); let i = index; trackBy: trackByActivitatId">
+            <tr [class.row-highlight]="highlightedActivitatId() === activitat.csopaActivitatId">
+              <td class="activity-type-cell" aria-label="Tipus">
+                <img
+                  class="activity-type-icon"
+                  [src]="getTipusIcon(activitat.tipus)"
+                  [alt]="getTipusLabel(activitat.tipus)"
+                  [title]="getTipusLabel(activitat.tipus)" />
+              </td>
+              <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
+              <td data-label="Data">{{ formatDate(activitat.createdAt) }}</td>
+              <td data-label="Activitat">
+                <span class="activity-title">{{ activitat.titol }}</span>
+                <span class="type-subline">{{ getTipusLabel(activitat.tipus) }}</span>
+              </td>
+              <td data-label="Publicada per">
+                {{ activitat.usuarioCreadorNombre }}
+              </td>
+              <td data-label="Assistents">
+                <span class="attendance-count">{{ activitat.assistencies.length }}</span>
+                <span class="attendance-subline" *ngIf="formatAssistencies(activitat)">
+                  {{ formatAssistencies(activitat) }}
+                </span>
+              </td>
+              <td data-label="Accio">
+                <button
+                  *ngIf="canPublish()"
+                  type="button"
+                  class="ghost-button small-button"
+                  (click)="abrirAssistencia(activitat)">
+                  Assistencia
+                </button>
+                <span class="status-text" *ngIf="!canPublish()">-</span>
+              </td>
+            </tr>
+
+            <tr class="attendance-row" *ngIf="attendanceOpenId() === activitat.csopaActivitatId">
+              <td colspan="7">
+                <form [formGroup]="attendanceForm" (ngSubmit)="guardarAssistencia(activitat)" class="attendance-form">
+                  <label class="form-field attendance-user">
+                    <span>Usuari</span>
+                    <select formControlName="usuarioId">
+                      <option value="">Selecciona usuari</option>
+                      <option *ngFor="let usuario of usuarios()" [value]="usuario.usuarioId">
+                        {{ usuario.nombre }}
+                      </option>
+                    </select>
+                  </label>
+
+                  <div class="attendance-actions">
+                    <button type="button" class="ghost-button" (click)="cancelarAssistencia()">Cancel.lar</button>
+                    <button type="submit" class="primary-button" [disabled]="savingAttendanceId() === activitat.csopaActivitatId">
+                      {{ savingAttendanceId() === activitat.csopaActivitatId ? 'Desant...' : 'Marcar assistencia' }}
+                    </button>
+                  </div>
+                </form>
+
+                <p class="field-error" *ngIf="attendanceFormError()">{{ attendanceFormError() }}</p>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-state" *ngIf="filteredActivitats().length === 0">
+      <h3>{{ activitats().length === 0 ? 'No hi ha activitats publicades' : 'No hi ha activitats amb aquests filtres' }}</h3>
+    </div>
+  </section>
+</section>

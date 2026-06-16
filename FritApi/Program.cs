@@ -56,6 +56,7 @@ builder.Services.AddScoped<PartidaService>();
 builder.Services.AddScoped<PartidaJugadorService>();
 builder.Services.AddScoped<PendentCompraService>();
 builder.Services.AddScoped<CineService>();
+builder.Services.AddScoped<CsopaService>();
 builder.Services.AddScoped<AQueJuguemService>();
 builder.Services.AddScoped<LaLlistaService>();
 builder.Services.AddScoped<RankingsService>();

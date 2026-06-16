@@ -53,6 +53,14 @@
 
   <button
     type="button"
+    class="menu-button menu-csopa"
+    [class.menu-button-active]="activePage === 'csopa'"
+    routerLink="/app/csopa">
+    C sopa/Gymfrit
+  </button>
+
+  <button
+    type="button"
     class="menu-button menu-partidas"
     [class.menu-button-active]="activePage === 'partidas'"
     routerLink="/app/partidas">

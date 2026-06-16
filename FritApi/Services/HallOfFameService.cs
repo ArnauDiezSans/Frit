@@ -65,7 +65,7 @@ public class HallOfFameService
             8),
         new(
             "dynamic:one-men-army",
-            "One man army",
+            "One men army",
             "Haver jugat 1000 partides.",
             "TotalPlays",
             1000)
@@ -219,6 +219,10 @@ public class HallOfFameService
             .AsNoTracking()
             .Include(pelicula => pelicula.Valoraciones)
             .ToListAsync();
+        var csopaActivitats = await _context.CsopaActivitats
+            .AsNoTracking()
+            .Include(activitat => activitat.Assistencies)
+            .ToListAsync();
 
         var wins = BuildWinLookup(partidas, usuarios);
         var plays = BuildPlayCountLookup(partidas, usuarios);
@@ -226,6 +230,25 @@ public class HallOfFameService
         var cineTotalTarget = cineTotals.Count > 0 ? cineTotals.Values.Max() : 0;
         var cineSundayStreaks = BuildCineSundayStreakLookup(cinePeliculas, usuarios, GetFritToday(DateTime.UtcNow));
         var cineSundayTarget = cineSundayStreaks.Count > 0 ? cineSundayStreaks.Values.Max() : 0;
+        var soparTotals = BuildCsopaTotalAttendanceLookup(csopaActivitats, CsopaService.TipusSopar);
+        var soparTotalTarget = soparTotals.Count > 0 ? soparTotals.Values.Max() : 0;
+        var gymfritTotals = BuildCsopaTotalAttendanceLookup(csopaActivitats, CsopaService.TipusGymfrit);
+        var gymfritTotalTarget = gymfritTotals.Count > 0 ? gymfritTotals.Values.Max() : 0;
+        var today = GetFritToday(DateTime.UtcNow);
+        var soparTuesdayStreaks = BuildCsopaWeekdayStreakLookup(
+            csopaActivitats,
+            usuarios,
+            CsopaService.TipusSopar,
+            DayOfWeek.Tuesday,
+            today);
+        var soparTuesdayTarget = soparTuesdayStreaks.Count > 0 ? soparTuesdayStreaks.Values.Max() : 0;
+        var gymfritThursdayStreaks = BuildCsopaWeekdayStreakLookup(
+            csopaActivitats,
+            usuarios,
+            CsopaService.TipusGymfrit,
+            DayOfWeek.Thursday,
+            today);
+        var gymfritThursdayTarget = gymfritThursdayStreaks.Count > 0 ? gymfritThursdayStreaks.Values.Max() : 0;
         var rows = new List<UserMedalProgressRow>();
 
         foreach (var usuario in usuarios)
@@ -327,6 +350,58 @@ public class HallOfFameService
                     cineSundayStreaks.GetValueOrDefault(usuario.UsuarioId),
                     cineSundayTarget,
                     true)));
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildWinnerProgress(
+                    "csopa:sopars-total",
+                    "Soparista Frit",
+                    "Ha anat a mÃ©s sopars que ningÃº.",
+                    "/assets/sopar.png",
+                    "CsopaSoparTotal",
+                    soparTotals.GetValueOrDefault(usuario.UsuarioId),
+                    soparTotalTarget,
+                    false)));
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildWinnerProgress(
+                    "csopa:sopars-tuesday-streak",
+                    "Dimarts de cullera",
+                    "Ratxa de dimarts consecutius anant a sopar.",
+                    "/assets/sopar.png",
+                    "CsopaSoparTuesdayStreak",
+                    soparTuesdayStreaks.GetValueOrDefault(usuario.UsuarioId),
+                    soparTuesdayTarget,
+                    true)));
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildWinnerProgress(
+                    "csopa:gymfrit-total",
+                    "Gymfriter",
+                    "Ha anat a mÃ©s Gymfrits que ningÃº.",
+                    "/assets/gymfrit.png",
+                    "CsopaGymfritTotal",
+                    gymfritTotals.GetValueOrDefault(usuario.UsuarioId),
+                    gymfritTotalTarget,
+                    false)));
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildWinnerProgress(
+                    "csopa:gymfrit-thursday-streak",
+                    "Dijous de ferro",
+                    "Ratxa de dijous consecutius anant a Gymfrit.",
+                    "/assets/gymfrit.png",
+                    "CsopaGymfritThursdayStreak",
+                    gymfritThursdayStreaks.GetValueOrDefault(usuario.UsuarioId),
+                    gymfritThursdayTarget,
+                    true)));
         }
 
         return rows;
@@ -371,6 +446,63 @@ public class HallOfFameService
 
                 if (!sundayMovies.Any(pelicula =>
                     pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuario.UsuarioId)))
+                {
+                    break;
+                }
+
+                streak++;
+            }
+
+            result[usuario.UsuarioId] = streak;
+        }
+
+        return result;
+    }
+
+    private static Dictionary<int, int> BuildCsopaTotalAttendanceLookup(
+        List<CsopaActivitat> activitats,
+        int tipus)
+    {
+        return activitats
+            .Where(activitat => activitat.Tipus == tipus)
+            .SelectMany(activitat => activitat.Assistencies)
+            .GroupBy(assistencia => assistencia.UsuarioId)
+            .ToDictionary(group => group.Key, group => group.Count());
+    }
+
+    private static Dictionary<int, int> BuildCsopaWeekdayStreakLookup(
+        List<CsopaActivitat> activitats,
+        List<Usuario> usuarios,
+        int tipus,
+        DayOfWeek weekday,
+        DateOnly today)
+    {
+        var activitatsByDay = activitats
+            .Where(activitat => activitat.Tipus == tipus)
+            .Select(activitat => new
+            {
+                Dia = GetFritDate(activitat.CreatedAt),
+                Activitat = activitat
+            })
+            .Where(row => row.Dia.DayOfWeek == weekday)
+            .GroupBy(row => row.Dia)
+            .ToDictionary(group => group.Key, group => group.Select(row => row.Activitat).ToList());
+        var latestDay = GetLatestWeekday(today, weekday);
+        var result = new Dictionary<int, int>();
+
+        foreach (var usuario in usuarios)
+        {
+            var streak = 0;
+
+            for (var day = latestDay; ; day = day.AddDays(-7))
+            {
+                if (!activitatsByDay.TryGetValue(day, out var dayActivities))
+                {
+                    break;
+                }
+
+                if (!dayActivities.Any(activitat =>
+                    activitat.Assistencies.Any(assistencia => assistencia.UsuarioId == usuario.UsuarioId)))
                 {
                     break;
                 }
@@ -574,6 +706,12 @@ public class HallOfFameService
         return today.AddDays(-daysSinceSunday);
     }
 
+    private static DateOnly GetLatestWeekday(DateOnly today, DayOfWeek weekday)
+    {
+        var daysSinceWeekday = ((int)today.DayOfWeek - (int)weekday + 7) % 7;
+        return today.AddDays(-daysSinceWeekday);
+    }
+
     private static DateOnly GetFritToday(DateTime utcNow)
     {
         return DateOnly.FromDateTime(ConvertFromUtcToFritTime(utcNow));
@@ -666,7 +804,10 @@ public class HallOfFameService
         return progress.Tipo switch
         {
             "GameWins" => progress.CurrentValue > 0,
-            "GameSetWins" or "HeavyBggWins" or "TotalPlays" or "CineTotalRatings" or "CineSundayStreak" => progress.Completed,
+            "GameSetWins" or "HeavyBggWins" or "TotalPlays" or
+                "CineTotalRatings" or "CineSundayStreak" or
+                "CsopaSoparTotal" or "CsopaSoparTuesdayStreak" or
+                "CsopaGymfritTotal" or "CsopaGymfritThursdayStreak" => progress.Completed,
             _ => progress.CurrentValue > 0
         };
     }

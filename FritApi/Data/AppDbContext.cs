@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<PendentCompra> PendentsCompra => Set<PendentCompra>();
     public DbSet<CinePelicula> CinePeliculas => Set<CinePelicula>();
     public DbSet<CineValoracion> CineValoraciones => Set<CineValoracion>();
+    public DbSet<CsopaActivitat> CsopaActivitats => Set<CsopaActivitat>();
+    public DbSet<CsopaAssistencia> CsopaAssistencies => Set<CsopaAssistencia>();
     public DbSet<ManualMedalla> ManualMedallas => Set<ManualMedalla>();
     public DbSet<ManualMedallaUsuario> ManualMedallaUsuarios => Set<ManualMedallaUsuario>();
 
@@ -204,6 +206,47 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.CinePeliculaId, e.UsuarioId })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<CsopaActivitat>(entity =>
+        {
+            entity.HasKey(e => e.CsopaActivitatId);
+
+            entity.Property(e => e.Titol)
+                .IsRequired()
+                .HasMaxLength(300);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.UsuarioCreador)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioCreadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.Tipus);
+        });
+
+        modelBuilder.Entity<CsopaAssistencia>(entity =>
+        {
+            entity.HasKey(e => e.CsopaAssistenciaId);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.CsopaActivitat)
+                .WithMany(e => e.Assistencies)
+                .HasForeignKey(e => e.CsopaActivitatId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.CsopaActivitatId, e.UsuarioId })
                 .IsUnique();
         });
 
