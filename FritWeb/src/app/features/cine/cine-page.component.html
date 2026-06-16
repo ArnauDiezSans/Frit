@@ -174,7 +174,12 @@
               <td *ngIf="showObservacions()" data-label="Publicada per">
                 {{ pelicula.usuarioCreadorNombre }}
               </td>
-              <td data-label="Puntuació">{{ formatMedia(pelicula) }}</td>
+              <td data-label="Puntuació">
+                <span>{{ formatMedia(pelicula) }}</span>
+                <span class="attendance-subline" *ngIf="formatAssistenciesSenseNota(pelicula)">
+                  {{ formatAssistenciesSenseNota(pelicula) }}
+                </span>
+              </td>
               <td *ngIf="filters().scoreUsuarioId" data-label="Nota usuari">{{ formatUserNota(pelicula) }}</td>
               <td data-label="Acció">
                 <div class="row-actions">

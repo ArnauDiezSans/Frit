@@ -269,6 +269,14 @@ h1 {
   font-size: 0.88rem;
 }
 
+.attendance-subline {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
 .row-actions {
   display: flex;
   gap: 8px;
