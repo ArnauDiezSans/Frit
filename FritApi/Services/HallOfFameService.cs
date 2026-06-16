@@ -65,7 +65,7 @@ public class HallOfFameService
             8),
         new(
             "dynamic:one-men-army",
-            "One men army",
+            "One man army",
             "Haver jugat 1000 partides.",
             "TotalPlays",
             1000)
@@ -357,7 +357,7 @@ public class HallOfFameService
                 BuildWinnerProgress(
                     "csopa:sopars-total",
                     "Soparista Frit",
-                    "Ha anat a mÃ©s sopars que ningÃº.",
+                    "Ha anat a més sopars que ningú.",
                     "/assets/sopar.png",
                     "CsopaSoparTotal",
                     soparTotals.GetValueOrDefault(usuario.UsuarioId),
