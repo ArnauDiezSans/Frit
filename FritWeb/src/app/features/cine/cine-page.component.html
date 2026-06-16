@@ -41,27 +41,81 @@
         <h2>Resultats</h2>
       </div>
 
-      <button type="button" class="secondary-button" (click)="toggleObservacions()">
-        {{ showObservacions() ? 'Amagar observacions' : 'Mostrar observacions' }}
-      </button>
+      <div class="toolbar">
+        <button type="button" class="secondary-button" (click)="toggleObservacions()">
+          {{ showObservacions() ? 'Amagar observacions' : 'Mostrar observacions' }}
+        </button>
+        <button type="button" class="ghost-button" (click)="clearFilters()">
+          Netejar filtres
+        </button>
+      </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="peliculas().length > 0">
+    <div class="filters-panel">
+      <div class="filters-grid">
+        <label class="filter-field">
+          <span>Data des de</span>
+          <input
+            type="date"
+            class="filter-input"
+            [value]="filters().fechaDesde"
+            (input)="updateFilter('fechaDesde', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Data fins</span>
+          <input
+            type="date"
+            class="filter-input"
+            [value]="filters().fechaHasta"
+            (input)="updateFilter('fechaHasta', $any($event.target).value)" />
+        </label>
+
+        <label class="filter-field">
+          <span>Usuari</span>
+          <select
+            class="filter-input"
+            [value]="filters().usuarioId"
+            (change)="updateFilter('usuarioId', $any($event.target).value)">
+            <option value="">Tots</option>
+            <option *ngFor="let usuario of userOptions()" [value]="usuario.usuarioId">
+              {{ usuario.nombre }}
+            </option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Ordenar per nota de</span>
+          <select
+            class="filter-input"
+            [value]="filters().scoreUsuarioId"
+            (change)="updateFilter('scoreUsuarioId', $any($event.target).value)">
+            <option value="">Mitjana</option>
+            <option *ngFor="let usuario of userOptions()" [value]="usuario.usuarioId">
+              {{ usuario.nombre }}
+            </option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="table-wrapper" *ngIf="filteredPeliculas().length > 0">
       <table class="cine-table">
         <thead>
           <tr>
             <th class="row-number-column">#</th>
-            <th>Data</th>
-            <th>Pel·lícula</th>
-            <th *ngIf="showObservacions()">Publicada per</th>
-            <th>Puntuació</th>
+            <th class="sortable" (click)="sortBy('createdAt')">Data{{ getSortIndicator('createdAt') }}</th>
+            <th class="sortable" (click)="sortBy('titulo')">Pel·lícula{{ getSortIndicator('titulo') }}</th>
+            <th *ngIf="showObservacions()" class="sortable" (click)="sortBy('usuario')">Publicada per{{ getSortIndicator('usuario') }}</th>
+            <th class="sortable" (click)="sortBy('mediaNota')">Puntuació{{ getSortIndicator('mediaNota') }}</th>
+            <th *ngIf="filters().scoreUsuarioId" class="sortable" (click)="sortBy('userNota')">Nota usuari{{ getSortIndicator('userNota') }}</th>
             <th>Acció</th>
             <th *ngIf="showObservacions()">Observacions</th>
           </tr>
         </thead>
 
         <tbody>
-          <ng-container *ngFor="let pelicula of peliculas(); let i = index; trackBy: trackByPeliculaId">
+          <ng-container *ngFor="let pelicula of filteredPeliculas(); let i = index; trackBy: trackByPeliculaId">
             <tr [class.row-highlight]="highlightedPeliculaId() === pelicula.cinePeliculaId">
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td data-label="Data">{{ formatDate(pelicula.createdAt) }}</td>
@@ -72,6 +126,7 @@
                 {{ pelicula.usuarioCreadorNombre }}
               </td>
               <td data-label="Puntuació">{{ formatMedia(pelicula) }}</td>
+              <td *ngIf="filters().scoreUsuarioId" data-label="Nota usuari">{{ formatUserNota(pelicula) }}</td>
               <td data-label="Acció">
                 <button
                   *ngIf="pelicula.puedeValorar; else noAction"
@@ -90,7 +145,7 @@
             </tr>
 
             <tr class="rating-row" *ngIf="ratingOpenId() === pelicula.cinePeliculaId">
-              <td [attr.colspan]="showObservacions() ? 7 : 5">
+              <td [attr.colspan]="(showObservacions() ? 7 : 5) + (filters().scoreUsuarioId ? 1 : 0)">
                 <form [formGroup]="ratingForm" (ngSubmit)="guardarValoracion(pelicula)" class="rating-form">
                   <label class="form-field rating-score">
                     <span>Nota</span>
@@ -118,8 +173,8 @@
       </table>
     </div>
 
-    <div class="empty-state" *ngIf="peliculas().length === 0">
-      <h3>No hi ha pel·lícules publicades</h3>
+    <div class="empty-state" *ngIf="filteredPeliculas().length === 0">
+      <h3>{{ peliculas().length === 0 ? 'No hi ha pel·lícules publicades' : 'No hi ha pel·lícules amb aquests filtres' }}</h3>
     </div>
   </section>
 </section>

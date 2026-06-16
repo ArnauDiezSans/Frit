@@ -7,6 +7,28 @@ import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { CinePelicula, CineService } from './cine.service';
 
+type CineSortColumn = 'createdAt' | 'titulo' | 'usuario' | 'mediaNota' | 'userNota';
+type SortDirection = 'asc' | 'desc';
+
+interface CineFilters {
+  fechaDesde: string;
+  fechaHasta: string;
+  usuarioId: string;
+  scoreUsuarioId: string;
+}
+
+interface CineUserOption {
+  usuarioId: number;
+  nombre: string;
+}
+
+const EMPTY_CINE_FILTERS: CineFilters = {
+  fechaDesde: '',
+  fechaHasta: '',
+  usuarioId: '',
+  scoreUsuarioId: ''
+};
+
 @Component({
   selector: 'app-cine-page',
   standalone: true,
@@ -30,10 +52,41 @@ export class CinePageComponent {
   peliculas = signal<CinePelicula[]>([]);
   highlightedPeliculaId = signal<number | null>(null);
   ratingOpenId = signal<number | null>(null);
+  filters = signal<CineFilters>({ ...EMPTY_CINE_FILTERS });
+  sortColumn = signal<CineSortColumn>('createdAt');
+  sortDirection = signal<SortDirection>('desc');
 
   canPublish = computed(() => {
     const currentUser = this.authService.currentUser;
     return currentUser ? !isExternalUser(currentUser) : false;
+  });
+
+  userOptions = computed<CineUserOption[]>(() => {
+    const users = new Map<number, string>();
+
+    for (const pelicula of this.peliculas()) {
+      users.set(pelicula.usuarioCreadorId, pelicula.usuarioCreadorNombre);
+
+      for (const valoracion of pelicula.valoraciones) {
+        users.set(valoracion.usuarioId, valoracion.usuarioNombre);
+      }
+    }
+
+    return Array.from(users.entries())
+      .map(([usuarioId, nombre]) => ({ usuarioId, nombre }))
+      .filter(usuario => !isExternalUser(usuario))
+      .sort((left, right) => left.nombre.localeCompare(right.nombre));
+  });
+
+  filteredPeliculas = computed(() => {
+    const filters = this.filters();
+    const usuarioId = Number(filters.usuarioId);
+    const filtered = this.peliculas().filter(pelicula =>
+      this.matchesDateRange(pelicula.createdAt, filters.fechaDesde, filters.fechaHasta) &&
+      (!usuarioId || this.matchesUser(pelicula, usuarioId))
+    );
+
+    return this.sortPeliculas(filtered);
   });
 
   movieForm = this.fb.group({
@@ -149,6 +202,43 @@ export class CinePageComponent {
     this.showObservacions.update(value => !value);
   }
 
+  updateFilter<K extends keyof CineFilters>(key: K, value: string): void {
+    this.filters.update(current => ({
+      ...current,
+      [key]: value
+    }));
+
+    if (key === 'scoreUsuarioId' && value) {
+      this.sortColumn.set('userNota');
+      this.sortDirection.set('desc');
+    }
+
+    if (key === 'scoreUsuarioId' && !value && this.sortColumn() === 'userNota') {
+      this.sortColumn.set('createdAt');
+      this.sortDirection.set('desc');
+    }
+  }
+
+  clearFilters(): void {
+    this.filters.set({ ...EMPTY_CINE_FILTERS });
+    this.sortColumn.set('createdAt');
+    this.sortDirection.set('desc');
+  }
+
+  sortBy(column: CineSortColumn): void {
+    if (column === 'userNota' && !this.filters().scoreUsuarioId) {
+      return;
+    }
+
+    if (this.sortColumn() !== column) {
+      this.sortColumn.set(column);
+      this.sortDirection.set(column === 'titulo' || column === 'usuario' ? 'asc' : 'desc');
+      return;
+    }
+
+    this.sortDirection.update(direction => direction === 'asc' ? 'desc' : 'asc');
+  }
+
   logout(): void {
     this.authService.logout().subscribe({
       next: () => this.router.navigateByUrl('/login'),
@@ -196,10 +286,91 @@ export class CinePageComponent {
     return observacions.length > 0 ? observacions.join(' | ') : '-';
   }
 
+  formatUserNota(pelicula: CinePelicula): string {
+    const nota = this.getSelectedUserNota(pelicula);
+    return nota === null ? '-' : this.formatNumber(nota);
+  }
+
+  getSortIndicator(column: CineSortColumn): string {
+    if (this.sortColumn() !== column) {
+      return '';
+    }
+
+    return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
+  }
+
   private formatNumber(value: number): string {
     return new Intl.NumberFormat('ca-ES', {
       maximumFractionDigits: 2
     }).format(value);
+  }
+
+  private matchesDateRange(value: string, fechaDesde: string, fechaHasta: string): boolean {
+    const fecha = value.slice(0, 10);
+
+    if (fechaDesde && fecha < fechaDesde) {
+      return false;
+    }
+
+    if (fechaHasta && fecha > fechaHasta) {
+      return false;
+    }
+
+    return true;
+  }
+
+  private matchesUser(pelicula: CinePelicula, usuarioId: number): boolean {
+    return pelicula.usuarioCreadorId === usuarioId ||
+      pelicula.valoraciones.some(valoracion => valoracion.usuarioId === usuarioId);
+  }
+
+  private getSelectedUserNota(pelicula: CinePelicula): number | null {
+    const usuarioId = Number(this.filters().scoreUsuarioId);
+    if (!usuarioId) {
+      return null;
+    }
+
+    return pelicula.valoraciones.find(valoracion => valoracion.usuarioId === usuarioId)?.nota ?? null;
+  }
+
+  private sortPeliculas(peliculas: CinePelicula[]): CinePelicula[] {
+    const column = this.sortColumn();
+    const direction = this.sortDirection();
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return [...peliculas].sort((left, right) => {
+      switch (column) {
+        case 'titulo':
+          return left.titulo.localeCompare(right.titulo) * multiplier;
+        case 'usuario':
+          return left.usuarioCreadorNombre.localeCompare(right.usuarioCreadorNombre) * multiplier;
+        case 'mediaNota':
+          return this.compareNullableNumbers(left.mediaNota ?? null, right.mediaNota ?? null) * multiplier ||
+            right.createdAt.localeCompare(left.createdAt);
+        case 'userNota':
+          return this.compareNullableNumbers(this.getSelectedUserNota(left), this.getSelectedUserNota(right)) * multiplier ||
+            right.createdAt.localeCompare(left.createdAt);
+        case 'createdAt':
+        default:
+          return left.createdAt.localeCompare(right.createdAt) * multiplier;
+      }
+    });
+  }
+
+  private compareNullableNumbers(left: number | null, right: number | null): number {
+    if (left === null && right === null) {
+      return 0;
+    }
+
+    if (left === null) {
+      return -1;
+    }
+
+    if (right === null) {
+      return 1;
+    }
+
+    return left - right;
   }
 
   private parseNota(value: string): number | null {
