@@ -217,26 +217,29 @@
               (input)="updateGameFilter('minPartidas', $any($event.target).value)" />
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showNoLlistaGames()"
+              [checked]="isGameTypeIncluded(noLlistaGamesFilter())"
+              [indeterminate]="isGameTypeOnly(noLlistaGamesFilter())"
               (change)="toggleShowNoLlistaGames()" />
             <span>No llista</span>
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showCooperativeGames()"
+              [checked]="isGameTypeIncluded(cooperativeGamesFilter())"
+              [indeterminate]="isGameTypeOnly(cooperativeGamesFilter())"
               (change)="toggleShowCooperativeGames()" />
             <span>Cooperatiu</span>
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showTeamsGames()"
+              [checked]="isGameTypeIncluded(teamsGamesFilter())"
+              [indeterminate]="isGameTypeOnly(teamsGamesFilter())"
               (change)="toggleShowTeamsGames()" />
             <span>Equips</span>
           </label>
@@ -414,26 +417,29 @@
               (input)="updateUserFilter('minPartidas', $any($event.target).value)" />
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showNoLlistaGames()"
+              [checked]="isGameTypeIncluded(noLlistaGamesFilter())"
+              [indeterminate]="isGameTypeOnly(noLlistaGamesFilter())"
               (change)="toggleShowNoLlistaGames()" />
             <span>No llista</span>
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showCooperativeGames()"
+              [checked]="isGameTypeIncluded(cooperativeGamesFilter())"
+              [indeterminate]="isGameTypeOnly(cooperativeGamesFilter())"
               (change)="toggleShowCooperativeGames()" />
             <span>Cooperatiu</span>
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showTeamsGames()"
+              [checked]="isGameTypeIncluded(teamsGamesFilter())"
+              [indeterminate]="isGameTypeOnly(teamsGamesFilter())"
               (change)="toggleShowTeamsGames()" />
             <span>Equips</span>
           </label>
@@ -551,26 +557,29 @@
               (input)="updateChartFilter('fechaHasta', $any($event.target).value)" />
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showNoLlistaGames()"
+              [checked]="isGameTypeIncluded(noLlistaGamesFilter())"
+              [indeterminate]="isGameTypeOnly(noLlistaGamesFilter())"
               (change)="toggleShowNoLlistaGames()" />
             <span>No llista</span>
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showCooperativeGames()"
+              [checked]="isGameTypeIncluded(cooperativeGamesFilter())"
+              [indeterminate]="isGameTypeOnly(cooperativeGamesFilter())"
               (change)="toggleShowCooperativeGames()" />
             <span>Cooperatiu</span>
           </label>
 
-          <label class="filter-check">
+          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
             <input
               type="checkbox"
-              [checked]="showTeamsGames()"
+              [checked]="isGameTypeIncluded(teamsGamesFilter())"
+              [indeterminate]="isGameTypeOnly(teamsGamesFilter())"
               (change)="toggleShowTeamsGames()" />
             <span>Equips</span>
           </label>

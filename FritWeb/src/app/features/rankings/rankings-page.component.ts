@@ -19,6 +19,7 @@ type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | '
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
 type ActiveRankingView = 'game' | 'user' | 'charts' | 'hallOfFame';
+type GameTypeFilterState = 'hidden' | 'include' | 'only';
 
 interface GameRankingRow {
   juegoId: number;
@@ -239,9 +240,9 @@ export class RankingsPageComponent {
   showRepeatedMaxScores = signal(false);
   showOnlyDistinctGameWins = signal(false);
   maxScorePlayerCount = signal('');
-  showNoLlistaGames = signal(false);
-  showCooperativeGames = signal(false);
-  showTeamsGames = signal(false);
+  noLlistaGamesFilter = signal<GameTypeFilterState>('hidden');
+  cooperativeGamesFilter = signal<GameTypeFilterState>('hidden');
+  teamsGamesFilter = signal<GameTypeFilterState>('hidden');
 
   gameColumns = signal<GameColumns>({
     nombre: true,
@@ -810,15 +811,23 @@ export class RankingsPageComponent {
   }
 
   toggleShowNoLlistaGames(): void {
-    this.showNoLlistaGames.update(value => !value);
+    this.cycleGameTypeFilter(this.noLlistaGamesFilter, [this.cooperativeGamesFilter, this.teamsGamesFilter]);
   }
 
   toggleShowCooperativeGames(): void {
-    this.showCooperativeGames.update(value => !value);
+    this.cycleGameTypeFilter(this.cooperativeGamesFilter, [this.noLlistaGamesFilter, this.teamsGamesFilter]);
   }
 
   toggleShowTeamsGames(): void {
-    this.showTeamsGames.update(value => !value);
+    this.cycleGameTypeFilter(this.teamsGamesFilter, [this.noLlistaGamesFilter, this.cooperativeGamesFilter]);
+  }
+
+  isGameTypeIncluded(state: GameTypeFilterState): boolean {
+    return state !== 'hidden';
+  }
+
+  isGameTypeOnly(state: GameTypeFilterState): boolean {
+    return state === 'only';
   }
 
   toggleShowRepeatedMaxScores(): void {
@@ -850,9 +859,28 @@ export class RankingsPageComponent {
   }
 
   private clearGameTypeFilters(): void {
-    this.showNoLlistaGames.set(false);
-    this.showCooperativeGames.set(false);
-    this.showTeamsGames.set(false);
+    this.noLlistaGamesFilter.set('hidden');
+    this.cooperativeGamesFilter.set('hidden');
+    this.teamsGamesFilter.set('hidden');
+  }
+
+  private cycleGameTypeFilter(
+    target: ReturnType<typeof signal<GameTypeFilterState>>,
+    others: Array<ReturnType<typeof signal<GameTypeFilterState>>>
+  ): void {
+    const nextState: GameTypeFilterState = target() === 'hidden'
+      ? 'include'
+      : target() === 'include'
+        ? 'only'
+        : 'hidden';
+
+    target.set(nextState);
+
+    if (nextState === 'only') {
+      for (const other of others) {
+        other.set('hidden');
+      }
+    }
   }
 
   toggleGameColumnsPanel(event: Event): void {
@@ -1104,19 +1132,40 @@ export class RankingsPageComponent {
   }
 
   private shouldShowGameType(value: string | null | undefined): boolean {
-    if (isNoLlistaType(value)) {
-      return this.showNoLlistaGames();
+    const isNoLlista = isNoLlistaType(value);
+    const isCooperative = isCooperativeType(value);
+    const isTeams = isTeamsType(value);
+    const onlyFilter = this.getOnlyGameTypeFilter();
+
+    if (onlyFilter) {
+      return (onlyFilter === 'noLlista' && isNoLlista) ||
+        (onlyFilter === 'cooperative' && isCooperative) ||
+        (onlyFilter === 'teams' && isTeams);
     }
 
-    if (isCooperativeType(value)) {
-      return this.showCooperativeGames();
+    if (!isNoLlista && !isCooperative && !isTeams) {
+      return true;
     }
 
-    if (isTeamsType(value)) {
-      return this.showTeamsGames();
+    return (isNoLlista && this.noLlistaGamesFilter() === 'include') ||
+      (isCooperative && this.cooperativeGamesFilter() === 'include') ||
+      (isTeams && this.teamsGamesFilter() === 'include');
+  }
+
+  private getOnlyGameTypeFilter(): 'noLlista' | 'cooperative' | 'teams' | null {
+    if (this.noLlistaGamesFilter() === 'only') {
+      return 'noLlista';
     }
 
-    return true;
+    if (this.cooperativeGamesFilter() === 'only') {
+      return 'cooperative';
+    }
+
+    if (this.teamsGamesFilter() === 'only') {
+      return 'teams';
+    }
+
+    return null;
   }
 
   private buildGameRows(partidas: RankingPartida[], filters: GameFilters, juegos: RankingJuego[]): GameRankingRow[] {
