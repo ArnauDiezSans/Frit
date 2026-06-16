@@ -53,6 +53,7 @@ export class CinePageComponent {
   highlightedPeliculaId = signal<number | null>(null);
   ratingOpenId = signal<number | null>(null);
   filters = signal<CineFilters>({ ...EMPTY_CINE_FILTERS });
+  showFilters = signal(false);
   sortColumn = signal<CineSortColumn>('createdAt');
   sortDirection = signal<SortDirection>('desc');
 
@@ -223,6 +224,16 @@ export class CinePageComponent {
     this.filters.set({ ...EMPTY_CINE_FILTERS });
     this.sortColumn.set('createdAt');
     this.sortDirection.set('desc');
+  }
+
+  toggleFilters(): void {
+    if (this.showFilters()) {
+      this.clearFilters();
+      this.showFilters.set(false);
+      return;
+    }
+
+    this.showFilters.set(true);
   }
 
   sortBy(column: CineSortColumn): void {

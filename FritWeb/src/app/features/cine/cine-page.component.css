@@ -272,6 +272,10 @@ h1 {
   background: #f0fdfa;
 }
 
+.toolbar-chip-active {
+  background: #ecfdf5;
+}
+
 .ghost-button {
   border: 1px solid #d0d5dd;
   background: #ffffff;

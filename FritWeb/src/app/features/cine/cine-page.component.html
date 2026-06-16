@@ -42,16 +42,20 @@
       </div>
 
       <div class="toolbar">
+        <button
+          type="button"
+          class="secondary-button"
+          [class.toolbar-chip-active]="showFilters()"
+          (click)="toggleFilters()">
+          Filtres
+        </button>
         <button type="button" class="secondary-button" (click)="toggleObservacions()">
           {{ showObservacions() ? 'Amagar observacions' : 'Mostrar observacions' }}
-        </button>
-        <button type="button" class="ghost-button" (click)="clearFilters()">
-          Netejar filtres
         </button>
       </div>
     </div>
 
-    <div class="filters-panel">
+    <div class="filters-panel" *ngIf="showFilters()">
       <div class="filters-grid">
         <label class="filter-field">
           <span>Data des de</span>
