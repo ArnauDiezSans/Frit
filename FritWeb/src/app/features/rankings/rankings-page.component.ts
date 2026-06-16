@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { isCooperativeType, isNoLlistaType } from '../../core/games/game-type';
+import { isCooperativeType, isNoLlistaType, isTeamsType } from '../../core/games/game-type';
 import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { HallOfFamePageComponent } from '../hall-of-fame/hall-of-fame-page.component';
@@ -241,6 +241,7 @@ export class RankingsPageComponent {
   maxScorePlayerCount = signal('');
   showNoLlistaGames = signal(false);
   showCooperativeGames = signal(false);
+  showTeamsGames = signal(false);
 
   gameColumns = signal<GameColumns>({
     nombre: true,
@@ -816,6 +817,10 @@ export class RankingsPageComponent {
     this.showCooperativeGames.update(value => !value);
   }
 
+  toggleShowTeamsGames(): void {
+    this.showTeamsGames.update(value => !value);
+  }
+
   toggleShowRepeatedMaxScores(): void {
     this.showRepeatedMaxScores.update(value => !value);
   }
@@ -847,6 +852,7 @@ export class RankingsPageComponent {
   private clearGameTypeFilters(): void {
     this.showNoLlistaGames.set(false);
     this.showCooperativeGames.set(false);
+    this.showTeamsGames.set(false);
   }
 
   toggleGameColumnsPanel(event: Event): void {
@@ -1104,6 +1110,10 @@ export class RankingsPageComponent {
 
     if (isCooperativeType(value)) {
       return this.showCooperativeGames();
+    }
+
+    if (isTeamsType(value)) {
+      return this.showTeamsGames();
     }
 
     return true;
