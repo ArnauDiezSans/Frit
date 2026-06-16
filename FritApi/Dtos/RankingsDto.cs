@@ -27,6 +27,8 @@ public class RankingJuegoDto
     public int JuegoId { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public string Tipo { get; set; } = string.Empty;
+    public int NumeroJugadoresMin { get; set; }
+    public int NumeroJugadoresMax { get; set; }
     public int NumeroPartidas { get; set; }
     public int DuracionTotalMinutos { get; set; }
     public int? DuracionMediaMinutos { get; set; }

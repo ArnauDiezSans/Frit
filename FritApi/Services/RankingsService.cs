@@ -106,6 +106,8 @@ public class RankingsService
                     JuegoId = juego.JuegoId,
                     Nombre = juego.Nombre,
                     Tipo = juego.Tipo,
+                    NumeroJugadoresMin = juego.NumeroJugadoresMin,
+                    NumeroJugadoresMax = juego.NumeroJugadoresMax,
                     NumeroPartidas = partidasJuego.Count,
                     DuracionTotalMinutos = duraciones.Sum(),
                     DuracionMediaMinutos = duraciones.Count > 0

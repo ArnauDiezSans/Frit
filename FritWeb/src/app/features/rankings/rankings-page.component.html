@@ -679,13 +679,26 @@
         <article class="chart-card">
           <div class="chart-card-heading">
             <h3>Puntuació màxima</h3>
-            <label class="filter-check" *ngIf="chartFilters().juegoId">
-              <input
-                type="checkbox"
-                [checked]="showRepeatedMaxScores()"
-                (change)="toggleShowRepeatedMaxScores()" />
-              <span>Repetits</span>
-            </label>
+            <div class="toolbar" *ngIf="chartFilters().juegoId">
+              <select
+                class="filter-input"
+                style="width: auto; min-width: 92px"
+                aria-label="Filtrar puntuació màxima per número de jugadors"
+                [value]="maxScorePlayerCount()"
+                (change)="updateMaxScorePlayerCount($any($event.target).value)">
+                <option value="">Jugadors</option>
+                <option *ngFor="let playerCount of maxScorePlayerCountOptions()" [value]="playerCount">
+                  {{ playerCount }}
+                </option>
+              </select>
+              <label class="filter-check">
+                <input
+                  type="checkbox"
+                  [checked]="showRepeatedMaxScores()"
+                  (change)="toggleShowRepeatedMaxScores()" />
+                <span>Repetits</span>
+              </label>
+            </div>
           </div>
 
           <div class="chart-bars chart-score-bars" *ngIf="maxScoreChartRows().length > 0; else noMaxScoreChartData">

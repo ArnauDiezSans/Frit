@@ -237,6 +237,7 @@ export class RankingsPageComponent {
   chartFilters = signal<ChartFilters>({ ...EMPTY_CHART_FILTERS });
   selectedChartUserIds = signal<number[]>([]);
   showRepeatedMaxScores = signal(false);
+  maxScorePlayerCount = signal('');
   showNoLlistaGames = signal(false);
   showCooperativeGames = signal(false);
 
@@ -357,6 +358,20 @@ export class RankingsPageComponent {
   selectedChartGameName = computed(() => {
     const juegoId = Number(this.chartFilters().juegoId);
     return this.gameOptions().find(juego => juego.juegoId === juegoId)?.nombre ?? '';
+  });
+
+  maxScorePlayerCountOptions = computed(() => {
+    const juegoId = Number(this.chartFilters().juegoId);
+    const juego = this.gameOptions().find(item => item.juegoId === juegoId);
+
+    if (!juego) {
+      return [];
+    }
+
+    const min = Math.max(1, juego.numeroJugadoresMin);
+    const max = Math.max(min, juego.numeroJugadoresMax);
+
+    return Array.from({ length: max - min + 1 }, (_, index) => min + index);
   });
 
   topUserByGames = computed(() => {
@@ -556,7 +571,9 @@ export class RankingsPageComponent {
   });
 
   maxScoreChartRows = computed<ChartValueRow[]>(() => {
-    const jugadores = this.chartJugadores();
+    const playerCount = Number(this.maxScorePlayerCount());
+    const jugadores = this.chartJugadores()
+      .filter(jugador => !playerCount || jugador.numeroJugadores === playerCount);
     const selectedUsers = this.selectedChartUsers();
     const colorByUserId = new Map(selectedUsers.map(usuario => [usuario.usuarioId, usuario.color]));
 
@@ -701,7 +718,8 @@ export class RankingsPageComponent {
       [key]: value
     }));
 
-    if (key === 'juegoId' && !value) {
+    if (key === 'juegoId') {
+      this.maxScorePlayerCount.set('');
       this.showRepeatedMaxScores.set(false);
     }
   }
@@ -765,6 +783,10 @@ export class RankingsPageComponent {
 
   toggleShowRepeatedMaxScores(): void {
     this.showRepeatedMaxScores.update(value => !value);
+  }
+
+  updateMaxScorePlayerCount(value: string): void {
+    this.maxScorePlayerCount.set(value);
   }
 
   toggleChartUser(usuarioId: number): void {

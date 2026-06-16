@@ -28,6 +28,8 @@ export interface RankingJuego {
   juegoId: number;
   nombre: string;
   tipo: string;
+  numeroJugadoresMin: number;
+  numeroJugadoresMax: number;
   numeroPartidas: number;
   duracionTotalMinutos: number;
   duracionMediaMinutos?: number | null;
