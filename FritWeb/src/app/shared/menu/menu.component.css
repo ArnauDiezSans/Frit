@@ -34,12 +34,8 @@
   order: 5;
 }
 
-.menu-cine {
+.menu-assistencia {
   order: 6;
-}
-
-.menu-csopa {
-  order: 7;
 }
 
 .menu-pendent-compra {
@@ -238,12 +234,8 @@
     order: 7;
   }
 
-  .menu-cine {
+  .menu-assistencia {
     order: 8;
-  }
-
-  .menu-csopa {
-    order: 9;
   }
 
   .menu-primary-action {
@@ -279,11 +271,7 @@
     grid-column: span 13;
   }
 
-  .menu-cine {
-    grid-column: span 8;
-  }
-
-  .menu-csopa {
+  .menu-assistencia {
     grid-column: span 12;
   }
 

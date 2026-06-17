@@ -35,6 +35,14 @@ h1 {
   line-height: 1.45;
 }
 
+.entry-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto 24px;
+}
+
 .content-card {
   max-width: 1100px;
   margin: 0 auto 24px;
@@ -43,6 +51,11 @@ h1 {
   border: 1px solid #e4e7ec;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.entry-card {
+  width: 100%;
+  margin: 0;
 }
 
 .error-card,
@@ -62,6 +75,13 @@ h1 {
   margin: 0;
 }
 
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .filters-panel {
   margin-bottom: 16px;
   padding: 10px;
@@ -72,7 +92,7 @@ h1 {
 
 .filters-grid {
   display: grid;
-  grid-template-columns: minmax(120px, 0.75fr) minmax(120px, 0.75fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(120px, 0.72fr) minmax(120px, 0.72fr) repeat(3, minmax(0, 1fr));
   align-items: end;
   gap: 8px;
 }
@@ -112,11 +132,45 @@ h1 {
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
 }
 
-.activity-form {
+.movie-form,
+.activity-form,
+.rating-form,
+.attendance-form {
   display: grid;
-  grid-template-columns: minmax(160px, 220px) auto auto;
   gap: 16px;
   align-items: end;
+}
+
+.movie-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.movie-group-options {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 42px;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #344054;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.checkbox-field input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0f766e;
+}
+
+.activity-form {
+  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr) auto;
 }
 
 .type-options {
@@ -158,14 +212,15 @@ h1 {
   object-fit: contain;
 }
 
-.attendance-form {
-  display: grid;
-  grid-template-columns: minmax(180px, 1fr) auto;
-  gap: 16px;
-  align-items: end;
+.rating-form {
+  grid-template-columns: 110px minmax(0, 1fr) auto;
 }
 
-.attendance-actions {
+.attendance-form {
+  grid-template-columns: minmax(180px, 1fr) auto;
+}
+
+.detail-actions {
   display: flex;
   gap: 10px;
 }
@@ -175,13 +230,13 @@ h1 {
   overflow-x: auto;
 }
 
-.csopa-table {
+.assistencia-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.csopa-table th,
-.csopa-table td {
+.assistencia-table th,
+.assistencia-table td {
   padding: 14px 12px;
   text-align: left;
   border-bottom: 1px solid #e4e7ec;
@@ -189,7 +244,7 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-.csopa-table th {
+.assistencia-table th {
   color: #475467;
   font-size: 0.92rem;
   font-weight: 700;
@@ -212,7 +267,7 @@ h1 {
   vertical-align: middle;
 }
 
-.csopa-table tbody tr:not(.attendance-row):hover {
+.assistencia-table tbody tr:not(.detail-row):hover {
   background: #fafafa;
 }
 
@@ -221,7 +276,7 @@ h1 {
   user-select: none;
 }
 
-.csopa-table tbody tr.row-highlight {
+.assistencia-table tbody tr.row-highlight {
   background: #ecfdf5;
   animation: highlightFade 2.5s ease-out;
 }
@@ -231,12 +286,14 @@ h1 {
   100% { background: #ecfdf5; }
 }
 
+.activity-title,
 .attendance-count {
   display: block;
   font-weight: 700;
   color: #101828;
 }
 
+.activity-subline,
 .attendance-subline,
 .status-text {
   display: block;
@@ -246,8 +303,13 @@ h1 {
   line-height: 1.35;
 }
 
-.attendance-row td,
-.edit-row td {
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-row td {
   background: #f9fafb;
 }
 
@@ -372,6 +434,13 @@ h1 {
   padding: 0 12px;
 }
 
+@media (max-width: 980px) {
+  .entry-cards {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 @media (max-width: 820px) {
   .dashboard-page {
     padding: 12px;
@@ -389,14 +458,35 @@ h1 {
     border-radius: 12px;
   }
 
+  .entry-cards {
+    margin-bottom: 12px;
+  }
+
   .error-card,
   .section-heading,
+  .movie-form,
   .activity-form,
+  .rating-form,
   .attendance-form,
   .edit-panel {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .movie-group-options {
+    grid-column: auto;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .filters-panel {
+    margin-bottom: 10px;
+    padding: 8px;
   }
 
   .filters-grid {
@@ -405,7 +495,7 @@ h1 {
   }
 
   .type-options,
-  .attendance-actions {
+  .detail-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
@@ -414,23 +504,23 @@ h1 {
     overflow: visible;
   }
 
-  .csopa-table,
-  .csopa-table thead,
-  .csopa-table tbody {
+  .assistencia-table,
+  .assistencia-table thead,
+  .assistencia-table tbody {
     display: block;
     width: 100%;
   }
 
-  .csopa-table thead {
+  .assistencia-table thead {
     display: none;
   }
 
-  .csopa-table tbody {
+  .assistencia-table tbody {
     display: grid;
     gap: 8px;
   }
 
-  .csopa-table tr:not(.attendance-row) {
+  .assistencia-table tr:not(.detail-row) {
     display: grid;
     grid-template-columns: 28px 28px minmax(0, 1fr) auto;
     gap: 6px 8px;
@@ -441,7 +531,7 @@ h1 {
     box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
   }
 
-  .csopa-table td {
+  .assistencia-table td {
     display: block;
     min-width: 0;
     padding: 0;
@@ -449,7 +539,7 @@ h1 {
     font-size: 0.9rem;
   }
 
-  .csopa-table td.activity-type-cell {
+  .assistencia-table td.activity-type-cell {
     grid-column: 1;
     grid-row: 1;
   }
@@ -459,38 +549,54 @@ h1 {
     height: 24px;
   }
 
-  .csopa-table td.row-number-cell {
+  .assistencia-table td.row-number-cell {
     grid-column: 2;
     grid-row: 1;
     padding-top: 2px;
   }
 
-  .csopa-table td[data-label="Data"] {
-    grid-column: 3 / -1;
+  .assistencia-table td[data-label="Data"] {
+    grid-column: 4;
     grid-row: 1;
     white-space: nowrap;
     color: #667085;
-    text-align: right;
   }
 
-  .csopa-table td[data-label="Assistents"] {
+  .assistencia-table td[data-label="Activitat"] {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .assistencia-table td[data-label="Assistents"] {
     grid-column: 1 / -1;
     grid-row: 2;
   }
 
-  .csopa-table td[data-label="Publicada per"] {
+  .assistencia-table td[data-label="Puntuació"] {
     grid-column: 1 / -1;
     grid-row: 3;
-    color: #667085;
   }
 
-  .csopa-table td[data-label="Accio"] {
+  .assistencia-table td[data-label="Nota usuari"] {
     grid-column: 1 / -1;
     grid-row: 4;
   }
 
-  .csopa-table td[data-label="Assistents"]::before,
-  .csopa-table td[data-label="Publicada per"]::before {
+  .assistencia-table td[data-label="Acció"] {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+
+  .assistencia-table td[data-label="Observacions"] {
+    grid-column: 1 / -1;
+    grid-row: 6;
+    color: #344054;
+  }
+
+  .assistencia-table td[data-label="Assistents"]::before,
+  .assistencia-table td[data-label="Puntuació"]::before,
+  .assistencia-table td[data-label="Nota usuari"]::before,
+  .assistencia-table td[data-label="Observacions"]::before {
     content: attr(data-label);
     display: block;
     margin-bottom: 3px;
@@ -499,8 +605,7 @@ h1 {
     color: #667085;
   }
 
-  .attendance-row td,
-  .edit-row td {
+  .detail-row td {
     display: block;
     padding: 12px;
     border: 1px solid #e4e7ec;
@@ -532,7 +637,7 @@ h1 {
 
   .filters-grid,
   .type-options,
-  .attendance-actions {
+  .detail-actions {
     grid-template-columns: 1fr;
   }
 }

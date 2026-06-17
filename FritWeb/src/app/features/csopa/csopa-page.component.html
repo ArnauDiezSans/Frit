@@ -2,51 +2,86 @@
   <header class="dashboard-header">
     <div>
       <p class="eyebrow">Frit</p>
-      <h1>C sopa/Gymfrit</h1>
-      <p class="subtitle">Sopars, sessions de Gymfrit i assistencies del grup.</p>
+      <h1>Assistència</h1>
+      <p class="subtitle">Pel·lícules, sopars, Gymfrits i assistències del grup.</p>
     </div>
 
-    <app-menu activePage="csopa" (logout)="logout()" />
+    <app-menu activePage="assistencia" (logout)="logout()" />
   </header>
 
   <section class="content-card" *ngIf="loading()">
-    <p>Carregant C sopa/Gymfrit...</p>
+    <p>Carregant Assistència...</p>
   </section>
 
   <section class="content-card error-card" *ngIf="error()">
     <p>{{ error() }}</p>
-    <button type="button" class="primary-button" (click)="cargarActivitats()">
+    <button type="button" class="primary-button" (click)="cargarAssistencia()">
       Tornar-ho a provar
     </button>
   </section>
 
-  <section class="content-card" *ngIf="!loading() && !error() && canPublish()">
-    <form [formGroup]="activityForm" (ngSubmit)="publicarActivitat()" class="activity-form">
-      <label class="form-field">
-        <span>Data</span>
-        <input type="date" formControlName="fecha" />
-      </label>
-
-      <div class="type-options">
-        <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusSopar">
-          <input type="radio" formControlName="tipus" [value]="tipusSopar" />
-          <img src="assets/sopar.png" alt="" />
-          <span>Sopar</span>
+  <section class="entry-cards" *ngIf="!loading() && !error() && canPublish()">
+    <section class="content-card entry-card">
+      <form [formGroup]="movieForm" (ngSubmit)="publicarPelicula()" class="movie-form">
+        <label class="form-field">
+          <span>Pel·lícula</span>
+          <input type="text" formControlName="titulo" maxlength="300" autocomplete="off" />
         </label>
 
-        <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusGymfrit">
-          <input type="radio" formControlName="tipus" [value]="tipusGymfrit" />
-          <img src="assets/gymfrit.png" alt="" />
-          <span>Gymfrit</span>
+        <div class="movie-group-options">
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              formControlName="creepyjous"
+              (change)="updateMovieGroup('creepyjous', $any($event.target).checked)" />
+            <span>Creepyjous</span>
+          </label>
+
+          <label class="checkbox-field">
+            <input
+              type="checkbox"
+              formControlName="estirarLaSetmana"
+              (change)="updateMovieGroup('estirarLaSetmana', $any($event.target).checked)" />
+            <span>Estirar la setmana</span>
+          </label>
+        </div>
+
+        <button type="submit" class="primary-button" [disabled]="savingMovie()">
+          {{ savingMovie() ? 'Publicant...' : 'Publicar' }}
+        </button>
+      </form>
+
+      <p class="field-error" *ngIf="movieFormError()">{{ movieFormError() }}</p>
+    </section>
+
+    <section class="content-card entry-card">
+      <form [formGroup]="activityForm" (ngSubmit)="publicarActivitat()" class="activity-form">
+        <label class="form-field">
+          <span>Data</span>
+          <input type="date" formControlName="fecha" />
         </label>
-      </div>
 
-      <button type="submit" class="primary-button" [disabled]="savingActivity()">
-        {{ savingActivity() ? 'Publicant...' : 'Publicar' }}
-      </button>
-    </form>
+        <div class="type-options">
+          <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusSopar">
+            <input type="radio" formControlName="tipus" [value]="tipusSopar" />
+            <img src="assets/sopar.png" alt="" />
+            <span>Sopar</span>
+          </label>
 
-    <p class="field-error" *ngIf="activityFormError()">{{ activityFormError() }}</p>
+          <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusGymfrit">
+            <input type="radio" formControlName="tipus" [value]="tipusGymfrit" />
+            <img src="assets/gymfrit.png" alt="" />
+            <span>Gymfrit</span>
+          </label>
+        </div>
+
+        <button type="submit" class="primary-button" [disabled]="savingActivity()">
+          {{ savingActivity() ? 'Publicant...' : 'Publicar' }}
+        </button>
+      </form>
+
+      <p class="field-error" *ngIf="activityFormError()">{{ activityFormError() }}</p>
+    </section>
   </section>
 
   <section class="content-card" *ngIf="!loading() && !error()">
@@ -55,13 +90,18 @@
         <h2>Resultats</h2>
       </div>
 
-      <button
-        type="button"
-        class="secondary-button"
-        [class.toolbar-chip-active]="showFilters()"
-        (click)="toggleFilters()">
-        Filtres
-      </button>
+      <div class="toolbar">
+        <button
+          type="button"
+          class="secondary-button"
+          [class.toolbar-chip-active]="showFilters()"
+          (click)="toggleFilters()">
+          Filtres
+        </button>
+        <button type="button" class="secondary-button" (click)="toggleObservacions()">
+          {{ showObservacions() ? 'Amagar observacions' : 'Mostrar observacions' }}
+        </button>
+      </div>
     </div>
 
     <div class="filters-panel" *ngIf="showFilters()">
@@ -104,69 +144,129 @@
             [value]="filters().tipus"
             (change)="updateFilter('tipus', $any($event.target).value)">
             <option value="">Tots</option>
-            <option [value]="tipusSopar">Sopars</option>
-            <option [value]="tipusGymfrit">Gymfrits</option>
+            <option value="cine">Pel·lícules</option>
+            <option value="cine-por">Creepyjous</option>
+            <option value="cine-diumenge">Estirar la setmana</option>
+            <option value="sopar">Sopars</option>
+            <option value="gymfrit">Gymfrits</option>
+          </select>
+        </label>
+
+        <label class="filter-field">
+          <span>Ordenar per nota de</span>
+          <select
+            class="filter-input"
+            [value]="filters().scoreUsuarioId"
+            (change)="updateFilter('scoreUsuarioId', $any($event.target).value)">
+            <option value="">Mitjana</option>
+            <option *ngFor="let usuario of userOptions()" [value]="usuario.usuarioId">
+              {{ usuario.nombre }}
+            </option>
           </select>
         </label>
       </div>
     </div>
 
-    <div class="table-wrapper" *ngIf="filteredActivitats().length > 0">
-      <table class="csopa-table">
+    <div class="table-wrapper" *ngIf="filteredRows().length > 0">
+      <table class="assistencia-table">
         <thead>
           <tr>
             <th class="activity-type-column" aria-label="Tipus"></th>
             <th class="row-number-column">#</th>
             <th class="sortable" (click)="sortBy('createdAt')">Data{{ getSortIndicator('createdAt') }}</th>
-            <th class="sortable" (click)="sortBy('usuario')">Publicada per{{ getSortIndicator('usuario') }}</th>
+            <th class="sortable" (click)="sortBy('titol')">Activitat{{ getSortIndicator('titol') }}</th>
             <th class="sortable" (click)="sortBy('assistencies')">Assistents{{ getSortIndicator('assistencies') }}</th>
-            <th>Accio</th>
+            <th class="sortable" (click)="sortBy('mediaNota')">Puntuació{{ getSortIndicator('mediaNota') }}</th>
+            <th *ngIf="filters().scoreUsuarioId" class="sortable" (click)="sortBy('userNota')">Nota usuari{{ getSortIndicator('userNota') }}</th>
+            <th>Acció</th>
+            <th *ngIf="showObservacions()">Observacions</th>
           </tr>
         </thead>
 
         <tbody>
-          <ng-container *ngFor="let activitat of filteredActivitats(); let i = index; trackBy: trackByActivitatId">
-            <tr [class.row-highlight]="highlightedActivitatId() === activitat.csopaActivitatId">
+          <ng-container *ngFor="let row of filteredRows(); let i = index; trackBy: trackByRowKey">
+            <tr [class.row-highlight]="highlightedKey() === row.key">
               <td class="activity-type-cell" aria-label="Tipus">
                 <img
+                  *ngIf="row.tipusIcon"
                   class="activity-type-icon"
-                  [src]="getTipusIcon(activitat.tipus)"
-                  [alt]="getTipusLabel(activitat.tipus)"
-                  [title]="getTipusLabel(activitat.tipus)" />
+                  [src]="row.tipusIcon"
+                  [alt]="row.tipusLabel"
+                  [title]="row.tipusLabel" />
               </td>
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
-              <td data-label="Data">{{ formatDate(activitat.createdAt) }}</td>
-              <td data-label="Publicada per">
-                {{ activitat.usuarioCreadorNombre }}
+              <td data-label="Data">{{ formatDate(row.createdAt) }}</td>
+              <td data-label="Activitat">
+                <span class="activity-title">{{ row.titol }}</span>
+                <span class="activity-subline">{{ row.tipusLabel }}</span>
               </td>
               <td data-label="Assistents">
-                <span class="attendance-count">{{ activitat.assistencies.length }}</span>
-                <span class="attendance-subline" *ngIf="formatAssistencies(activitat)">
-                  {{ formatAssistencies(activitat) }}
+                <span class="attendance-count">{{ row.assistenciesCount }}</span>
+                <span class="attendance-subline" *ngIf="row.assistenciesText">
+                  {{ row.assistenciesText }}
                 </span>
               </td>
-              <td data-label="Accio">
-                <button
-                  *ngIf="canPublish()"
-                  type="button"
-                  class="ghost-button small-button"
-                  (click)="abrirAssistencia(activitat)">
-                  Assistencia
-                </button>
-                <button
-                  *ngIf="canEdit()"
-                  type="button"
-                  class="secondary-button small-button"
-                  (click)="toggleEditar(activitat)">
-                  Editar
-                </button>
-                <span class="status-text" *ngIf="!canPublish()">-</span>
+              <td data-label="Puntuació">{{ row.source === 'cine' ? formatPrimaryValue(row) : '-' }}</td>
+              <td *ngIf="filters().scoreUsuarioId" data-label="Nota usuari">{{ formatUserNota(row) }}</td>
+              <td data-label="Acció">
+                <div class="row-actions">
+                  <button
+                    *ngIf="row.source === 'cine' && row.canRate"
+                    type="button"
+                    class="secondary-button small-button"
+                    (click)="abrirValoracion(row)">
+                    Valorar
+                  </button>
+                  <button
+                    *ngIf="canPublish()"
+                    type="button"
+                    class="ghost-button small-button"
+                    (click)="abrirAssistencia(row)">
+                    Assistència
+                  </button>
+                  <button
+                    *ngIf="row.source === 'csopa' && canEdit()"
+                    type="button"
+                    class="secondary-button small-button"
+                    (click)="toggleEditar(row)">
+                    Editar
+                  </button>
+                  <span class="status-text" *ngIf="!row.canRate && !canPublish() && !(row.source === 'csopa' && canEdit())">-</span>
+                </div>
+              </td>
+              <td *ngIf="showObservacions()" data-label="Observacions">
+                {{ row.observacionsText }}
               </td>
             </tr>
 
-            <tr class="attendance-row" *ngIf="attendanceOpenId() === activitat.csopaActivitatId">
-              <td colspan="6">
-                <form [formGroup]="attendanceForm" (ngSubmit)="guardarAssistencia(activitat)" class="attendance-form">
+            <tr class="detail-row" *ngIf="ratingOpenKey() === row.key">
+              <td [attr.colspan]="(showObservacions() ? 8 : 7) + (filters().scoreUsuarioId ? 1 : 0)">
+                <form [formGroup]="ratingForm" (ngSubmit)="guardarValoracion(row)" class="rating-form">
+                  <label class="form-field rating-score">
+                    <span>Nota</span>
+                    <input type="text" formControlName="nota" inputmode="decimal" />
+                  </label>
+
+                  <label class="form-field rating-observation">
+                    <span>Observació</span>
+                    <input type="text" formControlName="observacion" maxlength="200" />
+                  </label>
+
+                  <div class="detail-actions">
+                    <button type="button" class="ghost-button" (click)="cancelarValoracion()">Cancel·lar</button>
+                    <button type="submit" class="primary-button" [disabled]="savingRatingKey() === row.key">
+                      {{ savingRatingKey() === row.key ? 'Desant...' : 'Desar' }}
+                    </button>
+                  </div>
+                </form>
+
+                <p class="field-error" *ngIf="ratingFormError()">{{ ratingFormError() }}</p>
+              </td>
+            </tr>
+
+            <tr class="detail-row" *ngIf="attendanceOpenKey() === row.key">
+              <td [attr.colspan]="(showObservacions() ? 8 : 7) + (filters().scoreUsuarioId ? 1 : 0)">
+                <form [formGroup]="attendanceForm" (ngSubmit)="guardarAssistencia(row)" class="attendance-form">
                   <label class="form-field attendance-user">
                     <span>Usuari</span>
                     <select formControlName="usuarioId">
@@ -177,10 +277,10 @@
                     </select>
                   </label>
 
-                  <div class="attendance-actions">
-                    <button type="button" class="ghost-button" (click)="cancelarAssistencia()">Cancel.lar</button>
-                    <button type="submit" class="primary-button" [disabled]="savingAttendanceId() === activitat.csopaActivitatId">
-                      {{ savingAttendanceId() === activitat.csopaActivitatId ? 'Desant...' : 'Marcar assistencia' }}
+                  <div class="detail-actions">
+                    <button type="button" class="ghost-button" (click)="cancelarAssistencia()">Cancel·lar</button>
+                    <button type="submit" class="primary-button" [disabled]="savingAttendanceKey() === row.key">
+                      {{ savingAttendanceKey() === row.key ? 'Desant...' : 'Marcar assistència' }}
                     </button>
                   </div>
                 </form>
@@ -189,21 +289,21 @@
               </td>
             </tr>
 
-            <tr class="edit-row" *ngIf="editOpenId() === activitat.csopaActivitatId">
-              <td colspan="6">
+            <tr class="detail-row" *ngIf="row.source === 'csopa' && editOpenId() === row.id">
+              <td [attr.colspan]="(showObservacions() ? 8 : 7) + (filters().scoreUsuarioId ? 1 : 0)">
                 <div class="edit-panel">
                   <div class="edit-attendance-list">
                     <span class="edit-label">Assistents</span>
-                    <div class="edit-empty" *ngIf="activitat.assistencies.length === 0">
+                    <div class="edit-empty" *ngIf="getCsopaAssistencies(row).length === 0">
                       Sense assistents
                     </div>
-                    <div class="edit-attendance-item" *ngFor="let assistencia of activitat.assistencies">
+                    <div class="edit-attendance-item" *ngFor="let assistencia of getCsopaAssistencies(row)">
                       <span>{{ assistencia.usuarioNombre }}</span>
                       <button
                         type="button"
                         class="ghost-button small-button"
                         [disabled]="deletingAttendanceId() === assistencia.csopaAssistenciaId"
-                        (click)="eliminarAssistencia(activitat, assistencia.csopaAssistenciaId)">
+                        (click)="eliminarAssistencia(row, assistencia.csopaAssistenciaId)">
                         {{ deletingAttendanceId() === assistencia.csopaAssistenciaId ? 'Traient...' : 'Treure' }}
                       </button>
                     </div>
@@ -212,9 +312,9 @@
                   <button
                     type="button"
                     class="danger-button"
-                    [disabled]="deletingActivityId() === activitat.csopaActivitatId"
-                    (click)="eliminarActivitat(activitat)">
-                    {{ deletingActivityId() === activitat.csopaActivitatId ? 'Eliminant...' : 'Eliminar activitat' }}
+                    [disabled]="deletingActivityId() === row.id"
+                    (click)="eliminarActivitat(row)">
+                    {{ deletingActivityId() === row.id ? 'Eliminant...' : 'Eliminar activitat' }}
                   </button>
                 </div>
 
@@ -226,8 +326,8 @@
       </table>
     </div>
 
-    <div class="empty-state" *ngIf="filteredActivitats().length === 0">
-      <h3>{{ activitats().length === 0 ? 'No hi ha activitats publicades' : 'No hi ha activitats amb aquests filtres' }}</h3>
+    <div class="empty-state" *ngIf="filteredRows().length === 0">
+      <h3>{{ rows().length === 0 ? 'No hi ha assistències publicades' : 'No hi ha assistències amb aquests filtres' }}</h3>
     </div>
   </section>
 </section>

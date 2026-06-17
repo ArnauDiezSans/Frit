@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
+import { CinePelicula, CineService } from '../cine/cine.service';
 import { UsuarioOption } from '../juegos/juegos.models';
 import { UsuariosService } from '../juegos/usuarios.service';
 import {
@@ -14,26 +16,48 @@ import {
   CsopaService
 } from './csopa.service';
 
-type CsopaSortColumn = 'createdAt' | 'usuario' | 'assistencies';
+type AssistenciaSortColumn = 'createdAt' | 'titol' | 'assistencies' | 'mediaNota' | 'userNota';
 type SortDirection = 'asc' | 'desc';
+type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'sopar' | 'gymfrit';
 
-interface CsopaFilters {
+interface AssistenciaFilters {
   fechaDesde: string;
   fechaHasta: string;
   usuarioId: string;
   tipus: string;
+  scoreUsuarioId: string;
 }
 
-interface CsopaUserOption {
+interface AssistenciaUserOption {
   usuarioId: number;
   nombre: string;
 }
 
-const EMPTY_CSOPA_FILTERS: CsopaFilters = {
+interface AssistenciaRow {
+  key: string;
+  source: 'cine' | 'csopa';
+  id: number;
+  createdAt: string;
+  titol: string;
+  tipus: AssistenciaTipus;
+  tipusLabel: string;
+  tipusIcon: string;
+  usuarioCreadorId: number;
+  usuarioCreadorNombre: string;
+  assistenciesCount: number;
+  assistenciesText: string;
+  mediaNota: number | null;
+  observacionsText: string;
+  canRate: boolean;
+  raw: CinePelicula | CsopaActivitat;
+}
+
+const EMPTY_ASSISTENCIA_FILTERS: AssistenciaFilters = {
   fechaDesde: '',
   fechaHasta: '',
   usuarioId: '',
-  tipus: ''
+  tipus: '',
+  scoreUsuarioId: ''
 };
 
 @Component({
@@ -46,6 +70,7 @@ const EMPTY_CSOPA_FILTERS: CsopaFilters = {
 export class CsopaPageComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private cineService = inject(CineService);
   private csopaService = inject(CsopaService);
   private usuariosService = inject(UsuariosService);
   private router = inject(Router);
@@ -54,22 +79,29 @@ export class CsopaPageComponent {
   readonly tipusGymfrit = CSOPA_TIPUS_GYMFRIT;
 
   loading = signal(true);
+  savingMovie = signal(false);
   savingActivity = signal(false);
-  savingAttendanceId = signal<number | null>(null);
+  savingRatingKey = signal<string | null>(null);
+  savingAttendanceKey = signal<string | null>(null);
   deletingActivityId = signal<number | null>(null);
   deletingAttendanceId = signal<number | null>(null);
   error = signal('');
+  movieFormError = signal('');
   activityFormError = signal('');
+  ratingFormError = signal('');
   attendanceFormError = signal('');
   editFormError = signal('');
+  showObservacions = signal(false);
+  peliculas = signal<CinePelicula[]>([]);
   activitats = signal<CsopaActivitat[]>([]);
   usuarios = signal<UsuarioOption[]>([]);
-  highlightedActivitatId = signal<number | null>(null);
-  attendanceOpenId = signal<number | null>(null);
+  highlightedKey = signal<string | null>(null);
+  ratingOpenKey = signal<string | null>(null);
+  attendanceOpenKey = signal<string | null>(null);
   editOpenId = signal<number | null>(null);
-  filters = signal<CsopaFilters>({ ...EMPTY_CSOPA_FILTERS });
+  filters = signal<AssistenciaFilters>({ ...EMPTY_ASSISTENCIA_FILTERS });
   showFilters = signal(false);
-  sortColumn = signal<CsopaSortColumn>('createdAt');
+  sortColumn = signal<AssistenciaSortColumn>('createdAt');
   sortDirection = signal<SortDirection>('desc');
 
   canPublish = computed(() => {
@@ -79,12 +111,18 @@ export class CsopaPageComponent {
 
   canEdit = computed(() => this.authService.currentUser?.nombre === 'Arnau');
 
-  userOptions = computed<CsopaUserOption[]>(() => {
+  userOptions = computed<AssistenciaUserOption[]>(() => {
     const users = new Map<number, string>();
+
+    for (const pelicula of this.peliculas()) {
+      users.set(pelicula.usuarioCreadorId, pelicula.usuarioCreadorNombre);
+      for (const valoracion of pelicula.valoraciones) {
+        users.set(valoracion.usuarioId, valoracion.usuarioNombre);
+      }
+    }
 
     for (const activitat of this.activitats()) {
       users.set(activitat.usuarioCreadorId, activitat.usuarioCreadorNombre);
-
       for (const assistencia of activitat.assistencies) {
         users.set(assistencia.usuarioId, assistencia.usuarioNombre);
       }
@@ -96,17 +134,27 @@ export class CsopaPageComponent {
       .sort((left, right) => left.nombre.localeCompare(right.nombre));
   });
 
-  filteredActivitats = computed(() => {
+  rows = computed<AssistenciaRow[]>(() => [
+    ...this.peliculas().map(pelicula => this.mapPeliculaToRow(pelicula)),
+    ...this.activitats().map(activitat => this.mapActivitatToRow(activitat))
+  ]);
+
+  filteredRows = computed(() => {
     const filters = this.filters();
     const usuarioId = Number(filters.usuarioId);
-    const tipus = Number(filters.tipus);
-    const filtered = this.activitats().filter(activitat =>
-      this.matchesDateRange(activitat.createdAt, filters.fechaDesde, filters.fechaHasta) &&
-      (!usuarioId || this.matchesUser(activitat, usuarioId)) &&
-      (!tipus || activitat.tipus === tipus)
+    const filtered = this.rows().filter(row =>
+      this.matchesDateRange(row.createdAt, filters.fechaDesde, filters.fechaHasta) &&
+      (!usuarioId || this.matchesUser(row, usuarioId)) &&
+      this.matchesTipus(row, filters.tipus)
     );
 
-    return this.sortActivitats(filtered);
+    return this.sortRows(filtered);
+  });
+
+  movieForm = this.fb.group({
+    titulo: ['', [Validators.required, Validators.maxLength(300)]],
+    estirarLaSetmana: [false],
+    creepyjous: [false]
   });
 
   activityForm = this.fb.group({
@@ -114,26 +162,35 @@ export class CsopaPageComponent {
     tipus: [CSOPA_TIPUS_SOPAR, [Validators.required]]
   });
 
+  ratingForm = this.fb.group({
+    nota: ['', [Validators.required, this.notaValidator]],
+    observacion: ['', Validators.maxLength(200)]
+  });
+
   attendanceForm = this.fb.group({
     usuarioId: ['', Validators.required]
   });
 
   ngOnInit(): void {
-    this.cargarActivitats();
+    this.cargarAssistencia();
     this.cargarUsuarios();
   }
 
-  cargarActivitats(): void {
+  cargarAssistencia(): void {
     this.loading.set(true);
     this.error.set('');
 
-    this.csopaService.getAll().subscribe({
-      next: activitats => {
+    forkJoin({
+      peliculas: this.cineService.getAll(),
+      activitats: this.csopaService.getAll()
+    }).subscribe({
+      next: ({ peliculas, activitats }) => {
+        this.peliculas.set(peliculas);
         this.activitats.set(activitats);
         this.loading.set(false);
       },
       error: () => {
-        this.error.set("No s'ha pogut carregar C sopa/Gymfrit.");
+        this.error.set("No s'ha pogut carregar Assistència.");
         this.loading.set(false);
       }
     });
@@ -143,6 +200,47 @@ export class CsopaPageComponent {
     this.usuariosService.getJugadores().subscribe({
       next: usuarios => this.usuarios.set(usuarios),
       error: () => this.usuarios.set([])
+    });
+  }
+
+  publicarPelicula(): void {
+    if (!this.canPublish()) {
+      return;
+    }
+
+    if (this.movieForm.invalid) {
+      this.movieForm.markAllAsTouched();
+      this.movieFormError.set('Escriu el títol de la pel·lícula.');
+      return;
+    }
+
+    const titulo = this.movieForm.controls.titulo.value?.trim() ?? '';
+    const grupoPelicula = this.getMovieGroup();
+
+    if (!this.confirmMovieGroupDate(grupoPelicula)) {
+      return;
+    }
+
+    this.savingMovie.set(true);
+    this.movieFormError.set('');
+
+    this.cineService.create({ titulo, grupoPelicula }).subscribe({
+      next: pelicula => {
+        const key = this.getPeliculaKey(pelicula.cinePeliculaId);
+        this.peliculas.update(current => [pelicula, ...current]);
+        this.highlightedKey.set(key);
+        window.setTimeout(() => this.highlightedKey.set(null), 2500);
+        this.movieForm.reset({
+          titulo: '',
+          estirarLaSetmana: false,
+          creepyjous: false
+        });
+        this.savingMovie.set(false);
+      },
+      error: err => {
+        this.movieFormError.set(err?.error?.message ?? "No s'ha pogut publicar la pel·lícula.");
+        this.savingMovie.set(false);
+      }
     });
   }
 
@@ -168,14 +266,12 @@ export class CsopaPageComponent {
     this.savingActivity.set(true);
     this.activityFormError.set('');
 
-    this.csopaService.create({
-      tipus,
-      fecha
-    }).subscribe({
+    this.csopaService.create({ tipus, fecha }).subscribe({
       next: activitat => {
+        const key = this.getActivitatKey(activitat.csopaActivitatId);
         this.activitats.update(current => [activitat, ...current]);
-        this.highlightedActivitatId.set(activitat.csopaActivitatId);
-        window.setTimeout(() => this.highlightedActivitatId.set(null), 2500);
+        this.highlightedKey.set(key);
+        window.setTimeout(() => this.highlightedKey.set(null), 2500);
         this.activityForm.reset({
           fecha: this.getTodayInputValue(),
           tipus
@@ -189,37 +285,153 @@ export class CsopaPageComponent {
     });
   }
 
-  abrirAssistencia(activitat: CsopaActivitat): void {
+  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous', checked: boolean): void {
+    this.movieForm.patchValue({
+      estirarLaSetmana: group === 'estirarLaSetmana' ? checked : false,
+      creepyjous: group === 'creepyjous' ? checked : false
+    });
+  }
+
+  abrirValoracion(row: AssistenciaRow): void {
+    if (row.source !== 'cine' || !row.canRate) {
+      return;
+    }
+
+    this.attendanceOpenKey.set(null);
+    this.ratingForm.reset({
+      nota: '',
+      observacion: ''
+    });
+    this.ratingFormError.set('');
+    this.ratingOpenKey.set(row.key);
+  }
+
+  cancelarValoracion(): void {
+    this.ratingOpenKey.set(null);
+    this.ratingFormError.set('');
+  }
+
+  abrirAssistencia(row: AssistenciaRow): void {
     if (!this.canPublish()) {
       return;
     }
 
+    this.ratingOpenKey.set(null);
     this.editOpenId.set(null);
     this.attendanceForm.reset({ usuarioId: '' });
     this.attendanceFormError.set('');
-    this.attendanceOpenId.set(activitat.csopaActivitatId);
+    this.attendanceOpenKey.set(row.key);
   }
 
   cancelarAssistencia(): void {
-    this.attendanceOpenId.set(null);
+    this.attendanceOpenKey.set(null);
     this.attendanceFormError.set('');
   }
 
-  toggleEditar(activitat: CsopaActivitat): void {
-    if (!this.canEdit()) {
+  guardarValoracion(row: AssistenciaRow): void {
+    if (row.source !== 'cine') {
       return;
     }
 
-    this.attendanceOpenId.set(null);
+    const pelicula = row.raw as CinePelicula;
+    const raw = this.ratingForm.getRawValue();
+    const nota = this.parseNota(raw.nota ?? '');
+
+    if (this.ratingForm.invalid || nota === null) {
+      this.ratingForm.markAllAsTouched();
+      this.ratingFormError.set("La nota es obligatoria i ha d'anar de 0 a 10.");
+      return;
+    }
+
+    this.savingRatingKey.set(row.key);
+    this.ratingFormError.set('');
+
+    this.cineService.valorar(pelicula.cinePeliculaId, {
+      nota,
+      observacion: raw.observacion?.trim() || null
+    }).subscribe({
+      next: updated => {
+        this.peliculas.update(current =>
+          current.map(item => item.cinePeliculaId === updated.cinePeliculaId ? updated : item)
+        );
+        this.ratingOpenKey.set(null);
+        this.savingRatingKey.set(null);
+      },
+      error: err => {
+        this.ratingFormError.set(err?.error?.message ?? "No s'ha pogut guardar la valoracio.");
+        this.savingRatingKey.set(null);
+      }
+    });
+  }
+
+  guardarAssistencia(row: AssistenciaRow): void {
+    if (this.attendanceForm.invalid) {
+      this.attendanceForm.markAllAsTouched();
+      this.attendanceFormError.set('Selecciona un usuari.');
+      return;
+    }
+
+    const usuarioId = Number(this.attendanceForm.controls.usuarioId.value);
+    if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
+      this.attendanceFormError.set('Selecciona un usuari.');
+      return;
+    }
+
+    this.savingAttendanceKey.set(row.key);
+    this.attendanceFormError.set('');
+
+    if (row.source === 'cine') {
+      const pelicula = row.raw as CinePelicula;
+      this.cineService.marcarAsistencia(pelicula.cinePeliculaId, { usuarioId }).subscribe({
+        next: updated => {
+          this.peliculas.update(current =>
+            current.map(item => item.cinePeliculaId === updated.cinePeliculaId ? updated : item)
+          );
+          this.attendanceOpenKey.set(null);
+          this.savingAttendanceKey.set(null);
+        },
+        error: err => {
+          this.attendanceFormError.set(err?.error?.message ?? "No s'ha pogut marcar l'assistència.");
+          this.savingAttendanceKey.set(null);
+        }
+      });
+      return;
+    }
+
+    const activitat = row.raw as CsopaActivitat;
+    this.csopaService.marcarAssistencia(activitat.csopaActivitatId, { usuarioId }).subscribe({
+      next: updated => {
+        this.activitats.update(current =>
+          current.map(item => item.csopaActivitatId === updated.csopaActivitatId ? updated : item)
+        );
+        this.attendanceOpenKey.set(null);
+        this.savingAttendanceKey.set(null);
+      },
+      error: err => {
+        this.attendanceFormError.set(err?.error?.message ?? "No s'ha pogut marcar l'assistència.");
+        this.savingAttendanceKey.set(null);
+      }
+    });
+  }
+
+  toggleEditar(row: AssistenciaRow): void {
+    if (!this.canEdit() || row.source !== 'csopa') {
+      return;
+    }
+
+    const activitat = row.raw as CsopaActivitat;
+    this.attendanceOpenKey.set(null);
+    this.ratingOpenKey.set(null);
     this.editFormError.set('');
     this.editOpenId.update(current => current === activitat.csopaActivitatId ? null : activitat.csopaActivitatId);
   }
 
-  eliminarActivitat(activitat: CsopaActivitat): void {
-    if (!this.canEdit()) {
+  eliminarActivitat(row: AssistenciaRow): void {
+    if (!this.canEdit() || row.source !== 'csopa') {
       return;
     }
 
+    const activitat = row.raw as CsopaActivitat;
     if (!window.confirm(`Eliminar ${this.getTipusLabel(activitat.tipus)} del ${this.formatDate(activitat.createdAt)}?`)) {
       return;
     }
@@ -242,11 +454,12 @@ export class CsopaPageComponent {
     });
   }
 
-  eliminarAssistencia(activitat: CsopaActivitat, assistenciaId: number): void {
-    if (!this.canEdit()) {
+  eliminarAssistencia(row: AssistenciaRow, assistenciaId: number): void {
+    if (!this.canEdit() || row.source !== 'csopa') {
       return;
     }
 
+    const activitat = row.raw as CsopaActivitat;
     this.deletingAttendanceId.set(assistenciaId);
     this.editFormError.set('');
 
@@ -258,52 +471,35 @@ export class CsopaPageComponent {
         this.deletingAttendanceId.set(null);
       },
       error: err => {
-        this.editFormError.set(err?.error?.message ?? "No s'ha pogut treure l'assistencia.");
+        this.editFormError.set(err?.error?.message ?? "No s'ha pogut treure l'assistència.");
         this.deletingAttendanceId.set(null);
       }
     });
   }
 
-  guardarAssistencia(activitat: CsopaActivitat): void {
-    if (this.attendanceForm.invalid) {
-      this.attendanceForm.markAllAsTouched();
-      this.attendanceFormError.set('Selecciona un usuari.');
-      return;
-    }
-
-    const usuarioId = Number(this.attendanceForm.controls.usuarioId.value);
-    if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
-      this.attendanceFormError.set('Selecciona un usuari.');
-      return;
-    }
-
-    this.savingAttendanceId.set(activitat.csopaActivitatId);
-    this.attendanceFormError.set('');
-
-    this.csopaService.marcarAssistencia(activitat.csopaActivitatId, { usuarioId }).subscribe({
-      next: updated => {
-        this.activitats.update(current =>
-          current.map(item => item.csopaActivitatId === updated.csopaActivitatId ? updated : item)
-        );
-        this.attendanceOpenId.set(null);
-        this.savingAttendanceId.set(null);
-      },
-      error: err => {
-        this.attendanceFormError.set(err?.error?.message ?? "No s'ha pogut marcar l'assistencia.");
-        this.savingAttendanceId.set(null);
-      }
-    });
+  toggleObservacions(): void {
+    this.showObservacions.update(value => !value);
   }
 
-  updateFilter<K extends keyof CsopaFilters>(key: K, value: string): void {
+  updateFilter<K extends keyof AssistenciaFilters>(key: K, value: string): void {
     this.filters.update(current => ({
       ...current,
       [key]: value
     }));
+
+    if (key === 'scoreUsuarioId' && value) {
+      this.sortColumn.set('userNota');
+      this.sortDirection.set('desc');
+    }
+
+    if (key === 'scoreUsuarioId' && !value && this.sortColumn() === 'userNota') {
+      this.sortColumn.set('createdAt');
+      this.sortDirection.set('desc');
+    }
   }
 
   clearFilters(): void {
-    this.filters.set({ ...EMPTY_CSOPA_FILTERS });
+    this.filters.set({ ...EMPTY_ASSISTENCIA_FILTERS });
     this.sortColumn.set('createdAt');
     this.sortDirection.set('desc');
   }
@@ -318,10 +514,14 @@ export class CsopaPageComponent {
     this.showFilters.set(true);
   }
 
-  sortBy(column: CsopaSortColumn): void {
+  sortBy(column: AssistenciaSortColumn): void {
+    if (column === 'userNota' && !this.filters().scoreUsuarioId) {
+      return;
+    }
+
     if (this.sortColumn() !== column) {
       this.sortColumn.set(column);
-      this.sortDirection.set(column === 'usuario' ? 'asc' : 'desc');
+      this.sortDirection.set(column === 'titol' ? 'asc' : 'desc');
       return;
     }
 
@@ -335,16 +535,37 @@ export class CsopaPageComponent {
     });
   }
 
-  trackByActivitatId(_: number, activitat: CsopaActivitat): number {
-    return activitat.csopaActivitatId;
+  trackByRowKey(_: number, row: AssistenciaRow): string {
+    return row.key;
   }
 
   formatDate(value: string): string {
     return new Date(value).toLocaleDateString('ca-ES');
   }
 
-  formatAssistencies(activitat: CsopaActivitat): string {
-    return activitat.assistencies.map(assistencia => assistencia.usuarioNombre).join(', ');
+  formatPrimaryValue(row: AssistenciaRow): string {
+    if (row.source === 'cine') {
+      if (row.mediaNota === null) {
+        return '-';
+      }
+
+      return `${this.formatNumber(row.mediaNota)} (${this.formatValoraciones(row.raw as CinePelicula)})`;
+    }
+
+    return String(row.assistenciesCount);
+  }
+
+  formatUserNota(row: AssistenciaRow): string {
+    const nota = this.getSelectedUserNota(row);
+    return nota === null ? '-' : this.formatNumber(nota);
+  }
+
+  getSortIndicator(column: AssistenciaSortColumn): string {
+    if (this.sortColumn() !== column) {
+      return '';
+    }
+
+    return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
   }
 
   getTipusLabel(tipus: number): string {
@@ -355,12 +576,50 @@ export class CsopaPageComponent {
     return tipus === CSOPA_TIPUS_GYMFRIT ? 'assets/gymfrit.png' : 'assets/sopar.png';
   }
 
-  getSortIndicator(column: CsopaSortColumn): string {
-    if (this.sortColumn() !== column) {
-      return '';
-    }
+  getCsopaAssistencies(row: AssistenciaRow) {
+    return row.source === 'csopa' ? (row.raw as CsopaActivitat).assistencies : [];
+  }
 
-    return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
+  private mapPeliculaToRow(pelicula: CinePelicula): AssistenciaRow {
+    return {
+      key: this.getPeliculaKey(pelicula.cinePeliculaId),
+      source: 'cine',
+      id: pelicula.cinePeliculaId,
+      createdAt: pelicula.createdAt,
+      titol: pelicula.titulo,
+      tipus: pelicula.grupoPelicula === 2 ? 'cine-por' : pelicula.grupoPelicula === 1 ? 'cine-diumenge' : 'cine',
+      tipusLabel: pelicula.grupoPelicula === 2 ? 'Creepyjous' : pelicula.grupoPelicula === 1 ? 'Estirar la setmana' : 'Pel·lícula',
+      tipusIcon: pelicula.grupoPelicula === 2 ? 'assets/terror.png' : pelicula.grupoPelicula === 1 ? 'assets/diumenge.png' : '',
+      usuarioCreadorId: pelicula.usuarioCreadorId,
+      usuarioCreadorNombre: pelicula.usuarioCreadorNombre,
+      assistenciesCount: pelicula.valoraciones.length,
+      assistenciesText: this.formatAssistenciesSenseNota(pelicula),
+      mediaNota: pelicula.mediaNota ?? null,
+      observacionsText: this.formatObservacions(pelicula),
+      canRate: pelicula.puedeValorar,
+      raw: pelicula
+    };
+  }
+
+  private mapActivitatToRow(activitat: CsopaActivitat): AssistenciaRow {
+    return {
+      key: this.getActivitatKey(activitat.csopaActivitatId),
+      source: 'csopa',
+      id: activitat.csopaActivitatId,
+      createdAt: activitat.createdAt,
+      titol: this.getTipusLabel(activitat.tipus),
+      tipus: activitat.tipus === CSOPA_TIPUS_GYMFRIT ? 'gymfrit' : 'sopar',
+      tipusLabel: this.getTipusLabel(activitat.tipus),
+      tipusIcon: this.getTipusIcon(activitat.tipus),
+      usuarioCreadorId: activitat.usuarioCreadorId,
+      usuarioCreadorNombre: activitat.usuarioCreadorNombre,
+      assistenciesCount: activitat.assistencies.length,
+      assistenciesText: activitat.assistencies.map(assistencia => assistencia.usuarioNombre).join(', '),
+      mediaNota: null,
+      observacionsText: '-',
+      canRate: false,
+      raw: activitat
+    };
   }
 
   private matchesDateRange(value: string, fechaDesde: string, fechaHasta: string): boolean {
@@ -377,22 +636,47 @@ export class CsopaPageComponent {
     return true;
   }
 
-  private matchesUser(activitat: CsopaActivitat, usuarioId: number): boolean {
-    return activitat.usuarioCreadorId === usuarioId ||
-      activitat.assistencies.some(assistencia => assistencia.usuarioId === usuarioId);
+  private matchesUser(row: AssistenciaRow, usuarioId: number): boolean {
+    if (row.usuarioCreadorId === usuarioId) {
+      return true;
+    }
+
+    if (row.source === 'cine') {
+      return (row.raw as CinePelicula).valoraciones.some(valoracion => valoracion.usuarioId === usuarioId);
+    }
+
+    return (row.raw as CsopaActivitat).assistencies.some(assistencia => assistencia.usuarioId === usuarioId);
   }
 
-  private sortActivitats(activitats: CsopaActivitat[]): CsopaActivitat[] {
+  private matchesTipus(row: AssistenciaRow, tipus: string): boolean {
+    if (!tipus) {
+      return true;
+    }
+
+    if (tipus === 'cine') {
+      return row.source === 'cine';
+    }
+
+    return row.tipus === tipus;
+  }
+
+  private sortRows(rows: AssistenciaRow[]): AssistenciaRow[] {
     const column = this.sortColumn();
     const direction = this.sortDirection();
     const multiplier = direction === 'asc' ? 1 : -1;
 
-    return [...activitats].sort((left, right) => {
+    return [...rows].sort((left, right) => {
       switch (column) {
-        case 'usuario':
-          return left.usuarioCreadorNombre.localeCompare(right.usuarioCreadorNombre) * multiplier;
+        case 'titol':
+          return left.titol.localeCompare(right.titol) * multiplier;
         case 'assistencies':
-          return (left.assistencies.length - right.assistencies.length) * multiplier ||
+          return (left.assistenciesCount - right.assistenciesCount) * multiplier ||
+            right.createdAt.localeCompare(left.createdAt);
+        case 'mediaNota':
+          return this.compareNullableNumbers(left.mediaNota, right.mediaNota) * multiplier ||
+            right.createdAt.localeCompare(left.createdAt);
+        case 'userNota':
+          return this.compareNullableNumbers(this.getSelectedUserNota(left), this.getSelectedUserNota(right)) * multiplier ||
             right.createdAt.localeCompare(left.createdAt);
         case 'createdAt':
         default:
@@ -401,15 +685,101 @@ export class CsopaPageComponent {
     });
   }
 
+  private getSelectedUserNota(row: AssistenciaRow): number | null {
+    const usuarioId = Number(this.filters().scoreUsuarioId);
+    if (!usuarioId || row.source !== 'cine') {
+      return null;
+    }
+
+    return (row.raw as CinePelicula).valoraciones.find(valoracion => valoracion.usuarioId === usuarioId)?.nota ?? null;
+  }
+
+  private formatValoraciones(pelicula: CinePelicula): string {
+    return pelicula.valoraciones
+      .filter(valoracion => valoracion.nota !== null && valoracion.nota !== undefined)
+      .map(valoracion => `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota!)}`)
+      .join(', ');
+  }
+
+  private formatAssistenciesSenseNota(pelicula: CinePelicula): string {
+    return pelicula.valoraciones
+      .filter(valoracion => valoracion.nota === null || valoracion.nota === undefined)
+      .map(valoracion => valoracion.usuarioNombre)
+      .join(', ');
+  }
+
+  private formatObservacions(pelicula: CinePelicula): string {
+    const observacions = pelicula.valoraciones
+      .filter(valoracion => !!valoracion.observacion)
+      .map(valoracion => `${valoracion.usuarioNombre}: ${valoracion.observacion}`);
+
+    return observacions.length > 0 ? observacions.join(' | ') : '-';
+  }
+
+  private formatNumber(value: number): string {
+    return new Intl.NumberFormat('ca-ES', {
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
+  private compareNullableNumbers(left: number | null, right: number | null): number {
+    if (left === null && right === null) {
+      return 0;
+    }
+
+    if (left === null) {
+      return -1;
+    }
+
+    if (right === null) {
+      return 1;
+    }
+
+    return left - right;
+  }
+
+  private parseNota(value: string): number | null {
+    const normalized = value.trim().replace(',', '.');
+    const parsed = Number(normalized);
+
+    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10 ? parsed : null;
+  }
+
+  private getMovieGroup(): number | null {
+    if (this.movieForm.controls.estirarLaSetmana.value) {
+      return 1;
+    }
+
+    if (this.movieForm.controls.creepyjous.value) {
+      return 2;
+    }
+
+    return null;
+  }
+
+  private confirmMovieGroupDate(grupoPelicula: number | null): boolean {
+    const day = new Date().getDay();
+
+    if (grupoPelicula === 1 && day !== 0) {
+      return window.confirm("Estàs publicant un 'Estirar la setmana' en una data que no és diumenge. Vols continuar?");
+    }
+
+    if (grupoPelicula === 2 && day !== 4) {
+      return window.confirm("Estàs publicant un 'Creepyjous' en una data que no és dijous. Vols continuar?");
+    }
+
+    return true;
+  }
+
   private confirmActivityDate(tipus: number, fecha: string): boolean {
     const day = new Date(`${fecha}T12:00:00`).getDay();
 
     if (tipus === CSOPA_TIPUS_SOPAR && day !== 2) {
-      return window.confirm("Estas publicant un sopar en una data que no es dimarts. Vols continuar?");
+      return window.confirm("Estàs publicant un sopar en una data que no és dimarts. Vols continuar?");
     }
 
     if (tipus === CSOPA_TIPUS_GYMFRIT && day !== 4) {
-      return window.confirm("Estas publicant un Gymfrit en una data que no es dijous. Vols continuar?");
+      return window.confirm("Estàs publicant un Gymfrit en una data que no és dijous. Vols continuar?");
     }
 
     return true;
@@ -422,5 +792,27 @@ export class CsopaPageComponent {
     const day = String(today.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  private getPeliculaKey(id: number): string {
+    return `cine-${id}`;
+  }
+
+  private getActivitatKey(id: number): string {
+    return `csopa-${id}`;
+  }
+
+  private notaValidator(control: AbstractControl): ValidationErrors | null {
+    const value = String(control.value ?? '').trim();
+
+    if (!value) {
+      return null;
+    }
+
+    const parsed = Number(value.replace(',', '.'));
+
+    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10
+      ? null
+      : { notaRange: true };
   }
 }
