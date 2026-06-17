@@ -298,7 +298,7 @@ h1 {
 }
 
 .activity-title,
-.attendance-count {
+.attendance-primary {
   display: block;
   font-weight: 700;
   color: #101828;

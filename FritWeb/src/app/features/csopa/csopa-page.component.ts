@@ -45,6 +45,7 @@ interface AssistenciaRow {
   usuarioCreadorId: number;
   usuarioCreadorNombre: string;
   assistenciesCount: number;
+  assistenciesPrimaryText: string;
   assistenciesText: string;
   mediaNota: number | null;
   observacionsText: string;
@@ -649,6 +650,7 @@ export class CsopaPageComponent {
       usuarioCreadorId: pelicula.usuarioCreadorId,
       usuarioCreadorNombre: pelicula.usuarioCreadorNombre,
       assistenciesCount: pelicula.valoraciones.length,
+      assistenciesPrimaryText: this.formatAssistenciesAmbNota(pelicula),
       assistenciesText: this.formatAssistenciesSenseNota(pelicula),
       mediaNota: pelicula.mediaNota ?? null,
       observacionsText: this.formatObservacions(pelicula),
@@ -670,7 +672,8 @@ export class CsopaPageComponent {
       usuarioCreadorId: activitat.usuarioCreadorId,
       usuarioCreadorNombre: activitat.usuarioCreadorNombre,
       assistenciesCount: activitat.assistencies.length,
-      assistenciesText: activitat.assistencies.map(assistencia => assistencia.usuarioNombre).join(', '),
+      assistenciesPrimaryText: activitat.assistencies.map(assistencia => assistencia.usuarioNombre).join(', '),
+      assistenciesText: '',
       mediaNota: null,
       observacionsText: '-',
       canRate: false,
@@ -754,6 +757,13 @@ export class CsopaPageComponent {
     return pelicula.valoraciones
       .filter(valoracion => valoracion.nota !== null && valoracion.nota !== undefined)
       .map(valoracion => `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota!)}`)
+      .join(', ');
+  }
+
+  private formatAssistenciesAmbNota(pelicula: CinePelicula): string {
+    return pelicula.valoraciones
+      .filter(valoracion => valoracion.nota !== null && valoracion.nota !== undefined)
+      .map(valoracion => valoracion.usuarioNombre)
       .join(', ');
   }
 

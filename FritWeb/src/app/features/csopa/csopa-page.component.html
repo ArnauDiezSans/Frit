@@ -212,7 +212,9 @@
                 <span class="activity-subline">{{ row.tipusLabel }}</span>
               </td>
               <td data-label="Assistents">
-                <span class="attendance-count">{{ row.assistenciesCount }}</span>
+                <span class="attendance-primary">
+                  <span *ngIf="row.assistenciesPrimaryText">{{ row.assistenciesPrimaryText }}</span>
+                </span>
                 <span class="attendance-subline" *ngIf="row.assistenciesText">
                   {{ row.assistenciesText }}
                 </span>
