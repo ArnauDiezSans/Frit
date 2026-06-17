@@ -145,6 +145,12 @@ h1 {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+.movie-form > .primary-button,
+.activity-form > .primary-button {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
 .movie-group-options {
   grid-column: 1 / -1;
   display: flex;
@@ -170,45 +176,50 @@ h1 {
 }
 
 .activity-form {
-  grid-template-columns: minmax(150px, 190px) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .type-options {
+  grid-column: 1 / -1;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+  min-height: 42px;
 }
 
 .type-option {
-  min-height: 42px;
-  padding: 8px 10px;
+  min-height: auto;
+  padding: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #d0d5dd;
-  border-radius: 12px;
-  background: #ffffff;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #344054;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .type-option-active {
-  border-color: #0f766e;
-  background: #ecfdf5;
-  color: #0f766e;
+  color: #344054;
 }
 
 .type-option input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
+  position: static;
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+  pointer-events: auto;
+  accent-color: #0f766e;
 }
 
 .type-option img {
-  width: 24px;
-  height: 24px;
+  display: none;
+  width: 0;
+  height: 0;
   object-fit: contain;
 }
 
