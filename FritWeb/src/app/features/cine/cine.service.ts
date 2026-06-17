@@ -32,6 +32,7 @@ export interface CinePelicula {
 export interface CinePeliculaCreate {
   titulo: string;
   grupoPelicula?: number | null;
+  fecha: string;
 }
 
 export interface CineValoracionCreate {

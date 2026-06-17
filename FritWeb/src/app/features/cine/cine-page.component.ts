@@ -103,6 +103,7 @@ export class CinePageComponent {
 
   movieForm = this.fb.group({
     titulo: ['', [Validators.required, Validators.maxLength(300)]],
+    fecha: [this.getTodayInputValue(), Validators.required],
     estirarLaSetmana: [false],
     creepyjous: [false]
   });
@@ -156,6 +157,7 @@ export class CinePageComponent {
     }
 
     const titulo = this.movieForm.controls.titulo.value?.trim() ?? '';
+    const fecha = this.movieForm.controls.fecha.value ?? this.getTodayInputValue();
     const grupoPelicula = this.getMovieGroup();
 
     if (!this.confirmMovieGroupDate(grupoPelicula)) {
@@ -165,13 +167,14 @@ export class CinePageComponent {
     this.savingMovie.set(true);
     this.movieFormError.set('');
 
-    this.cineService.create({ titulo, grupoPelicula }).subscribe({
+    this.cineService.create({ titulo, grupoPelicula, fecha }).subscribe({
       next: pelicula => {
         this.peliculas.update(current => [pelicula, ...current]);
         this.highlightedPeliculaId.set(pelicula.cinePeliculaId);
         window.setTimeout(() => this.highlightedPeliculaId.set(null), 2500);
         this.movieForm.reset({
           titulo: '',
+          fecha: this.getTodayInputValue(),
           estirarLaSetmana: false,
           creepyjous: false
         });
@@ -496,6 +499,15 @@ export class CinePageComponent {
     }
 
     return null;
+  }
+
+  private getTodayInputValue(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
   }
 
   private confirmMovieGroupDate(grupoPelicula: number | null): boolean {

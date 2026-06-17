@@ -36,6 +36,9 @@ public class CinePeliculaCreateDto
 
     [Range(1, 2)]
     public int? GrupoPelicula { get; set; }
+
+    [Required]
+    public DateOnly? Fecha { get; set; }
 }
 
 public class CineValoracionCreateDto

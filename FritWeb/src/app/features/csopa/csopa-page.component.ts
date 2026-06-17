@@ -153,6 +153,7 @@ export class CsopaPageComponent {
 
   movieForm = this.fb.group({
     titulo: ['', [Validators.required, Validators.maxLength(300)]],
+    fecha: [this.getTodayInputValue(), Validators.required],
     estirarLaSetmana: [false],
     creepyjous: [false]
   });
@@ -215,16 +216,17 @@ export class CsopaPageComponent {
     }
 
     const titulo = this.movieForm.controls.titulo.value?.trim() ?? '';
+    const fecha = this.movieForm.controls.fecha.value ?? this.getTodayInputValue();
     const grupoPelicula = this.getMovieGroup();
 
-    if (!this.confirmMovieGroupDate(grupoPelicula)) {
+    if (!this.confirmMovieGroupDate(grupoPelicula, fecha)) {
       return;
     }
 
     this.savingMovie.set(true);
     this.movieFormError.set('');
 
-    this.cineService.create({ titulo, grupoPelicula }).subscribe({
+    this.cineService.create({ titulo, grupoPelicula, fecha }).subscribe({
       next: pelicula => {
         const key = this.getPeliculaKey(pelicula.cinePeliculaId);
         this.peliculas.update(current => [pelicula, ...current]);
@@ -232,6 +234,7 @@ export class CsopaPageComponent {
         window.setTimeout(() => this.highlightedKey.set(null), 2500);
         this.movieForm.reset({
           titulo: '',
+          fecha: this.getTodayInputValue(),
           estirarLaSetmana: false,
           creepyjous: false
         });
@@ -289,6 +292,12 @@ export class CsopaPageComponent {
     this.movieForm.patchValue({
       estirarLaSetmana: group === 'estirarLaSetmana' ? checked : false,
       creepyjous: group === 'creepyjous' ? checked : false
+    });
+  }
+
+  updateActivityType(tipus: number, checked: boolean): void {
+    this.activityForm.patchValue({
+      tipus: checked ? tipus : null
     });
   }
 
@@ -757,8 +766,8 @@ export class CsopaPageComponent {
     return null;
   }
 
-  private confirmMovieGroupDate(grupoPelicula: number | null): boolean {
-    const day = new Date().getDay();
+  private confirmMovieGroupDate(grupoPelicula: number | null, fecha: string): boolean {
+    const day = new Date(`${fecha}T12:00:00`).getDay();
 
     if (grupoPelicula === 1 && day !== 0) {
       return window.confirm("Estàs publicant un 'Estirar la setmana' en una data que no és diumenge. Vols continuar?");

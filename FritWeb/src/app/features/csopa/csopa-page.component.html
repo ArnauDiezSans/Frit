@@ -28,6 +28,11 @@
           <input type="text" formControlName="titulo" maxlength="300" autocomplete="off" />
         </label>
 
+        <label class="form-field date-field">
+          <span>Data</span>
+          <input type="date" formControlName="fecha" />
+        </label>
+
         <div class="movie-group-options">
           <label class="checkbox-field">
             <input
@@ -63,13 +68,19 @@
 
         <div class="type-options">
           <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusSopar">
-            <input type="radio" formControlName="tipus" [value]="tipusSopar" />
+            <input
+              type="checkbox"
+              [checked]="activityForm.controls.tipus.value === tipusSopar"
+              (change)="updateActivityType(tipusSopar, $any($event.target).checked)" />
             <img src="assets/sopar.png" alt="" />
             <span>Sopar</span>
           </label>
 
           <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusGymfrit">
-            <input type="radio" formControlName="tipus" [value]="tipusGymfrit" />
+            <input
+              type="checkbox"
+              [checked]="activityForm.controls.tipus.value === tipusGymfrit"
+              (change)="updateActivityType(tipusGymfrit, $any($event.target).checked)" />
             <img src="assets/gymfrit.png" alt="" />
             <span>Gymfrit</span>
           </label>
