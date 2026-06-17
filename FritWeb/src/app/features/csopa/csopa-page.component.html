@@ -236,13 +236,13 @@
                     Assistència
                   </button>
                   <button
-                    *ngIf="row.source === 'csopa' && canEdit()"
+                    *ngIf="canEdit()"
                     type="button"
                     class="secondary-button small-button"
                     (click)="toggleEditar(row)">
                     Editar
                   </button>
-                  <span class="status-text" *ngIf="!row.canRate && !canPublish() && !(row.source === 'csopa' && canEdit())">-</span>
+                  <span class="status-text" *ngIf="!row.canRate && !canPublish() && !canEdit()">-</span>
                 </div>
               </td>
               <td *ngIf="showObservacions()" data-label="Observacions">
@@ -300,22 +300,22 @@
               </td>
             </tr>
 
-            <tr class="detail-row" *ngIf="row.source === 'csopa' && editOpenId() === row.id">
+            <tr class="detail-row" *ngIf="editOpenKey() === row.key">
               <td [attr.colspan]="(showObservacions() ? 8 : 7) + (filters().scoreUsuarioId ? 1 : 0)">
                 <div class="edit-panel">
                   <div class="edit-attendance-list">
                     <span class="edit-label">Assistents</span>
-                    <div class="edit-empty" *ngIf="getCsopaAssistencies(row).length === 0">
+                    <div class="edit-empty" *ngIf="getEditAssistencies(row).length === 0">
                       Sense assistents
                     </div>
-                    <div class="edit-attendance-item" *ngFor="let assistencia of getCsopaAssistencies(row)">
-                      <span>{{ assistencia.usuarioNombre }}</span>
+                    <div class="edit-attendance-item" *ngFor="let assistencia of getEditAssistencies(row)">
+                      <span>{{ assistencia.nombre }}</span>
                       <button
                         type="button"
                         class="ghost-button small-button"
-                        [disabled]="deletingAttendanceId() === assistencia.csopaAssistenciaId"
-                        (click)="eliminarAssistencia(row, assistencia.csopaAssistenciaId)">
-                        {{ deletingAttendanceId() === assistencia.csopaAssistenciaId ? 'Traient...' : 'Treure' }}
+                        [disabled]="deletingAttendanceKey() === row.key + '-' + assistencia.id"
+                        (click)="eliminarAssistencia(row, assistencia.id)">
+                        {{ deletingAttendanceKey() === row.key + '-' + assistencia.id ? 'Traient...' : 'Treure' }}
                       </button>
                     </div>
                   </div>
@@ -323,9 +323,9 @@
                   <button
                     type="button"
                     class="danger-button"
-                    [disabled]="deletingActivityId() === row.id"
-                    (click)="eliminarActivitat(row)">
-                    {{ deletingActivityId() === row.id ? 'Eliminant...' : 'Eliminar activitat' }}
+                    [disabled]="deletingRowKey() === row.key"
+                    (click)="eliminarRegistre(row)">
+                    {{ deletingRowKey() === row.key ? 'Eliminant...' : 'Eliminar registre' }}
                   </button>
                 </div>
 

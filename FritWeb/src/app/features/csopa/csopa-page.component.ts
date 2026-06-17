@@ -326,7 +326,7 @@ export class CsopaPageComponent {
     }
 
     this.ratingOpenKey.set(null);
-    this.editOpenId.set(null);
+    this.editOpenKey.set(null);
     this.attendanceForm.reset({ usuarioId: '' });
     this.attendanceFormError.set('');
     this.attendanceOpenKey.set(row.key);
@@ -489,16 +489,34 @@ export class CsopaPageComponent {
     this.deletingAttendanceKey.set(attendanceKey);
     this.editFormError.set('');
 
+    if (row.source === 'cine') {
+      const pelicula = row.raw as CinePelicula;
+      this.cineService.deleteValoracion(pelicula.cinePeliculaId, assistenciaId).subscribe({
+        next: updated => {
+          this.peliculas.update(current =>
+            current.map(item => item.cinePeliculaId === updated.cinePeliculaId ? updated : item)
+          );
+          this.deletingAttendanceKey.set(null);
+        },
+        error: err => {
+          this.editFormError.set(err?.error?.message ?? "No s'ha pogut treure l'assistència.");
+          this.deletingAttendanceKey.set(null);
+        }
+      });
+      return;
+    }
+
+    const activitat = row.raw as CsopaActivitat;
     this.csopaService.deleteAssistencia(activitat.csopaActivitatId, assistenciaId).subscribe({
       next: updated => {
         this.activitats.update(current =>
           current.map(item => item.csopaActivitatId === updated.csopaActivitatId ? updated : item)
         );
-        this.deletingAttendanceId.set(null);
+        this.deletingAttendanceKey.set(null);
       },
       error: err => {
         this.editFormError.set(err?.error?.message ?? "No s'ha pogut treure l'assistència.");
-        this.deletingAttendanceId.set(null);
+        this.deletingAttendanceKey.set(null);
       }
     });
   }
@@ -602,8 +620,20 @@ export class CsopaPageComponent {
     return tipus === CSOPA_TIPUS_GYMFRIT ? 'assets/gymfrit.png' : 'assets/sopar.png';
   }
 
-  getCsopaAssistencies(row: AssistenciaRow) {
-    return row.source === 'csopa' ? (row.raw as CsopaActivitat).assistencies : [];
+  getEditAssistencies(row: AssistenciaRow): { id: number; nombre: string }[] {
+    if (row.source === 'cine') {
+      return (row.raw as CinePelicula).valoraciones.map(valoracion => ({
+        id: valoracion.cineValoracionId,
+        nombre: valoracion.nota === null || valoracion.nota === undefined
+          ? valoracion.usuarioNombre
+          : `${valoracion.usuarioNombre} ${this.formatNumber(valoracion.nota)}`
+      }));
+    }
+
+    return (row.raw as CsopaActivitat).assistencies.map(assistencia => ({
+      id: assistencia.csopaAssistenciaId,
+      nombre: assistencia.usuarioNombre
+    }));
   }
 
   private mapPeliculaToRow(pelicula: CinePelicula): AssistenciaRow {
