@@ -83,8 +83,8 @@ export class CsopaPageComponent {
   savingActivity = signal(false);
   savingRatingKey = signal<string | null>(null);
   savingAttendanceKey = signal<string | null>(null);
-  deletingActivityId = signal<number | null>(null);
-  deletingAttendanceId = signal<number | null>(null);
+  deletingRowKey = signal<string | null>(null);
+  deletingAttendanceKey = signal<string | null>(null);
   error = signal('');
   movieFormError = signal('');
   activityFormError = signal('');
@@ -98,7 +98,7 @@ export class CsopaPageComponent {
   highlightedKey = signal<string | null>(null);
   ratingOpenKey = signal<string | null>(null);
   attendanceOpenKey = signal<string | null>(null);
-  editOpenId = signal<number | null>(null);
+  editOpenKey = signal<string | null>(null);
   filters = signal<AssistenciaFilters>({ ...EMPTY_ASSISTENCIA_FILTERS });
   showFilters = signal(false);
   sortColumn = signal<AssistenciaSortColumn>('createdAt');
@@ -424,52 +424,69 @@ export class CsopaPageComponent {
   }
 
   toggleEditar(row: AssistenciaRow): void {
-    if (!this.canEdit() || row.source !== 'csopa') {
+    if (!this.canEdit()) {
       return;
     }
 
-    const activitat = row.raw as CsopaActivitat;
     this.attendanceOpenKey.set(null);
     this.ratingOpenKey.set(null);
     this.editFormError.set('');
-    this.editOpenId.update(current => current === activitat.csopaActivitatId ? null : activitat.csopaActivitatId);
+    this.editOpenKey.update(current => current === row.key ? null : row.key);
   }
 
-  eliminarActivitat(row: AssistenciaRow): void {
-    if (!this.canEdit() || row.source !== 'csopa') {
+  eliminarRegistre(row: AssistenciaRow): void {
+    if (!this.canEdit()) {
+      return;
+    }
+
+    if (!window.confirm(`Eliminar ${row.tipusLabel} del ${this.formatDate(row.createdAt)}?`)) {
+      return;
+    }
+
+    this.deletingRowKey.set(row.key);
+    this.editFormError.set('');
+
+    if (row.source === 'cine') {
+      const pelicula = row.raw as CinePelicula;
+      this.cineService.deletePelicula(pelicula.cinePeliculaId).subscribe({
+        next: () => {
+          this.peliculas.update(current =>
+            current.filter(item => item.cinePeliculaId !== pelicula.cinePeliculaId)
+          );
+          this.editOpenKey.set(null);
+          this.deletingRowKey.set(null);
+        },
+        error: err => {
+          this.editFormError.set(err?.error?.message ?? "No s'ha pogut eliminar la pel·lícula.");
+          this.deletingRowKey.set(null);
+        }
+      });
       return;
     }
 
     const activitat = row.raw as CsopaActivitat;
-    if (!window.confirm(`Eliminar ${this.getTipusLabel(activitat.tipus)} del ${this.formatDate(activitat.createdAt)}?`)) {
-      return;
-    }
-
-    this.deletingActivityId.set(activitat.csopaActivitatId);
-    this.editFormError.set('');
-
     this.csopaService.deleteActivitat(activitat.csopaActivitatId).subscribe({
       next: () => {
         this.activitats.update(current =>
           current.filter(item => item.csopaActivitatId !== activitat.csopaActivitatId)
         );
-        this.editOpenId.set(null);
-        this.deletingActivityId.set(null);
+        this.editOpenKey.set(null);
+        this.deletingRowKey.set(null);
       },
       error: err => {
         this.editFormError.set(err?.error?.message ?? "No s'ha pogut eliminar l'activitat.");
-        this.deletingActivityId.set(null);
+        this.deletingRowKey.set(null);
       }
     });
   }
 
   eliminarAssistencia(row: AssistenciaRow, assistenciaId: number): void {
-    if (!this.canEdit() || row.source !== 'csopa') {
+    if (!this.canEdit()) {
       return;
     }
 
-    const activitat = row.raw as CsopaActivitat;
-    this.deletingAttendanceId.set(assistenciaId);
+    const attendanceKey = `${row.key}-${assistenciaId}`;
+    this.deletingAttendanceKey.set(attendanceKey);
     this.editFormError.set('');
 
     this.csopaService.deleteAssistencia(activitat.csopaActivitatId, assistenciaId).subscribe({

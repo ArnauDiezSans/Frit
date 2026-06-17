@@ -213,6 +213,65 @@ public class CineService
         return (true, null, ToDto(pelicula, currentUsuarioId, DateTime.UtcNow));
     }
 
+    public async Task<(bool Success, string? Error)> DeletePeliculaAsync(int peliculaId, int currentUsuarioId)
+    {
+        var currentUsuario = await _context.Usuarios.FirstOrDefaultAsync(usuario => usuario.UsuarioId == currentUsuarioId);
+
+        if (!IsCineAdmin(currentUsuario))
+        {
+            return (false, "No tens permisos per editar Cine.");
+        }
+
+        var pelicula = await _context.CinePeliculas.FirstOrDefaultAsync(item => item.CinePeliculaId == peliculaId);
+
+        if (pelicula is null)
+        {
+            return (false, "Pel·lícula no trobada.");
+        }
+
+        _context.CinePeliculas.Remove(pelicula);
+        await _context.SaveChangesAsync();
+
+        return (true, null);
+    }
+
+    public async Task<(bool Success, string? Error, CinePeliculaDto? Pelicula)> DeleteValoracionAsync(
+        int peliculaId,
+        int valoracionId,
+        int currentUsuarioId)
+    {
+        var currentUsuario = await _context.Usuarios.FirstOrDefaultAsync(usuario => usuario.UsuarioId == currentUsuarioId);
+
+        if (!IsCineAdmin(currentUsuario))
+        {
+            return (false, "No tens permisos per editar Cine.", null);
+        }
+
+        var pelicula = await _context.CinePeliculas
+            .Include(item => item.UsuarioCreador)
+            .Include(item => item.Valoraciones)
+                .ThenInclude(valoracion => valoracion.Usuario)
+            .FirstOrDefaultAsync(item => item.CinePeliculaId == peliculaId);
+
+        if (pelicula is null)
+        {
+            return (false, "Pel·lícula no trobada.", null);
+        }
+
+        var valoracion = pelicula.Valoraciones.FirstOrDefault(item => item.CineValoracionId == valoracionId);
+
+        if (valoracion is null)
+        {
+            return (false, "Assistència no trobada.", null);
+        }
+
+        _context.CineValoraciones.Remove(valoracion);
+        await _context.SaveChangesAsync();
+        pelicula.Valoraciones.Remove(valoracion);
+
+        return (true, null, ToDto(pelicula, currentUsuarioId, DateTime.UtcNow));
+    }
+
     private static CinePeliculaDto ToDto(CinePelicula pelicula, int usuarioId, DateTime now)
     {
         var cierraAt = pelicula.CreatedAt.Add(VotingWindow);
@@ -252,5 +311,10 @@ public class CineService
                 })
                 .ToList()
         };
+    }
+
+    private static bool IsCineAdmin(Usuario? usuario)
+    {
+        return usuario is not null && string.Equals(usuario.Nombre, "Arnau", StringComparison.Ordinal);
     }
 }

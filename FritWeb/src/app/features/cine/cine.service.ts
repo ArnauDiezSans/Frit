@@ -96,6 +96,32 @@ export class CineService {
     );
   }
 
+  deletePelicula(peliculaId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${peliculaId}`, {
+      withCredentials: true
+    }).pipe(
+      tap(() => {
+        this.dataStore.update<CinePelicula[]>(this.cacheKey, current =>
+          (current ?? []).filter(pelicula => pelicula.cinePeliculaId !== peliculaId)
+        );
+        this.invalidateHallOfFame();
+      })
+    );
+  }
+
+  deleteValoracion(peliculaId: number, valoracionId: number): Observable<CinePelicula> {
+    return this.http.delete<CinePelicula>(`${this.baseUrl}/${peliculaId}/valoracions/${valoracionId}`, {
+      withCredentials: true
+    }).pipe(
+      tap(updated => {
+        this.dataStore.update<CinePelicula[]>(this.cacheKey, current =>
+          (current ?? []).map(pelicula => pelicula.cinePeliculaId === peliculaId ? updated : pelicula)
+        );
+        this.invalidateHallOfFame();
+      })
+    );
+  }
+
   private invalidateHallOfFame(): void {
     this.dataStore.invalidate('hall-of-fame');
     this.dataStore.invalidateByPrefix('hall-of-fame:user:');

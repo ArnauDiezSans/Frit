@@ -105,6 +105,56 @@ public class CineController : ControllerBase
         return Ok(result.Pelicula);
     }
 
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _cineService.DeletePeliculaAsync(id, userId.Value);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Pel·lícula no trobada.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}/valoracions/{valoracionId:int}")]
+    public async Task<ActionResult<CinePeliculaDto>> DeleteValoracion(int id, int valoracionId)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = await _cineService.DeleteValoracionAsync(id, valoracionId, userId.Value);
+
+        if (!result.Success)
+        {
+            if (result.Error == "Pel·lícula no trobada." || result.Error == "Assistència no trobada.")
+            {
+                return NotFound();
+            }
+
+            return BadRequest(new { message = result.Error });
+        }
+
+        return Ok(result.Pelicula);
+    }
+
     private int? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
