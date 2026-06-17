@@ -51,17 +51,14 @@ public class CineService
             return (false, "El títol és obligatori.", null);
         }
 
-        if (!dto.Fecha.HasValue)
-        {
-            return (false, "La data és obligatòria.", null);
-        }
-
         var pelicula = new CinePelicula
         {
             Titulo = titulo,
             UsuarioCreadorId = usuarioId,
             GrupoPelicula = dto.GrupoPelicula,
-            CreatedAt = dto.Fecha.Value.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc)
+            CreatedAt = dto.Fecha.HasValue
+                ? dto.Fecha.Value.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc)
+                : DateTime.UtcNow
         };
 
         _context.CinePeliculas.Add(pelicula);

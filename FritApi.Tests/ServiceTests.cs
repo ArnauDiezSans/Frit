@@ -695,6 +695,8 @@ public class ServiceTests
             {
                 Titulo = "Matrix",
                 UsuarioCreadorId = arnau.UsuarioId,
+                GrupoPelicula = 1,
+                CreatedAt = new DateTime(2026, 6, 14, 12, 0, 0, DateTimeKind.Utc),
                 Valoraciones =
                 [
                     new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 9 },
@@ -704,9 +706,22 @@ public class ServiceTests
             },
             new CinePelicula
             {
+                Titulo = "Arrival",
+                UsuarioCreadorId = arnau.UsuarioId,
+                GrupoPelicula = 1,
+                CreatedAt = new DateTime(2026, 6, 21, 12, 0, 0, DateTimeKind.Utc),
+                Valoraciones =
+                [
+                    new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 8 },
+                    new CineValoracion { UsuarioId = anna.UsuarioId, Nota = 8 }
+                ]
+            },
+            new CinePelicula
+            {
                 Titulo = "Alien",
                 UsuarioCreadorId = arnau.UsuarioId,
                 GrupoPelicula = 2,
+                CreatedAt = new DateTime(2026, 6, 18, 12, 0, 0, DateTimeKind.Utc),
                 Valoraciones =
                 [
                     new CineValoracion { UsuarioId = arnau.UsuarioId, Nota = 10 },

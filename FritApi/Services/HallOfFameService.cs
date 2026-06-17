@@ -331,7 +331,7 @@ public class HallOfFameService
                 BuildWinnerProgress(
                     "cine:total-ratings",
                     "Cinèfil Frit",
-                    "Ha valorat més pel·lícules que ningú.",
+                    "Ha vist més pel·lícules que ningú en diumenge.",
                     DefaultIconPath,
                     "CineTotalRatings",
                     cineTotals.GetValueOrDefault(usuario.UsuarioId),
@@ -410,6 +410,7 @@ public class HallOfFameService
     private static Dictionary<int, int> BuildCineTotalRatingsLookup(List<CinePelicula> peliculas)
     {
         return peliculas
+            .Where(pelicula => pelicula.GrupoPelicula == 1 && GetFritDate(pelicula.CreatedAt).DayOfWeek == DayOfWeek.Sunday)
             .SelectMany(pelicula => pelicula.Valoraciones)
             .GroupBy(valoracion => valoracion.UsuarioId)
             .ToDictionary(group => group.Key, group => group.Count());
