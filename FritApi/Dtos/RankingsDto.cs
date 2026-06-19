@@ -34,6 +34,7 @@ public class RankingJuegoDto
     public int? DuracionMediaMinutos { get; set; }
     public decimal? Pvp { get; set; }
     public decimal? PrecioPorPartida { get; set; }
+    public decimal? PrecioPorJugadorPartida { get; set; }
     public DateOnly? UltimaPartida { get; set; }
 }
 

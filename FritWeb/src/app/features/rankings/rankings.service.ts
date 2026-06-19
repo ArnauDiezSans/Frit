@@ -35,6 +35,7 @@ export interface RankingJuego {
   duracionMediaMinutos?: number | null;
   pvp?: number | null;
   precioPorPartida?: number | null;
+  precioPorJugadorPartida?: number | null;
   ultimaPartida?: string | null;
 }
 

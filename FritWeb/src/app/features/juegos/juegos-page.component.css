@@ -312,6 +312,10 @@ h1 {
   width: 82px;
 }
 
+.col-date {
+  width: 116px;
+}
+
 .col-actions {
   width: 48px;
 }

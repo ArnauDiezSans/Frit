@@ -14,7 +14,7 @@ import {
   RankingsService
 } from './rankings.service';
 
-type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'preuPerPartida' | 'ultima';
+type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'preuPerPartida' | 'preuPerJugadorPartida' | 'ultima';
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'pesBggMig' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
@@ -28,6 +28,7 @@ interface GameRankingRow {
   duracionTotalMinutos: number;
   duracionMediaMinutos: number | null;
   precioPorPartida: number | null;
+  precioPorJugadorPartida: number | null;
   ultimaPartida: string | null;
 }
 
@@ -138,6 +139,7 @@ interface GameColumns {
   horas: boolean;
   mitjana: boolean;
   preuPerPartida: boolean;
+  preuPerJugadorPartida: boolean;
   ultima: boolean;
 }
 
@@ -250,6 +252,7 @@ export class RankingsPageComponent {
     horas: true,
     mitjana: true,
     preuPerPartida: false,
+    preuPerJugadorPartida: false,
     ultima: true
   });
 
@@ -922,6 +925,7 @@ export class RankingsPageComponent {
       horas: nextValue,
       mitjana: nextValue,
       preuPerPartida: nextValue,
+      preuPerJugadorPartida: nextValue,
       ultima: nextValue
     });
   }
@@ -1193,6 +1197,9 @@ export class RankingsPageComponent {
           ? Math.round(duraciones.reduce((total, value) => total + value, 0) / duraciones.length)
           : null,
         precioPorPartida: juego?.pvp != null && totalJugadores > 0
+          ? Math.round((juego.pvp / partidasJuego.length) * 100) / 100
+          : null,
+        precioPorJugadorPartida: juego?.pvp != null && totalJugadores > 0
           ? Math.round((juego.pvp / totalJugadores) * 100) / 100
           : null,
         ultimaPartida: partidasJuego
@@ -1447,6 +1454,8 @@ export class RankingsPageComponent {
           return ((a.duracionMediaMinutos ?? 0) - (b.duracionMediaMinutos ?? 0)) * multiplier;
         case 'preuPerPartida':
           return this.compareNullableNumbers(a.precioPorPartida, b.precioPorPartida) * multiplier;
+        case 'preuPerJugadorPartida':
+          return this.compareNullableNumbers(a.precioPorJugadorPartida, b.precioPorJugadorPartida) * multiplier;
         case 'ultima':
           return ((a.ultimaPartida ?? '').localeCompare(b.ultimaPartida ?? '')) * multiplier;
         default:

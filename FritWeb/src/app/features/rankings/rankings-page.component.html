@@ -140,6 +140,10 @@
                   <span>Preu per partida</span>
                 </label>
                 <label class="column-option">
+                  <input type="checkbox" [checked]="gameColumns().preuPerJugadorPartida" (change)="toggleGameColumn('preuPerJugadorPartida')" />
+                  <span>Preu per jugador i partida</span>
+                </label>
+                <label class="column-option">
                   <input type="checkbox" [checked]="gameColumns().ultima" (change)="toggleGameColumn('ultima')" />
                   <span>Última</span>
                 </label>
@@ -257,6 +261,7 @@
               <th *ngIf="gameColumns().horas" class="sortable" (click)="sortGamesBy('horas')">Hores{{ getGameSortIndicator('horas') }}</th>
               <th *ngIf="gameColumns().mitjana" class="sortable" (click)="sortGamesBy('mitjana')">Mitjana{{ getGameSortIndicator('mitjana') }}</th>
               <th *ngIf="gameColumns().preuPerPartida" class="sortable" (click)="sortGamesBy('preuPerPartida')">Preu/partida{{ getGameSortIndicator('preuPerPartida') }}</th>
+              <th *ngIf="gameColumns().preuPerJugadorPartida" class="sortable" (click)="sortGamesBy('preuPerJugadorPartida')">Preu/jugador/partida{{ getGameSortIndicator('preuPerJugadorPartida') }}</th>
               <th *ngIf="gameColumns().ultima" class="sortable" (click)="sortGamesBy('ultima')">Última{{ getGameSortIndicator('ultima') }}</th>
             </tr>
           </thead>
@@ -268,6 +273,7 @@
               <td *ngIf="gameColumns().horas" data-label="Hores">{{ formatHours(item.duracionTotalMinutos) }}</td>
               <td *ngIf="gameColumns().mitjana" data-label="Mitjana">{{ formatMinutes(item.duracionMediaMinutos) }}</td>
               <td *ngIf="gameColumns().preuPerPartida" data-label="Preu/partida">{{ formatCurrency(item.precioPorPartida) }}</td>
+              <td *ngIf="gameColumns().preuPerJugadorPartida" data-label="Preu/jugador/partida">{{ formatCurrency(item.precioPorJugadorPartida) }}</td>
               <td *ngIf="gameColumns().ultima" data-label="Última">{{ formatDate(item.ultimaPartida) }}</td>
             </tr>
           </tbody>
@@ -735,7 +741,8 @@
           </div>
 
           <div class="chart-bars chart-score-bars" *ngIf="maxScoreChartRows().length > 0; else noMaxScoreChartData">
-            <div class="chart-bar-row" *ngFor="let row of maxScoreChartRows(); trackBy: trackByChartValueRow">
+            <div class="chart-bar-row chart-bar-row-ranked" *ngFor="let row of maxScoreChartRows(); let i = index; trackBy: trackByChartValueRow">
+              <span class="chart-bar-position">{{ i + 1 }}</span>
               <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
               <span class="chart-bar-track">
                 <span

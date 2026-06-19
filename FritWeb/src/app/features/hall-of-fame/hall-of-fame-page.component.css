@@ -161,6 +161,7 @@ h1 {
 }
 
 .medal-icon-frame {
+  position: relative;
   width: 54px;
   height: 54px;
   display: grid;
@@ -168,6 +169,9 @@ h1 {
   border: 3px solid #98a2b3;
   border-radius: 999px;
   background: #ffffff;
+  padding: 0;
+  color: inherit;
+  font: inherit;
 }
 
 .medal-icon-frame img {
@@ -295,6 +299,11 @@ h1 {
 
 .modal-header {
   margin-bottom: 18px;
+}
+
+.modal-header p {
+  margin-top: 4px;
+  color: #667085;
 }
 
 .form-grid {

@@ -6,7 +6,7 @@ import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
-import { HallOfFameService, MedalProgress } from '../hall-of-fame/hall-of-fame.service';
+import { HallOfFameService, MedalGame, MedalProgress } from '../hall-of-fame/hall-of-fame.service';
 import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.service';
 
 @Component({
@@ -37,6 +37,7 @@ export class UsuarioPageComponent {
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
   medals = signal<MedalProgress[]>([]);
+  gamesModalMedal = signal<MedalProgress | null>(null);
   scoreSearch = signal<Partial<Record<number, string>>>({});
   filteredScoreGames = signal<UsuarioJuegoOrden[]>([]);
   showScoreOptions = signal<number | null>(null);
@@ -440,6 +441,20 @@ export class UsuarioPageComponent {
 
   trackByMedal(_: number, medal: MedalProgress): string {
     return medal.medalId;
+  }
+
+  trackByMedalGame(_: number, game: MedalGame): number {
+    return game.juegoId;
+  }
+
+  openGamesModal(medal: MedalProgress): void {
+    if (medal.games.length > 0) {
+      this.gamesModalMedal.set(medal);
+    }
+  }
+
+  closeGamesModal(): void {
+    this.gamesModalMedal.set(null);
   }
 
   getMedalProgressWidth(medal: MedalProgress): string {

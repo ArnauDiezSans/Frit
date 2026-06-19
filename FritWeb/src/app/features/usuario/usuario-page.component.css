@@ -234,6 +234,7 @@ h1 {
 }
 
 .medal-icon-frame {
+  position: relative;
   width: 50px;
   height: 50px;
   border: 3px solid #98a2b3;
@@ -242,7 +243,10 @@ h1 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
+  padding: 0;
+  color: inherit;
+  font: inherit;
 }
 
 .medal-icon-frame img {

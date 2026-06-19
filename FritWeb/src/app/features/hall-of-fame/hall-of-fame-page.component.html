@@ -85,16 +85,25 @@
           class="medal-card"
           [class.medal-card-filled]="entry.medal.rankFilled"
           [style.--medal-color]="entry.medal.rankColor">
-          <div
+          <button
+            type="button"
             class="medal-icon-frame"
+            [class.medal-games-trigger]="entry.medal.games.length > 0"
             [class.medal-icon-frame-filled]="entry.medal.rankFilled"
             [style.borderColor]="entry.medal.rankColor"
-            [style.background]="entry.medal.rankFilled ? entry.medal.rankColor : null">
+            [style.background]="entry.medal.rankFilled ? entry.medal.rankColor : null"
+            [disabled]="entry.medal.games.length === 0"
+            [attr.aria-label]="entry.medal.games.length > 0 ? 'Veure els jocs de ' + entry.medal.nombre : entry.medal.nombre"
+            (click)="openGamesModal(entry.medal)">
             <img
               [src]="entry.medal.iconPath"
               [alt]="entry.medal.nombre"
               (error)="useDefaultMedalIcon($event)" />
-          </div>
+            <span class="medal-games-tooltip" *ngIf="entry.medal.games.length > 0">
+              <strong>Jocs de la medalla</strong>
+              <span *ngFor="let game of entry.medal.games; trackBy: trackByMedalGame">{{ game.nombre }}</span>
+            </span>
+          </button>
 
           <div class="medal-content">
             <div class="medal-title-row">
@@ -171,6 +180,21 @@
           </button>
         </div>
       </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop games-modal-backdrop" *ngIf="gamesModalMedal() as medal" (click)="closeGamesModal()">
+    <section class="modal-card games-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ medal.nombre }}</h2>
+          <p>Jocs necessaris per aconseguir aquesta medalla</p>
+        </div>
+        <button type="button" class="ghost-button" (click)="closeGamesModal()">Tancar</button>
+      </div>
+      <ul class="medal-games-list">
+        <li *ngFor="let game of medal.games; trackBy: trackByMedalGame">{{ game.nombre }}</li>
+      </ul>
     </section>
   </div>
 </section>

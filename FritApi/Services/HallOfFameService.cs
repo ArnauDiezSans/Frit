@@ -226,6 +226,7 @@ public class HallOfFameService
 
         var wins = BuildWinLookup(partidas, usuarios);
         var plays = BuildPlayCountLookup(partidas, usuarios);
+        var juegosById = juegos.ToDictionary(juego => juego.JuegoId);
         var cineTotals = BuildCineTotalRatingsLookup(cinePeliculas);
         var cineTotalTarget = cineTotals.Count > 0 ? cineTotals.Values.Max() : 0;
         var cineSundayStreaks = BuildCineSundayStreakLookup(cinePeliculas, usuarios, GetFritToday(DateTime.UtcNow));
@@ -282,7 +283,16 @@ public class HallOfFameService
                         DefaultIconPath,
                         "GameSetWins",
                         completedGames,
-                        medal.JuegoIds.Length)));
+                        medal.JuegoIds.Length,
+                        medal.JuegoIds
+                            .Where(juegosById.ContainsKey)
+                            .Select(juegoId => new MedalGameDto
+                            {
+                                JuegoId = juegoId,
+                                Nombre = juegosById[juegoId].Nombre
+                            })
+                            .OrderBy(juego => juego.Nombre)
+                            .ToList())));
             }
 
             foreach (var medal in DynamicMedals)
@@ -643,7 +653,8 @@ public class HallOfFameService
         string iconPath,
         string tipo,
         int currentValue,
-        int targetValue)
+        int targetValue,
+        List<MedalGameDto>? games = null)
     {
         var completed = currentValue >= targetValue;
 
@@ -664,7 +675,8 @@ public class HallOfFameService
             NextRankName = completed ? null : "Completada",
             NextTargetValue = completed ? null : targetValue,
             Completed = completed,
-            EpicScore = (completed ? 5000 : 0) + currentValue
+            EpicScore = (completed ? 5000 : 0) + currentValue,
+            Games = games ?? []
         };
     }
 

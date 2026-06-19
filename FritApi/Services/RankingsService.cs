@@ -114,7 +114,10 @@ public class RankingsService
                         ? (int)Math.Round(duraciones.Average())
                         : null,
                     Pvp = juego.Pvp,
-                    PrecioPorPartida = juego.Pvp.HasValue && partidasJuego.Sum(partida => partida.NumeroJugadores) > 0
+                    PrecioPorPartida = juego.Pvp.HasValue && partidasJuego.Count > 0
+                        ? Math.Round(juego.Pvp.Value / partidasJuego.Count, 2)
+                        : null,
+                    PrecioPorJugadorPartida = juego.Pvp.HasValue && partidasJuego.Sum(partida => partida.NumeroJugadores) > 0
                         ? Math.Round(juego.Pvp.Value / partidasJuego.Sum(partida => partida.NumeroJugadores), 2)
                         : null,
                     UltimaPartida = partidasJuego

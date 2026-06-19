@@ -25,7 +25,8 @@ type SortColumn =
   | 'propietario'
   | 'tipo'
   | 'pvp'
-  | 'dificultadBgg';
+  | 'dificultadBgg'
+  | 'fechaAdquisicion';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -48,6 +49,7 @@ interface VisibleColumns {
   tipo: boolean;
   pvp: boolean;
   dificultadBgg: boolean;
+  fechaAdquisicion: boolean;
 }
 
 const EMPTY_FILTERS: JuegosFilters = {
@@ -68,7 +70,8 @@ const DEFAULT_VISIBLE_COLUMNS: VisibleColumns = {
   propietario: true,
   tipo: true,
   pvp: true,
-  dificultadBgg: true
+  dificultadBgg: true,
+  fechaAdquisicion: true
 };
 
 const SORT_COLUMNS: SortColumn[] = [
@@ -78,7 +81,8 @@ const SORT_COLUMNS: SortColumn[] = [
   'propietario',
   'tipo',
   'pvp',
-  'dificultadBgg'
+  'dificultadBgg',
+  'fechaAdquisicion'
 ];
 
 function normalizeSortColumn(value: SortColumn | string | null): SortColumn | null {
@@ -93,7 +97,8 @@ function normalizeVisibleColumns(value: Partial<VisibleColumns>): VisibleColumns
     propietario: value.propietario ?? DEFAULT_VISIBLE_COLUMNS.propietario,
     tipo: value.tipo ?? DEFAULT_VISIBLE_COLUMNS.tipo,
     pvp: value.pvp ?? DEFAULT_VISIBLE_COLUMNS.pvp,
-    dificultadBgg: value.dificultadBgg ?? DEFAULT_VISIBLE_COLUMNS.dificultadBgg
+    dificultadBgg: value.dificultadBgg ?? DEFAULT_VISIBLE_COLUMNS.dificultadBgg,
+    fechaAdquisicion: value.fechaAdquisicion ?? DEFAULT_VISIBLE_COLUMNS.fechaAdquisicion
   };
 }
 
@@ -256,6 +261,9 @@ export class JuegosPageComponent implements OnInit {
         case 'dificultadBgg':
           return ((a.dificultadBgg ?? 0) - (b.dificultadBgg ?? 0)) * direction;
 
+        case 'fechaAdquisicion':
+          return ((a.fechaAdquisicion ?? '').localeCompare(b.fechaAdquisicion ?? '')) * direction;
+
         default:
           return 0;
       }
@@ -400,7 +408,8 @@ export class JuegosPageComponent implements OnInit {
       propietario: nextValue,
       tipo: nextValue,
       pvp: nextValue,
-      dificultadBgg: nextValue
+      dificultadBgg: nextValue,
+      fechaAdquisicion: nextValue
     });
   }
 
@@ -430,6 +439,11 @@ export class JuegosPageComponent implements OnInit {
     }
 
     return this.sortDirection() === 'asc' ? ' ↑' : ' ↓';
+  }
+
+  formatFecha(value: string): string {
+    const [year, month, day] = value.split('-');
+    return year && month && day ? `${day}/${month}/${year}` : value;
   }
 
   getNombrePropietario(

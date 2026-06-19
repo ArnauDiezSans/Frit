@@ -133,16 +133,25 @@
         [class.user-medal-card-pending]="medal.rankLevel === 0"
         [class.user-medal-card-filled]="medal.rankFilled"
         [style.--medal-color]="medal.rankColor">
-        <div
+        <button
+          type="button"
           class="medal-icon-frame"
+          [class.medal-games-trigger]="medal.games.length > 0"
           [class.medal-icon-frame-filled]="medal.rankFilled"
           [style.borderColor]="medal.rankColor"
-          [style.background]="medal.rankFilled ? medal.rankColor : null">
+          [style.background]="medal.rankFilled ? medal.rankColor : null"
+          [disabled]="medal.games.length === 0"
+          [attr.aria-label]="medal.games.length > 0 ? 'Veure els jocs de ' + medal.nombre : medal.nombre"
+          (click)="openGamesModal(medal)">
           <img
             [src]="medal.iconPath"
             [alt]="medal.nombre"
             (error)="useDefaultMedalIcon($event)" />
-        </div>
+          <span class="medal-games-tooltip" *ngIf="medal.games.length > 0">
+            <strong>Jocs de la medalla</strong>
+            <span *ngFor="let game of medal.games; trackBy: trackByMedalGame">{{ game.nombre }}</span>
+          </span>
+        </button>
 
         <div class="user-medal-content">
           <div class="user-medal-header">
@@ -177,6 +186,21 @@
       </div>
     </ng-template>
   </section>
+
+  <div class="modal-backdrop games-modal-backdrop" *ngIf="gamesModalMedal() as medal" (click)="closeGamesModal()">
+    <section class="games-modal-card" (click)="$event.stopPropagation()">
+      <div class="games-modal-header">
+        <div>
+          <h2>{{ medal.nombre }}</h2>
+          <p>Jocs necessaris per aconseguir aquesta medalla</p>
+        </div>
+        <button type="button" class="ghost-button" (click)="closeGamesModal()">Tancar</button>
+      </div>
+      <ul class="medal-games-list">
+        <li *ngFor="let game of medal.games; trackBy: trackByMedalGame">{{ game.nombre }}</li>
+      </ul>
+    </section>
+  </div>
 
   <section
     class="content-card preferences-section"

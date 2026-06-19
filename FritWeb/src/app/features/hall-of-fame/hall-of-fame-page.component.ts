@@ -6,7 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { UsuarioOption } from '../juegos/juegos.models';
 import { UsuariosService } from '../juegos/usuarios.service';
-import { HallOfFame, HallOfFameEntry, HallOfFameService } from './hall-of-fame.service';
+import { HallOfFame, HallOfFameEntry, HallOfFameService, MedalGame, MedalProgress } from './hall-of-fame.service';
 
 @Component({
   selector: 'app-hall-of-fame-page',
@@ -31,6 +31,7 @@ export class HallOfFamePageComponent {
   usuarios = signal<UsuarioOption[]>([]);
   selectedUsuarioIds = signal<number[]>([]);
   gameMedalFilter = signal('');
+  gamesModalMedal = signal<MedalProgress | null>(null);
   @Input() embedded = false;
 
   form = this.fb.group({
@@ -136,6 +137,20 @@ export class HallOfFamePageComponent {
 
   onGameMedalFilterInput(value: string): void {
     this.gameMedalFilter.set(value);
+  }
+
+  openGamesModal(medal: MedalProgress): void {
+    if (medal.games.length > 0) {
+      this.gamesModalMedal.set(medal);
+    }
+  }
+
+  closeGamesModal(): void {
+    this.gamesModalMedal.set(null);
+  }
+
+  trackByMedalGame(_: number, game: MedalGame): number {
+    return game.juegoId;
   }
 
   trackByEntry(_: number, entry: HallOfFameEntry): string {
