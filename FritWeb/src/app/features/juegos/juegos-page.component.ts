@@ -71,7 +71,7 @@ const DEFAULT_VISIBLE_COLUMNS: VisibleColumns = {
   tipo: true,
   pvp: true,
   dificultadBgg: true,
-  fechaAdquisicion: true
+  fechaAdquisicion: false
 };
 
 const SORT_COLUMNS: SortColumn[] = [

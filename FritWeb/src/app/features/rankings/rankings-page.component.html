@@ -775,7 +775,8 @@
           </div>
 
           <div class="chart-bars" *ngIf="distinctGamesChartRows().length > 0; else noDistinctGamesChartData">
-            <div class="chart-bar-row" *ngFor="let row of distinctGamesChartRows(); trackBy: trackByChartValueRow">
+            <div class="chart-bar-row chart-bar-row-ranked" *ngFor="let row of distinctGamesChartRows(); let i = index; trackBy: trackByChartValueRow">
+              <span class="chart-bar-position">{{ i + 1 }}</span>
               <span class="chart-bar-label">{{ row.usuarioNombre }}</span>
               <span class="chart-bar-track">
                 <span
