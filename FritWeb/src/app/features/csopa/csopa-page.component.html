@@ -184,12 +184,12 @@
           <tr>
             <th class="activity-type-column" aria-label="Tipus"></th>
             <th class="row-number-column">#</th>
-            <th class="sortable" (click)="sortBy('createdAt')">Data{{ getSortIndicator('createdAt') }}</th>
-            <th class="sortable" (click)="sortBy('titol')">Activitat{{ getSortIndicator('titol') }}</th>
-            <th class="sortable" (click)="sortBy('assistencies')">Assistents{{ getSortIndicator('assistencies') }}</th>
-            <th class="sortable" (click)="sortBy('mediaNota')">Puntuació{{ getSortIndicator('mediaNota') }}</th>
+            <th class="sortable date-column" (click)="sortBy('createdAt')">Data{{ getSortIndicator('createdAt') }}</th>
+            <th class="sortable activity-column" (click)="sortBy('titol')">Activitat{{ getSortIndicator('titol') }}</th>
+            <th class="sortable attendees-column" (click)="sortBy('assistencies')">Assistents{{ getSortIndicator('assistencies') }}</th>
+            <th class="sortable score-column" (click)="sortBy('mediaNota')">Puntuació{{ getSortIndicator('mediaNota') }}</th>
             <th *ngIf="filters().scoreUsuarioId" class="sortable" (click)="sortBy('userNota')">Nota usuari{{ getSortIndicator('userNota') }}</th>
-            <th>Acció</th>
+            <th class="actions-column">Acció</th>
             <th *ngIf="showObservacions()">Observacions</th>
           </tr>
         </thead>
@@ -206,12 +206,12 @@
                   [title]="row.tipusLabel" />
               </td>
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
-              <td data-label="Data">{{ formatDate(row.createdAt) }}</td>
-              <td data-label="Activitat">
+              <td class="date-cell" data-label="Data">{{ formatDate(row.createdAt) }}</td>
+              <td class="activity-cell" data-label="Activitat">
                 <span class="activity-title">{{ row.titol }}</span>
                 <span class="activity-subline">{{ row.tipusLabel }}</span>
               </td>
-              <td data-label="Assistents">
+              <td class="attendees-cell" data-label="Assistents">
                 <span class="attendance-primary">
                   <span *ngIf="row.assistenciesPrimaryText">{{ row.assistenciesPrimaryText }}</span>
                 </span>
@@ -219,9 +219,9 @@
                   {{ row.assistenciesText }}
                 </span>
               </td>
-              <td data-label="Puntuació">{{ row.source === 'cine' ? formatPrimaryValue(row) : '-' }}</td>
+              <td class="score-cell" data-label="Puntuació">{{ row.source === 'cine' ? formatPrimaryValue(row) : '-' }}</td>
               <td *ngIf="filters().scoreUsuarioId" data-label="Nota usuari">{{ formatUserNota(row) }}</td>
-              <td data-label="Acció">
+              <td class="actions-cell" data-label="Acció">
                 <div class="row-actions">
                   <button
                     *ngIf="row.source === 'cine' && row.canRate"

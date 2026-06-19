@@ -7,7 +7,7 @@ namespace FritApi.Services;
 
 public class CineService
 {
-    private static readonly TimeSpan VotingWindow = TimeSpan.FromHours(24);
+    private static readonly TimeSpan VotingWindow = TimeSpan.FromDays(7);
     private readonly AppDbContext _context;
 
     public CineService(AppDbContext context)

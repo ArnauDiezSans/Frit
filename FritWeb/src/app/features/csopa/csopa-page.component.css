@@ -243,6 +243,7 @@ h1 {
 
 .assistencia-table {
   width: 100%;
+  min-width: 960px;
   border-collapse: collapse;
 }
 
@@ -266,8 +267,39 @@ h1 {
 .activity-type-cell,
 .row-number-column,
 .row-number-cell {
-  width: 36px;
+  width: 44px;
+  padding-right: 6px;
+  padding-left: 6px;
   text-align: center;
+}
+
+.date-column,
+.date-cell {
+  width: 100px;
+  min-width: 100px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.activity-column,
+.activity-cell {
+  width: 140px;
+}
+
+.attendees-column,
+.attendees-cell {
+  width: 36%;
+}
+
+.score-column,
+.score-cell {
+  width: 180px;
+}
+
+.actions-column,
+.actions-cell {
+  width: 160px;
+  min-width: 160px;
 }
 
 .activity-type-icon {
@@ -520,6 +552,7 @@ h1 {
   .assistencia-table tbody {
     display: block;
     width: 100%;
+    min-width: 0;
   }
 
   .assistencia-table thead {
