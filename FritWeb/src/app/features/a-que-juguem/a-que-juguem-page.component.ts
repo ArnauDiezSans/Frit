@@ -8,11 +8,17 @@ import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/au
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
+import { LaLlistaService } from '../la-llista/la-llista.service';
 import { UsuariosService } from '../juegos/usuarios.service';
 import { Partida } from '../partidas/partidas.models';
 import { PartidasService } from '../partidas/partidas.service';
 import { UsuarioJuegoOrden, UsuarioService } from '../usuario/usuario.service';
 import { AQueJuguemRecommendation } from './a-que-juguem.service';
+
+interface RowingRecommendation extends AQueJuguemRecommendation {
+  llistaPosition: number;
+  tempsMaximMinuts: number;
+}
 
 @Component({
   selector: 'app-a-que-juguem-page',
@@ -28,6 +34,7 @@ export class AQueJuguemPageComponent {
   private juegosService = inject(JuegosService);
   private partidasService = inject(PartidasService);
   private usuarioService = inject(UsuarioService);
+  private laLlistaService = inject(LaLlistaService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -58,6 +65,13 @@ export class AQueJuguemPageComponent {
   showRecommendationFilters = signal(false);
   tempsMigMesGranQue = signal('');
   tempsMigMesPetitQue = signal('');
+  rowingConfigOpen = signal(false);
+  rowingResultsOpen = signal(false);
+  rowingLoading = signal(false);
+  rowingError = signal('');
+  rowingTime = signal('');
+  rowingStrength = signal<1 | 5 | 10>(1);
+  rowingResults = signal<RowingRecommendation[]>([]);
   private calculationRequestId = 0;
   private lastRecommendationKey = '';
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
@@ -137,6 +151,104 @@ export class AQueJuguemPageComponent {
 
   allPlayersSelected(): boolean {
     return this.getSelectedUsuarioIds().length > 0;
+  }
+
+  getSelectedPlayerNames(): string[] {
+    const selectedIds = new Set(this.getSelectedUsuarioIds());
+    return this.usuarios()
+      .filter(usuario => selectedIds.has(usuario.usuarioId))
+      .map(usuario => usuario.nombre);
+  }
+
+  openRowingConfig(): void {
+    if (!this.allPlayersSelected()) {
+      return;
+    }
+
+    this.rowingTime.set('');
+    this.rowingStrength.set(1);
+    this.rowingError.set('');
+    this.rowingConfigOpen.set(true);
+  }
+
+  closeRowingConfig(): void {
+    if (!this.rowingLoading()) {
+      this.rowingConfigOpen.set(false);
+      this.rowingError.set('');
+    }
+  }
+
+  closeRowingResults(): void {
+    this.rowingResultsOpen.set(false);
+  }
+
+  onRowingTimeInput(value: string): void {
+    this.rowingTime.set(value);
+    this.rowingError.set('');
+  }
+
+  onRowingStrengthChange(value: string): void {
+    const parsed = Number(value);
+    this.rowingStrength.set(parsed === 5 ? 5 : parsed === 10 ? 10 : 1);
+  }
+
+  canAcceptRowing(): boolean {
+    const time = Number(this.rowingTime());
+    return Number.isFinite(time) && time > 0 && !this.rowingLoading() && !this.calculating();
+  }
+
+  getRowingPoints(): number {
+    return this.rowingStrength() === 1 ? 3 : this.rowingStrength() === 5 ? 2 : 1;
+  }
+
+  acceptRowing(): void {
+    if (!this.canAcceptRowing()) {
+      return;
+    }
+
+    const availableMinutes = Number(this.rowingTime());
+    const resultCount = this.rowingStrength();
+    this.rowingLoading.set(true);
+    this.rowingError.set('');
+
+    this.laLlistaService.getAll().subscribe({
+      next: items => {
+        const recommendationsById = new Map(
+          this.recommendations().map(recommendation => [recommendation.juegoId, recommendation])
+        );
+
+        const results = items
+          .map((item, index) => {
+            const recommendation = recommendationsById.get(item.juegoId);
+
+            if (recommendation?.tempsMigMinuts == null) {
+              return null;
+            }
+
+            const tempsMaximMinuts = Math.ceil(recommendation.tempsMigMinuts * 1.25);
+            if (tempsMaximMinuts > availableMinutes) {
+              return null;
+            }
+
+            return {
+              ...recommendation,
+              llistaPosition: index + 1,
+              tempsMaximMinuts
+            };
+          })
+          .filter((item): item is RowingRecommendation => item !== null)
+          .slice(0, resultCount);
+
+        this.rowingResults.set(results);
+        this.rowingLoading.set(false);
+        this.rowingConfigOpen.set(false);
+        this.rowingResultsOpen.set(true);
+      },
+      error: () => {
+        this.rowingLoading.set(false);
+        this.rowingError.set("No s'ha pogut carregar l'ordre de La llista.");
+      }
+    });
   }
 
   calcular(): void {
