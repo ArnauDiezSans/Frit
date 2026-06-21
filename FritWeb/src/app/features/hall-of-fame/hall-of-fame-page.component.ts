@@ -118,7 +118,16 @@ export class HallOfFamePageComponent {
   }
 
   getFritEntries(): HallOfFameEntry[] {
-    return this.hallOfFame()?.entries.filter(entry => entry.medal.tipo !== 'GameWins') ?? [];
+    const entries = this.hallOfFame()?.entries.filter(entry => entry.medal.tipo !== 'GameWins') ?? [];
+
+    if (!this.embedded) {
+      return entries;
+    }
+
+    return [...entries].sort((left, right) =>
+      left.users.length - right.users.length ||
+      left.medal.nombre.localeCompare(right.medal.nombre)
+    );
   }
 
   getGameEntries(): HallOfFameEntry[] {
