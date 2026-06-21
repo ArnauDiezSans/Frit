@@ -90,19 +90,29 @@ h1 {
 }
 
 .rowing-admin-button {
-  width: 28px !important;
-  min-width: 28px !important;
-  height: 24px !important;
-  min-height: 24px !important;
+  width: 32px;
+  min-width: 32px;
+  height: 28px;
+  min-height: 28px;
+  padding: 2px;
 }
 
-.rowing-admin-button svg,
 .small-icon-button svg {
   width: 15px;
   height: 15px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rowing-admin-button svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: #0b4a79;
+  stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -133,6 +143,10 @@ h1 {
   background: #f8fafc;
   color: #475467;
   font-weight: 800;
+}
+
+.remada-admin-row-readonly {
+  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px;
 }
 
 .remada-admin-row > span {

@@ -54,11 +54,6 @@ public class AQueJuguemController : ControllerBase
     [HttpGet("remades")]
     public async Task<ActionResult<List<RemadaDto>>> GetRemades()
     {
-        if (!CanManageRemades())
-        {
-            return Forbid();
-        }
-
         return Ok(await _aQueJuguemService.GetRemadesAsync());
     }
 

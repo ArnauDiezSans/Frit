@@ -175,10 +175,6 @@ export class AQueJuguemPageComponent {
   }
 
   openRemadesAdmin(): void {
-    if (!this.canManageRemades()) {
-      return;
-    }
-
     this.remadesAdminOpen.set(true);
     this.remadesLoading.set(true);
     this.remadesError.set('');
