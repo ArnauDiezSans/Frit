@@ -473,6 +473,14 @@ export class UsuarioPageComponent {
     return this.medals().filter(medal => medal.tipo !== 'GameWins');
   }
 
+  getCompletedFritMedals(): MedalProgress[] {
+    return this.getFritMedals().filter(medal => medal.completed);
+  }
+
+  getPendingFritMedals(): MedalProgress[] {
+    return this.getFritMedals().filter(medal => !medal.completed);
+  }
+
   getGameMedals(): MedalProgress[] {
     return this.medals().filter(medal => medal.tipo === 'GameWins');
   }

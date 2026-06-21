@@ -83,27 +83,27 @@ public class HallOfFameService
 
     private static readonly ThresholdSetMedal[] ThresholdSetMedals =
     [
-        new("dynamic:noe-arca", "Noè, el de l'arca", "Guanya 12 jocs diferents d'Animals.", 12,
+        new("dynamic:noe-arca", "Noè, el de l'arca", "Guanya 20 jocs diferents d'Animals.", 20,
             [7, 13, 18, 24, 29, 32, 44, 46, 52, 55, 57, 59, 73, 74, 75, 79, 86, 91, 116, 123, 137, 140, 142, 147, 157, 183, 195, 209, 211]),
-        new("dynamic:rei-mides", "Rei/Reina Mides", "Guanya 15 jocs Econòmics diferents.", 15,
+        new("dynamic:rei-mides", "Rei/Reina Mides", "Guanya 25 jocs Econòmics diferents.", 25,
             [2, 5, 7, 6, 11, 19, 20, 21, 23, 31, 32, 33, 34, 36, 40, 52, 84, 87, 97, 100, 108, 112, 114, 117, 118, 125, 132, 134, 136, 142, 143, 145, 148, 153, 164, 174, 175, 184, 185, 186, 187, 188, 198, 201, 203, 206, 210]),
-        new("dynamic:mestre-cartes", "Mestre/a de les cartes", "Guanya 20 jocs de cartes diferents.", 20,
+        new("dynamic:mestre-cartes", "Mestre/a de les cartes", "Guanya 25 jocs de cartes diferents.", 25,
             [2, 5, 8, 13, 17, 18, 26, 37, 39, 41, 42, 46, 47, 51, 53, 54, 56, 66, 68, 69, 71, 73, 74, 75, 77, 78, 79, 80, 82, 86, 88, 89, 93, 96, 97, 106, 111, 109, 115, 118, 124, 125, 138, 147, 150, 158, 160, 165, 166, 168, 170, 173, 174, 175, 176, 180, 179, 191, 197, 198, 199, 205, 208, 209, 211]),
-        new("dynamic:urbanista", "Urbanista", "Guanya 10 jocs de Construcció de ciutats.", 10,
+        new("dynamic:urbanista", "Urbanista", "Guanya 20 jocs de Construcció de ciutats.", 20,
             [2, 4, 5, 9, 20, 21, 26, 34, 36, 37, 40, 52, 73, 79, 100, 114, 120, 130, 134, 136, 148, 207]),
-        new("dynamic:senyor-daus", "Senyor/a dels daus", "Guanya 8 jocs de Daus diferents.", 8,
+        new("dynamic:senyor-daus", "Senyor/a dels daus", "Guanya 15 jocs de Daus diferents.", 15,
             [4, 25, 44, 65, 101, 102, 103, 116, 135, 149, 153, 159, 172, 177, 186, 187, 202]),
-        new("dynamic:ment-criminal", "Ment criminal", "Guanya 7 jocs de Deducció diferents.", 7,
+        new("dynamic:ment-criminal", "Ment criminal", "Guanya 12 jocs de Deducció diferents.", 12,
             [17, 22, 37, 41, 42, 47, 49, 61, 94, 95, 128, 160, 166, 171]),
-        new("dynamic:trencaclosques-huma", "Trencaclosques humà", "Guanya 8 jocs de Trencaclosques diferents.", 8,
+        new("dynamic:trencaclosques-huma", "Trencaclosques humà", "Guanya 15 jocs de Trencaclosques diferents.", 15,
             [16, 24, 30, 59, 76, 78, 91, 131, 139, 141, 143, 146, 147, 159, 168, 182, 200]),
-        new("dynamic:geometra", "Geòmetra", "Guanya 8 jocs d'Estratègia abstracta.", 8,
+        new("dynamic:geometra", "Geòmetra", "Guanya 15 jocs d'Estratègia abstracta.", 15,
             [15, 16, 24, 72, 85, 91, 119, 127, 131, 140, 141, 143, 145, 158, 159, 168]),
-        new("dynamic:fundador-imperis", "Fundador/a d'imperis", "Guanya 6 jocs de Civilització.", 6,
+        new("dynamic:fundador-imperis", "Fundador/a d'imperis", "Guanya 10 jocs de Civilització.", 10,
             [2, 5, 69, 71, 84, 97, 151, 161, 184, 185, 188]),
-        new("dynamic:pages-any", "Pagès de l'any", "Guanya 7 jocs d'Agricultura.", 7,
+        new("dynamic:pages-any", "Pagès de l'any", "Guanya 12 jocs d'Agricultura.", 12,
             [7, 6, 12, 32, 33, 59, 109, 144, 148, 161, 162, 183, 189, 206]),
-        new("dynamic:anima-festa", "Ànima de la festa", "Guanya 12 jocs de festa diferents.", 12,
+        new("dynamic:anima-festa", "Ànima de la festa", "Guanya 15 jocs de festa diferents.", 15,
             [8, 22, 41, 42, 47, 49, 54, 61, 66, 82, 86, 94, 98, 99, 128, 139, 163, 166, 180, 179, 191, 192, 196, 208]),
         new("set:capita-picard", "Capità Jean-Luc Picard", "Guanya tots els jocs d'Exploració espacial.", 8,
             [45, 69, 84, 134, 149, 167, 172, 185]),
@@ -367,7 +367,8 @@ public class HallOfFameService
                             .Select(juegoId => new MedalGameDto
                             {
                                 JuegoId = juegoId,
-                                Nombre = juegosById[juegoId].Nombre
+                                Nombre = juegosById[juegoId].Nombre,
+                                Achieved = wins.GetValueOrDefault((usuario.UsuarioId, juegoId)) > 0
                             })
                             .OrderBy(juego => juego.Nombre)
                             .ToList())));
@@ -393,7 +394,8 @@ public class HallOfFameService
                             .Select(juegoId => new MedalGameDto
                             {
                                 JuegoId = juegoId,
-                                Nombre = juegosById[juegoId].Nombre
+                                Nombre = juegosById[juegoId].Nombre,
+                                Achieved = wins.GetValueOrDefault((usuario.UsuarioId, juegoId)) > 0
                             })
                             .OrderBy(juego => juego.Nombre)
                             .ToList())));
@@ -416,7 +418,8 @@ public class HallOfFameService
                         .Select(juego => new MedalGameDto
                         {
                             JuegoId = juego.JuegoId,
-                            Nombre = juego.Nombre
+                            Nombre = juego.Nombre,
+                            Achieved = wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0
                         })
                         .ToList())));
 
@@ -437,7 +440,8 @@ public class HallOfFameService
                         .Select(juego => new MedalGameDto
                         {
                             JuegoId = juego.JuegoId,
-                            Nombre = juego.Nombre
+                            Nombre = juego.Nombre,
+                            Achieved = wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0
                         })
                         .ToList())));
 
@@ -458,7 +462,8 @@ public class HallOfFameService
                         .Select(juego => new MedalGameDto
                         {
                             JuegoId = juego.JuegoId,
-                            Nombre = juego.Nombre
+                            Nombre = juego.Nombre,
+                            Achieved = wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0
                         })
                         .ToList())));
 
@@ -488,9 +493,13 @@ public class HallOfFameService
 
             var wonNonListGames = juegos.Count(juego =>
                 !ContainsGameType(juego.Tipo, "no llista") &&
+                !ContainsGameType(juego.Tipo, "cooperatiu") &&
+                !ContainsGameType(juego.Tipo, "equips") &&
                 wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0);
             var playedNonListGames = juegos.Count(juego =>
                 !ContainsGameType(juego.Tipo, "no llista") &&
+                !ContainsGameType(juego.Tipo, "cooperatiu") &&
+                !ContainsGameType(juego.Tipo, "equips") &&
                 playedGames.TryGetValue(usuario.UsuarioId, out var userPlayedGames) &&
                 userPlayedGames.Contains(juego.JuegoId));
 
@@ -498,8 +507,8 @@ public class HallOfFameService
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:fritvers", "Fritvers",
-                    "Guanya almenys un joc de 10 categories diferents.", DefaultIconPath,
-                    "CategoryWins", winningCategories.GetValueOrDefault(usuario.UsuarioId), 10)));
+                    "Guanya almenys un joc de 50 categories diferents.", DefaultIconPath,
+                    "CategoryWins", winningCategories.GetValueOrDefault(usuario.UsuarioId), 50)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
                 usuario.Nombre,
@@ -512,13 +521,13 @@ public class HallOfFameService
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:rodamon-ludic", "Rodamón lúdic",
-                    "Guanya 50 jocs diferents, excloent els No llista.", DefaultIconPath,
+                    "Guanya 50 jocs diferents, excloent els No llista, Cooperatius i per Equips.", DefaultIconPath,
                     "DistinctGameWins", wonNonListGames, 50)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:explorador", "Explorador/a",
-                    "Juga 100 jocs diferents, excloent els No llista.", DefaultIconPath,
+                    "Juga 100 jocs diferents, excloent els No llista, Cooperatius i per Equips.", DefaultIconPath,
                     "DistinctGamesPlayed", playedNonListGames, 100)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
@@ -531,13 +540,18 @@ public class HallOfFameService
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:au-fenix", "Au Fènix",
                     "Torna a guanyar un joc després d'un any sense jugar-lo.", DefaultIconPath,
-                    "PhoenixWin", phoenixWins.GetValueOrDefault(usuario.UsuarioId), 1)));
+                    "PhoenixWin",
+                    phoenixWins.ContainsKey(usuario.UsuarioId) ? 1 : 0,
+                    1,
+                    detailText: phoenixWins.TryGetValue(usuario.UsuarioId, out var phoenix)
+                        ? $"{phoenix.JuegoNombre} · {phoenix.PreviousDate:dd/MM/yyyy} → {phoenix.WinDate:dd/MM/yyyy}"
+                        : null)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:per-poc", "Per poc!",
-                    "Guanya 10 partides amb empat a la primera posició.", DefaultIconPath,
-                    "TiedFirstWins", tiedFirstWins.GetValueOrDefault(usuario.UsuarioId), 10)));
+                    "Guanya 50 partides amb empat a la primera posició.", DefaultIconPath,
+                    "TiedFirstWins", tiedFirstWins.GetValueOrDefault(usuario.UsuarioId), 50)));
 
             foreach (var manual in manualMedallas)
             {
@@ -958,11 +972,11 @@ public class HallOfFameService
         });
     }
 
-    private static Dictionary<int, int> BuildPhoenixWinLookup(
+    private static Dictionary<int, PhoenixWinDetail> BuildPhoenixWinLookup(
         List<Partida> partidas,
         List<Usuario> usuarios)
     {
-        var result = new Dictionary<int, int>();
+        var result = new Dictionary<int, PhoenixWinDetail>();
 
         foreach (var gameGroup in partidas.GroupBy(partida => partida.JuegoId))
         {
@@ -974,7 +988,10 @@ public class HallOfFameService
                 {
                     foreach (var usuarioId in DetectWinnerIds(partida, usuarios))
                     {
-                        result[usuarioId] = 1;
+                        result[usuarioId] = new PhoenixWinDetail(
+                            partida.Juego.Nombre,
+                            previousDate.Value,
+                            partida.Fecha);
                     }
                 }
 
@@ -1094,7 +1111,8 @@ public class HallOfFameService
         string tipo,
         int currentValue,
         int targetValue,
-        List<MedalGameDto>? games = null)
+        List<MedalGameDto>? games = null,
+        string? detailText = null)
     {
         var completed = currentValue >= targetValue;
 
@@ -1116,6 +1134,7 @@ public class HallOfFameService
             NextTargetValue = completed ? null : targetValue,
             Completed = completed,
             EpicScore = (completed ? 5000 : 0) + currentValue,
+            DetailText = detailText,
             Games = games ?? []
         };
     }
@@ -1295,5 +1314,6 @@ public class HallOfFameService
         int[] JuegoIds);
     private sealed record DynamicMedal(string MedalId, string Nombre, string Descripcion, string Tipo, int TargetValue);
     private sealed record RegisteredUserRow(int UsuarioId, string Nombre, string NormalizedNombre);
+    private sealed record PhoenixWinDetail(string JuegoNombre, DateOnly PreviousDate, DateOnly WinDate);
     private sealed record UserMedalProgressRow(int UsuarioId, string UsuarioNombre, MedalProgressDto Progress);
 }

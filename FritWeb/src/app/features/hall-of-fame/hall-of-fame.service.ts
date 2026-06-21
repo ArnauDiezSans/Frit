@@ -22,12 +22,14 @@ export interface MedalProgress {
   nextTargetValue?: number | null;
   completed: boolean;
   epicScore: number;
+  detailText?: string | null;
   games: MedalGame[];
 }
 
 export interface MedalGame {
   juegoId: number;
   nombre: string;
+  achieved: boolean;
 }
 
 export interface MedalUserProgress {

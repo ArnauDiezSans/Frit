@@ -300,10 +300,25 @@ h1 {
 }
 
 .medal-progress-row {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
+}
+
+.medal-compact-detail {
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 0;
+  right: 42px;
+  overflow: hidden;
+  color: #667085;
+  font-size: 0.62rem;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .medal-progress-track {

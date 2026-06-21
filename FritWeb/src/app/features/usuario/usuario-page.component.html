@@ -92,19 +92,37 @@
     <div class="medal-category-stack" *ngIf="medals().length > 0; else emptyMedals">
       <section class="medal-category">
         <div class="medal-category-heading">
-          <h3>Medalles frites</h3>
-          <span>{{ getFritMedals().length }}</span>
+          <h3>Medalles frites aconseguides</h3>
+          <span>{{ getCompletedFritMedals().length }}</span>
         </div>
 
-        <div class="user-medal-grid" *ngIf="getFritMedals().length > 0; else emptyFritMedals">
+        <div class="user-medal-grid" *ngIf="getCompletedFritMedals().length > 0; else emptyFritMedals">
           <ng-container
-            *ngFor="let medal of getFritMedals(); trackBy: trackByMedal"
+            *ngFor="let medal of getCompletedFritMedals(); trackBy: trackByMedal"
             [ngTemplateOutlet]="medalCard"
             [ngTemplateOutletContext]="{ medal: medal }"></ng-container>
         </div>
 
         <ng-template #emptyFritMedals>
-          <p class="medal-category-empty">Encara no hi ha medalles frites.</p>
+          <p class="medal-category-empty">Encara no hi ha medalles frites aconseguides.</p>
+        </ng-template>
+      </section>
+
+      <section class="medal-category">
+        <div class="medal-category-heading">
+          <h3>Medalles frites en progrés</h3>
+          <span>{{ getPendingFritMedals().length }}</span>
+        </div>
+
+        <div class="user-medal-grid" *ngIf="getPendingFritMedals().length > 0; else emptyPendingFritMedals">
+          <ng-container
+            *ngFor="let medal of getPendingFritMedals(); trackBy: trackByMedal"
+            [ngTemplateOutlet]="medalCard"
+            [ngTemplateOutletContext]="{ medal: medal }"></ng-container>
+        </div>
+
+        <ng-template #emptyPendingFritMedals>
+          <p class="medal-category-empty">No hi ha medalles frites pendents.</p>
         </ng-template>
       </section>
 
@@ -149,7 +167,11 @@
             (error)="useDefaultMedalIcon($event)" />
           <span class="medal-games-tooltip" *ngIf="medal.games.length > 0">
             <strong>Jocs de la medalla</strong>
-            <span *ngFor="let game of medal.games; trackBy: trackByMedalGame">{{ game.nombre }}</span>
+            <span
+              *ngFor="let game of medal.games; trackBy: trackByMedalGame"
+              [class.medal-game-achieved]="game.achieved">
+              {{ game.nombre }}
+            </span>
           </span>
         </button>
 
@@ -163,7 +185,7 @@
 
           <p>{{ medal.descripcion }}</p>
 
-          <div class="medal-progress-row">
+          <div class="medal-progress-row" [class.medal-progress-row-with-detail]="medal.detailText">
             <div class="medal-progress-track">
               <span
                 class="medal-progress-fill"
@@ -171,6 +193,12 @@
                 [style.background]="medal.rankColor"></span>
             </div>
             <strong>{{ medal.currentValue }}/{{ medal.targetValue }}</strong>
+            <span
+              class="medal-compact-detail"
+              *ngIf="medal.detailText"
+              [title]="medal.detailText">
+              {{ medal.detailText }}
+            </span>
           </div>
 
           <span class="next-rank" *ngIf="shouldShowNextRank(medal)">
@@ -197,7 +225,11 @@
         <button type="button" class="ghost-button" (click)="closeGamesModal()">Tancar</button>
       </div>
       <ul class="medal-games-list">
-        <li *ngFor="let game of medal.games; trackBy: trackByMedalGame">{{ game.nombre }}</li>
+        <li
+          *ngFor="let game of medal.games; trackBy: trackByMedalGame"
+          [class.medal-game-achieved]="game.achieved">
+          {{ game.nombre }}
+        </li>
       </ul>
     </section>
   </div>

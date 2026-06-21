@@ -164,6 +164,12 @@ button {
   margin-bottom: 8px;
 }
 
+app-usuario-page .medal-games-tooltip .medal-game-achieved,
+app-usuario-page .medal-games-list .medal-game-achieved {
+  color: #b7791f;
+  font-weight: 900;
+}
+
 .chart-bar-row-ranked {
   grid-template-columns: 28px minmax(82px, 0.9fr) minmax(120px, 2fr) 56px 44px !important;
 }

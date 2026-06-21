@@ -39,6 +39,7 @@ public class MedalProgressDto
     public int? NextTargetValue { get; set; }
     public bool Completed { get; set; }
     public int EpicScore { get; set; }
+    public string? DetailText { get; set; }
     public List<MedalGameDto> Games { get; set; } = new();
 }
 
@@ -46,6 +47,7 @@ public class MedalGameDto
 {
     public int JuegoId { get; set; }
     public string Nombre { get; set; } = string.Empty;
+    public bool Achieved { get; set; }
 }
 
 public class MedalUserProgressDto
