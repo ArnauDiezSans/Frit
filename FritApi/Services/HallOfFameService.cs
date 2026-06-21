@@ -81,6 +81,40 @@ public class HallOfFameService
             1000)
     ];
 
+    private static readonly ThresholdSetMedal[] ThresholdSetMedals =
+    [
+        new("dynamic:noe-arca", "Noè, el de l'arca", "Guanya 12 jocs diferents d'Animals.", 12,
+            [7, 13, 18, 24, 29, 32, 44, 46, 52, 55, 57, 59, 73, 74, 75, 79, 86, 91, 116, 123, 137, 140, 142, 147, 157, 183, 195, 209, 211]),
+        new("dynamic:rei-mides", "Rei/Reina Mides", "Guanya 15 jocs Econòmics diferents.", 15,
+            [2, 5, 7, 6, 11, 19, 20, 21, 23, 31, 32, 33, 34, 36, 40, 52, 84, 87, 97, 100, 108, 112, 114, 117, 118, 125, 132, 134, 136, 142, 143, 145, 148, 153, 164, 174, 175, 184, 185, 186, 187, 188, 198, 201, 203, 206, 210]),
+        new("dynamic:mestre-cartes", "Mestre/a de les cartes", "Guanya 20 jocs de cartes diferents.", 20,
+            [2, 5, 8, 13, 17, 18, 26, 37, 39, 41, 42, 46, 47, 51, 53, 54, 56, 66, 68, 69, 71, 73, 74, 75, 77, 78, 79, 80, 82, 86, 88, 89, 93, 96, 97, 106, 111, 109, 115, 118, 124, 125, 138, 147, 150, 158, 160, 165, 166, 168, 170, 173, 174, 175, 176, 180, 179, 191, 197, 198, 199, 205, 208, 209, 211]),
+        new("dynamic:urbanista", "Urbanista", "Guanya 10 jocs de Construcció de ciutats.", 10,
+            [2, 4, 5, 9, 20, 21, 26, 34, 36, 37, 40, 52, 73, 79, 100, 114, 120, 130, 134, 136, 148, 207]),
+        new("dynamic:senyor-daus", "Senyor/a dels daus", "Guanya 8 jocs de Daus diferents.", 8,
+            [4, 25, 44, 65, 101, 102, 103, 116, 135, 149, 153, 159, 172, 177, 186, 187, 202]),
+        new("dynamic:ment-criminal", "Ment criminal", "Guanya 7 jocs de Deducció diferents.", 7,
+            [17, 22, 37, 41, 42, 47, 49, 61, 94, 95, 128, 160, 166, 171]),
+        new("dynamic:trencaclosques-huma", "Trencaclosques humà", "Guanya 8 jocs de Trencaclosques diferents.", 8,
+            [16, 24, 30, 59, 76, 78, 91, 131, 139, 141, 143, 146, 147, 159, 168, 182, 200]),
+        new("dynamic:geometra", "Geòmetra", "Guanya 8 jocs d'Estratègia abstracta.", 8,
+            [15, 16, 24, 72, 85, 91, 119, 127, 131, 140, 141, 143, 145, 158, 159, 168]),
+        new("dynamic:fundador-imperis", "Fundador/a d'imperis", "Guanya 6 jocs de Civilització.", 6,
+            [2, 5, 69, 71, 84, 97, 151, 161, 184, 185, 188]),
+        new("dynamic:pages-any", "Pagès de l'any", "Guanya 7 jocs d'Agricultura.", 7,
+            [7, 6, 12, 32, 33, 59, 109, 144, 148, 161, 162, 183, 189, 206]),
+        new("dynamic:anima-festa", "Ànima de la festa", "Guanya 12 jocs de festa diferents.", 12,
+            [8, 22, 41, 42, 47, 49, 54, 61, 66, 82, 86, 94, 98, 99, 128, 139, 163, 166, 180, 179, 191, 192, 196, 208]),
+        new("set:capita-picard", "Capità Jean-Luc Picard", "Guanya tots els jocs d'Exploració espacial.", 8,
+            [45, 69, 84, 134, 149, 167, 172, 185]),
+        new("set:capita-sparrow", "Capità Jack Sparrow", "Guanya tots els jocs Nàutics o de Pirates.", 5,
+            [27, 53, 132, 170, 178]),
+        new("set:interrail", "Interrail", "Guanya tots els jocs de Trens.", 3,
+            [14, 23, 130]),
+        new("dynamic:diplomatic", "Diplomàtic/a", "Guanya 5 jocs de Negociació.", 5,
+            [31, 36, 45, 66, 80, 105, 157, 162])
+    ];
+
     public HallOfFameService(AppDbContext context)
     {
         _context = context;
@@ -245,6 +279,12 @@ public class HallOfFameService
 
         var wins = BuildWinLookup(partidas, usuarios);
         var plays = BuildPlayCountLookup(partidas, usuarios);
+        var playedGames = BuildPlayedGamesLookup(partidas, usuarios);
+        var winningPlayerCounts = BuildWinningPlayerCountsLookup(partidas, usuarios);
+        var winningCategories = BuildWinningCategoryCountLookup(wins, juegos);
+        var calendarStreaks = BuildMonthlyPlayStreakLookup(partidas, usuarios);
+        var phoenixWins = BuildPhoenixWinLookup(partidas, usuarios);
+        var tiedFirstWins = BuildTiedFirstWinLookup(partidas, usuarios);
         var juegosById = juegos.ToDictionary(juego => juego.JuegoId);
         var cooperativeGames = juegos
             .Where(juego =>
@@ -322,6 +362,32 @@ public class HallOfFameService
                         "GameSetWins",
                         completedGames,
                         medal.JuegoIds.Length,
+                        medal.JuegoIds
+                            .Where(juegosById.ContainsKey)
+                            .Select(juegoId => new MedalGameDto
+                            {
+                                JuegoId = juegoId,
+                                Nombre = juegosById[juegoId].Nombre
+                            })
+                            .OrderBy(juego => juego.Nombre)
+                            .ToList())));
+            }
+
+            foreach (var medal in ThresholdSetMedals)
+            {
+                var completedGames = medal.JuegoIds.Count(juegoId =>
+                    wins.GetValueOrDefault((usuario.UsuarioId, juegoId)) > 0);
+                rows.Add(new UserMedalProgressRow(
+                    usuario.UsuarioId,
+                    usuario.Nombre,
+                    BuildSingleTargetProgress(
+                        medal.MedalId,
+                        medal.Nombre,
+                        medal.Descripcion,
+                        DefaultIconPath,
+                        "GameSetWins",
+                        completedGames,
+                        medal.TargetValue,
                         medal.JuegoIds
                             .Where(juegosById.ContainsKey)
                             .Select(juegoId => new MedalGameDto
@@ -419,6 +485,59 @@ public class HallOfFameService
                         currentValue,
                         medal.TargetValue)));
             }
+
+            var wonNonListGames = juegos.Count(juego =>
+                !ContainsGameType(juego.Tipo, "no llista") &&
+                wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0);
+            var playedNonListGames = juegos.Count(juego =>
+                !ContainsGameType(juego.Tipo, "no llista") &&
+                playedGames.TryGetValue(usuario.UsuarioId, out var userPlayedGames) &&
+                userPlayedGames.Contains(juego.JuegoId));
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:fritvers", "Fritvers",
+                    "Guanya almenys un joc de 10 categories diferents.", DefaultIconPath,
+                    "CategoryWins", winningCategories.GetValueOrDefault(usuario.UsuarioId), 10)));
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:polivalent", "Polivalent",
+                    "Guanya partides amb 1, 2, 3, 4, 5 i 6 jugadors.", DefaultIconPath,
+                    "PlayerCountWins",
+                    winningPlayerCounts.TryGetValue(usuario.UsuarioId, out var playerCounts) ? playerCounts.Count : 0,
+                    6)));
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:rodamon-ludic", "Rodamón lúdic",
+                    "Guanya 50 jocs diferents, excloent els No llista.", DefaultIconPath,
+                    "DistinctGameWins", wonNonListGames, 50)));
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:explorador", "Explorador/a",
+                    "Juga 100 jocs diferents, excloent els No llista.", DefaultIconPath,
+                    "DistinctGamesPlayed", playedNonListGames, 100)));
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:calendari-frit", "Calendari Frit",
+                    "Juga almenys una partida cada mes durant 12 mesos consecutius.", DefaultIconPath,
+                    "MonthlyPlayStreak", calendarStreaks.GetValueOrDefault(usuario.UsuarioId), 12)));
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:au-fenix", "Au Fènix",
+                    "Torna a guanyar un joc després d'un any sense jugar-lo.", DefaultIconPath,
+                    "PhoenixWin", phoenixWins.GetValueOrDefault(usuario.UsuarioId), 1)));
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress("dynamic:per-poc", "Per poc!",
+                    "Guanya 10 partides amb empat a la primera posició.", DefaultIconPath,
+                    "TiedFirstWins", tiedFirstWins.GetValueOrDefault(usuario.UsuarioId), 10)));
 
             foreach (var manual in manualMedallas)
             {
@@ -724,6 +843,215 @@ public class HallOfFameService
             .ToDictionary(group => group.Key, group => group.Count());
     }
 
+    private static Dictionary<int, HashSet<int>> BuildPlayedGamesLookup(
+        List<Partida> partidas,
+        List<Usuario> usuarios)
+    {
+        var result = new Dictionary<int, HashSet<int>>();
+
+        foreach (var partida in partidas)
+        {
+            foreach (var usuarioId in DetectParticipantIds(partida, usuarios))
+            {
+                if (!result.TryGetValue(usuarioId, out var gameIds))
+                {
+                    gameIds = [];
+                    result[usuarioId] = gameIds;
+                }
+
+                gameIds.Add(partida.JuegoId);
+            }
+        }
+
+        return result;
+    }
+
+    private static Dictionary<int, HashSet<int>> BuildWinningPlayerCountsLookup(
+        List<Partida> partidas,
+        List<Usuario> usuarios)
+    {
+        var result = new Dictionary<int, HashSet<int>>();
+
+        foreach (var partida in partidas.Where(partida =>
+            partida.NumeroJugadores >= 1 && partida.NumeroJugadores <= 6))
+        {
+            foreach (var usuarioId in DetectWinnerIds(partida, usuarios))
+            {
+                if (!result.TryGetValue(usuarioId, out var playerCounts))
+                {
+                    playerCounts = [];
+                    result[usuarioId] = playerCounts;
+                }
+
+                playerCounts.Add(partida.NumeroJugadores);
+            }
+        }
+
+        return result;
+    }
+
+    private static Dictionary<int, int> BuildWinningCategoryCountLookup(
+        Dictionary<(int UsuarioId, int JuegoId), int> wins,
+        List<Juego> juegos)
+    {
+        var categoriesByGame = juegos
+            .ToDictionary(
+                juego => juego.JuegoId,
+                juego => SplitGameTypes(juego.Tipo));
+        var categoriesByUser = new Dictionary<int, HashSet<string>>();
+
+        foreach (var ((usuarioId, juegoId), winCount) in wins.Where(row => row.Value > 0))
+        {
+            if (!categoriesByGame.TryGetValue(juegoId, out var categories))
+            {
+                continue;
+            }
+
+            if (!categoriesByUser.TryGetValue(usuarioId, out var userCategories))
+            {
+                userCategories = new(StringComparer.OrdinalIgnoreCase);
+                categoriesByUser[usuarioId] = userCategories;
+            }
+
+            userCategories.UnionWith(categories);
+        }
+
+        return categoriesByUser.ToDictionary(row => row.Key, row => row.Value.Count);
+    }
+
+    private static Dictionary<int, int> BuildMonthlyPlayStreakLookup(
+        List<Partida> partidas,
+        List<Usuario> usuarios)
+    {
+        var monthsByUser = new Dictionary<int, HashSet<int>>();
+
+        foreach (var partida in partidas)
+        {
+            var monthIndex = partida.Fecha.Year * 12 + partida.Fecha.Month;
+            foreach (var usuarioId in DetectParticipantIds(partida, usuarios))
+            {
+                if (!monthsByUser.TryGetValue(usuarioId, out var months))
+                {
+                    months = [];
+                    monthsByUser[usuarioId] = months;
+                }
+
+                months.Add(monthIndex);
+            }
+        }
+
+        return monthsByUser.ToDictionary(row => row.Key, row =>
+        {
+            var ordered = row.Value.Order().ToList();
+            var best = 0;
+            var current = 0;
+            int? previous = null;
+
+            foreach (var month in ordered)
+            {
+                current = previous.HasValue && month == previous.Value + 1 ? current + 1 : 1;
+                best = Math.Max(best, current);
+                previous = month;
+            }
+
+            return best;
+        });
+    }
+
+    private static Dictionary<int, int> BuildPhoenixWinLookup(
+        List<Partida> partidas,
+        List<Usuario> usuarios)
+    {
+        var result = new Dictionary<int, int>();
+
+        foreach (var gameGroup in partidas.GroupBy(partida => partida.JuegoId))
+        {
+            DateOnly? previousDate = null;
+
+            foreach (var partida in gameGroup.OrderBy(partida => partida.Fecha).ThenBy(partida => partida.PartidaId))
+            {
+                if (previousDate.HasValue && previousDate.Value.AddYears(1) <= partida.Fecha)
+                {
+                    foreach (var usuarioId in DetectWinnerIds(partida, usuarios))
+                    {
+                        result[usuarioId] = 1;
+                    }
+                }
+
+                previousDate = partida.Fecha;
+            }
+        }
+
+        return result;
+    }
+
+    private static Dictionary<int, int> BuildTiedFirstWinLookup(
+        List<Partida> partidas,
+        List<Usuario> usuarios)
+    {
+        var result = new Dictionary<int, int>();
+
+        foreach (var partida in partidas.Where(partida =>
+            partida.Jugadores.Count(jugador => jugador.Posicion == 1) > 1))
+        {
+            foreach (var usuarioId in DetectWinnerIds(partida, usuarios))
+            {
+                result[usuarioId] = result.GetValueOrDefault(usuarioId) + 1;
+            }
+        }
+
+        return result;
+    }
+
+    private static HashSet<int> DetectParticipantIds(Partida partida, List<Usuario> usuarios)
+    {
+        return DetectUsuarioIds(partida.Jugadores, usuarios);
+    }
+
+    private static HashSet<int> DetectWinnerIds(Partida partida, List<Usuario> usuarios)
+    {
+        return DetectUsuarioIds(
+            partida.Jugadores.Where(jugador => jugador.Posicion == 1),
+            usuarios);
+    }
+
+    private static HashSet<int> DetectUsuarioIds(
+        IEnumerable<PartidaJugador> jugadores,
+        List<Usuario> usuarios)
+    {
+        var usuariosById = usuarios.ToDictionary(usuario => usuario.UsuarioId);
+        var registeredUsers = usuarios
+            .Select(usuario => new RegisteredUserRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                NormalizeName(usuario.Nombre)))
+            .ToList();
+        var result = new HashSet<int>();
+
+        foreach (var jugador in jugadores)
+        {
+            if (jugador.UsuarioId.HasValue && usuariosById.ContainsKey(jugador.UsuarioId.Value))
+            {
+                result.Add(jugador.UsuarioId.Value);
+            }
+
+            foreach (var usuario in MatchUsuariosByNombreMostrado(jugador.NombreMostrado, registeredUsers))
+            {
+                result.Add(usuario.UsuarioId);
+            }
+        }
+
+        return result;
+    }
+
+    private static HashSet<string> SplitGameTypes(string? value)
+    {
+        return (value ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(type => !string.Equals(type, "No llista", StringComparison.OrdinalIgnoreCase))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     private static MedalProgressDto BuildRankedProgress(
         string medalId,
         string nombre,
@@ -930,6 +1258,9 @@ public class HallOfFameService
         {
             "GameWins" => progress.CurrentValue > 0,
             "GameSetWins" or "HeavyBggWins" or "TotalPlays" or
+                "CategoryWins" or "PlayerCountWins" or "DistinctGameWins" or
+                "DistinctGamesPlayed" or "MonthlyPlayStreak" or "PhoenixWin" or
+                "TiedFirstWins" or
                 "CineTotalRatings" or "CineSundayStreak" or
                 "CsopaSoparTotal" or "CsopaSoparTuesdayStreak" or
                 "CsopaGymfritTotal" or "CsopaGymfritThursdayStreak" => progress.Completed,
@@ -956,6 +1287,12 @@ public class HallOfFameService
 
     private sealed record MedalRank(string Name, int Threshold, string Color, bool Filled);
     private sealed record CodedSetMedal(string MedalId, string Nombre, string Descripcion, int[] JuegoIds);
+    private sealed record ThresholdSetMedal(
+        string MedalId,
+        string Nombre,
+        string Descripcion,
+        int TargetValue,
+        int[] JuegoIds);
     private sealed record DynamicMedal(string MedalId, string Nombre, string Descripcion, string Tipo, int TargetValue);
     private sealed record RegisteredUserRow(int UsuarioId, string Nombre, string NormalizedNombre);
     private sealed record UserMedalProgressRow(int UsuarioId, string UsuarioNombre, MedalProgressDto Progress);
