@@ -87,7 +87,7 @@ public class HallOfFameService
             [7, 13, 18, 24, 29, 32, 44, 46, 52, 55, 57, 59, 73, 74, 75, 79, 86, 91, 116, 123, 137, 140, 142, 147, 157, 183, 195, 209, 211]),
         new("dynamic:rei-mides", "Rei/Reina Mides", "Guanya 25 jocs Econòmics diferents.", 25,
             [2, 5, 7, 6, 11, 19, 20, 21, 23, 31, 32, 33, 34, 36, 40, 52, 84, 87, 97, 100, 108, 112, 114, 117, 118, 125, 132, 134, 136, 142, 143, 145, 148, 153, 164, 174, 175, 184, 185, 186, 187, 188, 198, 201, 203, 206, 210]),
-        new("dynamic:mestre-cartes", "Mestre/a de les cartes", "Guanya 25 jocs de cartes diferents.", 25,
+        new("dynamic:mestre-cartes", "Mestre/a de les cartes", "Guanya 50 jocs de cartes diferents.", 50,
             [2, 5, 8, 13, 17, 18, 26, 37, 39, 41, 42, 46, 47, 51, 53, 54, 56, 66, 68, 69, 71, 73, 74, 75, 77, 78, 79, 80, 82, 86, 88, 89, 93, 96, 97, 106, 111, 109, 115, 118, 124, 125, 138, 147, 150, 158, 160, 165, 166, 168, 170, 173, 174, 175, 176, 180, 179, 191, 197, 198, 199, 205, 208, 209, 211]),
         new("dynamic:urbanista", "Urbanista", "Guanya 20 jocs de Construcció de ciutats.", 20,
             [2, 4, 5, 9, 20, 21, 26, 34, 36, 37, 40, 52, 73, 79, 100, 114, 120, 130, 134, 136, 148, 207]),
@@ -527,8 +527,8 @@ public class HallOfFameService
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:explorador", "Explorador/a",
-                    "Juga 100 jocs diferents, excloent els No llista, Cooperatius i per Equips.", DefaultIconPath,
-                    "DistinctGamesPlayed", playedNonListGames, 100)));
+                    "Juga 200 jocs diferents, excloent els No llista, Cooperatius i per Equips.", DefaultIconPath,
+                    "DistinctGamesPlayed", playedNonListGames, 200)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
                 usuario.Nombre,
