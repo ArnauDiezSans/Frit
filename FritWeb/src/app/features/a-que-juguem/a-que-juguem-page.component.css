@@ -73,12 +73,9 @@ h1 {
 }
 
 .rowing-action-stack {
-  display: grid;
-  justify-items: center;
-  gap: 3px;
+  position: relative;
 }
 
-.rowing-admin-button,
 .small-icon-button {
   display: inline-grid;
   place-items: center;
@@ -90,11 +87,20 @@ h1 {
 }
 
 .rowing-admin-button {
-  width: 32px;
-  min-width: 32px;
-  height: 28px;
-  min-height: 28px;
-  padding: 2px;
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #667085;
+  cursor: pointer;
+}
+
+.rowing-admin-button:hover {
+  color: #0f766e;
 }
 
 .small-icon-button svg {
@@ -108,11 +114,11 @@ h1 {
 }
 
 .rowing-admin-button svg {
-  width: 24px;
-  height: 24px;
+  width: 16px;
+  height: 16px;
   fill: none;
-  stroke: #0b4a79;
-  stroke-width: 1.8;
+  stroke: currentColor;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -607,10 +613,6 @@ h1 {
     flex-wrap: wrap;
   }
 
-  .rowing-action-stack {
-    justify-items: stretch;
-  }
-
   .recommendation-filters {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -646,10 +648,6 @@ h1 {
 
   .rowing-button {
     width: auto;
-  }
-
-  .rowing-admin-button {
-    justify-self: center;
   }
 
   .modal-backdrop {
