@@ -195,10 +195,6 @@
         </label>
       </div>
 
-      <p class="rowing-note">
-        Es mostraran {{ rowingStrength() }} joc{{ rowingStrength() === 1 ? '' : 's' }}.
-        Aquesta opció valdrà {{ getRowingPoints() }} punt{{ getRowingPoints() === 1 ? '' : 's' }} per jugador quan activem la puntuació.
-      </p>
       <p class="field-error" *ngIf="rowingError()">{{ rowingError() }}</p>
 
       <div class="modal-actions">

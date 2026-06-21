@@ -52,7 +52,17 @@ public class HallOfFameService
             "set:malvat",
             "Malvat",
             "Guanya una partida als tres Villainous.",
-            [53, 124, 177])
+            [53, 124, 177]),
+        new(
+            "set:primer-en-actuar",
+            "Primer/a en actuar",
+            "Guanya almenys una partida a tots els jocs de rapidesa.",
+            [214, 76, 77, 104, 121, 139, 163, 200, 208, 86, 99, 106, 113]),
+        new(
+            "set:arquitecte-del-paper",
+            "Arquitecte/a del paper",
+            "Guanya almenys una partida a tots els jocs de paper i llapis.",
+            [4, 214, 130, 135, 153, 207])
     ];
 
     private static readonly DynamicMedal[] DynamicMedals =
@@ -236,6 +246,25 @@ public class HallOfFameService
         var wins = BuildWinLookup(partidas, usuarios);
         var plays = BuildPlayCountLookup(partidas, usuarios);
         var juegosById = juegos.ToDictionary(juego => juego.JuegoId);
+        var cooperativeGames = juegos
+            .Where(juego =>
+                ContainsGameType(juego.Tipo, "cooperatiu") &&
+                !ContainsGameType(juego.Tipo, "no llista"))
+            .OrderBy(juego => juego.Nombre)
+            .ToList();
+        var teamGames = juegos
+            .Where(juego =>
+                ContainsGameType(juego.Tipo, "equips") &&
+                !ContainsGameType(juego.Tipo, "no llista"))
+            .OrderBy(juego => juego.Nombre)
+            .ToList();
+        var twoPlayerGames = juegos
+            .Where(juego =>
+                juego.NumeroJugadoresMin == 2 &&
+                juego.NumeroJugadoresMax == 2 &&
+                !ContainsGameType(juego.Tipo, "no llista"))
+            .OrderBy(juego => juego.Nombre)
+            .ToList();
         var cineTotals = BuildCineTotalRatingsLookup(cinePeliculas);
         var cineTotalTarget = cineTotals.Count > 0 ? cineTotals.Values.Max() : 0;
         var cineSundayStreaks = BuildCineSundayStreakLookup(cinePeliculas, usuarios, GetFritToday(DateTime.UtcNow));
@@ -303,6 +332,69 @@ public class HallOfFameService
                             .OrderBy(juego => juego.Nombre)
                             .ToList())));
             }
+
+            var cooperativeWins = cooperativeGames.Count(juego =>
+                wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0);
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress(
+                    "set:primer-entre-iguals",
+                    "Primer entre iguals",
+                    "Es tracta d'haver guanyat tots els jocs cooperatius, excloent els No llista.",
+                    DefaultIconPath,
+                    "GameSetWins",
+                    cooperativeWins,
+                    cooperativeGames.Count,
+                    cooperativeGames
+                        .Select(juego => new MedalGameDto
+                        {
+                            JuegoId = juego.JuegoId,
+                            Nombre = juego.Nombre
+                        })
+                        .ToList())));
+
+            var teamWins = teamGames.Count(juego =>
+                wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0);
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress(
+                    "set:engranatge-perfecte",
+                    "Engranatge perfecte",
+                    "Es tracta d'haver guanyat tots els jocs per equips, excloent els No llista.",
+                    DefaultIconPath,
+                    "GameSetWins",
+                    teamWins,
+                    teamGames.Count,
+                    teamGames
+                        .Select(juego => new MedalGameDto
+                        {
+                            JuegoId = juego.JuegoId,
+                            Nombre = juego.Nombre
+                        })
+                        .ToList())));
+
+            var twoPlayerWins = twoPlayerGames.Count(juego =>
+                wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0);
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildSingleTargetProgress(
+                    "set:duelista",
+                    "Duelista",
+                    "Es tracta d'haver guanyat tots els jocs exclusius per a dos jugadors, excloent els No llista.",
+                    DefaultIconPath,
+                    "GameSetWins",
+                    twoPlayerWins,
+                    twoPlayerGames.Count,
+                    twoPlayerGames
+                        .Select(juego => new MedalGameDto
+                        {
+                            JuegoId = juego.JuegoId,
+                            Nombre = juego.Nombre
+                        })
+                        .ToList())));
 
             foreach (var medal in DynamicMedals)
             {
@@ -855,6 +947,11 @@ public class HallOfFameService
     private static string GetGameIconPath(int juegoId)
     {
         return $"/assets/medallas/jocs/{juegoId}.png";
+    }
+
+    private static bool ContainsGameType(string? value, string type)
+    {
+        return (value ?? string.Empty).Contains(type, StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record MedalRank(string Name, int Threshold, string Color, bool Filled);
