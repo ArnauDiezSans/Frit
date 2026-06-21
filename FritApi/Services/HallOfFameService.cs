@@ -282,7 +282,7 @@ public class HallOfFameService
         var playedGames = BuildPlayedGamesLookup(partidas, usuarios);
         var winningPlayerCounts = BuildWinningPlayerCountsLookup(partidas, usuarios);
         var winningCategories = BuildWinningCategoryCountLookup(wins, juegos);
-        var calendarStreaks = BuildMonthlyPlayStreakLookup(partidas, usuarios);
+        var calendarStreaks = BuildWeeklyPlayStreakLookup(partidas, usuarios);
         var phoenixWins = BuildPhoenixWinLookup(partidas, usuarios);
         var tiedFirstWins = BuildTiedFirstWinLookup(partidas, usuarios);
         var juegosById = juegos.ToDictionary(juego => juego.JuegoId);
@@ -521,8 +521,8 @@ public class HallOfFameService
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:rodamon-ludic", "Rodamón lúdic",
-                    "Guanya 50 jocs diferents, excloent els No llista, Cooperatius i per Equips.", DefaultIconPath,
-                    "DistinctGameWins", wonNonListGames, 50)));
+                    "Guanya 100 jocs diferents, excloent els No llista, Cooperatius i per Equips.", DefaultIconPath,
+                    "DistinctGameWins", wonNonListGames, 100)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
                 usuario.Nombre,
@@ -533,8 +533,8 @@ public class HallOfFameService
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:calendari-frit", "Calendari Frit",
-                    "Juga almenys una partida cada mes durant 12 mesos consecutius.", DefaultIconPath,
-                    "MonthlyPlayStreak", calendarStreaks.GetValueOrDefault(usuario.UsuarioId), 12)));
+                    "Juga almenys una partida cada setmana durant 12 setmanes consecutives.", DefaultIconPath,
+                    "WeeklyPlayStreak", calendarStreaks.GetValueOrDefault(usuario.UsuarioId), 12)));
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,
                 usuario.Nombre,
@@ -933,43 +933,48 @@ public class HallOfFameService
         return categoriesByUser.ToDictionary(row => row.Key, row => row.Value.Count);
     }
 
-    private static Dictionary<int, int> BuildMonthlyPlayStreakLookup(
+    private static Dictionary<int, int> BuildWeeklyPlayStreakLookup(
         List<Partida> partidas,
         List<Usuario> usuarios)
     {
-        var monthsByUser = new Dictionary<int, HashSet<int>>();
+        var weeksByUser = new Dictionary<int, HashSet<DateOnly>>();
 
         foreach (var partida in partidas)
         {
-            var monthIndex = partida.Fecha.Year * 12 + partida.Fecha.Month;
+            var weekStart = partida.Fecha.AddDays(-GetMondayBasedDayOffset(partida.Fecha.DayOfWeek));
             foreach (var usuarioId in DetectParticipantIds(partida, usuarios))
             {
-                if (!monthsByUser.TryGetValue(usuarioId, out var months))
+                if (!weeksByUser.TryGetValue(usuarioId, out var weeks))
                 {
-                    months = [];
-                    monthsByUser[usuarioId] = months;
+                    weeks = [];
+                    weeksByUser[usuarioId] = weeks;
                 }
 
-                months.Add(monthIndex);
+                weeks.Add(weekStart);
             }
         }
 
-        return monthsByUser.ToDictionary(row => row.Key, row =>
+        return weeksByUser.ToDictionary(row => row.Key, row =>
         {
             var ordered = row.Value.Order().ToList();
             var best = 0;
             var current = 0;
-            int? previous = null;
+            DateOnly? previous = null;
 
-            foreach (var month in ordered)
+            foreach (var week in ordered)
             {
-                current = previous.HasValue && month == previous.Value + 1 ? current + 1 : 1;
+                current = previous.HasValue && week == previous.Value.AddDays(7) ? current + 1 : 1;
                 best = Math.Max(best, current);
-                previous = month;
+                previous = week;
             }
 
             return best;
         });
+    }
+
+    private static int GetMondayBasedDayOffset(DayOfWeek dayOfWeek)
+    {
+        return dayOfWeek == DayOfWeek.Sunday ? 6 : (int)dayOfWeek - 1;
     }
 
     private static Dictionary<int, PhoenixWinDetail> BuildPhoenixWinLookup(
@@ -1278,7 +1283,7 @@ public class HallOfFameService
             "GameWins" => progress.CurrentValue > 0,
             "GameSetWins" or "HeavyBggWins" or "TotalPlays" or
                 "CategoryWins" or "PlayerCountWins" or "DistinctGameWins" or
-                "DistinctGamesPlayed" or "MonthlyPlayStreak" or "PhoenixWin" or
+                "DistinctGamesPlayed" or "WeeklyPlayStreak" or "PhoenixWin" or
                 "TiedFirstWins" or
                 "CineTotalRatings" or "CineSundayStreak" or
                 "CsopaSoparTotal" or "CsopaSoparTuesdayStreak" or
