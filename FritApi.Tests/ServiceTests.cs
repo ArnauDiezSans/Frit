@@ -983,6 +983,38 @@ public class ServiceTests
         }
     }
 
+    [Fact]
+    public async Task AQueJuguemService_RegistersRefusedRowingWithMinusOnePoint()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Catan",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Propietario = user
+        };
+        context.Add(user);
+        context.Add(game);
+        await context.SaveChangesAsync();
+
+        var service = new AQueJuguemService(context, new UsuarioJuegoOrdenService(context));
+        var result = await service.RegisterRemadaAsync(user.UsuarioId, new RemadaCreateDto
+        {
+            TempsDisponibleMinuts = 90,
+            NombreJocs = 1,
+            PuntsPerJugador = -1,
+            UsuarioIds = [user.UsuarioId],
+            JuegoIds = [game.JuegoId]
+        });
+
+        Assert.True(result.Success);
+        var remada = await context.Remades.Include(item => item.Jugadors).SingleAsync();
+        Assert.Equal(-1, remada.PuntsPerJugador);
+        Assert.Equal(-1, Assert.Single(remada.Jugadors).Punts);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

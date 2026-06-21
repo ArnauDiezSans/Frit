@@ -28,7 +28,7 @@ public class RemadaCreateDto
     [Range(1, 10)]
     public int NombreJocs { get; set; }
 
-    [Range(1, 3)]
+    [Range(-1, 3)]
     public int PuntsPerJugador { get; set; }
 
     [Required]
@@ -73,7 +73,7 @@ public class RemadaUpdateDto
     [Range(1, 10)]
     public int NombreJocs { get; set; }
 
-    [Range(1, 3)]
+    [Range(-1, 3)]
     public int PuntsPerJugador { get; set; }
 
     [Required]

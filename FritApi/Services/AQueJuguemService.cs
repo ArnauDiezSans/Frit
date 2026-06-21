@@ -97,7 +97,8 @@ public class AQueJuguemService
             _ => 0
         };
 
-        if (expectedPoints == 0 || dto.PuntsPerJugador != expectedPoints)
+        if (expectedPoints == 0 ||
+            (dto.PuntsPerJugador != expectedPoints && dto.PuntsPerJugador != -1))
         {
             return (false, "La intensitat de la remada no és vàlida.");
         }
@@ -286,7 +287,8 @@ public class AQueJuguemService
         var usuarioIds = rawUsuarioIds.Distinct().ToList();
         var juegoIds = rawJuegoIds.Distinct().ToList();
 
-        if (expectedPoints == 0 || puntsPerJugador != expectedPoints)
+        if (expectedPoints == 0 ||
+            (puntsPerJugador != expectedPoints && puntsPerJugador != -1))
         {
             return (false, "La intensitat de la remada no és vàlida.", [], [], [], []);
         }

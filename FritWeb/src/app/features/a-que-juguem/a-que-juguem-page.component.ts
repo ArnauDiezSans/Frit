@@ -83,6 +83,7 @@ export class AQueJuguemPageComponent {
   editRemadaDate = signal('');
   editRemadaTime = signal('');
   editRemadaStrength = signal<1 | 5 | 10>(1);
+  editRemadaPoints = signal<-1 | 1 | 2 | 3>(3);
   editRemadaUsuarioIds = signal<number[]>([]);
   editRemadaJuegoIds = signal<number[]>([]);
   canManageRemades = computed(() => this.authService.currentUser?.nombre === 'Arnau');
@@ -208,6 +209,7 @@ export class AQueJuguemPageComponent {
     this.editRemadaDate.set(this.toDatetimeLocal(remada.createdAt));
     this.editRemadaTime.set(String(remada.tempsDisponibleMinuts));
     this.editRemadaStrength.set(remada.nombreJocs);
+    this.editRemadaPoints.set(remada.puntsPerJugador);
     this.editRemadaUsuarioIds.set(remada.jugadors.map(jugador => jugador.usuarioId));
     this.editRemadaJuegoIds.set(remada.jocs.map(joc => joc.juegoId));
     this.remadesError.set('');
@@ -218,6 +220,7 @@ export class AQueJuguemPageComponent {
     this.editRemadaDate.set('');
     this.editRemadaTime.set('');
     this.editRemadaStrength.set(1);
+    this.editRemadaPoints.set(3);
     this.editRemadaUsuarioIds.set([]);
     this.editRemadaJuegoIds.set([]);
   }
@@ -245,6 +248,9 @@ export class AQueJuguemPageComponent {
     const parsed = Number(value);
     const strength: 1 | 5 | 10 = parsed === 5 ? 5 : parsed === 10 ? 10 : 1;
     this.editRemadaStrength.set(strength);
+    if (this.editRemadaPoints() !== -1) {
+      this.editRemadaPoints.set(strength === 1 ? 3 : strength === 5 ? 2 : 1);
+    }
     this.editRemadaJuegoIds.update(current => current.slice(0, strength));
   }
 
@@ -266,7 +272,6 @@ export class AQueJuguemPageComponent {
     }
 
     const strength = this.editRemadaStrength();
-    const points: 1 | 2 | 3 = strength === 1 ? 3 : strength === 5 ? 2 : 1;
     this.remadesSaving.set(true);
     this.remadesError.set('');
 
@@ -274,7 +279,7 @@ export class AQueJuguemPageComponent {
       createdAt: new Date(this.editRemadaDate()).toISOString(),
       tempsDisponibleMinuts: Number(this.editRemadaTime()),
       nombreJocs: strength,
-      puntsPerJugador: points,
+      puntsPerJugador: this.editRemadaPoints(),
       usuarioIds: this.editRemadaUsuarioIds(),
       juegoIds: this.editRemadaJuegoIds()
     }).subscribe({
@@ -350,7 +355,10 @@ export class AQueJuguemPageComponent {
   }
 
   closeRowingResults(): void {
-    this.rowingResultsOpen.set(false);
+    if (!this.rowingLoading() && this.rowingResults().length === 0) {
+      this.rowingResultsOpen.set(false);
+      this.rowingError.set('');
+    }
   }
 
   onRowingTimeInput(value: string): void {
@@ -372,7 +380,7 @@ export class AQueJuguemPageComponent {
     return this.rowingStrength() === 1 ? 3 : this.rowingStrength() === 5 ? 2 : 1;
   }
 
-  acceptRowing(): void {
+  prepareRowing(): void {
     if (!this.canAcceptRowing()) {
       return;
     }
@@ -418,28 +426,40 @@ export class AQueJuguemPageComponent {
           return;
         }
 
-        this.aQueJuguemService.registerRemada({
-          tempsDisponibleMinuts: availableMinutes,
-          nombreJocs: resultCount,
-          puntsPerJugador: this.getRowingPoints(),
-          usuarioIds: this.getSelectedUsuarioIds(),
-          juegoIds: results.map(result => result.juegoId)
-        }).subscribe({
-          next: () => {
-            this.rowingResults.set(results);
-            this.rowingLoading.set(false);
-            this.rowingConfigOpen.set(false);
-            this.rowingResultsOpen.set(true);
-          },
-          error: error => {
-            this.rowingLoading.set(false);
-            this.rowingError.set(error?.error?.message ?? "No s'ha pogut registrar la remada.");
-          }
-        });
+        this.rowingResults.set(results);
+        this.rowingLoading.set(false);
+        this.rowingConfigOpen.set(false);
+        this.rowingResultsOpen.set(true);
       },
       error: () => {
         this.rowingLoading.set(false);
         this.rowingError.set("No s'ha pogut carregar l'ordre de La llista.");
+      }
+    });
+  }
+
+  resolveRowing(accepted: boolean): void {
+    const results = this.rowingResults();
+    if (this.rowingLoading() || results.length !== this.rowingStrength()) {
+      return;
+    }
+
+    this.rowingLoading.set(true);
+    this.rowingError.set('');
+    this.aQueJuguemService.registerRemada({
+      tempsDisponibleMinuts: Number(this.rowingTime()),
+      nombreJocs: this.rowingStrength(),
+      puntsPerJugador: accepted ? this.getRowingPoints() : -1,
+      usuarioIds: this.getSelectedUsuarioIds(),
+      juegoIds: results.map(result => result.juegoId)
+    }).subscribe({
+      next: () => {
+        this.rowingLoading.set(false);
+        this.rowingResultsOpen.set(false);
+      },
+      error: error => {
+        this.rowingLoading.set(false);
+        this.rowingError.set(error?.error?.message ?? "No s'ha pogut registrar la remada.");
       }
     });
   }

@@ -172,6 +172,10 @@
         </div>
       </div>
 
+      <p class="rowing-note">
+        Si s'accepta la llista següent es rebran els punts de la remada; si no, es restarà un punt als jugadors seleccionats.
+      </p>
+
       <div class="rowing-form-grid">
         <label class="form-field">
           <span>Temps disponible (minuts)</span>
@@ -199,8 +203,8 @@
 
       <div class="modal-actions">
         <button type="button" class="ghost-button" [disabled]="rowingLoading()" (click)="closeRowingConfig()">Cancel·lar</button>
-        <button type="button" class="primary-button" [disabled]="!canAcceptRowing()" (click)="acceptRowing()">
-          {{ rowingLoading() ? 'Remant...' : 'Acceptar' }}
+        <button type="button" class="primary-button" [disabled]="!canAcceptRowing()" (click)="prepareRowing()">
+          {{ rowingLoading() ? 'Preparant...' : 'Veure proposta' }}
         </button>
       </div>
     </section>
@@ -213,7 +217,6 @@
           <h2>Jocs per remar</h2>
           <p>{{ getSelectedPlayerNames().join(', ') }} · {{ rowingTime() }} minuts</p>
         </div>
-        <button type="button" class="ghost-button" (click)="closeRowingResults()">Tancar</button>
       </div>
 
       <ol class="rowing-results-list" *ngIf="rowingResults().length > 0; else noRowingResults">
@@ -221,6 +224,7 @@
           <div>
             <strong>{{ juego.nombre }}</strong>
             <span>Posició {{ juego.llistaPosition }} de La llista</span>
+            <span>Puntuació dels usuaris: {{ juego.puntuacion }}</span>
           </div>
           <div class="rowing-time-detail">
             <strong>{{ juego.tempsMigMinuts }} min</strong>
@@ -236,8 +240,20 @@
         </div>
       </ng-template>
 
+      <p class="field-error" *ngIf="rowingError()">{{ rowingError() }}</p>
+
       <div class="modal-actions">
-        <button type="button" class="primary-button" (click)="closeRowingResults()">Entesos</button>
+        <ng-container *ngIf="rowingResults().length > 0; else closeEmptyRowingResults">
+          <button type="button" class="ghost-button" [disabled]="rowingLoading()" (click)="resolveRowing(false)">
+            Refusar remada
+          </button>
+          <button type="button" class="primary-button" [disabled]="rowingLoading()" (click)="resolveRowing(true)">
+            {{ rowingLoading() ? 'Desant...' : 'Acceptar remada' }}
+          </button>
+        </ng-container>
+        <ng-template #closeEmptyRowingResults>
+          <button type="button" class="primary-button" (click)="closeRowingResults()">Tancar</button>
+        </ng-template>
       </div>
     </section>
   </div>
@@ -348,5 +364,3 @@
     </section>
   </div>
 </section>
-
-
