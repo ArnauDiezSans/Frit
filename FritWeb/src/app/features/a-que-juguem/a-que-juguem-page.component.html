@@ -161,9 +161,6 @@
           <h2>Volem remar</h2>
           <p>Configuració de la remada</p>
         </div>
-        <button type="button" class="ghost-button" [disabled]="rowingLoading()" (click)="closeRowingConfig()">
-          Tancar
-        </button>
       </div>
 
       <div class="rowing-summary">
@@ -191,9 +188,9 @@
         <label class="form-field">
           <span>Com de fort voleu remar?</span>
           <select [value]="rowingStrength()" (change)="onRowingStrengthChange($any($event.target).value)">
-            <option value="1">1 (+3)</option>
-            <option value="5">5 (+2)</option>
-            <option value="10">10 (+1)</option>
+            <option value="1">Triar entre 1 joc (+3 punts)</option>
+            <option value="5">Triar entre 5 jocs (+2 punts)</option>
+            <option value="10">Triar entre 10 jocs (+1 punt)</option>
           </select>
         </label>
       </div>
@@ -307,9 +304,9 @@
               <label class="form-field">
                 <span>Intensitat</span>
                 <select [value]="editRemadaStrength()" (change)="onEditRemadaStrengthChange($any($event.target).value)">
-                  <option value="1">1 (+3)</option>
-                  <option value="5">5 (+2)</option>
-                  <option value="10">10 (+1)</option>
+                  <option value="1">Triar entre 1 joc (+3 punts)</option>
+                  <option value="5">Triar entre 5 jocs (+2 punts)</option>
+                  <option value="10">Triar entre 10 jocs (+1 punt)</option>
                 </select>
               </label>
             </div>
