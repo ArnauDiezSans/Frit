@@ -223,6 +223,15 @@ public class HallOfFameService
             .AsNoTracking()
             .Include(activitat => activitat.Assistencies)
             .ToListAsync();
+        var remadaPoints = await _context.RemadaJugadors
+            .AsNoTracking()
+            .GroupBy(jugador => jugador.UsuarioId)
+            .Select(group => new
+            {
+                UsuarioId = group.Key,
+                Punts = group.Sum(jugador => jugador.Punts)
+            })
+            .ToDictionaryAsync(row => row.UsuarioId, row => row.Punts);
 
         var wins = BuildWinLookup(partidas, usuarios);
         var plays = BuildPlayCountLookup(partidas, usuarios);
@@ -334,6 +343,17 @@ public class HallOfFameService
                         completed ? 1 : 0,
                         1)));
             }
+
+            rows.Add(new UserMedalProgressRow(
+                usuario.UsuarioId,
+                usuario.Nombre,
+                BuildRankedProgress(
+                    "rowing:hero-of-galleys",
+                    "Heroi de Galeres",
+                    "Acumula punts participant en remades.",
+                    DefaultIconPath,
+                    "RowingPoints",
+                    remadaPoints.GetValueOrDefault(usuario.UsuarioId))));
 
             rows.Add(new UserMedalProgressRow(
                 usuario.UsuarioId,

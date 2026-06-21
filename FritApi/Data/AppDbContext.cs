@@ -21,6 +21,9 @@ public class AppDbContext : DbContext
     public DbSet<CsopaAssistencia> CsopaAssistencies => Set<CsopaAssistencia>();
     public DbSet<ManualMedalla> ManualMedallas => Set<ManualMedalla>();
     public DbSet<ManualMedallaUsuario> ManualMedallaUsuarios => Set<ManualMedallaUsuario>();
+    public DbSet<Remada> Remades => Set<Remada>();
+    public DbSet<RemadaJugador> RemadaJugadors => Set<RemadaJugador>();
+    public DbSet<RemadaJuego> RemadaJocs => Set<RemadaJuego>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -283,6 +286,65 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.ManualMedallaId, e.UsuarioId })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<Remada>(entity =>
+        {
+            entity.HasKey(e => e.RemadaId);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.UsuarioCreador)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioCreadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<RemadaJugador>(entity =>
+        {
+            entity.HasKey(e => e.RemadaJugadorId);
+
+            entity.Property(e => e.UsuarioNombre)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.HasOne(e => e.Remada)
+                .WithMany(e => e.Jugadors)
+                .HasForeignKey(e => e.RemadaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.RemadaId, e.UsuarioId })
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<RemadaJuego>(entity =>
+        {
+            entity.HasKey(e => e.RemadaJuegoId);
+
+            entity.Property(e => e.JuegoNombre)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.HasOne(e => e.Remada)
+                .WithMany(e => e.Jocs)
+                .HasForeignKey(e => e.RemadaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Juego)
+                .WithMany()
+                .HasForeignKey(e => e.JuegoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.RemadaId, e.JuegoId })
                 .IsUnique();
         });
     }

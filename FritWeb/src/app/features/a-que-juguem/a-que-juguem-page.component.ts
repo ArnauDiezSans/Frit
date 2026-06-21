@@ -13,7 +13,7 @@ import { UsuariosService } from '../juegos/usuarios.service';
 import { Partida } from '../partidas/partidas.models';
 import { PartidasService } from '../partidas/partidas.service';
 import { UsuarioJuegoOrden, UsuarioService } from '../usuario/usuario.service';
-import { AQueJuguemRecommendation } from './a-que-juguem.service';
+import { AQueJuguemRecommendation, AQueJuguemService, Remada } from './a-que-juguem.service';
 
 interface RowingRecommendation extends AQueJuguemRecommendation {
   llistaPosition: number;
@@ -35,6 +35,7 @@ export class AQueJuguemPageComponent {
   private partidasService = inject(PartidasService);
   private usuarioService = inject(UsuarioService);
   private laLlistaService = inject(LaLlistaService);
+  private aQueJuguemService = inject(AQueJuguemService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -72,6 +73,19 @@ export class AQueJuguemPageComponent {
   rowingTime = signal('');
   rowingStrength = signal<1 | 5 | 10>(1);
   rowingResults = signal<RowingRecommendation[]>([]);
+  remadesAdminOpen = signal(false);
+  remadesLoading = signal(false);
+  remadesSaving = signal(false);
+  remadesError = signal('');
+  remades = signal<Remada[]>([]);
+  adminGames = signal<Juego[]>([]);
+  editingRemadaId = signal<number | null>(null);
+  editRemadaDate = signal('');
+  editRemadaTime = signal('');
+  editRemadaStrength = signal<1 | 5 | 10>(1);
+  editRemadaUsuarioIds = signal<number[]>([]);
+  editRemadaJuegoIds = signal<number[]>([]);
+  canManageRemades = computed(() => this.authService.currentUser?.nombre === 'Arnau');
   private calculationRequestId = 0;
   private lastRecommendationKey = '';
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
@@ -160,6 +174,167 @@ export class AQueJuguemPageComponent {
       .map(usuario => usuario.nombre);
   }
 
+  openRemadesAdmin(): void {
+    if (!this.canManageRemades()) {
+      return;
+    }
+
+    this.remadesAdminOpen.set(true);
+    this.remadesLoading.set(true);
+    this.remadesError.set('');
+    this.cancelEditRemada();
+
+    forkJoin({
+      remades: this.aQueJuguemService.getRemades(),
+      games: this.juegosService.getAll()
+    }).subscribe({
+      next: ({ remades, games }) => {
+        this.remades.set(remades);
+        this.adminGames.set([...games].sort((left, right) => left.nombre.localeCompare(right.nombre)));
+        this.remadesLoading.set(false);
+      },
+      error: () => {
+        this.remadesError.set("No s'han pogut carregar les remades.");
+        this.remadesLoading.set(false);
+      }
+    });
+  }
+
+  closeRemadesAdmin(): void {
+    if (!this.remadesSaving()) {
+      this.remadesAdminOpen.set(false);
+      this.cancelEditRemada();
+    }
+  }
+
+  startEditRemada(remada: Remada): void {
+    this.editingRemadaId.set(remada.remadaId);
+    this.editRemadaDate.set(this.toDatetimeLocal(remada.createdAt));
+    this.editRemadaTime.set(String(remada.tempsDisponibleMinuts));
+    this.editRemadaStrength.set(remada.nombreJocs);
+    this.editRemadaUsuarioIds.set(remada.jugadors.map(jugador => jugador.usuarioId));
+    this.editRemadaJuegoIds.set(remada.jocs.map(joc => joc.juegoId));
+    this.remadesError.set('');
+  }
+
+  cancelEditRemada(): void {
+    this.editingRemadaId.set(null);
+    this.editRemadaDate.set('');
+    this.editRemadaTime.set('');
+    this.editRemadaStrength.set(1);
+    this.editRemadaUsuarioIds.set([]);
+    this.editRemadaJuegoIds.set([]);
+  }
+
+  toggleEditRemadaUsuario(usuarioId: number): void {
+    this.editRemadaUsuarioIds.update(current =>
+      current.includes(usuarioId)
+        ? current.filter(id => id !== usuarioId)
+        : [...current, usuarioId]
+    );
+  }
+
+  toggleEditRemadaJuego(juegoId: number): void {
+    const maximum = this.editRemadaStrength();
+    this.editRemadaJuegoIds.update(current => {
+      if (current.includes(juegoId)) {
+        return current.filter(id => id !== juegoId);
+      }
+
+      return current.length < maximum ? [...current, juegoId] : current;
+    });
+  }
+
+  onEditRemadaStrengthChange(value: string): void {
+    const parsed = Number(value);
+    const strength: 1 | 5 | 10 = parsed === 5 ? 5 : parsed === 10 ? 10 : 1;
+    this.editRemadaStrength.set(strength);
+    this.editRemadaJuegoIds.update(current => current.slice(0, strength));
+  }
+
+  canSaveEditedRemada(): boolean {
+    const time = Number(this.editRemadaTime());
+    return Boolean(this.editingRemadaId()) &&
+      Boolean(this.editRemadaDate()) &&
+      Number.isFinite(time) &&
+      time > 0 &&
+      this.editRemadaUsuarioIds().length > 0 &&
+      this.editRemadaJuegoIds().length === this.editRemadaStrength() &&
+      !this.remadesSaving();
+  }
+
+  saveEditedRemada(): void {
+    const id = this.editingRemadaId();
+    if (!id || !this.canSaveEditedRemada()) {
+      return;
+    }
+
+    const strength = this.editRemadaStrength();
+    const points: 1 | 2 | 3 = strength === 1 ? 3 : strength === 5 ? 2 : 1;
+    this.remadesSaving.set(true);
+    this.remadesError.set('');
+
+    this.aQueJuguemService.updateRemada(id, {
+      createdAt: new Date(this.editRemadaDate()).toISOString(),
+      tempsDisponibleMinuts: Number(this.editRemadaTime()),
+      nombreJocs: strength,
+      puntsPerJugador: points,
+      usuarioIds: this.editRemadaUsuarioIds(),
+      juegoIds: this.editRemadaJuegoIds()
+    }).subscribe({
+      next: () => {
+        this.remadesSaving.set(false);
+        this.openRemadesAdmin();
+      },
+      error: error => {
+        this.remadesSaving.set(false);
+        this.remadesError.set(error?.error?.message ?? "No s'ha pogut editar la remada.");
+      }
+    });
+  }
+
+  deleteRemada(remada: Remada): void {
+    if (!window.confirm(`Eliminar la remada del ${this.formatRemadaDate(remada.createdAt)}?`)) {
+      return;
+    }
+
+    this.remadesSaving.set(true);
+    this.remadesError.set('');
+    this.aQueJuguemService.deleteRemada(remada.remadaId).subscribe({
+      next: () => {
+        this.remades.update(current => current.filter(item => item.remadaId !== remada.remadaId));
+        if (this.editingRemadaId() === remada.remadaId) {
+          this.cancelEditRemada();
+        }
+        this.remadesSaving.set(false);
+      },
+      error: () => {
+        this.remadesSaving.set(false);
+        this.remadesError.set("No s'ha pogut eliminar la remada.");
+      }
+    });
+  }
+
+  formatRemadaDate(value: string): string {
+    return new Date(value).toLocaleString('ca-ES');
+  }
+
+  formatRemadaPlayers(remada: Remada): string {
+    return remada.jugadors.map(jugador => jugador.nombre).join(', ');
+  }
+
+  formatRemadaGames(remada: Remada): string {
+    return remada.jocs.map(joc => joc.nombre).join(', ');
+  }
+
+  trackByRemadaId(_: number, remada: Remada): number {
+    return remada.remadaId;
+  }
+
+  trackByAdminGameId(_: number, juego: Juego): number {
+    return juego.juegoId;
+  }
+
   openRowingConfig(): void {
     if (!this.allPlayersSelected()) {
       return;
@@ -197,7 +372,7 @@ export class AQueJuguemPageComponent {
     return Number.isFinite(time) && time > 0 && !this.rowingLoading() && !this.calculating();
   }
 
-  getRowingPoints(): number {
+  getRowingPoints(): 1 | 2 | 3 {
     return this.rowingStrength() === 1 ? 3 : this.rowingStrength() === 5 ? 2 : 1;
   }
 
@@ -239,10 +414,32 @@ export class AQueJuguemPageComponent {
           .filter((item): item is RowingRecommendation => item !== null)
           .slice(0, resultCount);
 
-        this.rowingResults.set(results);
-        this.rowingLoading.set(false);
-        this.rowingConfigOpen.set(false);
-        this.rowingResultsOpen.set(true);
+        if (results.length !== resultCount) {
+          this.rowingResults.set([]);
+          this.rowingLoading.set(false);
+          this.rowingConfigOpen.set(false);
+          this.rowingResultsOpen.set(true);
+          return;
+        }
+
+        this.aQueJuguemService.registerRemada({
+          tempsDisponibleMinuts: availableMinutes,
+          nombreJocs: resultCount,
+          puntsPerJugador: this.getRowingPoints(),
+          usuarioIds: this.getSelectedUsuarioIds(),
+          juegoIds: results.map(result => result.juegoId)
+        }).subscribe({
+          next: () => {
+            this.rowingResults.set(results);
+            this.rowingLoading.set(false);
+            this.rowingConfigOpen.set(false);
+            this.rowingResultsOpen.set(true);
+          },
+          error: error => {
+            this.rowingLoading.set(false);
+            this.rowingError.set(error?.error?.message ?? "No s'ha pogut registrar la remada.");
+          }
+        });
       },
       error: () => {
         this.rowingLoading.set(false);
@@ -452,6 +649,12 @@ export class AQueJuguemPageComponent {
     const parsed = Number(value);
 
     return value.trim() !== '' && Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private toDatetimeLocal(value: string): string {
+    const date = new Date(value);
+    const offset = date.getTimezoneOffset() * 60_000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
   }
 
   private recalculateForCurrentPlayers(): void {

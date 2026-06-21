@@ -72,6 +72,149 @@ h1 {
   gap: 10px;
 }
 
+.rowing-action-stack {
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+}
+
+.rowing-admin-button,
+.small-icon-button {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #d0d5dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475467;
+  cursor: pointer;
+}
+
+.rowing-admin-button {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+}
+
+.rowing-admin-button svg,
+.small-icon-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.remades-admin-modal {
+  width: min(1050px, 100%);
+}
+
+.remades-admin-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.remada-admin-row {
+  display: grid;
+  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px 76px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 0.85rem;
+}
+
+.remada-admin-header {
+  border: 0;
+  background: #f8fafc;
+  color: #475467;
+  font-weight: 800;
+}
+
+.remada-admin-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.remada-admin-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.small-icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.danger-icon-button {
+  color: #b42318;
+}
+
+.remada-edit-panel {
+  margin: 0 0 8px;
+  padding: 14px;
+  border: 1px solid #b7d9d5;
+  border-radius: 12px;
+  background: #f4fbfa;
+}
+
+.remada-edit-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.remada-edit-fields select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.remada-edit-selections {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.65fr) minmax(260px, 1.35fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.remada-edit-selections fieldset {
+  max-height: 240px;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #d0d5dd;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.remada-edit-selections legend {
+  padding: 0 5px;
+  color: #344054;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.remada-edit-selections label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+}
+
+.remada-edit-actions {
+  margin-top: 14px;
+}
+
 .filter-button,
 .clear-filter-button {
   min-height: 40px;
@@ -450,6 +593,10 @@ h1 {
     flex-wrap: wrap;
   }
 
+  .rowing-action-stack {
+    justify-items: stretch;
+  }
+
   .recommendation-filters {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -487,6 +634,10 @@ h1 {
     width: auto;
   }
 
+  .rowing-admin-button {
+    justify-self: center;
+  }
+
   .modal-backdrop {
     align-items: flex-end;
     padding: 10px;
@@ -507,6 +658,39 @@ h1 {
   .modal-actions .ghost-button {
     flex: 1;
     width: auto;
+  }
+
+  .remada-admin-header {
+    display: none;
+  }
+
+  .remada-admin-row {
+    grid-template-columns: 1fr auto;
+    gap: 6px 10px;
+  }
+
+  .remada-admin-row > span:not(.remada-admin-actions)::before {
+    content: attr(data-label) ": ";
+    color: #667085;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .remada-admin-row > span {
+    grid-column: 1;
+    white-space: normal;
+  }
+
+  .remada-admin-actions {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    align-self: center;
+    flex-direction: column;
+  }
+
+  .remada-edit-fields,
+  .remada-edit-selections {
+    grid-template-columns: 1fr;
   }
 
   .form-field {
