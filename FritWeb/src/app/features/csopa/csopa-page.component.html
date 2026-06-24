@@ -319,10 +319,12 @@
                       <span>{{ assistencia.nombre }}</span>
                       <button
                         type="button"
-                        class="ghost-button small-button"
+                        class="remove-attendance-button"
+                        title="Treure assistència"
+                        aria-label="Treure assistència"
                         [disabled]="deletingAttendanceKey() === row.key + '-' + assistencia.id"
                         (click)="eliminarAssistencia(row, assistencia.id)">
-                        {{ deletingAttendanceKey() === row.key + '-' + assistencia.id ? 'Traient...' : 'Treure' }}
+                        <span aria-hidden="true">&times;</span>
                       </button>
                     </div>
                   </div>
