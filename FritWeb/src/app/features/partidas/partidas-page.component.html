@@ -228,7 +228,6 @@
           <col *ngIf="visibleColumns().numeroJugadores" />
           <col *ngIf="visibleColumns().resultadoJugadores" />
           <col *ngIf="visibleColumns().observaciones" />
-          <col *ngIf="canEditPartidas()" class="actions-column" />
         </colgroup>
         <thead>
           <tr>
@@ -251,7 +250,6 @@
             <th *ngIf="visibleColumns().observaciones" (click)="setSort('observaciones')" class="sortable">
               Observacions{{ getSortIndicator('observaciones') }}
             </th>
-            <th *ngIf="canEditPartidas()" class="actions-header">Accions</th>
           </tr>
 
         </thead>
@@ -262,7 +260,18 @@
             [class.row-highlight]="highlightedPartidaId() === partida.partidaId"
             [class.row-expanded]="expandedPartidaId() === partida.partidaId"
             (click)="togglePartidaDetail(partida.partidaId)">
-            <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
+            <td class="row-number-cell" data-label="#">
+              <button
+                *ngIf="canEditPartidas(); else plainRowNumber"
+                type="button"
+                class="row-number-button"
+                title="Editar partida"
+                aria-label="Editar partida"
+                (click)="abrirEditarPartida(partida.partidaId, $event)">
+                {{ i + 1 }}
+              </button>
+              <ng-template #plainRowNumber>{{ i + 1 }}</ng-template>
+            </td>
             <td *ngIf="visibleColumns().fecha" class="partida-date" data-label="Data">
               <span class="cell-value cell-title cell-date">{{ formatFecha(partida.fecha) }}</span>
             </td>
@@ -293,24 +302,11 @@
               data-label="Observacions">
               <span class="cell-value">{{ partida.observaciones }}</span>
             </td>
-            <td *ngIf="canEditPartidas()" class="partida-actions" data-label="Accions">
-              <button
-                type="button"
-                class="icon-action-button"
-                title="Editar partida"
-                aria-label="Editar partida"
-                (click)="abrirEditarPartida(partida.partidaId, $event)">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
-              </button>
-            </td>
             <td
               *ngIf="isMobileFilters() && expandedPartidaId() === partida.partidaId"
               class="partida-detail-popup"
               style="grid-area: detail"
-              [attr.colspan]="canEditPartidas() ? 8 : 7">
+              colspan="7">
               <div class="partida-detail-grid">
                 <div class="partida-detail-item">
                   <span class="partida-detail-label">Data</span>

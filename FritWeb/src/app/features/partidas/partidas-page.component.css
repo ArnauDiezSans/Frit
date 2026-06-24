@@ -291,7 +291,6 @@ h1 {
 .games-table col:nth-child(5) { width: 96px; }
 .games-table col:nth-child(6) { width: 290px; }
 .games-table col:nth-child(7) { width: auto; }
-.games-table col.actions-column { width: 76px; }
 
 .games-table th,
 .games-table td {
@@ -365,36 +364,26 @@ h1 {
   word-break: normal;
 }
 
-.actions-header,
-.partida-actions {
-  text-align: center;
-}
-
-.icon-action-button {
-  display: inline-grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #0f766e;
+.row-number-button {
+  display: inline-flex;
+  min-width: 24px;
+  min-height: 28px;
+  align-items: center;
+  justify-content: flex-start;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+  font: inherit;
+  font-weight: 700;
 }
 
-.icon-action-button:hover {
-  border-color: #0f766e;
+.row-number-button:hover,
+.row-number-button:focus-visible {
   background: #f0fdfa;
-}
-
-.icon-action-button svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2;
+  color: #0f766e;
+  outline: none;
 }
 
 .empty-state {
@@ -794,12 +783,12 @@ h1 {
 
   .games-table tr {
     display: grid;
-    grid-template-columns: 24px minmax(0, 1fr) auto auto auto auto;
+    grid-template-columns: 24px minmax(0, 1fr) auto auto auto;
     grid-template-areas:
-      "number game date duration players actions"
-      "results results results results results results"
-      "notes notes notes notes notes notes"
-      "detail detail detail detail detail detail";
+      "number game date duration players"
+      "results results results results results"
+      "notes notes notes notes notes"
+      "detail detail detail detail detail";
     align-items: center;
     gap: 4px 8px;
     padding: 9px 10px;
@@ -810,7 +799,7 @@ h1 {
   }
 
   .games-table tr.row-expanded {
-    grid-template-areas: "detail detail detail detail detail detail";
+    grid-template-areas: "detail detail detail detail detail";
   }
 
   .games-table tr.row-expanded > td:not(.partida-detail-popup) {
@@ -880,17 +869,6 @@ h1 {
 
   .partida-notes {
     grid-area: notes;
-  }
-
-  .partida-actions {
-    grid-area: actions;
-    text-align: right;
-  }
-
-  .icon-action-button {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
   }
 
   .partida-notes-empty {
