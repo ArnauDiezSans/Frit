@@ -76,16 +76,6 @@ h1 {
   position: relative;
 }
 
-.small-icon-button {
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid #d0d5dd;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #475467;
-  cursor: pointer;
-}
-
 .rowing-admin-button {
   position: absolute;
   top: calc(100% + 6px);
@@ -101,16 +91,6 @@ h1 {
 
 .rowing-admin-button:hover {
   color: #0f766e;
-}
-
-.small-icon-button svg {
-  width: 15px;
-  height: 15px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .rowing-admin-button svg {
@@ -134,7 +114,7 @@ h1 {
 
 .remada-admin-row {
   display: grid;
-  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px 76px;
+  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
@@ -151,28 +131,29 @@ h1 {
   font-weight: 800;
 }
 
-.remada-admin-row-readonly {
-  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px;
-}
-
 .remada-admin-row > span {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.remada-admin-actions {
-  display: flex;
-  gap: 6px;
+.remada-date-button {
+  display: inline;
+  min-width: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
 }
 
-.small-icon-button {
-  width: 32px;
-  height: 32px;
-}
-
-.danger-icon-button {
-  color: #b42318;
+.remada-date-button:hover,
+.remada-date-button:focus-visible {
+  color: #0f766e;
+  outline: none;
 }
 
 .remada-edit-panel {
@@ -677,11 +658,11 @@ h1 {
   }
 
   .remada-admin-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
     gap: 6px 10px;
   }
 
-  .remada-admin-row > span:not(.remada-admin-actions)::before {
+  .remada-admin-row > span::before {
     content: attr(data-label) ": ";
     color: #667085;
     font-size: 0.72rem;
@@ -691,13 +672,6 @@ h1 {
   .remada-admin-row > span {
     grid-column: 1;
     white-space: normal;
-  }
-
-  .remada-admin-actions {
-    grid-column: 2;
-    grid-row: 1 / span 4;
-    align-self: center;
-    flex-direction: column;
   }
 
   .remada-edit-fields,

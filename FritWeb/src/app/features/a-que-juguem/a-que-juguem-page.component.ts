@@ -205,6 +205,10 @@ export class AQueJuguemPageComponent {
   }
 
   startEditRemada(remada: Remada): void {
+    if (!this.canManageRemades()) {
+      return;
+    }
+
     this.editingRemadaId.set(remada.remadaId);
     this.editRemadaDate.set(this.toDatetimeLocal(remada.createdAt));
     this.editRemadaTime.set(String(remada.tempsDisponibleMinuts));
