@@ -151,6 +151,7 @@ export class JuegosPageComponent implements OnInit {
   showFilters = signal(false);
   showColumnsPanel = signal(false);
   isMobileFilters = signal(false);
+  private readonly mobileFiltersQuery = window.matchMedia('(max-width: 820px)');
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
   totalJuegos = computed(() => this.juegos().length);
@@ -724,11 +725,7 @@ export class JuegosPageComponent implements OnInit {
   }
 
   private updateResponsiveState(): void {
-    const isMobile = window.innerWidth <= 820;
+    const isMobile = this.mobileFiltersQuery.matches;
     this.isMobileFilters.set(isMobile);
-
-    if (!isMobile) {
-      this.showFilters.set(false);
-    }
   }
 }

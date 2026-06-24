@@ -167,6 +167,7 @@ export class PartidasPageComponent implements OnInit {
   showFilters = signal(false);
   showColumnsPanel = signal(false);
   isMobileFilters = signal(false);
+  private readonly mobileFiltersQuery = window.matchMedia('(max-width: 820px)');
   teamColors = TEAM_COLORS;
   displayJuego = (juego: Juego) => juego.nombre;
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
@@ -1318,11 +1319,10 @@ const partidaPayload: Partida = {
   }
 
   private updateResponsiveState(): void {
-    const isMobile = window.innerWidth <= 820;
+    const isMobile = this.mobileFiltersQuery.matches;
     this.isMobileFilters.set(isMobile);
 
     if (!isMobile) {
-      this.showFilters.set(false);
       this.expandedPartidaId.set(null);
     }
   }

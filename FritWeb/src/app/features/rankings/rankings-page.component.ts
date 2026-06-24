@@ -281,6 +281,7 @@ export class RankingsPageComponent {
   showGameColumnsPanel = signal(false);
   showUserColumnsPanel = signal(false);
   isMobileFilters = signal(false);
+  private readonly mobileFiltersQuery = window.matchMedia('(max-width: 820px)');
 
   gameSortColumn = signal<GameSortColumn | null>('partidas');
   gameSortDirection = signal<SortDirection | null>('desc');
@@ -1619,12 +1620,7 @@ export class RankingsPageComponent {
   }
 
   private updateResponsiveState(): void {
-    const isMobile = window.innerWidth <= 820;
+    const isMobile = this.mobileFiltersQuery.matches;
     this.isMobileFilters.set(isMobile);
-
-    if (!isMobile) {
-      this.showGameFilters.set(false);
-      this.showUserFilters.set(false);
-    }
   }
 }
