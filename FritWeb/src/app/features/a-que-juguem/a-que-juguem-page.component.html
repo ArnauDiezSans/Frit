@@ -277,6 +277,7 @@
           <span>Jugadors</span>
           <span>Jocs</span>
           <span>Punts</span>
+          <span>Accions</span>
         </div>
         <ng-container *ngFor="let remada of remades(); trackBy: trackByRemadaId">
           <div class="remada-admin-row">
@@ -295,6 +296,15 @@
             <span data-label="Jugadors">{{ formatRemadaPlayers(remada) }}</span>
             <span data-label="Jocs" [title]="formatRemadaGames(remada)">{{ formatRemadaGames(remada) }}</span>
             <span data-label="Punts">{{ remada.puntsPerJugador }}</span>
+            <span class="remada-actions" data-label="Accions">
+              <button
+                type="button"
+                class="danger-button compact-danger-button"
+                [disabled]="remadesSaving()"
+                (click)="deleteRemada(remada)">
+                Eliminar
+              </button>
+            </span>
           </div>
 
           <div class="remada-edit-panel" *ngIf="canManageRemades() && editingRemadaId() === remada.remadaId">

@@ -6,7 +6,14 @@ import { AuthService } from '../../core/auth/auth.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { UsuarioOption } from '../juegos/juegos.models';
 import { UsuariosService } from '../juegos/usuarios.service';
-import { HallOfFame, HallOfFameEntry, HallOfFameService, MedalGame, MedalProgress } from './hall-of-fame.service';
+import { HallOfFame, HallOfFameEntry, HallOfFameService, MedalGame, MedalProgress, MedalUserProgress } from './hall-of-fame.service';
+
+interface EntryRank {
+  rankName: string;
+  rankLevel: number;
+  rankTargetValue: number;
+  rankColor: string;
+}
 
 @Component({
   selector: 'app-hall-of-fame-page',
@@ -178,6 +185,29 @@ export class HallOfFamePageComponent {
 
   getHallRankName(entry: HallOfFameEntry): string {
     return this.shouldShowRankTarget(entry) ? entry.bestUser.rankName : 'Llegenda';
+  }
+
+  getEntryRanks(entry: HallOfFameEntry): EntryRank[] {
+    const ranksByLevel = new Map<number, EntryRank>();
+
+    for (const user of entry.users) {
+      if (!ranksByLevel.has(user.rankLevel)) {
+        ranksByLevel.set(user.rankLevel, {
+          rankName: user.rankName,
+          rankLevel: user.rankLevel,
+          rankTargetValue: user.rankTargetValue,
+          rankColor: user.rankColor
+        });
+      }
+    }
+
+    return [...ranksByLevel.values()].sort((left, right) => right.rankLevel - left.rankLevel);
+  }
+
+  shouldShowUserRankValue(entry: HallOfFameEntry, user: MedalUserProgress): boolean {
+    return entry.medal.tipo !== 'HeavyBggWins' &&
+      entry.medal.tipo !== 'TotalPlays' &&
+      user.rankTargetValue > 0;
   }
 
   trackByUsuario(_: number, usuario: UsuarioOption): number {

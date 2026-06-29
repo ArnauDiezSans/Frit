@@ -145,7 +145,10 @@ public class HallOfFameService
                         UsuarioNombre = best.UsuarioNombre,
                         CurrentValue = best.Progress.CurrentValue,
                         RankName = best.Progress.RankName,
-                        RankLevel = best.Progress.RankLevel
+                        RankLevel = best.Progress.RankLevel,
+                        RankTargetValue = best.Progress.RankTargetValue,
+                        RankColor = best.Progress.RankColor,
+                        RankFilled = best.Progress.RankFilled
                     },
                     Users = orderedUsers
                         .Select(row => new MedalUserProgressDto
@@ -154,7 +157,10 @@ public class HallOfFameService
                             UsuarioNombre = row.UsuarioNombre,
                             CurrentValue = row.Progress.CurrentValue,
                             RankName = row.Progress.RankName,
-                            RankLevel = row.Progress.RankLevel
+                            RankLevel = row.Progress.RankLevel,
+                            RankTargetValue = row.Progress.RankTargetValue,
+                            RankColor = row.Progress.RankColor,
+                            RankFilled = row.Progress.RankFilled
                         })
                         .ToList()
                 };

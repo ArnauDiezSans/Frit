@@ -114,7 +114,7 @@ h1 {
 
 .remada-admin-row {
   display: grid;
-  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px;
+  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px 92px;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
@@ -154,6 +154,11 @@ h1 {
 .remada-date-button:focus-visible {
   color: #0f766e;
   outline: none;
+}
+
+.remada-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .remada-edit-panel {
@@ -404,6 +409,33 @@ h1 {
 .ghost-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.danger-button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #fecdca;
+  border-radius: 10px;
+  background: #fff5f5;
+  color: #b42318;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.danger-button:hover {
+  background: #fee4e2;
+}
+
+.danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.compact-danger-button {
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 0.8rem;
 }
 
 .modal-backdrop {
@@ -672,6 +704,14 @@ h1 {
   .remada-admin-row > span {
     grid-column: 1;
     white-space: normal;
+  }
+
+  .remada-actions {
+    justify-content: flex-start;
+  }
+
+  .remada-actions::before {
+    display: none;
   }
 
   .remada-edit-fields,

@@ -38,6 +38,9 @@ export interface MedalUserProgress {
   currentValue: number;
   rankName: string;
   rankLevel: number;
+  rankTargetValue: number;
+  rankColor: string;
+  rankFilled: boolean;
 }
 
 export interface HallOfFameEntry {

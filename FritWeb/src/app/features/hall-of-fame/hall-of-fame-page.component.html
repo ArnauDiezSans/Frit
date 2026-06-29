@@ -113,10 +113,22 @@
                 <span class="rank-target" *ngIf="shouldShowRankTarget(entry)">{{ entry.medal.rankTargetValue }}</span>
               </div>
             </div>
+            <div class="medal-ranks" *ngIf="getEntryRanks(entry).length > 1">
+              <span
+                *ngFor="let rank of getEntryRanks(entry)"
+                [style.background]="rank.rankColor">
+                {{ rank.rankName }}
+                <strong *ngIf="rank.rankTargetValue > 0">{{ rank.rankTargetValue }}</strong>
+              </span>
+            </div>
             <p *ngIf="entry.medal.tipo !== 'GameWins'">{{ entry.medal.descripcion }}</p>
             <div class="medal-users">
-              <span *ngFor="let user of entry.users; trackBy: trackByEntryUser">
+              <span
+                *ngFor="let user of entry.users; trackBy: trackByEntryUser"
+                [style.--user-rank-color]="user.rankColor"
+                [title]="user.rankName + ' - ' + user.currentValue">
                 {{ user.usuarioNombre }}
+                <strong *ngIf="shouldShowUserRankValue(entry, user)">{{ user.currentValue }}</strong>
               </span>
             </div>
           </div>

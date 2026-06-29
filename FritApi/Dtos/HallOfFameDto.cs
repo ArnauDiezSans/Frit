@@ -57,6 +57,9 @@ public class MedalUserProgressDto
     public int CurrentValue { get; set; }
     public string RankName { get; set; } = string.Empty;
     public int RankLevel { get; set; }
+    public int RankTargetValue { get; set; }
+    public string RankColor { get; set; } = string.Empty;
+    public bool RankFilled { get; set; }
 }
 
 public class ManualMedallaCreateDto
