@@ -205,8 +205,7 @@ export class HallOfFamePageComponent {
   }
 
   shouldShowUserRankValue(entry: HallOfFameEntry, user: MedalUserProgress): boolean {
-    return entry.medal.tipo !== 'HeavyBggWins' &&
-      entry.medal.tipo !== 'TotalPlays' &&
+    return entry.medal.tipo === 'RowingPoints' &&
       user.rankTargetValue > 0;
   }
 
