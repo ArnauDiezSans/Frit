@@ -545,7 +545,7 @@ public class HallOfFameService
                 usuario.UsuarioId,
                 usuario.Nombre,
                 BuildSingleTargetProgress("dynamic:au-fenix", "Au Fènix",
-                    "Torna a guanyar un joc després d'un any sense jugar-lo.", DefaultIconPath,
+                    "Torna a guanyar la partida següent d'un joc després d'un any de l'última victòria.", DefaultIconPath,
                     "PhoenixWin",
                     phoenixWins.ContainsKey(usuario.UsuarioId) ? 1 : 0,
                     1,
