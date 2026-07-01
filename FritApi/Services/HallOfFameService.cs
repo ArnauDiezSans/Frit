@@ -991,22 +991,25 @@ public class HallOfFameService
 
         foreach (var gameGroup in partidas.GroupBy(partida => partida.JuegoId))
         {
-            DateOnly? previousDate = null;
+            Partida? previousPartida = null;
 
             foreach (var partida in gameGroup.OrderBy(partida => partida.Fecha).ThenBy(partida => partida.PartidaId))
             {
-                if (previousDate.HasValue && previousDate.Value.AddYears(1) <= partida.Fecha)
+                if (previousPartida is not null && previousPartida.Fecha.AddYears(1) <= partida.Fecha)
                 {
-                    foreach (var usuarioId in DetectWinnerIds(partida, usuarios))
+                    var previousWinners = DetectWinnerIds(previousPartida, usuarios);
+                    var currentWinners = DetectWinnerIds(partida, usuarios);
+
+                    foreach (var usuarioId in currentWinners.Where(previousWinners.Contains))
                     {
                         result[usuarioId] = new PhoenixWinDetail(
                             partida.Juego.Nombre,
-                            previousDate.Value,
+                            previousPartida.Fecha,
                             partida.Fecha);
                     }
                 }
 
-                previousDate = partida.Fecha;
+                previousPartida = partida;
             }
         }
 
@@ -1125,7 +1128,7 @@ public class HallOfFameService
         List<MedalGameDto>? games = null,
         string? detailText = null)
     {
-        var completed = currentValue >= targetValue;
+        var completed = targetValue > 0 && currentValue >= targetValue;
 
         return new MedalProgressDto
         {

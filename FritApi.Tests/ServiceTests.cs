@@ -145,7 +145,7 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task RankingsService_CalculatesPricePerGameByTotalPlayers()
+    public async Task RankingsService_CalculatesPricePerPlayerGameByTotalPlayers()
     {
         await using var context = CreateContext();
         var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
@@ -181,7 +181,7 @@ public class ServiceTests
 
         var rankings = await service.GetAsync();
 
-        Assert.Equal(2, rankings.Juegos.Single(row => row.Nombre == "Catan").PrecioPorPartida);
+        Assert.Equal(2, rankings.Juegos.Single(row => row.Nombre == "Catan").PrecioPorJugadorPartida);
     }
 
     [Fact]
@@ -298,6 +298,104 @@ public class ServiceTests
         Assert.Equal(1, gameMedal.CurrentValue);
         Assert.Equal("Debutant", gameMedal.RankName);
         Assert.Equal(1, gameMedal.RankLevel);
+    }
+
+    [Fact]
+    public async Task HallOfFameService_AuFenixRequiresSameWinnerAfterOneYearGap()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var anna = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        var gemma = new Usuario { Nombre = "Gemma", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Catan",
+            NumeroJugadoresMin = 2,
+            NumeroJugadoresMax = 4,
+            Propietario = arnau
+        };
+        context.AddRange(arnau, anna, gemma, game);
+        await context.SaveChangesAsync();
+
+        var previousPartida = new Partida
+        {
+            JuegoId = game.JuegoId,
+            UsuarioCreadorId = arnau.UsuarioId,
+            Fecha = new DateOnly(2025, 6, 1),
+            NumeroJugadores = 3
+        };
+        var currentPartida = new Partida
+        {
+            JuegoId = game.JuegoId,
+            UsuarioCreadorId = arnau.UsuarioId,
+            Fecha = new DateOnly(2026, 6, 1),
+            NumeroJugadores = 3
+        };
+        context.Partidas.AddRange(previousPartida, currentPartida);
+        await context.SaveChangesAsync();
+
+        context.PartidaJugadores.AddRange(
+            new PartidaJugador
+            {
+                PartidaId = previousPartida.PartidaId,
+                UsuarioId = arnau.UsuarioId,
+                NombreMostrado = "Arnau",
+                Posicion = 1
+            },
+            new PartidaJugador
+            {
+                PartidaId = previousPartida.PartidaId,
+                UsuarioId = anna.UsuarioId,
+                NombreMostrado = "Anna",
+                Posicion = 1
+            },
+            new PartidaJugador
+            {
+                PartidaId = previousPartida.PartidaId,
+                UsuarioId = gemma.UsuarioId,
+                NombreMostrado = "Gemma",
+                Posicion = 2
+            },
+            new PartidaJugador
+            {
+                PartidaId = currentPartida.PartidaId,
+                UsuarioId = arnau.UsuarioId,
+                NombreMostrado = "Arnau",
+                Posicion = 1
+            },
+            new PartidaJugador
+            {
+                PartidaId = currentPartida.PartidaId,
+                UsuarioId = gemma.UsuarioId,
+                NombreMostrado = "Gemma",
+                Posicion = 1
+            },
+            new PartidaJugador
+            {
+                PartidaId = currentPartida.PartidaId,
+                UsuarioId = anna.UsuarioId,
+                NombreMostrado = "Anna",
+                Posicion = 2
+            });
+        await context.SaveChangesAsync();
+
+        var service = new HallOfFameService(context);
+
+        var arnauMedals = await service.GetUserMedalsAsync(arnau.UsuarioId);
+        var annaMedals = await service.GetUserMedalsAsync(anna.UsuarioId);
+        var gemmaMedals = await service.GetUserMedalsAsync(gemma.UsuarioId);
+
+        Assert.NotNull(arnauMedals);
+        Assert.NotNull(annaMedals);
+        Assert.NotNull(gemmaMedals);
+        var arnauFenix = arnauMedals.Medals.Single(row => row.MedalId == "dynamic:au-fenix");
+        var annaFenix = annaMedals.Medals.Single(row => row.MedalId == "dynamic:au-fenix");
+        var gemmaFenix = gemmaMedals.Medals.Single(row => row.MedalId == "dynamic:au-fenix");
+        Assert.Equal(1, arnauFenix.CurrentValue);
+        Assert.Equal("Completada", arnauFenix.RankName);
+        Assert.Equal("Catan · 01/06/2025 → 01/06/2026", arnauFenix.DetailText);
+        Assert.Equal(0, annaFenix.CurrentValue);
+        Assert.Equal(0, gemmaFenix.CurrentValue);
     }
 
     [Fact]
@@ -479,11 +577,11 @@ public class ServiceTests
         var hallOfFame = await service.GetHallOfFameAsync("Arnau");
 
         Assert.NotNull(medals);
-        var oneMenArmy = medals.Medals.Single(row => row.Nombre == "One men army");
+        var oneMenArmy = medals.Medals.Single(row => row.Nombre == "One man army");
         Assert.Equal(2, oneMenArmy.CurrentValue);
         Assert.Equal(1000, oneMenArmy.TargetValue);
         Assert.Equal("Pendent", oneMenArmy.RankName);
-        Assert.DoesNotContain(hallOfFame.Entries, row => row.Medal.Nombre == "One men army");
+        Assert.DoesNotContain(hallOfFame.Entries, row => row.Medal.Nombre == "One man army");
     }
 
     [Fact]
@@ -566,7 +664,7 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task CineService_BlocksRatingsAfterTwentyFourHours()
+    public async Task CineService_BlocksRatingsAfterSevenDays()
     {
         await using var context = CreateContext();
         var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
@@ -576,7 +674,7 @@ public class ServiceTests
         {
             Titulo = "Alien",
             UsuarioCreadorId = arnau.UsuarioId,
-            CreatedAt = DateTime.UtcNow.AddHours(-25)
+            CreatedAt = DateTime.UtcNow.AddDays(-8)
         };
         context.CinePeliculas.Add(pelicula);
         await context.SaveChangesAsync();
