@@ -408,6 +408,15 @@
             <span>Observacions</span>
             <textarea rows="3" formControlName="observaciones"></textarea>
           </label>
+
+          <aside class="team-scoring-help" *ngIf="form.controls.perEquips.value">
+            <strong>Puntuació en jocs per equips</strong>
+            <p>En una partida per equips, tots els jugadors d’un mateix equip obtenen la mateixa posició.</p>
+            <p>L’equip guanyador rep sempre la posició 1. L’equip perdedor rep com a posició el nombre total de jugadors de la partida.</p>
+            <p>Si hi ha equips intermedis, ocupen virtualment les posicions individuals que els correspondrien. La seva posició és la mitjana d’aquestes posicions, arrodonida sempre cap avall.</p>
+            <p><b>Exemple:</b> en una partida de set jugadors amb equips de 2, 4 i 1 jugadors, els dos membres de l’equip guanyador tenen posició 1. L’equip intermedi ocuparia les posicions 3, 4, 5 i 6; la mitjana és 4,5 i tots quatre membres tenen posició 4. El jugador de l’equip perdedor té posició 7.</p>
+            <p>Els punts serveixen per ordenar els equips, però la posició es comparteix entre tots els membres de cadascun.</p>
+          </aside>
         </div>
 
         <div class="players-section">

@@ -490,6 +490,28 @@ h1 {
   accent-color: #0f766e;
 }
 
+.team-scoring-help {
+  grid-column: 1 / -1;
+  padding: 8px 10px;
+  border: 1px solid #d6e9e5;
+  border-radius: 8px;
+  background: #f5fbfa;
+  color: #475467;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.team-scoring-help strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #0f766e;
+  font-size: 0.78rem;
+}
+
+.team-scoring-help p {
+  margin: 2px 0 0;
+}
+
 .field-error {
   margin: 14px 0 0;
   color: #b42318;
