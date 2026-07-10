@@ -10,7 +10,7 @@ export const CSOPA_TIPUS_GYMFRIT = 2;
 
 export interface CsopaAssistencia {
   csopaAssistenciaId: number;
-  usuarioId: number;
+  usuarioId: number | null;
   usuarioNombre: string;
   createdAt: string;
 }
@@ -33,7 +33,8 @@ export interface CsopaActivitatCreate {
 }
 
 export interface CsopaAssistenciaCreate {
-  usuarioId: number;
+  usuarioId?: number | null;
+  nombreMostrado?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -17,7 +17,7 @@ public class CsopaActivitatDto
 public class CsopaAssistenciaDto
 {
     public int CsopaAssistenciaId { get; set; }
-    public int UsuarioId { get; set; }
+    public int? UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
 }
@@ -37,6 +37,8 @@ public class CsopaActivitatCreateDto
 
 public class CsopaAssistenciaCreateDto
 {
-    [Required]
     public int? UsuarioId { get; set; }
+
+    [MaxLength(200)]
+    public string? NombreMostrado { get; set; }
 }

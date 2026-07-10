@@ -673,7 +673,8 @@ public class HallOfFameService
         return peliculas
             .Where(pelicula => pelicula.GrupoPelicula == 1 && GetFritDate(pelicula.CreatedAt).DayOfWeek == DayOfWeek.Sunday)
             .SelectMany(pelicula => pelicula.Valoraciones)
-            .GroupBy(valoracion => valoracion.UsuarioId)
+            .Where(valoracion => valoracion.UsuarioId.HasValue)
+            .GroupBy(valoracion => valoracion.UsuarioId!.Value)
             .ToDictionary(group => group.Key, group => group.Count());
     }
 
@@ -728,7 +729,8 @@ public class HallOfFameService
         return activitats
             .Where(activitat => activitat.Tipus == tipus)
             .SelectMany(activitat => activitat.Assistencies)
-            .GroupBy(assistencia => assistencia.UsuarioId)
+            .Where(assistencia => assistencia.UsuarioId.HasValue)
+            .GroupBy(assistencia => assistencia.UsuarioId!.Value)
             .ToDictionary(group => group.Key, group => group.Count());
     }
 

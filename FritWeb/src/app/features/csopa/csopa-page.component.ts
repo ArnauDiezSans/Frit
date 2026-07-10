@@ -118,14 +118,18 @@ export class CsopaPageComponent {
     for (const pelicula of this.peliculas()) {
       users.set(pelicula.usuarioCreadorId, pelicula.usuarioCreadorNombre);
       for (const valoracion of pelicula.valoraciones) {
-        users.set(valoracion.usuarioId, valoracion.usuarioNombre);
+        if (valoracion.usuarioId !== null) {
+          users.set(valoracion.usuarioId, valoracion.usuarioNombre);
+        }
       }
     }
 
     for (const activitat of this.activitats()) {
       users.set(activitat.usuarioCreadorId, activitat.usuarioCreadorNombre);
       for (const assistencia of activitat.assistencies) {
-        users.set(assistencia.usuarioId, assistencia.usuarioNombre);
+        if (assistencia.usuarioId !== null) {
+          users.set(assistencia.usuarioId, assistencia.usuarioNombre);
+        }
       }
     }
 
@@ -170,7 +174,8 @@ export class CsopaPageComponent {
   });
 
   attendanceForm = this.fb.group({
-    usuarioId: ['', Validators.required]
+    usuarioId: [''],
+    nombreMostrado: ['', Validators.maxLength(200)]
   });
 
   ngOnInit(): void {
@@ -328,7 +333,7 @@ export class CsopaPageComponent {
 
     this.ratingOpenKey.set(null);
     this.editOpenKey.set(null);
-    this.attendanceForm.reset({ usuarioId: '' });
+    this.attendanceForm.reset({ usuarioId: '', nombreMostrado: '' });
     this.attendanceFormError.set('');
     this.attendanceOpenKey.set(row.key);
   }
@@ -375,24 +380,26 @@ export class CsopaPageComponent {
   }
 
   guardarAssistencia(row: AssistenciaRow): void {
-    if (this.attendanceForm.invalid) {
+    const usuarioId = Number(this.attendanceForm.controls.usuarioId.value);
+    const nombreMostrado = this.attendanceForm.controls.nombreMostrado.value?.trim() ?? '';
+    const hasUsuario = Number.isFinite(usuarioId) && usuarioId > 0;
+
+    if (this.attendanceForm.invalid || (!hasUsuario && !nombreMostrado)) {
       this.attendanceForm.markAllAsTouched();
-      this.attendanceFormError.set('Selecciona un usuari.');
+      this.attendanceFormError.set('Selecciona un usuari o escriu el nom d’un assistent extern.');
       return;
     }
 
-    const usuarioId = Number(this.attendanceForm.controls.usuarioId.value);
-    if (!Number.isFinite(usuarioId) || usuarioId <= 0) {
-      this.attendanceFormError.set('Selecciona un usuari.');
-      return;
-    }
+    const attendance = hasUsuario
+      ? { usuarioId, nombreMostrado: null }
+      : { usuarioId: null, nombreMostrado };
 
     this.savingAttendanceKey.set(row.key);
     this.attendanceFormError.set('');
 
     if (row.source === 'cine') {
       const pelicula = row.raw as CinePelicula;
-      this.cineService.marcarAsistencia(pelicula.cinePeliculaId, { usuarioId }).subscribe({
+      this.cineService.marcarAsistencia(pelicula.cinePeliculaId, attendance).subscribe({
         next: updated => {
           this.peliculas.update(current =>
             current.map(item => item.cinePeliculaId === updated.cinePeliculaId ? updated : item)
@@ -409,7 +416,7 @@ export class CsopaPageComponent {
     }
 
     const activitat = row.raw as CsopaActivitat;
-    this.csopaService.marcarAssistencia(activitat.csopaActivitatId, { usuarioId }).subscribe({
+    this.csopaService.marcarAssistencia(activitat.csopaActivitatId, attendance).subscribe({
       next: updated => {
         this.activitats.update(current =>
           current.map(item => item.csopaActivitatId === updated.csopaActivitatId ? updated : item)

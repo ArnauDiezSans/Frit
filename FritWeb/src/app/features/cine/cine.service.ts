@@ -7,7 +7,7 @@ import { DataStoreService } from '../../core/data/data-store.service';
 
 export interface CineValoracion {
   cineValoracionId: number;
-  usuarioId: number;
+  usuarioId: number | null;
   usuarioNombre: string;
   nota?: number | null;
   observacion?: string | null;
@@ -41,7 +41,8 @@ export interface CineValoracionCreate {
 }
 
 export interface CineAsistenciaCreate {
-  usuarioId: number;
+  usuarioId?: number | null;
+  nombreMostrado?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

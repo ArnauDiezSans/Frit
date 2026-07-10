@@ -195,6 +195,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Observacion)
                 .HasMaxLength(200);
 
+            entity.Property(e => e.NombreMostrado)
+                .HasMaxLength(200);
+
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
 
@@ -206,7 +209,7 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Usuario)
                 .WithMany()
                 .HasForeignKey(e => e.UsuarioId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => new { e.CinePeliculaId, e.UsuarioId })
                 .IsUnique();
@@ -239,6 +242,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
 
+            entity.Property(e => e.NombreMostrado)
+                .HasMaxLength(200);
+
             entity.HasOne(e => e.CsopaActivitat)
                 .WithMany(e => e.Assistencies)
                 .HasForeignKey(e => e.CsopaActivitatId)
@@ -247,7 +253,7 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Usuario)
                 .WithMany()
                 .HasForeignKey(e => e.UsuarioId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => new { e.CsopaActivitatId, e.UsuarioId })
                 .IsUnique();

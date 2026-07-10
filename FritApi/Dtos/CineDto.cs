@@ -21,7 +21,7 @@ public class CinePeliculaDto
 public class CineValoracionDto
 {
     public int CineValoracionId { get; set; }
-    public int UsuarioId { get; set; }
+    public int? UsuarioId { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
     public decimal? Nota { get; set; }
     public string? Observacion { get; set; }
@@ -52,6 +52,8 @@ public class CineValoracionCreateDto
 
 public class CineAsistenciaCreateDto
 {
-    [Required]
     public int? UsuarioId { get; set; }
+
+    [MaxLength(200)]
+    public string? NombreMostrado { get; set; }
 }

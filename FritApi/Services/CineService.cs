@@ -163,14 +163,17 @@ public class CineService
             return (false, "L'usuari Extern no pot marcar assistències.", null);
         }
 
-        if (!dto.UsuarioId.HasValue)
+        var nombreMostrado = dto.NombreMostrado?.Trim();
+        if (!dto.UsuarioId.HasValue && string.IsNullOrWhiteSpace(nombreMostrado))
         {
-            return (false, "L'usuari és obligatori.", null);
+            return (false, "L'usuari o el nom de l'assistent és obligatori.", null);
         }
 
-        var usuario = await _context.Usuarios.FirstOrDefaultAsync(item => item.UsuarioId == dto.UsuarioId.Value);
+        var usuario = dto.UsuarioId.HasValue
+            ? await _context.Usuarios.FirstOrDefaultAsync(item => item.UsuarioId == dto.UsuarioId.Value)
+            : null;
 
-        if (usuario is null || ExternalUserPolicy.IsExternal(usuario))
+        if (dto.UsuarioId.HasValue && (usuario is null || ExternalUserPolicy.IsExternal(usuario)))
         {
             return (false, "Usuari no trobat.", null);
         }
@@ -186,15 +189,22 @@ public class CineService
             return (false, "Pel·lícula no trobada.", null);
         }
 
-        if (pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuario.UsuarioId))
+        if (usuario is not null && pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId == usuario.UsuarioId))
         {
             return (false, "Aquest usuari ja consta com a assistent.", null);
+        }
+
+        if (usuario is null && pelicula.Valoraciones.Any(valoracion => valoracion.UsuarioId is null &&
+            string.Equals(valoracion.NombreMostrado, nombreMostrado, StringComparison.OrdinalIgnoreCase)))
+        {
+            return (false, "Aquest assistent ja hi consta.", null);
         }
 
         var asistencia = new CineValoracion
         {
             CinePeliculaId = peliculaId,
-            UsuarioId = usuario.UsuarioId,
+            UsuarioId = usuario?.UsuarioId,
+            NombreMostrado = usuario is null ? nombreMostrado : null,
             Nota = null
         };
 
@@ -296,12 +306,12 @@ public class CineService
                 ? Math.Round(notas.Average(), 1)
                 : null,
             Valoraciones = pelicula.Valoraciones
-                .OrderBy(valoracion => valoracion.Usuario.Nombre)
+                .OrderBy(valoracion => valoracion.Usuario != null ? valoracion.Usuario.Nombre : valoracion.NombreMostrado)
                 .Select(valoracion => new CineValoracionDto
                 {
                     CineValoracionId = valoracion.CineValoracionId,
                     UsuarioId = valoracion.UsuarioId,
-                    UsuarioNombre = valoracion.Usuario.Nombre,
+                    UsuarioNombre = valoracion.Usuario?.Nombre ?? valoracion.NombreMostrado ?? string.Empty,
                     Nota = valoracion.Nota,
                     Observacion = valoracion.Observacion,
                     CreatedAt = valoracion.CreatedAt

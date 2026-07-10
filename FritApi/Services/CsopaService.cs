@@ -93,14 +93,17 @@ public class CsopaService
             return (false, "L'usuari Extern no pot marcar assistències.", null);
         }
 
-        if (!dto.UsuarioId.HasValue)
+        var nombreMostrado = dto.NombreMostrado?.Trim();
+        if (!dto.UsuarioId.HasValue && string.IsNullOrWhiteSpace(nombreMostrado))
         {
-            return (false, "L'usuari és obligatori.", null);
+            return (false, "L'usuari o el nom de l'assistent és obligatori.", null);
         }
 
-        var usuario = await _context.Usuarios.FirstOrDefaultAsync(item => item.UsuarioId == dto.UsuarioId.Value);
+        var usuario = dto.UsuarioId.HasValue
+            ? await _context.Usuarios.FirstOrDefaultAsync(item => item.UsuarioId == dto.UsuarioId.Value)
+            : null;
 
-        if (usuario is null || ExternalUserPolicy.IsExternal(usuario))
+        if (dto.UsuarioId.HasValue && (usuario is null || ExternalUserPolicy.IsExternal(usuario)))
         {
             return (false, "Usuari no trobat.", null);
         }
@@ -116,15 +119,22 @@ public class CsopaService
             return (false, "Activitat no trobada.", null);
         }
 
-        if (activitat.Assistencies.Any(assistencia => assistencia.UsuarioId == usuario.UsuarioId))
+        if (usuario is not null && activitat.Assistencies.Any(assistencia => assistencia.UsuarioId == usuario.UsuarioId))
         {
             return (false, "Aquest usuari ja consta com a assistent.", null);
+        }
+
+        if (usuario is null && activitat.Assistencies.Any(assistencia => assistencia.UsuarioId is null &&
+            string.Equals(assistencia.NombreMostrado, nombreMostrado, StringComparison.OrdinalIgnoreCase)))
+        {
+            return (false, "Aquest assistent ja hi consta.", null);
         }
 
         var assistencia = new CsopaAssistencia
         {
             CsopaActivitatId = activitatId,
-            UsuarioId = usuario.UsuarioId
+            UsuarioId = usuario?.UsuarioId,
+            NombreMostrado = usuario is null ? nombreMostrado : null
         };
 
         _context.CsopaAssistencies.Add(assistencia);
@@ -210,12 +220,12 @@ public class CsopaService
             CreatedAt = activitat.CreatedAt,
             YaAsistidaPorUsuario = activitat.Assistencies.Any(assistencia => assistencia.UsuarioId == usuarioId),
             Assistencies = activitat.Assistencies
-                .OrderBy(assistencia => assistencia.Usuario.Nombre)
+                .OrderBy(assistencia => assistencia.Usuario != null ? assistencia.Usuario.Nombre : assistencia.NombreMostrado)
                 .Select(assistencia => new CsopaAssistenciaDto
                 {
                     CsopaAssistenciaId = assistencia.CsopaAssistenciaId,
                     UsuarioId = assistencia.UsuarioId,
-                    UsuarioNombre = assistencia.Usuario.Nombre,
+                    UsuarioNombre = assistencia.Usuario?.Nombre ?? assistencia.NombreMostrado ?? string.Empty,
                     CreatedAt = assistencia.CreatedAt
                 })
                 .ToList()

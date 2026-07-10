@@ -270,6 +270,11 @@
                     <input type="text" formControlName="observacion" maxlength="200" />
                   </label>
 
+                  <label class="form-field attendance-user">
+                    <span>O assistent extern</span>
+                    <input type="text" maxlength="200" formControlName="nombreMostrado" placeholder="Escriu el nom" />
+                  </label>
+
                   <div class="detail-actions">
                     <button type="button" class="ghost-button" (click)="cancelarValoracion()">Cancel·lar</button>
                     <button type="submit" class="primary-button" [disabled]="savingRatingKey() === row.key">
