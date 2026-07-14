@@ -302,6 +302,20 @@ h1 {
   min-width: 160px;
 }
 
+.observacions-column,
+.observacions-cell {
+  width: 280px;
+  min-width: 220px;
+}
+
+.observacions-column {
+  white-space: nowrap;
+}
+
+.observacions-cell {
+  white-space: normal;
+}
+
 .activity-type-icon {
   width: 26px;
   height: 26px;
