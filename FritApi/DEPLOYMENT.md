@@ -29,7 +29,7 @@ dotnet FritApi.dll
 La primera migració multi-tenant crea `frit14` i assigna totes les dades
 preexistents a aquest tenant. Les sessions creades abans d'aquesta migració
 deixen de ser vàlides perquè no contenen el claim del tenant; els usuaris només
-han de tornar a iniciar sessió indicant el grup `frit14`.
+han de tornar a iniciar sessió amb el seu usuari i contrasenya habituals.
 
 ## Crear un altre grup
 
