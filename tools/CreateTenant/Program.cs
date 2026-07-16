@@ -25,8 +25,9 @@ var connectionString = ParseConnectionString(databaseUrl);
 var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
 var passwordService = new PasswordService();
 
-await using var bootstrapContext = new AppDbContext(options);
-if (await bootstrapContext.Tenants.AnyAsync(item => item.Codi == code))
+var currentTenant = new MutableCurrentTenant();
+await using var context = new AppDbContext(options, currentTenant);
+if (await context.Tenants.AnyAsync(item => item.Codi == code))
 {
     throw new InvalidOperationException($"Ja existeix el tenant '{code}'.");
 }
@@ -37,18 +38,20 @@ var tenant = new Tenant
     Nom = name,
     CodiRegistreHash = passwordService.HashPassword(registrationCode)
 };
-bootstrapContext.Tenants.Add(tenant);
-await bootstrapContext.SaveChangesAsync();
+await using var transaction = await context.Database.BeginTransactionAsync();
+context.Tenants.Add(tenant);
+await context.SaveChangesAsync();
 
-await using var tenantContext = new AppDbContext(options, new FixedCurrentTenant(tenant.TenantId));
-tenantContext.Usuarios.Add(new Usuario
+currentTenant.TenantId = tenant.TenantId;
+context.Usuarios.Add(new Usuario
 {
     TenantId = tenant.TenantId,
     Nombre = adminName,
     PasswordHash = passwordService.HashPassword(adminPassword),
     EsAdmin = true
 });
-await tenantContext.SaveChangesAsync();
+await context.SaveChangesAsync();
+await transaction.CommitAsync();
 
 Console.WriteLine($"Tenant '{tenant.Nom}' ({tenant.Codi}) creat amb l'administrador '{adminName}'.");
 
@@ -73,7 +76,7 @@ static string ParseConnectionString(string value)
     }.ConnectionString;
 }
 
-file sealed class FixedCurrentTenant(int tenantId) : ICurrentTenant
+file sealed class MutableCurrentTenant : ICurrentTenant
 {
-    public int? TenantId { get; } = tenantId;
+    public int? TenantId { get; set; }
 }
