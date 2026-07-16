@@ -476,7 +476,7 @@
             <input type="number" formControlName="numeroJugadoresMax" />
           </label>
 
-          <div class="form-field" *ngIf="!isTenantOwnedLibrary()">
+          <div class="form-field">
             <span>Joc base</span>
             <app-autocomplete-select
               [items]="filteredJuegosBase()"
@@ -492,7 +492,7 @@
               (cleared)="limpiarJuegoBase()" />
           </div>
 
-          <div class="form-field">
+          <div class="form-field" *ngIf="!isTenantOwnedLibrary()">
             <span>Propietari *</span>
             <app-autocomplete-select
               [items]="filteredUsuarios()"

@@ -12,6 +12,12 @@ export class BrandingService {
     return sessionStorage.getItem(this.storageKey) === 'ajjrr' ? 'ajjrr' : 'frit';
   }
 
+  applyForTenant(tenantCodi: string | null | undefined): void {
+    const brand: BrandCode = tenantCodi === 'ajjrr26' ? 'ajjrr' : 'frit';
+    sessionStorage.setItem(this.storageKey, brand);
+    this.apply(brand);
+  }
+
   applyFromUrl(url: string): void {
     if (url === '/ajjrr' || url.startsWith('/ajjrr/')) {
       sessionStorage.setItem(this.storageKey, 'ajjrr');
@@ -25,6 +31,7 @@ export class BrandingService {
   private apply(brand: BrandCode): void {
     const isAjjrr = brand === 'ajjrr';
     this.document.title = isAjjrr ? 'AJJRR' : 'Frit';
+    this.document.body.classList.toggle('brand-ajjrr', isAjjrr);
 
     let favicon = this.document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (!favicon) {

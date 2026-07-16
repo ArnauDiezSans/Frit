@@ -6,12 +6,14 @@ import { DataStoreService } from '../data/data-store.service';
 import { UiStateService } from '../data/ui-state.service';
 import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
 import { canUseTenantFeature, TenantFeature } from './tenant-features';
+import { BrandingService } from '../branding/branding.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private dataStore = inject(DataStoreService);
   private uiState = inject(UiStateService);
+  private branding = inject(BrandingService);
   private baseUrl = `${API_BASE_URL}/auth`;
 
   private readonly currentUserState = signal<AuthUser | null>(null);
@@ -25,6 +27,9 @@ export class AuthService {
 
   set currentUser(user: AuthUser | null) {
     this.currentUserState.set(user);
+    if (user) {
+      this.branding.applyForTenant(user.tenantCodi);
+    }
   }
 
   login(data: LoginRequest): Observable<AuthUser> {

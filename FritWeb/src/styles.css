@@ -238,3 +238,11 @@ app-usuario-page .medal-games-list .medal-game-achieved {
     white-space: normal;
   }
 }
+body.brand-ajjrr .eyebrow {
+  font-size: 0;
+}
+
+body.brand-ajjrr .eyebrow::after {
+  content: 'AJJRR';
+  font-size: 0.8rem;
+}
