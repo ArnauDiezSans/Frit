@@ -18,8 +18,7 @@ public class PendentCompraService
     {
         return await _context.PendentsCompra
             .Where(item =>
-                item.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                item.Usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !item.Usuario.EsUsuarioExterno)
             .OrderBy(item => item.CreatedAt)
             .ThenBy(item => item.PendentCompraId)
             .Select(item => new PendentCompraDto

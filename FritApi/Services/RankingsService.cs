@@ -33,8 +33,7 @@ public class RankingsService
         var usuariosRegistrados = await context.Usuarios
             .AsNoTracking()
             .Where(usuario =>
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .Select(usuario => new RegisteredUserRow(
                 usuario.UsuarioId,
                 usuario.Nombre,

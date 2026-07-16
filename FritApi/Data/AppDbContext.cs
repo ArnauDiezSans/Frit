@@ -1,13 +1,23 @@
 using FritApi.Models;
+using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace FritApi.Data;
 
 public class AppDbContext : DbContext
 {
+    private readonly ICurrentTenant? _currentTenant;
+
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentTenant currentTenant) : base(options)
+    {
+        _currentTenant = currentTenant;
+    }
+
+    public int CurrentTenantId => _currentTenant is null ? 1 : _currentTenant.TenantId ?? 0;
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -72,8 +82,14 @@ public class AppDbContext : DbContext
             entity.Property(e => e.EsAdmin)
                 .HasDefaultValue(false);
 
+            entity.Property(e => e.EsUsuarioExterno)
+                .HasDefaultValue(false);
+
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
+
+            entity.HasIndex(e => new { e.TenantId, e.Nombre })
+                .IsUnique();
         });
 
         modelBuilder.Entity<Juego>(entity =>
@@ -301,6 +317,7 @@ public class AppDbContext : DbContext
 
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
+
         });
 
         modelBuilder.Entity<ManualMedallaUsuario>(entity =>
@@ -384,13 +401,65 @@ public class AppDbContext : DbContext
                      .Where(entityType => typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType)))
         {
             modelBuilder.Entity(entityType.ClrType)
-                .HasOne(typeof(Tenant))
+                .HasOne(
+                    typeof(Tenant),
+                    entityType.ClrType == typeof(Usuario) ? nameof(Usuario.Tenant) : null)
                 .WithMany()
                 .HasForeignKey(nameof(ITenantEntity.TenantId))
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity(entityType.ClrType)
                 .HasIndex(nameof(ITenantEntity.TenantId));
+
+            var method = typeof(AppDbContext)
+                .GetMethod(nameof(ConfigureTenantFilter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                .MakeGenericMethod(entityType.ClrType);
+            method.Invoke(this, [modelBuilder]);
+        }
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ApplyTenantRules();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        ApplyTenantRules();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private void ConfigureTenantFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class, ITenantEntity
+    {
+        modelBuilder.Entity<TEntity>()
+            .HasQueryFilter(entity => entity.TenantId == CurrentTenantId);
+    }
+
+    private void ApplyTenantRules()
+    {
+        var tenantId = CurrentTenantId;
+
+        foreach (var entry in ChangeTracker.Entries<ITenantEntity>())
+        {
+            if (entry.State == EntityState.Added)
+            {
+                if (entry.Entity.TenantId == 0)
+                {
+                    entry.Entity.TenantId = tenantId;
+                }
+                else if (tenantId != 0 && entry.Entity.TenantId != tenantId)
+                {
+                    throw new InvalidOperationException("No es poden crear dades en un altre tenant.");
+                }
+            }
+            else if (entry.State == EntityState.Modified && entry.Property(nameof(ITenantEntity.TenantId)).IsModified)
+            {
+                throw new InvalidOperationException("No es pot canviar el tenant d'un registre.");
+            }
         }
     }
 }

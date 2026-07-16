@@ -6,6 +6,7 @@ public class Usuario : ITenantEntity
 {
     public int UsuarioId { get; set; }
     public int TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
 
     [Required]
     [MaxLength(200)]
@@ -21,6 +22,7 @@ public class Usuario : ITenantEntity
     public string PasswordHash { get; set; } = string.Empty;
 
     public bool EsAdmin { get; set; }
+    public bool EsUsuarioExterno { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

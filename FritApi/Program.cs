@@ -48,7 +48,9 @@ builder.Services
         options.Events.OnValidatePrincipal = async context =>
         {
             var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(userIdClaim, out var userId))
+            var tenantIdClaim = context.Principal?.FindFirstValue(TenantClaims.TenantId);
+            if (!int.TryParse(userIdClaim, out var userId) ||
+                !int.TryParse(tenantIdClaim, out var tenantId))
             {
                 context.RejectPrincipal();
                 await context.HttpContext.SignOutAsync();
@@ -57,9 +59,10 @@ builder.Services
 
             var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
             var user = await db.Usuarios
+                .IgnoreQueryFilters()
                 .AsNoTracking()
-                .Where(row => row.UsuarioId == userId)
-                .Select(row => new { row.UsuarioId, row.Nombre, row.EsAdmin })
+                .Where(row => row.UsuarioId == userId && row.TenantId == tenantId)
+                .Select(row => new { row.UsuarioId, row.TenantId, row.Nombre, row.EsAdmin })
                 .FirstOrDefaultAsync();
 
             if (user is null)
@@ -72,6 +75,7 @@ builder.Services
             var identity = new ClaimsIdentity(
             [
                 new Claim(ClaimTypes.NameIdentifier, user.UsuarioId.ToString()),
+                new Claim(TenantClaims.TenantId, user.TenantId.ToString()),
                 new Claim(ClaimTypes.Name, user.Nombre),
                 new Claim(ClaimTypes.Role, user.EsAdmin ? "Admin" : "User")
             ], CookieAuthenticationDefaults.AuthenticationScheme);
@@ -97,6 +101,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentTenant, HttpCurrentTenant>();
 
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
