@@ -10,6 +10,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Juego> Juegos => Set<Juego>();
     public DbSet<Partida> Partidas => Set<Partida>();
     public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
@@ -28,6 +29,28 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(e => e.TenantId);
+
+            entity.Property(e => e.Codi)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Nom)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Actiu)
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("NOW()");
+
+            entity.HasIndex(e => e.Codi)
+                .IsUnique();
+        });
 
         modelBuilder.Entity<Usuario>(entity =>
         {
@@ -356,5 +379,18 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.RemadaId, e.JuegoId })
                 .IsUnique();
         });
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                     .Where(entityType => typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType)))
+        {
+            modelBuilder.Entity(entityType.ClrType)
+                .HasOne(typeof(Tenant))
+                .WithMany()
+                .HasForeignKey(nameof(ITenantEntity.TenantId))
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity(entityType.ClrType)
+                .HasIndex(nameof(ITenantEntity.TenantId));
+        }
     }
 }

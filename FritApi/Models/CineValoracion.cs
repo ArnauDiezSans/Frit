@@ -2,9 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FritApi.Models;
 
-public class CineValoracion
+public class CineValoracion : ITenantEntity
 {
     public int CineValoracionId { get; set; }
+    public int TenantId { get; set; }
 
     public int CinePeliculaId { get; set; }
     public CinePelicula CinePelicula { get; set; } = null!;

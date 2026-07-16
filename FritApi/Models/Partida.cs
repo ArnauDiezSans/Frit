@@ -1,8 +1,9 @@
 namespace FritApi.Models;
 
-public class Partida
+public class Partida : ITenantEntity
 {
     public int PartidaId { get; set; }
+    public int TenantId { get; set; }
 
     public int JuegoId { get; set; }
     public Juego Juego { get; set; } = null!;
