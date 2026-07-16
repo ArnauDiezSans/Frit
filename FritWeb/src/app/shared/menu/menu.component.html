@@ -37,7 +37,6 @@
     Pendent comprar
   </button>
   <button
-    *ngIf="canUseAssistencia()"
     type="button"
     class="menu-button menu-a-que-juguem"
     [class.menu-button-active]="activePage === 'aQueJuguem'"
@@ -46,6 +45,7 @@
   </button>
 
   <button
+    *ngIf="canUseAssistencia()"
     type="button"
     class="menu-button menu-assistencia"
     [class.menu-button-active]="activePage === 'assistencia'"
