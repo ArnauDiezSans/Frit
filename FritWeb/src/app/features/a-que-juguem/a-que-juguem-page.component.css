@@ -124,6 +124,10 @@ h1 {
   font-size: 0.85rem;
 }
 
+.remada-admin-row-readonly {
+  grid-template-columns: 145px minmax(140px, 1fr) minmax(180px, 1.4fr) 72px;
+}
+
 .remada-admin-header {
   border: 0;
   background: #f8fafc;
