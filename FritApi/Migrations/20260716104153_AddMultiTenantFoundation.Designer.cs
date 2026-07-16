@@ -3,6 +3,7 @@ using System;
 using FritApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FritApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260716104153_AddMultiTenantFoundation")]
+    partial class AddMultiTenantFoundation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -569,9 +572,6 @@ namespace FritApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("CodiRegistreHash")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -608,11 +608,6 @@ namespace FritApi.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
-                    b.Property<bool>("EsUsuarioExterno")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
-
                     b.Property<string>("Grupo")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
@@ -634,9 +629,6 @@ namespace FritApi.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("UsuarioId");
-
-                    b.HasIndex("Nombre")
-                        .IsUnique();
 
                     b.HasIndex("TenantId");
 
@@ -950,13 +942,11 @@ namespace FritApi.Migrations
 
             modelBuilder.Entity("FritApi.Models.Usuario", b =>
                 {
-                    b.HasOne("FritApi.Models.Tenant", "Tenant")
+                    b.HasOne("FritApi.Models.Tenant", null)
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("FritApi.Models.UsuarioJuegoOrden", b =>

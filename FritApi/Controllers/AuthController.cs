@@ -19,10 +19,7 @@ public class AuthController : ControllerBase
     private readonly PasswordService _passwordService;
     private readonly IConfiguration _configuration;
 
-    public AuthController(
-        AppDbContext context,
-        PasswordService passwordService,
-        IConfiguration configuration)
+    public AuthController(AppDbContext context, PasswordService passwordService, IConfiguration configuration)
     {
         _context = context;
         _passwordService = passwordService;
@@ -37,43 +34,19 @@ public class AuthController : ControllerBase
         var nombre = dto.Nombre.Trim();
 
         var usuario = await _context.Usuarios
-            .FirstOrDefaultAsync(u => u.Nombre == nombre);
+            .IgnoreQueryFilters()
+            .Include(item => item.Tenant)
+            .FirstOrDefaultAsync(item =>
+                item.Nombre == nombre &&
+                item.Tenant.Actiu);
 
-        if (usuario is null)
+        if (usuario is null || !_passwordService.VerifyPassword(usuario.PasswordHash, dto.Password))
         {
             return Unauthorized();
         }
 
-        var validPassword = _passwordService.VerifyPassword(usuario.PasswordHash, dto.Password);
-
-        if (!validPassword)
-        {
-            return Unauthorized();
-        }
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
-            new Claim(ClaimTypes.Name, usuario.Nombre),
-            new Claim(ClaimTypes.Role, usuario.EsAdmin ? "Admin" : "User")
-        };
-
-        var identity = new ClaimsIdentity(
-            claims,
-            CookieAuthenticationDefaults.AuthenticationScheme);
-
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal);
-
-        return Ok(new AuthUserDto
-        {
-            UsuarioId = usuario.UsuarioId,
-            Nombre = usuario.Nombre,
-            EsAdmin = usuario.EsAdmin
-        });
+        await SignInAsync(usuario);
+        return Ok(ToAuthUser(usuario));
     }
 
     [HttpPost("logout")]
@@ -88,51 +61,37 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<AuthUserDto>> Me()
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
         {
             return Unauthorized();
         }
 
         var usuario = await _context.Usuarios
-            .Where(u => u.UsuarioId == userId)
-            .Select(u => new AuthUserDto
-            {
-                UsuarioId = u.UsuarioId,
-                Nombre = u.Nombre,
-                EsAdmin = u.EsAdmin
-            })
-            .FirstOrDefaultAsync();
+            .Include(item => item.Tenant)
+            .FirstOrDefaultAsync(item => item.UsuarioId == userId);
 
-        if (usuario is null)
-        {
-            return Unauthorized();
-        }
-
-        return Ok(usuario);
+        return usuario is null ? Unauthorized() : Ok(ToAuthUser(usuario));
     }
 
     [HttpPost("register")]
     [AllowAnonymous]
     [EnableRateLimiting("auth")]
-    public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
+    public async Task<ActionResult<AuthUserDto>> Register([FromBody] RegisterRequestDto dto)
     {
         var nombre = dto.Nombre.Trim();
-        var registrationCode = _configuration["GROUP_REGISTRATION_CODE"];
+        var tenantCodi = NormalizeTenantCode(dto.TenantCodi);
+        var tenant = await _context.Tenants
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Codi == tenantCodi && item.Actiu);
 
-        if (string.IsNullOrWhiteSpace(registrationCode))
+        if (tenant is null || !IsRegistrationCodeValid(tenant, dto.CodiRegistre))
         {
-            return StatusCode(StatusCodes.Status503ServiceUnavailable,
-                new { message = "El registre no està configurat." });
+            return BadRequest(new { message = "Grup o codi de registre incorrecte." });
         }
 
-        if (!string.Equals(dto.Grupo?.Trim(), registrationCode, StringComparison.Ordinal))
-        {
-            return BadRequest(new { message = "Codi de grup incorrecte." });
-        }
-
-        var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
+        var exists = await _context.Usuarios
+            .IgnoreQueryFilters()
+            .AnyAsync(item => item.Nombre == nombre);
 
         if (exists)
         {
@@ -141,20 +100,56 @@ public class AuthController : ControllerBase
 
         var usuario = new Models.Usuario
         {
+            TenantId = tenant.TenantId,
             Nombre = nombre,
-            Grupo = null,
             Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
-            PasswordHash = _passwordService.HashPassword(dto.Password)
+            PasswordHash = _passwordService.HashPassword(dto.Password),
+            Tenant = tenant
         };
 
         _context.Usuarios.Add(usuario);
         await _context.SaveChangesAsync();
 
-        return StatusCode(StatusCodes.Status201Created, new AuthUserDto
-        {
-            UsuarioId = usuario.UsuarioId,
-            Nombre = usuario.Nombre,
-            EsAdmin = usuario.EsAdmin
-        });
+        return StatusCode(StatusCodes.Status201Created, ToAuthUser(usuario));
     }
+
+    private bool IsRegistrationCodeValid(Models.Tenant tenant, string registrationCode)
+    {
+        if (!string.IsNullOrWhiteSpace(tenant.CodiRegistreHash))
+        {
+            return _passwordService.VerifyPassword(tenant.CodiRegistreHash, registrationCode);
+        }
+
+        return tenant.Codi == "frit14" &&
+            !string.IsNullOrWhiteSpace(_configuration["GROUP_REGISTRATION_CODE"]) &&
+            string.Equals(registrationCode, _configuration["GROUP_REGISTRATION_CODE"], StringComparison.Ordinal);
+    }
+
+    private async Task SignInAsync(Models.Usuario usuario)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+            new(TenantClaims.TenantId, usuario.TenantId.ToString()),
+            new(ClaimTypes.Name, usuario.Nombre),
+            new(ClaimTypes.Role, usuario.EsAdmin ? "Admin" : "User")
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity));
+    }
+
+    private static AuthUserDto ToAuthUser(Models.Usuario usuario) => new()
+    {
+        UsuarioId = usuario.UsuarioId,
+        Nombre = usuario.Nombre,
+        EsAdmin = usuario.EsAdmin,
+        TenantId = usuario.TenantId,
+        TenantCodi = usuario.Tenant.Codi,
+        TenantNom = usuario.Tenant.Nom
+    };
+
+    private static string NormalizeTenantCode(string value) => value.Trim().ToLowerInvariant();
 }

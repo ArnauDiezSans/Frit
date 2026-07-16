@@ -17,7 +17,10 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBeFalse();
     expect(service.isAdmin()).toBeFalse();
 
-    service.currentUser = { usuarioId: 1, nombre: 'Usuari', esAdmin: true };
+    service.currentUser = {
+      usuarioId: 1, nombre: 'Usuari', esAdmin: true,
+      tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
+    };
 
     expect(service.currentUserSignal()?.nombre).toBe('Usuari');
     expect(service.isAuthenticated()).toBeTrue();

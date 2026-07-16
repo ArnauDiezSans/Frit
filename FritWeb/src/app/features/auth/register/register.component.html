@@ -1,20 +1,26 @@
 <div class="auth-page">
   <div class="auth-card">
     <h1>Crear usuari</h1>
-    <p class="subtitle">Registra un nou accés per a Frit.</p>
+    <p class="subtitle">Registra un nou accés per al teu grup de Frit.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
+      <label for="tenantCodi">Grup</label>
+      <input id="tenantCodi" type="text" formControlName="tenantCodi" />
+      @if (tenantCodi.touched && tenantCodi.invalid) {
+        <p class="field-error">El grup és obligatori.</p>
+      }
+
       <label for="nombre">Usuari</label>
       <input id="nombre" type="text" formControlName="nombre" />
       @if (nombre.touched && nombre.invalid) {
         <p class="field-error">L'usuari és obligatori.</p>
       }
 
-      <label for="grupo">Grup</label>
-      <input id="grupo" type="text" formControlName="grupo" />
-       @if (grupo.touched && grupo.invalid) {
-       <p class="field-error">El grup no és vàlid.</p>
-       }
+      <label for="codiRegistre">Codi de registre</label>
+      <input id="codiRegistre" type="password" formControlName="codiRegistre" />
+      @if (codiRegistre.touched && codiRegistre.invalid) {
+        <p class="field-error">El codi de registre és obligatori.</p>
+      }
 
       <label for="observaciones">Observacions</label>
       <textarea id="observaciones" rows="3" formControlName="observaciones"></textarea>

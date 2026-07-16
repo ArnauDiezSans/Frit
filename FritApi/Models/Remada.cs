@@ -1,8 +1,9 @@
 namespace FritApi.Models;
 
-public class Remada
+public class Remada : ITenantEntity
 {
     public int RemadaId { get; set; }
+    public int TenantId { get; set; }
     public int UsuarioCreadorId { get; set; }
     public Usuario UsuarioCreador { get; set; } = null!;
     public int TempsDisponibleMinuts { get; set; }

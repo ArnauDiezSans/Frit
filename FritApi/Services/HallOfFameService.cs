@@ -214,8 +214,7 @@ public class HallOfFameService
         var validUserIds = await _context.Usuarios
             .Where(usuario =>
                 userIds.Contains(usuario.UsuarioId) &&
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .Select(usuario => usuario.UsuarioId)
             .ToListAsync();
 
@@ -242,8 +241,7 @@ public class HallOfFameService
         var usuarios = await _context.Usuarios
             .AsNoTracking()
             .Where(usuario =>
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .OrderBy(usuario => usuario.Nombre)
             .ToListAsync();
         var juegos = await _context.Juegos
@@ -1279,8 +1277,7 @@ public class HallOfFameService
 
     private static bool IsExternalUser(Usuario usuario)
     {
-        return usuario.UsuarioId == ExternalUserPolicy.ExternalUserId ||
-            usuario.Nombre == ExternalUserPolicy.ExternalUserName;
+        return usuario.EsUsuarioExterno;
     }
 
     private static bool ShouldShowInHallOfFame(MedalProgressDto progress)
