@@ -38,9 +38,11 @@ export class LoginPageComponent {
         this.loading = false;
         this.router.navigateByUrl('/app/partidas');
       },
-      error: () => {
+      error: err => {
         this.loading = false;
-        this.error = 'Usuari o contrasenya incorrectes.';
+        this.error = err.status === 429
+          ? 'Massa intents. Torna-ho a provar d’aquí a uns minuts.'
+          : 'Usuari o contrasenya incorrectes.';
       }
     });
   }

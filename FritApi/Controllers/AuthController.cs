@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace FritApi.Controllers;
@@ -16,15 +17,21 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(AppDbContext context, PasswordService passwordService)
+    public AuthController(
+        AppDbContext context,
+        PasswordService passwordService,
+        IConfiguration configuration)
     {
         _context = context;
         _passwordService = passwordService;
+        _configuration = configuration;
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<AuthUserDto>> Login([FromBody] LoginRequestDto dto)
     {
         var nombre = dto.Nombre.Trim();
@@ -107,39 +114,47 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-[AllowAnonymous]
-public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
-{
-    var nombre = dto.Nombre.Trim();
-
-    if (dto.Grupo?.Trim() != "Frit14")
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
     {
-        return BadRequest(new { message = "Codi de grup incorrecte." });
+        var nombre = dto.Nombre.Trim();
+        var registrationCode = _configuration["GROUP_REGISTRATION_CODE"];
+
+        if (string.IsNullOrWhiteSpace(registrationCode))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "El registre no està configurat." });
+        }
+
+        if (!string.Equals(dto.Grupo?.Trim(), registrationCode, StringComparison.Ordinal))
+        {
+            return BadRequest(new { message = "Codi de grup incorrecte." });
+        }
+
+        var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
+
+        if (exists)
+        {
+            return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
+        }
+
+        var usuario = new Models.Usuario
+        {
+            Nombre = nombre,
+            Grupo = null,
+            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
+            PasswordHash = _passwordService.HashPassword(dto.Password)
+        };
+
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
+
+        return StatusCode(StatusCodes.Status201Created, new AuthUserDto
+        {
+            UsuarioId = usuario.UsuarioId,
+            Nombre = usuario.Nombre,
+            EsAdmin = usuario.EsAdmin
+        });
     }
-
-    var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
-
-    if (exists)
-    {
-        return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
-    }
-
-    var usuario = new Models.Usuario
-    {
-        Nombre = nombre,
-        Grupo = dto.Grupo.Trim(),
-        Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
-        PasswordHash = _passwordService.HashPassword(dto.Password)
-    };
-
-    _context.Usuarios.Add(usuario);
-    await _context.SaveChangesAsync();
-
-    return StatusCode(StatusCodes.Status201Created, new AuthUserDto
-    {
-        UsuarioId = usuario.UsuarioId,
-        Nombre = usuario.Nombre,
-        EsAdmin = usuario.EsAdmin
-    });
-}
 }

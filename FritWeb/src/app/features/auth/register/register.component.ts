@@ -1,14 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-
-function exactValueValidator(expected: string): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    return control.value?.trim() === expected ? null : { exactValue: true };
-  };
-}
 
 @Component({
   selector: 'app-register',
@@ -28,7 +22,7 @@ export class RegisterComponent {
 
   form = this.fb.nonNullable.group({
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    grupo: ['', [Validators.required, Validators.maxLength(200), exactValueValidator('Frit14')]],
+    grupo: ['', [Validators.required, Validators.maxLength(200)]],
     observaciones: ['', [Validators.maxLength(800)]],
     password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
   });
@@ -69,7 +63,17 @@ export class RegisterComponent {
           return;
         }
 
-        this.error = 'No s ha pogut crear l"usuari.';
+        if (err.status === 429) {
+          this.error = 'Massa intents. Torna-ho a provar d’aquí a uns minuts.';
+          return;
+        }
+
+        if (err.status === 503) {
+          this.error = 'El registre no està disponible temporalment.';
+          return;
+        }
+
+        this.error = "No s'ha pogut crear l'usuari.";
       }
     });
   }
