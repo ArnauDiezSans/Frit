@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { authGuard, hallOfFameGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
+  { path: 'ajjrr', data: { brand: 'ajjrr' }, loadComponent: () => import('./features/auth/login-page.component').then(m => m.LoginPageComponent) },
+  { path: 'ajjrr/register', data: { brand: 'ajjrr', tenantCodi: 'ajjrr26' }, loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
   { path: 'login', loadComponent: () => import('./features/auth/login-page.component').then(m => m.LoginPageComponent) },
   { path: 'register', loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
   { path: 'app/partidas', loadComponent: () => import('./features/partidas/partidas-page.component').then(m => m.PartidasPageComponent), canActivate: [authGuard] },

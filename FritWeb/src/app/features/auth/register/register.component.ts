@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
@@ -15,13 +15,18 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  readonly fixedTenantCodi = this.route.snapshot.data['tenantCodi'] as string | undefined;
+  readonly isAjjrr = this.route.snapshot.data['brand'] === 'ajjrr';
+  readonly loginUrl = this.isAjjrr ? '/ajjrr' : '/login';
 
   loading = false;
   error = '';
   success = '';
 
   form = this.fb.nonNullable.group({
-    tenantCodi: ['', [Validators.required, Validators.maxLength(100)]],
+    tenantCodi: [this.fixedTenantCodi ?? '', [Validators.required, Validators.maxLength(100)]],
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
     password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
   });
@@ -46,7 +51,7 @@ export class RegisterComponent {
       next: () => {
         this.loading = false;
         this.success = 'Usuari creat correctament.';
-        this.router.navigateByUrl('/login');
+        this.router.navigateByUrl(this.loginUrl);
       },
       error: err => {
         this.loading = false;

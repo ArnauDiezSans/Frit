@@ -4,10 +4,12 @@
     <p class="subtitle">Registra un nou accés per al teu grup de Frit.</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
-      <label for="tenantCodi">Grup</label>
-      <input id="tenantCodi" type="text" formControlName="tenantCodi" />
-      @if (tenantCodi.touched && tenantCodi.invalid) {
-        <p class="field-error">El grup és obligatori.</p>
+      @if (!fixedTenantCodi) {
+        <label for="tenantCodi">Grup</label>
+        <input id="tenantCodi" type="text" formControlName="tenantCodi" />
+        @if (tenantCodi.touched && tenantCodi.invalid) {
+          <p class="field-error">El grup és obligatori.</p>
+        }
       }
 
       <label for="nombre">Usuari</label>
@@ -31,6 +33,6 @@
       </button>
     </form>
 
-    <a routerLink="/login" class="secondary-link">Tornar a iniciar sessió</a>
+    <a [routerLink]="loginUrl" class="secondary-link">Tornar a iniciar sessió</a>
   </div>
 </div>

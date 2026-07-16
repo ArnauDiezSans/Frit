@@ -1,6 +1,10 @@
 <section class="login-page">
   <div class="login-card">
-    <h1>Frit</h1>
+    @if (isAjjrr) {
+      <img class="brand-logo" src="/assets/brands/ajjrr/logo-source.gif" alt="AJJRR" />
+    } @else {
+      <h1>Frit</h1>
+    }
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <label for="nombre">Usuari</label>
@@ -14,7 +18,7 @@
       <button type="submit" [disabled]="loading">
         {{ loading ? 'Entrant...' : 'Entrar' }}
       </button>
-      <a routerLink="/register" class="secondary-button">Crear usuari</a>
+      <a [routerLink]="registerUrl" class="secondary-button">Crear usuari</a>
     </form>
   </div>
 </section>
