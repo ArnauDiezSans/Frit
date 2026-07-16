@@ -90,6 +90,31 @@ public class TenantIsolationTests
         await Assert.ThrowsAsync<InvalidOperationException>(() => context.SaveChangesAsync());
     }
 
+    [Fact]
+    public async Task HallOfFame_DynamicMedalsAreExclusiveToFrit14()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+
+        await using var ajjrr = CreateContext(options, 2);
+        var user = new Usuario { Nombre = "AJJRR Player", PasswordHash = "hash" };
+        ajjrr.Usuarios.Add(user);
+        await ajjrr.SaveChangesAsync();
+        ajjrr.ManualMedallas.Add(new ManualMedalla
+        {
+            Nombre = "Medalla AJJRR",
+            Usuarios = [new ManualMedallaUsuario { UsuarioId = user.UsuarioId }]
+        });
+        await ajjrr.SaveChangesAsync();
+
+        var medals = await new HallOfFameService(ajjrr).GetUserMedalsAsync(user.UsuarioId);
+
+        Assert.NotNull(medals);
+        var medal = Assert.Single(medals.Medals);
+        Assert.StartsWith("manual:", medal.MedalId);
+        Assert.Equal("Medalla AJJRR", medal.Nombre);
+    }
+
     private static DbContextOptions<AppDbContext> CreateOptions() =>
         new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())

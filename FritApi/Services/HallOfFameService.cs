@@ -238,6 +238,12 @@ public class HallOfFameService
 
     private async Task<List<UserMedalProgressRow>> BuildAllProgressAsync()
     {
+        var usesFritDynamicMedals = _context.CurrentTenantId == 1 ||
+            await _context.Tenants
+                .Where(tenant => tenant.TenantId == _context.CurrentTenantId)
+                .Select(tenant => tenant.Codi == "frit14")
+                .FirstOrDefaultAsync();
+
         var usuarios = await _context.Usuarios
             .AsNoTracking()
             .Where(usuario =>
@@ -659,7 +665,11 @@ public class HallOfFameService
                     true)));
         }
 
-        return rows;
+        return usesFritDynamicMedals
+            ? rows
+            : rows
+                .Where(row => row.Progress.MedalId.StartsWith("manual:", StringComparison.Ordinal))
+                .ToList();
     }
 
     private static Dictionary<int, int> BuildCineTotalRatingsLookup(List<CinePelicula> peliculas)
