@@ -37,7 +37,7 @@ export class HallOfFamePageComponent {
   hallOfFame = signal<HallOfFame | null>(null);
   usuarios = signal<UsuarioOption[]>([]);
   selectedUsuarioIds = signal<number[]>([]);
-  gameMedalFilter = signal('');
+  userMedalFilter = signal('');
   gamesModalMedal = signal<MedalProgress | null>(null);
   @Input() embedded = false;
 
@@ -125,7 +125,9 @@ export class HallOfFamePageComponent {
   }
 
   getFritEntries(): HallOfFameEntry[] {
-    const entries = this.hallOfFame()?.entries.filter(entry => entry.medal.tipo !== 'GameWins') ?? [];
+    const entries = this.filterEntriesByUser(
+      this.hallOfFame()?.entries.filter(entry => entry.medal.tipo !== 'GameWins') ?? []
+    );
 
     if (!this.embedded) {
       return entries;
@@ -138,21 +140,12 @@ export class HallOfFamePageComponent {
   }
 
   getGameEntries(): HallOfFameEntry[] {
-    const filter = this.normalizeFilter(this.gameMedalFilter());
     const entries = this.hallOfFame()?.entries.filter(entry => entry.medal.tipo === 'GameWins') ?? [];
-
-    if (!filter) {
-      return entries;
-    }
-
-    return entries.filter(entry =>
-      this.normalizeFilter(entry.medal.nombre).includes(filter) ||
-      entry.users.some(user => this.normalizeFilter(user.usuarioNombre).includes(filter))
-    );
+    return this.filterEntriesByUser(entries);
   }
 
-  onGameMedalFilterInput(value: string): void {
-    this.gameMedalFilter.set(value);
+  onUserMedalFilterInput(value: string): void {
+    this.userMedalFilter.set(value);
   }
 
   openGamesModal(medal: MedalProgress): void {
@@ -245,5 +238,17 @@ export class HallOfFamePageComponent {
       .replace(/[\u0300-\u036f]/g, '')
       .trim()
       .toLowerCase();
+  }
+
+  private filterEntriesByUser(entries: HallOfFameEntry[]): HallOfFameEntry[] {
+    const filter = this.normalizeFilter(this.userMedalFilter());
+
+    if (!filter) {
+      return entries;
+    }
+
+    return entries.filter(entry =>
+      entry.users.some(user => this.normalizeFilter(user.usuarioNombre).includes(filter))
+    );
   }
 }
