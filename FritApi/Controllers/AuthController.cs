@@ -17,13 +17,11 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
-    private readonly IConfiguration _configuration;
 
-    public AuthController(AppDbContext context, PasswordService passwordService, IConfiguration configuration)
+    public AuthController(AppDbContext context, PasswordService passwordService)
     {
         _context = context;
         _passwordService = passwordService;
-        _configuration = configuration;
     }
 
     [HttpPost("login")]
@@ -81,12 +79,11 @@ public class AuthController : ControllerBase
         var nombre = dto.Nombre.Trim();
         var tenantCodi = NormalizeTenantCode(dto.TenantCodi);
         var tenant = await _context.Tenants
-            .AsNoTracking()
             .FirstOrDefaultAsync(item => item.Codi == tenantCodi && item.Actiu);
 
-        if (tenant is null || !IsRegistrationCodeValid(tenant, dto.CodiRegistre))
+        if (tenant is null)
         {
-            return BadRequest(new { message = "Grup o codi de registre incorrecte." });
+            return BadRequest(new { message = "El grup no existeix o no està actiu." });
         }
 
         var exists = await _context.Usuarios
@@ -102,7 +99,6 @@ public class AuthController : ControllerBase
         {
             TenantId = tenant.TenantId,
             Nombre = nombre,
-            Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
             PasswordHash = _passwordService.HashPassword(dto.Password),
             Tenant = tenant
         };
@@ -111,18 +107,6 @@ public class AuthController : ControllerBase
         await _context.SaveChangesAsync();
 
         return StatusCode(StatusCodes.Status201Created, ToAuthUser(usuario));
-    }
-
-    private bool IsRegistrationCodeValid(Models.Tenant tenant, string registrationCode)
-    {
-        if (!string.IsNullOrWhiteSpace(tenant.CodiRegistreHash))
-        {
-            return _passwordService.VerifyPassword(tenant.CodiRegistreHash, registrationCode);
-        }
-
-        return tenant.Codi == "frit14" &&
-            !string.IsNullOrWhiteSpace(_configuration["GROUP_REGISTRATION_CODE"]) &&
-            string.Equals(registrationCode, _configuration["GROUP_REGISTRATION_CODE"], StringComparison.Ordinal);
     }
 
     private async Task SignInAsync(Models.Usuario usuario)

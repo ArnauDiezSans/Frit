@@ -15,7 +15,6 @@ string Required(string name) => values.TryGetValue(name, out var value) && !stri
 
 var code = Required("--code").ToLowerInvariant();
 var name = Required("--name");
-var registrationCode = Required("--registration-code");
 var adminName = Required("--admin");
 var adminPassword = Required("--password");
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL")
@@ -35,8 +34,7 @@ if (await context.Tenants.AnyAsync(item => item.Codi == code))
 var tenant = new Tenant
 {
     Codi = code,
-    Nom = name,
-    CodiRegistreHash = passwordService.HashPassword(registrationCode)
+    Nom = name
 };
 await using var transaction = await context.Database.BeginTransactionAsync();
 context.Tenants.Add(tenant);
