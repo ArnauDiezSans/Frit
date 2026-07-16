@@ -1,15 +1,15 @@
 {
   "name": "frit-web",
   "version": "1.0.0",
-"scripts": {
-  "ng": "node ./node_modules/@angular/cli/bin/ng.js",
-  "start": "node ./node_modules/@angular/cli/bin/ng.js serve",
-  "build": "node ./node_modules/@angular/cli/bin/ng.js build",
-  "build:prod": "node ./node_modules/@angular/cli/bin/ng.js build --configuration production",
-  "watch": "node ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development",
-  "test": "node ./node_modules/@angular/cli/bin/ng.js test",
-  "lint": "node ./node_modules/@angular/cli/bin/ng.js lint"
-},
+  "scripts": {
+    "ng": "node ./node_modules/@angular/cli/bin/ng.js",
+    "start": "node ./node_modules/@angular/cli/bin/ng.js serve",
+    "build": "node ./node_modules/@angular/cli/bin/ng.js build",
+    "build:prod": "node ./node_modules/@angular/cli/bin/ng.js build --configuration production",
+    "watch": "node ./node_modules/@angular/cli/bin/ng.js build --watch --configuration development",
+    "test": "node ./node_modules/@angular/cli/bin/ng.js test",
+    "lint": "node ./node_modules/@angular/cli/bin/ng.js lint"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "^19.0.0",
@@ -26,15 +26,22 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.0.0",
+    "@angular-eslint/builder": "^19.8.1",
+    "@angular-eslint/eslint-plugin": "^19.8.1",
+    "@angular-eslint/eslint-plugin-template": "^19.8.1",
+    "@angular-eslint/template-parser": "^19.8.1",
     "@angular/cli": "^19.0.0",
     "@angular/compiler-cli": "^19.0.0",
     "@types/jasmine": "~5.1.0",
+    "angular-eslint": "^19.8.1",
+    "eslint": "^9.39.5",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.6.0"
+    "typescript": "~5.6.0",
+    "typescript-eslint": "^8.64.0"
   }
 }

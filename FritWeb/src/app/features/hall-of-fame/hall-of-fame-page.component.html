@@ -148,7 +148,7 @@
   </ng-container>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Nova medalla manual" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Nova medalla manual</h2>
@@ -200,7 +200,7 @@
   </div>
 
   <div class="modal-backdrop games-modal-backdrop" *ngIf="gamesModalMedal() as medal" (click)="closeGamesModal()">
-    <section class="modal-card games-modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card games-modal-card" role="dialog" aria-modal="true" [attr.aria-label]="medal.nombre" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>{{ medal.nombre }}</h2>

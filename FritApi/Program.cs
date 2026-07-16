@@ -167,8 +167,7 @@ static string GetConnectionString(string? databaseUrl)
             Database = uri.AbsolutePath.Trim('/'),
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
-            SslMode = SslMode.Require,
-            TrustServerCertificate = true
+            SslMode = SslMode.Require
         };
 
         return builder.ConnectionString;

@@ -155,7 +155,7 @@
   </section>
 
   <div class="modal-backdrop" *ngIf="rowingConfigOpen()" (click)="closeRowingConfig()">
-    <section class="modal-card rowing-config-modal" (click)="$event.stopPropagation()">
+    <section class="modal-card rowing-config-modal" role="dialog" aria-modal="true" aria-label="Configurar remada" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Volem remar</h2>
@@ -211,7 +211,7 @@
   </div>
 
   <div class="modal-backdrop" *ngIf="rowingResultsOpen()" (click)="closeRowingResults()">
-    <section class="modal-card rowing-results-modal" (click)="$event.stopPropagation()">
+    <section class="modal-card rowing-results-modal" role="dialog" aria-modal="true" aria-label="Resultats de la remada" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Jocs per remar</h2>
@@ -259,7 +259,7 @@
   </div>
 
   <div class="modal-backdrop" *ngIf="remadesAdminOpen()" (click)="closeRemadesAdmin()">
-    <section class="modal-card remades-admin-modal" (click)="$event.stopPropagation()">
+    <section class="modal-card remades-admin-modal" role="dialog" aria-modal="true" aria-label="Gestió de remades" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Gestió de remades</h2>

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { API_BASE_URL } from '../api/api.config';
@@ -13,8 +13,18 @@ export class AuthService {
   private uiState = inject(UiStateService);
   private baseUrl = `${API_BASE_URL}/auth`;
 
-  currentUser: AuthUser | null = null;
+  private readonly currentUserState = signal<AuthUser | null>(null);
+  readonly currentUserSignal = this.currentUserState.asReadonly();
+  readonly isAdmin = computed(() => this.currentUserState()?.esAdmin === true);
   initialized = false;
+
+  get currentUser(): AuthUser | null {
+    return this.currentUserState();
+  }
+
+  set currentUser(user: AuthUser | null) {
+    this.currentUserState.set(user);
+  }
 
   login(data: LoginRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.baseUrl}/login`, data, {

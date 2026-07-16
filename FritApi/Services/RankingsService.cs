@@ -22,6 +22,7 @@ public class RankingsService
             .Include(partida => partida.Juego)
             .Include(partida => partida.Jugadores)
                 .ThenInclude(jugador => jugador.Usuario)
+            .AsSplitQuery()
             .ToListAsync();
 
         var juegos = await context.Juegos

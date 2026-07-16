@@ -1,31 +1,20 @@
 import { Routes } from '@angular/router';
 import { authGuard, hallOfFameGuard } from './core/auth/auth.guard';
-import { LoginPageComponent } from './features/auth/login-page.component';
-import { RegisterComponent } from './features/auth/register/register.component';
-import { PartidasPageComponent } from './features/partidas/partidas-page.component';
-import { JuegosPageComponent } from './features/juegos/juegos-page.component';
-import { UsuarioPageComponent } from './features/usuario/usuario-page.component';
-import { PendentCompraPageComponent } from './features/pendent-compra/pendent-compra-page.component';
-import { AQueJuguemPageComponent } from './features/a-que-juguem/a-que-juguem-page.component';
-import { CsopaPageComponent } from './features/csopa/csopa-page.component';
-import { LaLlistaPageComponent } from './features/la-llista/la-llista-page.component';
-import { RankingsPageComponent } from './features/rankings/rankings-page.component';
-import { HallOfFamePageComponent } from './features/hall-of-fame/hall-of-fame-page.component';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginPageComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'app/partidas', component: PartidasPageComponent, canActivate: [authGuard] },
-  { path: 'app/rankings', component: RankingsPageComponent, canActivate: [authGuard] },
-  { path: 'app/hall-of-fame', component: HallOfFamePageComponent, canActivate: [hallOfFameGuard] },
-  { path: 'app/juegos', component: JuegosPageComponent, canActivate: [authGuard] },
-  { path: 'app/la-llista', component: LaLlistaPageComponent, canActivate: [authGuard] },
-  { path: 'app/pendent-compra', component: PendentCompraPageComponent, canActivate: [authGuard] },
-  { path: 'app/a-que-juguem', component: AQueJuguemPageComponent, canActivate: [authGuard] },
-  { path: 'app/assistencia', component: CsopaPageComponent, canActivate: [authGuard] },
+  { path: 'login', loadComponent: () => import('./features/auth/login-page.component').then(m => m.LoginPageComponent) },
+  { path: 'register', loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
+  { path: 'app/partidas', loadComponent: () => import('./features/partidas/partidas-page.component').then(m => m.PartidasPageComponent), canActivate: [authGuard] },
+  { path: 'app/rankings', loadComponent: () => import('./features/rankings/rankings-page.component').then(m => m.RankingsPageComponent), canActivate: [authGuard] },
+  { path: 'app/hall-of-fame', loadComponent: () => import('./features/hall-of-fame/hall-of-fame-page.component').then(m => m.HallOfFamePageComponent), canActivate: [hallOfFameGuard] },
+  { path: 'app/juegos', loadComponent: () => import('./features/juegos/juegos-page.component').then(m => m.JuegosPageComponent), canActivate: [authGuard] },
+  { path: 'app/la-llista', loadComponent: () => import('./features/la-llista/la-llista-page.component').then(m => m.LaLlistaPageComponent), canActivate: [authGuard] },
+  { path: 'app/pendent-compra', loadComponent: () => import('./features/pendent-compra/pendent-compra-page.component').then(m => m.PendentCompraPageComponent), canActivate: [authGuard] },
+  { path: 'app/a-que-juguem', loadComponent: () => import('./features/a-que-juguem/a-que-juguem-page.component').then(m => m.AQueJuguemPageComponent), canActivate: [authGuard] },
+  { path: 'app/assistencia', loadComponent: () => import('./features/csopa/csopa-page.component').then(m => m.CsopaPageComponent), canActivate: [authGuard] },
   { path: 'app/cine', redirectTo: 'app/assistencia', pathMatch: 'full' },
   { path: 'app/csopa', redirectTo: 'app/assistencia', pathMatch: 'full' },
-  { path: 'app/usuario', component: UsuarioPageComponent, canActivate: [authGuard] },
+  { path: 'app/usuario', loadComponent: () => import('./features/usuario/usuario-page.component').then(m => m.UsuarioPageComponent), canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' }
 ];

@@ -254,6 +254,7 @@ public class HallOfFameService
             .AsNoTracking()
             .Include(partida => partida.Juego)
             .Include(partida => partida.Jugadores)
+            .AsSplitQuery()
             .ToListAsync();
         var manualMedallas = await _context.ManualMedallas
             .AsNoTracking()

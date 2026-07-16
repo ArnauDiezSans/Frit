@@ -428,7 +428,7 @@
   </section>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Joc" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>{{ editingJuegoId() ? 'Editar joc' : 'Nou joc' }}</h2>
