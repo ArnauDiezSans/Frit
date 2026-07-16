@@ -19,5 +19,7 @@ public class Usuario
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 
+    public bool EsAdmin { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -47,7 +47,8 @@ public class AuthController : ControllerBase
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
-            new Claim(ClaimTypes.Name, usuario.Nombre)
+            new Claim(ClaimTypes.Name, usuario.Nombre),
+            new Claim(ClaimTypes.Role, usuario.EsAdmin ? "Admin" : "User")
         };
 
         var identity = new ClaimsIdentity(
@@ -63,7 +64,8 @@ public class AuthController : ControllerBase
         return Ok(new AuthUserDto
         {
             UsuarioId = usuario.UsuarioId,
-            Nombre = usuario.Nombre
+            Nombre = usuario.Nombre,
+            EsAdmin = usuario.EsAdmin
         });
     }
 
@@ -91,7 +93,8 @@ public class AuthController : ControllerBase
             .Select(u => new AuthUserDto
             {
                 UsuarioId = u.UsuarioId,
-                Nombre = u.Nombre
+                Nombre = u.Nombre,
+                EsAdmin = u.EsAdmin
             })
             .FirstOrDefaultAsync();
 
@@ -135,7 +138,8 @@ public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto
     return StatusCode(StatusCodes.Status201Created, new AuthUserDto
     {
         UsuarioId = usuario.UsuarioId,
-        Nombre = usuario.Nombre
+        Nombre = usuario.Nombre,
+        EsAdmin = usuario.EsAdmin
     });
 }
 }

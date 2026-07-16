@@ -110,7 +110,9 @@ export class CsopaPageComponent {
     return currentUser ? !isExternalUser(currentUser) : false;
   });
 
-  canEdit = computed(() => this.authService.currentUser?.nombre === 'Arnau');
+  canEdit(): boolean {
+    return this.authService.currentUser?.esAdmin === true;
+  }
 
   userOptions = computed<AssistenciaUserOption[]>(() => {
     const users = new Map<number, string>();

@@ -13,4 +13,5 @@ export interface RegisterRequest {
 export interface AuthUser {
   usuarioId: number;
   nombre: string;
+  esAdmin: boolean;
 }

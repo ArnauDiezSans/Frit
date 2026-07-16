@@ -17,6 +17,8 @@
 
 using FritApi.Data;
 using FritApi.Services;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -41,6 +43,39 @@ builder.Services
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync();
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            var user = await db.Usuarios
+                .AsNoTracking()
+                .Where(row => row.UsuarioId == userId)
+                .Select(row => new { row.UsuarioId, row.Nombre, row.EsAdmin })
+                .FirstOrDefaultAsync();
+
+            if (user is null)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync();
+                return;
+            }
+
+            var identity = new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, user.UsuarioId.ToString()),
+                new Claim(ClaimTypes.Name, user.Nombre),
+                new Claim(ClaimTypes.Role, user.EsAdmin ? "Admin" : "User")
+            ], CookieAuthenticationDefaults.AuthenticationScheme);
+
+            context.ReplacePrincipal(new ClaimsPrincipal(identity));
+        };
     });
 
 builder.Services.AddAuthorization();

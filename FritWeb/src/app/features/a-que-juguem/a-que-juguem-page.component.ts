@@ -100,7 +100,7 @@ export class AQueJuguemPageComponent {
   }
 
   canManageRemades(): boolean {
-    return this.authService.currentUser?.nombre === 'Arnau';
+    return this.authService.currentUser?.esAdmin === true;
   }
 
   ngOnInit(): void {

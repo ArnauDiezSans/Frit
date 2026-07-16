@@ -244,6 +244,6 @@ public class CsopaService
 
     private static bool IsCsopaAdmin(Usuario? usuario)
     {
-        return usuario is not null && string.Equals(usuario.Nombre, "Arnau", StringComparison.Ordinal);
+        return usuario?.EsAdmin == true;
     }
 }

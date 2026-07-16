@@ -46,6 +46,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.PasswordHash)
                 .IsRequired();
 
+            entity.Property(e => e.EsAdmin)
+                .HasDefaultValue(false);
+
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
         });

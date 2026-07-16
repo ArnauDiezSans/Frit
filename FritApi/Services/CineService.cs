@@ -322,6 +322,6 @@ public class CineService
 
     private static bool IsCineAdmin(Usuario? usuario)
     {
-        return usuario is not null && string.Equals(usuario.Nombre, "Arnau", StringComparison.Ordinal);
+        return usuario?.EsAdmin == true;
     }
 }

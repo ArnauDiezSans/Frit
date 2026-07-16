@@ -1,10 +1,12 @@
 using FritApi.Dtos;
 using FritApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FritApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class JuegosController : ControllerBase
 {

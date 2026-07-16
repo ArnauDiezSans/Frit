@@ -120,7 +120,7 @@ public class HallOfFameService
         _context = context;
     }
 
-    public async Task<HallOfFameDto> GetHallOfFameAsync(string? currentUserName)
+    public async Task<HallOfFameDto> GetHallOfFameAsync(bool canManageManualMedals)
     {
         var progress = await BuildAllProgressAsync();
         var entries = progress
@@ -171,7 +171,7 @@ public class HallOfFameService
 
         return new HallOfFameDto
         {
-            CanManageManualMedals = IsHallOfFameAdmin(currentUserName),
+            CanManageManualMedals = canManageManualMedals,
             Entries = entries
         };
     }
@@ -235,11 +235,6 @@ public class HallOfFameService
         await _context.SaveChangesAsync();
 
         return (true, null);
-    }
-
-    public static bool IsHallOfFameAdmin(string? userName)
-    {
-        return string.Equals(userName, "Arnau", StringComparison.Ordinal);
     }
 
     private async Task<List<UserMedalProgressRow>> BuildAllProgressAsync()

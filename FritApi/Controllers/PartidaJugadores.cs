@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FritApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class PartidaJugadoresController : ControllerBase
 {
@@ -51,14 +52,9 @@ public class PartidaJugadoresController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<PartidaJugadorDto>> Update(int id, [FromBody] PartidaJugadorDto dto)
     {
-        if (!CanEditPartidas(User))
-        {
-            return Forbid();
-        }
-
         var result = await _service.UpdateAsync(id, dto);
 
         if (!result.Success)
@@ -75,14 +71,9 @@ public class PartidaJugadoresController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        if (!CanEditPartidas(User))
-        {
-            return Forbid();
-        }
-
         var deleted = await _service.DeleteAsync(id);
 
         if (!deleted)
@@ -93,9 +84,4 @@ public class PartidaJugadoresController : ControllerBase
         return NoContent();
     }
 
-    private static bool CanEditPartidas(ClaimsPrincipal user)
-    {
-        var name = user.FindFirstValue(ClaimTypes.Name);
-        return string.Equals(name, "Arnau", StringComparison.OrdinalIgnoreCase);
-    }
 }
