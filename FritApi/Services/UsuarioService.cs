@@ -24,7 +24,7 @@ public class UsuarioService
             {
                 UsuarioId = u.UsuarioId,
                 Nombre = u.Nombre,
-                Grupo = u.Grupo,
+                Grupo = u.Tenant.Nom,
                 Observaciones = u.Observaciones,
                 CreatedAt = u.CreatedAt
             })
@@ -39,7 +39,7 @@ public class UsuarioService
             {
                 UsuarioId = u.UsuarioId,
                 Nombre = u.Nombre,
-                Grupo = u.Grupo,
+                Grupo = u.Tenant.Nom,
                 Observaciones = u.Observaciones,
                 CreatedAt = u.CreatedAt
             })
@@ -105,7 +105,6 @@ public class UsuarioService
         }
 
         usuario.Nombre = dto.Nombre.Trim();
-        usuario.Grupo = string.IsNullOrWhiteSpace(dto.Grupo) ? null : dto.Grupo.Trim();
         usuario.Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim();
 
         await _context.SaveChangesAsync();
@@ -114,7 +113,7 @@ public class UsuarioService
         {
             UsuarioId = usuario.UsuarioId,
             Nombre = usuario.Nombre,
-            Grupo = usuario.Grupo,
+            Grupo = await GetTenantNameAsync(usuario.TenantId) ?? usuario.Grupo,
             Observaciones = usuario.Observaciones,
             CreatedAt = usuario.CreatedAt
         };
@@ -154,4 +153,10 @@ public class UsuarioService
 
         return true;
     }
+
+    private Task<string?> GetTenantNameAsync(int tenantId) =>
+        _context.Tenants
+            .Where(tenant => tenant.TenantId == tenantId)
+            .Select(tenant => tenant.Nom)
+            .FirstOrDefaultAsync();
 }

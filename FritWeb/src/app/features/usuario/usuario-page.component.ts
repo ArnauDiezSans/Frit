@@ -65,7 +65,6 @@ export class UsuarioPageComponent {
 
   profileForm = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    grupo: ['', Validators.maxLength(200)],
     observaciones: ['', Validators.maxLength(800)]
   });
 
@@ -128,7 +127,6 @@ export class UsuarioPageComponent {
 
     this.profileForm.reset({
       nombre: user.nombre,
-      grupo: user.grupo ?? '',
       observaciones: user.observaciones ?? ''
     });
     this.formError.set('');
@@ -162,7 +160,6 @@ export class UsuarioPageComponent {
 
     this.usuarioService.updateProfile(currentUser.usuarioId, {
       nombre: raw.nombre?.trim() ?? '',
-      grupo: raw.grupo?.trim() || null,
       observaciones: raw.observaciones?.trim() || null
     }).subscribe({
       next: usuario => {
