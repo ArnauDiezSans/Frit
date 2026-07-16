@@ -86,7 +86,6 @@ export class AQueJuguemPageComponent {
   editRemadaPoints = signal<-1 | 1 | 2 | 3>(3);
   editRemadaUsuarioIds = signal<number[]>([]);
   editRemadaJuegoIds = signal<number[]>([]);
-  canManageRemades = computed(() => this.authService.currentUser?.nombre === 'Arnau');
   private calculationRequestId = 0;
   private lastRecommendationKey = '';
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
@@ -98,6 +97,10 @@ export class AQueJuguemPageComponent {
 
   get jugadoresArray(): FormArray {
     return this.form.get('jugadores') as FormArray;
+  }
+
+  canManageRemades(): boolean {
+    return this.authService.currentUser?.nombre === 'Arnau';
   }
 
   ngOnInit(): void {
