@@ -342,6 +342,24 @@ namespace FritApi.Migrations
                 principalTable: "Tenants",
                 principalColumn: "TenantId",
                 onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.Sql("""
+                ALTER TABLE "Usuarios" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "UsuarioJuegoOrdenes" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "Remades" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "RemadaJugadors" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "RemadaJocs" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "PendentsCompra" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "Partidas" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "PartidaJugadores" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "ManualMedallaUsuarios" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "ManualMedallas" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "Juegos" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "CsopaAssistencies" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "CsopaActivitats" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "CineValoraciones" ALTER COLUMN "TenantId" DROP DEFAULT;
+                ALTER TABLE "CinePeliculas" ALTER COLUMN "TenantId" DROP DEFAULT;
+                """);
         }
 
         /// <inheritdoc />
