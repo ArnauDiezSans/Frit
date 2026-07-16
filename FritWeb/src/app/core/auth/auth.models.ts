@@ -5,9 +5,7 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   tenantCodi: string;
-  codiRegistre: string;
   nombre: string;
-  observaciones?: string | null;
   password: string;
 }
 

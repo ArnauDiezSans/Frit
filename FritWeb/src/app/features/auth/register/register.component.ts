@@ -21,10 +21,8 @@ export class RegisterComponent {
   success = '';
 
   form = this.fb.nonNullable.group({
-    tenantCodi: ['frit14', [Validators.required, Validators.maxLength(100)]],
+    tenantCodi: ['', [Validators.required, Validators.maxLength(100)]],
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    codiRegistre: ['', [Validators.required, Validators.maxLength(200)]],
-    observaciones: ['', [Validators.maxLength(800)]],
     password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
   });
 
@@ -42,9 +40,7 @@ export class RegisterComponent {
 
     this.authService.register({
       tenantCodi: value.tenantCodi,
-      codiRegistre: value.codiRegistre,
       nombre: value.nombre,
-      observaciones: value.observaciones || null,
       password: value.password
     }).subscribe({
       next: () => {
@@ -82,7 +78,5 @@ export class RegisterComponent {
 
   get nombre() { return this.form.controls.nombre; }
   get tenantCodi() { return this.form.controls.tenantCodi; }
-  get codiRegistre() { return this.form.controls.codiRegistre; }
-  get observaciones() { return this.form.controls.observaciones; }
   get password() { return this.form.controls.password; }
 }

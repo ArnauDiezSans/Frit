@@ -16,15 +16,6 @@
         <p class="field-error">L'usuari és obligatori.</p>
       }
 
-      <label for="codiRegistre">Codi de registre</label>
-      <input id="codiRegistre" type="password" formControlName="codiRegistre" />
-      @if (codiRegistre.touched && codiRegistre.invalid) {
-        <p class="field-error">El codi de registre és obligatori.</p>
-      }
-
-      <label for="observaciones">Observacions</label>
-      <textarea id="observaciones" rows="3" formControlName="observaciones"></textarea>
-
       <label for="password">Contrasenya</label>
       <input id="password" type="password" formControlName="password" />
       @if (password.touched && password.invalid) {

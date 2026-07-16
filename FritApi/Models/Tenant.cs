@@ -14,8 +14,6 @@ public class Tenant
     [MaxLength(200)]
     public string Nom { get; set; } = string.Empty;
 
-    public string? CodiRegistreHash { get; set; }
-
     public bool Actiu { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

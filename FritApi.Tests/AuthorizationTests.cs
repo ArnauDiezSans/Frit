@@ -27,6 +27,7 @@ public class AuthorizationTests
     [InlineData(typeof(AQueJuguemController), "UpdateRemada")]
     [InlineData(typeof(AQueJuguemController), "DeleteRemada")]
     [InlineData(typeof(HallOfFameController), "CreateManualMedal")]
+    [InlineData(typeof(TenantsController), "Create")]
     public void AdministrativeEndpoints_RequireAdminRole(Type controllerType, string methodName)
     {
         var method = controllerType.GetMethod(methodName);
