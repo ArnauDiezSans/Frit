@@ -17,7 +17,6 @@ export class RegisterComponent {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
-  readonly fixedTenantCodi = this.route.snapshot.data['tenantCodi'] as string | undefined;
   readonly isAjjrr = this.route.snapshot.data['brand'] === 'ajjrr';
   readonly loginUrl = this.isAjjrr ? '/ajjrr' : '/login';
 
@@ -26,7 +25,7 @@ export class RegisterComponent {
   success = '';
 
   form = this.fb.nonNullable.group({
-    tenantCodi: [this.fixedTenantCodi ?? '', [Validators.required, Validators.maxLength(100)]],
+    tenantCodi: ['', [Validators.required, Validators.maxLength(100)]],
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
     password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
   });
