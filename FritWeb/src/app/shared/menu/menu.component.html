@@ -22,6 +22,7 @@
     Rankings
   </button>
   <button
+    *ngIf="canUseLaLlista()"
     type="button"
     class="menu-button menu-la-llista"
     [class.menu-button-active]="activePage === 'laLlista'"
@@ -36,6 +37,7 @@
     Pendent comprar
   </button>
   <button
+    *ngIf="canUseAssistencia()"
     type="button"
     class="menu-button menu-a-que-juguem"
     [class.menu-button-active]="activePage === 'aQueJuguem'"

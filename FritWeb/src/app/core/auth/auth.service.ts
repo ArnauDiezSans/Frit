@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../api/api.config';
 import { DataStoreService } from '../data/data-store.service';
 import { UiStateService } from '../data/ui-state.service';
 import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
+import { canUseTenantFeature, TenantFeature } from './tenant-features';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -93,5 +94,9 @@ export class AuthService {
 
   canViewHallOfFame(): boolean {
     return this.isAuthenticated();
+  }
+
+  canUseFeature(feature: TenantFeature): boolean {
+    return canUseTenantFeature(this.currentUser, feature);
   }
 }

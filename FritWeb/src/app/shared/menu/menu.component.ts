@@ -46,6 +46,14 @@ export class MenuComponent {
     return this.authService.canViewHallOfFame();
   }
 
+  canUseLaLlista(): boolean {
+    return this.authService.canUseFeature('laLlista');
+  }
+
+  canUseAssistencia(): boolean {
+    return this.authService.canUseFeature('assistencia');
+  }
+
   onPrimaryAction(): void {
     this.closeMenu();
     this.primaryAction.emit();

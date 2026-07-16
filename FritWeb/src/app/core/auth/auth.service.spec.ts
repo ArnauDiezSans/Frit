@@ -31,4 +31,24 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBeFalse();
     expect(service.isAdmin()).toBeFalse();
   });
+
+  it('enables all initial features for frit14', () => {
+    service.currentUser = {
+      usuarioId: 1, nombre: 'Usuari', esAdmin: false,
+      tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
+    };
+
+    expect(service.canUseFeature('laLlista')).toBeTrue();
+    expect(service.canUseFeature('assistencia')).toBeTrue();
+  });
+
+  it('hides la llista and assistencia for ajjrr26', () => {
+    service.currentUser = {
+      usuarioId: 2, nombre: 'Kiderak', esAdmin: true,
+      tenantId: 3, tenantCodi: 'ajjrr26', tenantNom: 'AJJRR'
+    };
+
+    expect(service.canUseFeature('laLlista')).toBeFalse();
+    expect(service.canUseFeature('assistencia')).toBeFalse();
+  });
 });
