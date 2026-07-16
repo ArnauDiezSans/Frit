@@ -20,6 +20,7 @@ export class LoginPageComponent {
   error = '';
 
   form = this.fb.nonNullable.group({
+    tenantCodi: ['frit14', [Validators.required]],
     nombre: ['', [Validators.required]],
     password: ['', [Validators.required]]
   });
@@ -42,7 +43,7 @@ export class LoginPageComponent {
         this.loading = false;
         this.error = err.status === 429
           ? 'Massa intents. Torna-ho a provar d’aquí a uns minuts.'
-          : 'Usuari o contrasenya incorrectes.';
+          : 'Grup, usuari o contrasenya incorrectes.';
       }
     });
   }

@@ -3,6 +3,9 @@
     <h1>Frit</h1>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
+      <label for="tenantCodi">Grup</label>
+      <input id="tenantCodi" type="text" formControlName="tenantCodi" autocomplete="organization" />
+
       <label for="nombre">Usuari</label>
       <input id="nombre" type="text" formControlName="nombre" />
 
