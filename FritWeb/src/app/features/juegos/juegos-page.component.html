@@ -384,7 +384,7 @@
             </td>
 
             <td *ngIf="visibleColumns().propietario" data-label="Propietari">
-              <span class="cell-value">{{ getNombrePropietario(juego.propietarioId) }}</span>
+              <span class="cell-value">{{ getPropietarioJuego(juego) }}</span>
             </td>
 
             <td *ngIf="visibleColumns().tipo" data-label="Tipus">
@@ -476,7 +476,7 @@
             <input type="number" formControlName="numeroJugadoresMax" />
           </label>
 
-          <div class="form-field">
+          <div class="form-field" *ngIf="!isTenantOwnedLibrary()">
             <span>Joc base</span>
             <app-autocomplete-select
               [items]="filteredJuegosBase()"

@@ -7,6 +7,7 @@ export interface Juego {
   numeroJugadoresMax: number;
   pvp?: number | null;
   propietarioId: number;
+  esPropiedadTenant?: boolean;
   fechaAdquisicion?: string | null;
   tipo: string;
   juegoBaseId?: number | null;

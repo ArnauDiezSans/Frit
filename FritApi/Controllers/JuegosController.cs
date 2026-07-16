@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FritApi.Dtos;
 using FritApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -53,7 +54,7 @@ public class JuegosController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<JuegoDto>> Create([FromBody] JuegoDto dto)
     {
-        var result = await _juegoService.CreateAsync(dto);
+        var result = await _juegoService.CreateAsync(dto, GetCurrentUserId());
 
         if (!result.Success)
         {
@@ -66,7 +67,7 @@ public class JuegosController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<ActionResult<JuegoDto>> Update(int id, [FromBody] JuegoDto dto)
     {
-        var result = await _juegoService.UpdateAsync(id, dto);
+        var result = await _juegoService.UpdateAsync(id, dto, GetCurrentUserId());
 
         if (!result.Success)
         {
@@ -93,4 +94,7 @@ public class JuegosController : ControllerBase
 
         return NoContent();
     }
+
+    private int GetCurrentUserId() =>
+        int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : 0;
 }

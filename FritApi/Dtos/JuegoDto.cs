@@ -25,6 +25,8 @@ public class JuegoDto
     [Required]
     public int PropietarioId { get; set; }
 
+    public bool EsPropiedadTenant { get; set; }
+
     public DateOnly? FechaAdquisicion { get; set; }
 
     [MaxLength(200)]

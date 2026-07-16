@@ -1,7 +1,9 @@
 using FritApi.Data;
+using FritApi.Dtos;
 using FritApi.Models;
 using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace FritApi.Tests;
 
@@ -115,6 +117,36 @@ public class TenantIsolationTests
         Assert.Equal("Medalla AJJRR", medal.Nombre);
     }
 
+    [Fact]
+    public async Task JuegoService_AJJRRGamesAreTenantOwnedAndIgnoreSubmittedOwner()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+        await using var context = CreateContext(options, 2);
+        var creator = new Usuario { Nombre = "Creator", PasswordHash = "hash" };
+        var other = new Usuario { Nombre = "Other", PasswordHash = "hash" };
+        context.AddRange(creator, other);
+        await context.SaveChangesAsync();
+
+        var service = new JuegoService(
+            context,
+            new TestHttpClientFactory(new HttpClient()),
+            new ConfigurationBuilder().Build(),
+            new FakeBggMedalImageService());
+        var result = await service.CreateAsync(new JuegoDto
+        {
+            Nombre = "AJJRR Game",
+            NumeroJugadoresMin = 1,
+            NumeroJugadoresMax = 4,
+            PropietarioId = other.UsuarioId
+        }, creator.UsuarioId);
+
+        Assert.True(result.Success);
+        var game = await context.Juegos.SingleAsync();
+        Assert.True(game.EsPropiedadTenant);
+        Assert.Equal(creator.UsuarioId, game.PropietarioId);
+    }
+
     private static DbContextOptions<AppDbContext> CreateOptions() =>
         new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -128,12 +160,22 @@ public class TenantIsolationTests
         await using var context = new AppDbContext(options);
         context.Tenants.AddRange(
             new Tenant { TenantId = 1, Codi = "frit14", Nom = "Frit14" },
-            new Tenant { TenantId = 2, Codi = "altre", Nom = "Altre" });
+            new Tenant { TenantId = 2, Codi = "ajjrr26", Nom = "AJJRR" });
         await context.SaveChangesAsync();
     }
 
     private sealed class FixedCurrentTenant(int tenantId) : ICurrentTenant
     {
         public int? TenantId { get; } = tenantId;
+    }
+
+    private sealed class TestHttpClientFactory(HttpClient client) : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name) => client;
+    }
+
+    private sealed class FakeBggMedalImageService : IBggMedalImageService
+    {
+        public Task EnsureGameMedalImageAsync(int juegoId, int bggId) => Task.CompletedTask;
     }
 }

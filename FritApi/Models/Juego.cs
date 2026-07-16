@@ -24,6 +24,8 @@ public class Juego : ITenantEntity
     public int PropietarioId { get; set; }
     public Usuario Propietario { get; set; } = null!;
 
+    public bool EsPropiedadTenant { get; set; }
+
     public DateOnly? FechaAdquisicion { get; set; }
 
     [MaxLength(200)]
