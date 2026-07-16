@@ -15,13 +15,13 @@ public class TenantIsolationTests
 
         await using (var tenantOne = CreateContext(options, 1))
         {
-            tenantOne.Usuarios.Add(new Usuario { Nombre = "Alex", PasswordHash = "hash" });
+            tenantOne.Usuarios.Add(new Usuario { Nombre = "Alex A", PasswordHash = "hash" });
             await tenantOne.SaveChangesAsync();
         }
 
         await using (var tenantTwo = CreateContext(options, 2))
         {
-            tenantTwo.Usuarios.Add(new Usuario { Nombre = "Alex", PasswordHash = "hash" });
+            tenantTwo.Usuarios.Add(new Usuario { Nombre = "Alex B", PasswordHash = "hash" });
             await tenantTwo.SaveChangesAsync();
         }
 
@@ -33,6 +33,19 @@ public class TenantIsolationTests
         Assert.Equal(1, firstUser.TenantId);
         Assert.Equal(2, secondUser.TenantId);
         Assert.NotEqual(firstUser.UsuarioId, secondUser.UsuarioId);
+    }
+
+    [Fact]
+    public void UserName_HasAGlobalUniqueIndex()
+    {
+        var options = CreateOptions();
+        using var context = CreateContext(options, 1);
+
+        var index = context.Model.FindEntityType(typeof(Usuario))!
+            .GetIndexes()
+            .Single(item => item.Properties.Select(property => property.Name).SequenceEqual([nameof(Usuario.Nombre)]));
+
+        Assert.True(index.IsUnique);
     }
 
     [Fact]

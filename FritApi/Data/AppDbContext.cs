@@ -88,7 +88,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
 
-            entity.HasIndex(e => new { e.TenantId, e.Nombre })
+            entity.HasIndex(e => e.Nombre)
                 .IsUnique();
         });
 

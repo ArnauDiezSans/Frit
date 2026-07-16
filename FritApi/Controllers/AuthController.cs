@@ -32,14 +32,12 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<AuthUserDto>> Login([FromBody] LoginRequestDto dto)
     {
         var nombre = dto.Nombre.Trim();
-        var tenantCodi = NormalizeTenantCode(dto.TenantCodi);
 
         var usuario = await _context.Usuarios
             .IgnoreQueryFilters()
             .Include(item => item.Tenant)
             .FirstOrDefaultAsync(item =>
                 item.Nombre == nombre &&
-                item.Tenant.Codi == tenantCodi &&
                 item.Tenant.Actiu);
 
         if (usuario is null || !_passwordService.VerifyPassword(usuario.PasswordHash, dto.Password))
@@ -93,11 +91,11 @@ public class AuthController : ControllerBase
 
         var exists = await _context.Usuarios
             .IgnoreQueryFilters()
-            .AnyAsync(item => item.TenantId == tenant.TenantId && item.Nombre == nombre);
+            .AnyAsync(item => item.Nombre == nombre);
 
         if (exists)
         {
-            return Conflict(new { message = "Ja existeix un usuari amb aquest nom en aquest grup." });
+            return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
         }
 
         var usuario = new Models.Usuario

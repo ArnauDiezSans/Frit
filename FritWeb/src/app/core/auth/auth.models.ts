@@ -1,5 +1,4 @@
 export interface LoginRequest {
-  tenantCodi: string;
   nombre: string;
   password: string;
 }
