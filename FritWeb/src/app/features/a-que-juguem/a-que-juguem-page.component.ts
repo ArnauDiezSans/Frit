@@ -299,6 +299,10 @@ export class AQueJuguemPageComponent {
   }
 
   deleteRemada(remada: Remada): void {
+    if (!this.canManageRemades()) {
+      return;
+    }
+
     if (!window.confirm(`Eliminar la remada del ${this.formatRemadaDate(remada.createdAt)}?`)) {
       return;
     }

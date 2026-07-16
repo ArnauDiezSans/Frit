@@ -298,6 +298,7 @@
             <span data-label="Punts">{{ remada.puntsPerJugador }}</span>
             <span class="remada-actions" data-label="Accions">
               <button
+                *ngIf="canManageRemades()"
                 type="button"
                 class="danger-button compact-danger-button"
                 [disabled]="remadesSaving()"
