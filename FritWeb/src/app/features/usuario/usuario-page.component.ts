@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
@@ -12,7 +12,7 @@ import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.ser
 @Component({
   selector: 'app-usuario-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MenuComponent, AutocompleteSelectComponent],
   templateUrl: './usuario-page.component.html',
   styleUrl: './usuario-page.component.css'
 })
@@ -484,6 +484,10 @@ export class UsuarioPageComponent {
 
   canViewMedals(): boolean {
     return this.authService.canViewHallOfFame();
+  }
+
+  canViewAudit(): boolean {
+    return this.authService.canViewAudit();
   }
 
   setActiveUserPanel(panel: 'medals' | 'favorites'): void {

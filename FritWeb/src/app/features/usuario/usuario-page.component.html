@@ -43,7 +43,20 @@
       </button>
 
       <a
-        class="bug-link"
+        class="utility-link audit-link"
+        *ngIf="canViewAudit()"
+        routerLink="/app/auditoria"
+        aria-label="Obrir auditoria"
+        title="Auditoria">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+          <path d="M3 4v6h6"></path>
+          <path d="M12 7v5l3 2"></path>
+        </svg>
+      </a>
+
+      <a
+        class="utility-link bug-link"
         href="https://docs.google.com/spreadsheets/d/1tpd1Uy5tGfEmEQgT8V5_GIz3qeJnmJj31fLFkAXCYtA/edit?usp=sharing"
         target="_blank"
         rel="noopener noreferrer"

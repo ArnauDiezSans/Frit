@@ -54,10 +54,6 @@ export class MenuComponent {
     return this.authService.canUseFeature('assistencia');
   }
 
-  canViewAudit(): boolean {
-    return this.authService.canViewAudit();
-  }
-
   onPrimaryAction(): void {
     this.closeMenu();
     this.primaryAction.emit();
