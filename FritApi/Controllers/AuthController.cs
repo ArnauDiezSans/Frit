@@ -17,11 +17,13 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
+    private readonly AuditService _auditService;
 
-    public AuthController(AppDbContext context, PasswordService passwordService)
+    public AuthController(AppDbContext context, PasswordService passwordService, AuditService auditService)
     {
         _context = context;
         _passwordService = passwordService;
+        _auditService = auditService;
     }
 
     [HttpPost("login")]
@@ -44,7 +46,7 @@ public class AuthController : ControllerBase
         }
 
         await SignInAsync(usuario);
-        return Ok(ToAuthUser(usuario));
+        return Ok(await ToAuthUserAsync(usuario));
     }
 
     [HttpPost("logout")]
@@ -68,7 +70,7 @@ public class AuthController : ControllerBase
             .Include(item => item.Tenant)
             .FirstOrDefaultAsync(item => item.UsuarioId == userId);
 
-        return usuario is null ? Unauthorized() : Ok(ToAuthUser(usuario));
+        return usuario is null ? Unauthorized() : Ok(await ToAuthUserAsync(usuario));
     }
 
     [HttpPost("register")]
@@ -106,7 +108,7 @@ public class AuthController : ControllerBase
         _context.Usuarios.Add(usuario);
         await _context.SaveChangesAsync();
 
-        return StatusCode(StatusCodes.Status201Created, ToAuthUser(usuario));
+        return StatusCode(StatusCodes.Status201Created, await ToAuthUserAsync(usuario));
     }
 
     private async Task SignInAsync(Models.Usuario usuario)
@@ -125,11 +127,12 @@ public class AuthController : ControllerBase
             new ClaimsPrincipal(identity));
     }
 
-    private static AuthUserDto ToAuthUser(Models.Usuario usuario) => new()
+    private async Task<AuthUserDto> ToAuthUserAsync(Models.Usuario usuario) => new()
     {
         UsuarioId = usuario.UsuarioId,
         Nombre = usuario.Nombre,
         EsAdmin = usuario.EsAdmin,
+        PotVeureAuditoria = await _auditService.IsAuthorizedAsync(usuario.UsuarioId),
         TenantId = usuario.TenantId,
         TenantCodi = usuario.Tenant.Codi,
         TenantNom = usuario.Tenant.Nom

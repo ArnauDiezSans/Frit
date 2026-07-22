@@ -11,6 +11,7 @@ public class AuthorizationTests
     [InlineData(typeof(JuegosController))]
     [InlineData(typeof(PartidasController))]
     [InlineData(typeof(PartidaJugadoresController))]
+    [InlineData(typeof(AuditoriaController))]
     public void DataControllers_RequireAuthentication(Type controllerType)
     {
         Assert.NotNull(controllerType.GetCustomAttribute<AuthorizeAttribute>());

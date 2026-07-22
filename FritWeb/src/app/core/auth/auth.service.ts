@@ -104,4 +104,8 @@ export class AuthService {
   canUseFeature(feature: TenantFeature): boolean {
     return canUseTenantFeature(this.currentUser, feature);
   }
+
+  canViewAudit(): boolean {
+    return this.currentUser?.potVeureAuditoria === true;
+  }
 }

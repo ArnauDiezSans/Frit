@@ -34,3 +34,12 @@ export const tenantFeatureGuard: CanActivateFn = route => {
     ? true
     : router.createUrlTree(['/app/partidas']);
 };
+
+export const auditGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  return authService.canViewAudit()
+    ? true
+    : router.createUrlTree([authService.isAuthenticated() ? '/app/partidas' : '/login']);
+};

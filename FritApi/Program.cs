@@ -21,6 +21,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Threading.RateLimiting;
@@ -102,7 +103,14 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 builder.Services.AddScoped<ICurrentTenant, HttpCurrentTenant>();
+builder.Services.AddScoped<IAuditContext, HttpAuditContext>();
 
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
@@ -118,6 +126,7 @@ builder.Services.AddScoped<AQueJuguemService>();
 builder.Services.AddScoped<LaLlistaService>();
 builder.Services.AddScoped<RankingsService>();
 builder.Services.AddScoped<HallOfFameService>();
+builder.Services.AddScoped<AuditService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
@@ -140,6 +149,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseForwardedHeaders();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

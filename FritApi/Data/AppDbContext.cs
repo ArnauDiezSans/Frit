@@ -1,12 +1,15 @@
 using FritApi.Models;
 using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Text.Json;
 
 namespace FritApi.Data;
 
 public class AppDbContext : DbContext
 {
     private readonly ICurrentTenant? _currentTenant;
+    private readonly IAuditContext? _auditContext;
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -15,6 +18,15 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options, ICurrentTenant currentTenant) : base(options)
     {
         _currentTenant = currentTenant;
+    }
+
+    public AppDbContext(
+        DbContextOptions<AppDbContext> options,
+        ICurrentTenant currentTenant,
+        IAuditContext auditContext) : base(options)
+    {
+        _currentTenant = currentTenant;
+        _auditContext = auditContext;
     }
 
     public int CurrentTenantId => _currentTenant is null ? 1 : _currentTenant.TenantId ?? 0;
@@ -35,6 +47,8 @@ public class AppDbContext : DbContext
     public DbSet<Remada> Remades => Set<Remada>();
     public DbSet<RemadaJugador> RemadaJugadors => Set<RemadaJugador>();
     public DbSet<RemadaJuego> RemadaJocs => Set<RemadaJuego>();
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+    public DbSet<AuditAuthorizedUser> AuditAuthorizedUsers => Set<AuditAuthorizedUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -397,6 +411,29 @@ public class AppDbContext : DbContext
                 .IsUnique();
         });
 
+        modelBuilder.Entity<AuditEntry>(entity =>
+        {
+            entity.HasKey(e => e.AuditEntryId);
+            entity.Property(e => e.UsuarioNombre).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Ip).HasMaxLength(45);
+            entity.Property(e => e.Entidad).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.RegistroId).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Accion).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+            entity.HasIndex(e => new { e.TenantId, e.CreatedAt });
+            entity.HasIndex(e => new { e.TenantId, e.UsuarioId });
+            entity.HasIndex(e => new { e.TenantId, e.Entidad });
+        });
+
+        modelBuilder.Entity<AuditAuthorizedUser>(entity =>
+        {
+            entity.HasKey(e => e.UsuarioId);
+            entity.HasOne<Usuario>()
+                .WithOne()
+                .HasForeignKey<AuditAuthorizedUser>(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes()
                      .Where(entityType => typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType)))
         {
@@ -421,15 +458,45 @@ public class AppDbContext : DbContext
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         ApplyTenantRules();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
+        var pending = CapturePendingAudits();
+        if (pending.Count == 0)
+        {
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        using var transaction = Database.IsRelational() && Database.CurrentTransaction is null
+            ? Database.BeginTransaction()
+            : null;
+        var result = base.SaveChanges(acceptAllChangesOnSuccess);
+        AddAuditEntries(pending);
+        base.SaveChanges(acceptAllChangesOnSuccess);
+        transaction?.Commit();
+        return result;
     }
 
-    public override Task<int> SaveChangesAsync(
+    public override async Task<int> SaveChangesAsync(
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
         ApplyTenantRules();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        var pending = CapturePendingAudits();
+        if (pending.Count == 0)
+        {
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        await using var transaction = Database.IsRelational() && Database.CurrentTransaction is null
+            ? await Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        AddAuditEntries(pending);
+        await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return result;
     }
 
     private void ConfigureTenantFilter<TEntity>(ModelBuilder modelBuilder)
@@ -462,4 +529,89 @@ public class AppDbContext : DbContext
             }
         }
     }
+
+    private List<PendingAudit> CapturePendingAudits()
+    {
+        var usuarioId = _auditContext?.UsuarioId;
+        if (usuarioId is null)
+        {
+            return [];
+        }
+
+        ChangeTracker.DetectChanges();
+        return ChangeTracker.Entries()
+            .Where(entry => entry.Entity is not AuditEntry && entry.Entity is not AuditAuthorizedUser)
+            .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Select(entry => new PendingAudit(
+                entry,
+                entry.State,
+                entry.State == EntityState.Added ? null : SerializeValues(entry, original: true)))
+            .ToList();
+    }
+
+    private void AddAuditEntries(IEnumerable<PendingAudit> pendingAudits)
+    {
+        var usuarioId = _auditContext!.UsuarioId!.Value;
+        var usuarioNombre = _auditContext.UsuarioNombre?.Trim();
+
+        foreach (var pending in pendingAudits)
+        {
+            var entry = pending.Entry;
+            AuditEntries.Add(new AuditEntry
+            {
+                TenantId = GetTenantId(entry),
+                UsuarioId = usuarioId,
+                UsuarioNombre = string.IsNullOrWhiteSpace(usuarioNombre) ? $"Usuari {usuarioId}" : usuarioNombre,
+                Ip = _auditContext.Ip,
+                Entidad = entry.Metadata.ClrType.Name,
+                RegistroId = GetPrimaryKey(entry),
+                Accion = pending.State switch
+                {
+                    EntityState.Added => "Alta",
+                    EntityState.Modified => "Modificacio",
+                    EntityState.Deleted => "Eliminacio",
+                    _ => throw new InvalidOperationException("Estat d'auditoria no suportat.")
+                },
+                ValoresAnteriores = pending.OldValues,
+                ValoresNuevos = pending.State == EntityState.Deleted
+                    ? null
+                    : SerializeValues(entry, original: false)
+            });
+        }
+    }
+
+    private int GetTenantId(EntityEntry entry)
+    {
+        var property = entry.Properties.FirstOrDefault(item => item.Metadata.Name == nameof(ITenantEntity.TenantId));
+        return property?.CurrentValue as int? ?? _currentTenant?.TenantId ?? 0;
+    }
+
+    private static string GetPrimaryKey(EntityEntry entry)
+    {
+        var key = entry.Metadata.FindPrimaryKey();
+        if (key is null)
+        {
+            return string.Empty;
+        }
+
+        return string.Join(", ", key.Properties.Select(property =>
+            $"{property.Name}={entry.Property(property.Name).CurrentValue}"));
+    }
+
+    private static string SerializeValues(EntityEntry entry, bool original)
+    {
+        var values = entry.Properties
+            .Where(property => !IsSensitive(property.Metadata.Name))
+            .ToDictionary(
+                property => property.Metadata.Name,
+                property => original ? property.OriginalValue : property.CurrentValue);
+        return JsonSerializer.Serialize(values);
+    }
+
+    private static bool IsSensitive(string propertyName) =>
+        propertyName.Contains("password", StringComparison.OrdinalIgnoreCase) ||
+        propertyName.Contains("secret", StringComparison.OrdinalIgnoreCase) ||
+        propertyName.Contains("token", StringComparison.OrdinalIgnoreCase);
+
+    private sealed record PendingAudit(EntityEntry Entry, EntityState State, string? OldValues);
 }

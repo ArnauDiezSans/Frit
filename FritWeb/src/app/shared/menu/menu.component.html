@@ -79,6 +79,15 @@
 
   <div class="session-actions">
     <button
+      *ngIf="canViewAudit()"
+      type="button"
+      class="menu-button menu-auditoria"
+      [class.menu-button-active]="activePage === 'auditoria'"
+      routerLink="/app/auditoria">
+      Auditoria
+    </button>
+
+    <button
       type="button"
       class="menu-button refresh-icon-button"
       aria-label="Refrescar"
