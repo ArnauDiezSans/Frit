@@ -30,6 +30,7 @@ import {
 } from './partidas.models';
 import { PartidasService } from './partidas.service';
 import { PartidaJugadoresService } from './partida-jugadores.service';
+import { getPartidaValidationErrors } from './partida-validation';
 
 type FormJugador = {
   partidaJugadorId: number;
@@ -751,71 +752,84 @@ export class PartidasPageComponent implements OnInit {
     this.formError.set('');
     this.success.set('');
 
-    if (this.form.invalid) {
+    const raw = this.form.getRawValue() as {
+      juegoId: number | null;
+      fecha: string | null;
+      duracionMinutos: number | null;
+      numeroJugadores: number | null;
+      perEquips: boolean | null;
+      observaciones: string | null;
+      jugadores: FormJugador[];
+      equipos: FormEquipo[];
+    };
+
+    const validationErrors = getPartidaValidationErrors({
+      juegoId: raw.juegoId,
+      fecha: raw.fecha,
+      numeroJugadores: raw.numeroJugadores,
+      perEquips: !!raw.perEquips,
+      jugadores: (raw.jugadores ?? []).map(jugador => ({
+        usuarioId: jugador.usuarioId,
+        usuarioSearch: jugador.usuarioSearch,
+        nombreMostrado: jugador.nombreMostrado,
+        posicion: jugador.posicion
+      })),
+      equipos: (raw.equipos ?? []).map(equipo => ({
+        numeroJugadores: equipo.numeroJugadores,
+        posicion: equipo.posicion,
+        jugadores: (equipo.jugadores ?? []).map(jugador => ({
+          usuarioId: jugador.usuarioId,
+          usuarioSearch: jugador.usuarioSearch,
+          nombreMostrado: jugador.nombreMostrado,
+          posicion: jugador.posicion
+        }))
+      }))
+    });
+
+    if (validationErrors.length > 0) {
       this.form.markAllAsTouched();
-      this.formError.set('Revisa els camps obligatoris.');
+      this.formError.set(validationErrors[0] ?? 'Revisa els camps obligatoris.');
       return;
     }
 
-const raw = this.form.getRawValue() as {
-  juegoId: number | null;
-  fecha: string | null;
-  duracionMinutos: number | null;
-  numeroJugadores: number | null;
-  perEquips: boolean | null;
-  observaciones: string | null;
-  jugadores: FormJugador[];
-  equipos: FormEquipo[];
-};
+    const rawJugadores = raw.perEquips
+      ? (raw.equipos ?? []).flatMap(equipo => equipo.jugadores ?? [])
+      : (raw.jugadores ?? []);
 
-const rawJugadores = raw.perEquips
-  ? (raw.equipos ?? []).flatMap(equipo => equipo.jugadores ?? [])
-  : (raw.jugadores ?? []);
+    const jugadores: PartidaJugador[] = rawJugadores.map(
+      (jugador: FormJugador, index: number) => ({
+        partidaJugadorId: jugador.partidaJugadorId ?? 0,
+        partidaId: 0,
+        usuarioId: jugador.usuarioId ?? null,
+        nombreMostrado: (jugador.usuarioSearch ?? '').trim(),
+        posicion: Number(jugador.posicion) || index + 1,
+        puntos: jugador.puntos ?? null
+      })
+    );
 
-const jugadores: PartidaJugador[] = rawJugadores.map(
-  (jugador: FormJugador, index: number) => ({
-    partidaJugadorId: jugador.partidaJugadorId ?? 0,
-    partidaId: 0,
-    usuarioId: jugador.usuarioId ?? null,
-    nombreMostrado: (jugador.usuarioSearch ?? '').trim(),
-    posicion: Number(jugador.posicion) || index + 1,
-    puntos: jugador.puntos ?? null
-  })
-);
+    const currentUser = this.authService.currentUser;
 
-    if (!raw.juegoId) {
+    if (!currentUser) {
+      this.formError.set('No s’ha pogut identificar l’usuari actual.');
+      return;
+    }
+
+    if (raw.juegoId === null || raw.juegoId === undefined) {
       this.formError.set('Has de seleccionar un joc.');
       return;
     }
 
-    if (jugadores.length === 0) {
-      this.formError.set('Has d’afegir almenys un jugador.');
-      return;
-    }
-
-    if (jugadores.some(j => !j.nombreMostrado)) {
-      this.formError.set('Tots els jugadors han de tenir nom.');
-      return;
-    }
-
-const currentUser = this.authService.currentUser;
-
-if (!currentUser) {
-  this.formError.set('No s’ha pogut identificar l’usuari actual.');
-  return;
-}
-
-const existingPartida = this.partidas().find(partida => partida.partidaId === this.editingPartidaId());
-const partidaPayload: Partida = {
-  partidaId: this.editingPartidaId() ?? 0,
-  juegoId: raw.juegoId,
-  usuarioCreadorId: existingPartida?.usuarioCreadorId ?? currentUser.usuarioId,
-  fecha: raw.fecha ?? this.getTodayDate(),
-  duracionMinutos: raw.duracionMinutos ?? null,
-  numeroJugadores: raw.numeroJugadores ?? jugadores.length,
-  observaciones: raw.observaciones?.trim() || null,
-  createdAt: existingPartida?.createdAt ?? new Date().toISOString()
-};
+    const existingPartida = this.partidas().find(partida => partida.partidaId === this.editingPartidaId());
+    const partidaPayload: Partida = {
+      partidaId: this.editingPartidaId() ?? 0,
+      juegoId: raw.juegoId,
+      usuarioCreadorId: existingPartida?.usuarioCreadorId ?? currentUser.usuarioId,
+      fecha: raw.fecha ?? this.getTodayDate(),
+      duracionMinutos: raw.duracionMinutos ?? null,
+      numeroJugadores: raw.numeroJugadores ?? jugadores.length,
+      observaciones: raw.observaciones?.trim() || null,
+      createdAt: existingPartida?.createdAt ?? new Date().toISOString()
+    };
 
     this.saving.set(true);
 
