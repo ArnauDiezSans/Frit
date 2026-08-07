@@ -22,6 +22,7 @@ public class RankingsService
             .Include(partida => partida.Juego)
             .Include(partida => partida.Jugadores)
                 .ThenInclude(jugador => jugador.Usuario)
+            .AsSplitQuery()
             .ToListAsync();
 
         var juegos = await context.Juegos
@@ -32,8 +33,7 @@ public class RankingsService
         var usuariosRegistrados = await context.Usuarios
             .AsNoTracking()
             .Where(usuario =>
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .Select(usuario => new RegisteredUserRow(
                 usuario.UsuarioId,
                 usuario.Nombre,

@@ -23,16 +23,27 @@
       <div class="section-heading">
         <div>
           <h2>Medalles destacades</h2>
-          <p>{{ data.entries.length }} medalles amb progrés</p>
+          <p>{{ getFritEntries().length + getGameEntries().length }} medalles amb progrés</p>
         </div>
 
-        <button
-          type="button"
-          class="primary-button"
-          *ngIf="data.canManageManualMedals"
-          (click)="abrirModal()">
-          Nova medalla
-        </button>
+        <div class="section-heading-actions">
+          <label class="medal-user-filter">
+            <span>Filtrar per usuari...</span>
+            <input
+              type="search"
+              [value]="userMedalFilter()"
+              placeholder="Filtrar per usuari..."
+              (input)="onUserMedalFilterInput($any($event.target).value)" />
+          </label>
+
+          <button
+            type="button"
+            class="primary-button"
+            *ngIf="data.canManageManualMedals"
+            (click)="abrirModal()">
+            Nova medalla
+          </button>
+        </div>
       </div>
 
       <div class="medal-category-stack" *ngIf="data.entries.length > 0; else emptyHall">
@@ -55,16 +66,9 @@
         </section>
 
         <section class="medal-category">
-          <div class="medal-category-heading medal-category-heading-with-filter">
+          <div class="medal-category-heading">
             <h3>Medalles jocs</h3>
-            <div class="medal-game-filter">
-              <input
-                type="search"
-                [value]="gameMedalFilter()"
-                placeholder="Filtra joc o usuari"
-                (input)="onGameMedalFilterInput($any($event.target).value)" />
-              <span>{{ getGameEntries().length }}</span>
-            </div>
+            <span>{{ getGameEntries().length }}</span>
           </div>
 
           <div class="medal-grid" *ngIf="getGameEntries().length > 0; else emptyGameEntries">
@@ -144,7 +148,7 @@
   </ng-container>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Nova medalla manual" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Nova medalla manual</h2>
@@ -196,7 +200,7 @@
   </div>
 
   <div class="modal-backdrop games-modal-backdrop" *ngIf="gamesModalMedal() as medal" (click)="closeGamesModal()">
-    <section class="modal-card games-modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card games-modal-card" role="dialog" aria-modal="true" [attr.aria-label]="medal.nombre" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>{{ medal.nombre }}</h2>

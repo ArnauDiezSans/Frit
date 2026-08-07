@@ -384,7 +384,7 @@
             </td>
 
             <td *ngIf="visibleColumns().propietario" data-label="Propietari">
-              <span class="cell-value">{{ getNombrePropietario(juego.propietarioId) }}</span>
+              <span class="cell-value">{{ getPropietarioJuego(juego) }}</span>
             </td>
 
             <td *ngIf="visibleColumns().tipo" data-label="Tipus">
@@ -428,7 +428,7 @@
   </section>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Joc" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>{{ editingJuegoId() ? 'Editar joc' : 'Nou joc' }}</h2>
@@ -492,7 +492,7 @@
               (cleared)="limpiarJuegoBase()" />
           </div>
 
-          <div class="form-field">
+          <div class="form-field" *ngIf="!isTenantOwnedLibrary()">
             <span>Propietari *</span>
             <app-autocomplete-select
               [items]="filteredUsuarios()"

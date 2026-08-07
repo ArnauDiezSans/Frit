@@ -2,9 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FritApi.Models;
 
-public class PendentCompra
+public class PendentCompra : ITenantEntity
 {
     public int PendentCompraId { get; set; }
+    public int TenantId { get; set; }
 
     public int UsuarioId { get; set; }
     public Usuario Usuario { get; set; } = null!;

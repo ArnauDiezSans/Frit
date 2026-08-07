@@ -21,7 +21,7 @@ public class HallOfFameController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<HallOfFameDto>> Get()
     {
-        return Ok(await _hallOfFameService.GetHallOfFameAsync(User.FindFirstValue(ClaimTypes.Name)));
+        return Ok(await _hallOfFameService.GetHallOfFameAsync(User.IsInRole("Admin")));
     }
 
     [HttpGet("usuarios/{usuarioId:int}")]
@@ -32,13 +32,9 @@ public class HallOfFameController : ControllerBase
     }
 
     [HttpPost("manual-medallas")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateManualMedal([FromBody] ManualMedallaCreateDto dto)
     {
-        if (!CanManageHallOfFame())
-        {
-            return Forbid();
-        }
-
         var result = await _hallOfFameService.CreateManualMedalAsync(dto);
 
         if (!result.Success)
@@ -49,8 +45,4 @@ public class HallOfFameController : ControllerBase
         return NoContent();
     }
 
-    private bool CanManageHallOfFame()
-    {
-        return HallOfFameService.IsHallOfFameAdmin(User.FindFirstValue(ClaimTypes.Name));
-    }
 }

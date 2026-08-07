@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FritApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class UsuariosController : ControllerBase
 {
@@ -42,6 +43,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UsuarioDto>> Create([FromBody] UsuarioWriteDto dto)
     {
         var usuario = await _usuarioService.CreateAsync(dto);
@@ -49,6 +51,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UsuarioDto>> Update(int id, [FromBody] UsuarioWriteDto dto)
     {
         var usuario = await _usuarioService.UpdateAsync(id, dto);
@@ -150,6 +153,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _usuarioService.DeleteAsync(id);

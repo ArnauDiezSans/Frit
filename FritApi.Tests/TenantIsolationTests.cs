@@ -1,0 +1,181 @@
+using FritApi.Data;
+using FritApi.Dtos;
+using FritApi.Models;
+using FritApi.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+
+namespace FritApi.Tests;
+
+public class TenantIsolationTests
+{
+    [Fact]
+    public async Task GlobalFilters_OnlyReturnCurrentTenantData()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+
+        await using (var tenantOne = CreateContext(options, 1))
+        {
+            tenantOne.Usuarios.Add(new Usuario { Nombre = "Alex A", PasswordHash = "hash" });
+            await tenantOne.SaveChangesAsync();
+        }
+
+        await using (var tenantTwo = CreateContext(options, 2))
+        {
+            tenantTwo.Usuarios.Add(new Usuario { Nombre = "Alex B", PasswordHash = "hash" });
+            await tenantTwo.SaveChangesAsync();
+        }
+
+        await using var firstContext = CreateContext(options, 1);
+        await using var secondContext = CreateContext(options, 2);
+
+        var firstUser = Assert.Single(await firstContext.Usuarios.ToListAsync());
+        var secondUser = Assert.Single(await secondContext.Usuarios.ToListAsync());
+        Assert.Equal(1, firstUser.TenantId);
+        Assert.Equal(2, secondUser.TenantId);
+        Assert.NotEqual(firstUser.UsuarioId, secondUser.UsuarioId);
+    }
+
+    [Fact]
+    public void UserName_HasAGlobalUniqueIndex()
+    {
+        var options = CreateOptions();
+        using var context = CreateContext(options, 1);
+
+        var index = context.Model.FindEntityType(typeof(Usuario))!
+            .GetIndexes()
+            .Single(item => item.Properties.Select(property => property.Name).SequenceEqual([nameof(Usuario.Nombre)]));
+
+        Assert.True(index.IsUnique);
+    }
+
+    [Fact]
+    public async Task SaveChanges_AssignsCurrentTenantToNewRows()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+        await using var context = CreateContext(options, 2);
+
+        var user = new Usuario { Nombre = "Berta", PasswordHash = "hash" };
+        context.Usuarios.Add(user);
+        await context.SaveChangesAsync();
+
+        Assert.Equal(2, user.TenantId);
+    }
+
+    [Fact]
+    public async Task SaveChanges_RejectsExplicitDifferentTenant()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+        await using var context = CreateContext(options, 1);
+
+        context.Usuarios.Add(new Usuario { TenantId = 2, Nombre = "Intrús", PasswordHash = "hash" });
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => context.SaveChangesAsync());
+        Assert.Contains("altre tenant", error.Message);
+    }
+
+    [Fact]
+    public async Task SaveChanges_RejectsTenantChanges()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+        await using var context = CreateContext(options, 1);
+        var user = new Usuario { Nombre = "Ada", PasswordHash = "hash" };
+        context.Usuarios.Add(user);
+        await context.SaveChangesAsync();
+
+        user.TenantId = 2;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => context.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task HallOfFame_DynamicMedalsAreExclusiveToFrit14()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+
+        await using var ajjrr = CreateContext(options, 2);
+        var user = new Usuario { Nombre = "AJJRR Player", PasswordHash = "hash" };
+        ajjrr.Usuarios.Add(user);
+        await ajjrr.SaveChangesAsync();
+        ajjrr.ManualMedallas.Add(new ManualMedalla
+        {
+            Nombre = "Medalla AJJRR",
+            Usuarios = [new ManualMedallaUsuario { UsuarioId = user.UsuarioId }]
+        });
+        await ajjrr.SaveChangesAsync();
+
+        var medals = await new HallOfFameService(ajjrr).GetUserMedalsAsync(user.UsuarioId);
+
+        Assert.NotNull(medals);
+        var medal = Assert.Single(medals.Medals);
+        Assert.StartsWith("manual:", medal.MedalId);
+        Assert.Equal("Medalla AJJRR", medal.Nombre);
+    }
+
+    [Fact]
+    public async Task JuegoService_AJJRRGamesAreTenantOwnedAndIgnoreSubmittedOwner()
+    {
+        var options = CreateOptions();
+        await SeedTenantsAsync(options);
+        await using var context = CreateContext(options, 2);
+        var creator = new Usuario { Nombre = "Creator", PasswordHash = "hash" };
+        var other = new Usuario { Nombre = "Other", PasswordHash = "hash" };
+        context.AddRange(creator, other);
+        await context.SaveChangesAsync();
+
+        var service = new JuegoService(
+            context,
+            new TestHttpClientFactory(new HttpClient()),
+            new ConfigurationBuilder().Build(),
+            new FakeBggMedalImageService());
+        var result = await service.CreateAsync(new JuegoDto
+        {
+            Nombre = "AJJRR Game",
+            NumeroJugadoresMin = 1,
+            NumeroJugadoresMax = 4,
+            PropietarioId = other.UsuarioId
+        }, creator.UsuarioId);
+
+        Assert.True(result.Success);
+        var game = await context.Juegos.SingleAsync();
+        Assert.True(game.EsPropiedadTenant);
+        Assert.Equal(creator.UsuarioId, game.PropietarioId);
+    }
+
+    private static DbContextOptions<AppDbContext> CreateOptions() =>
+        new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+    private static AppDbContext CreateContext(DbContextOptions<AppDbContext> options, int tenantId) =>
+        new(options, new FixedCurrentTenant(tenantId));
+
+    private static async Task SeedTenantsAsync(DbContextOptions<AppDbContext> options)
+    {
+        await using var context = new AppDbContext(options);
+        context.Tenants.AddRange(
+            new Tenant { TenantId = 1, Codi = "frit14", Nom = "Frit14" },
+            new Tenant { TenantId = 2, Codi = "ajjrr26", Nom = "AJJRR" });
+        await context.SaveChangesAsync();
+    }
+
+    private sealed class FixedCurrentTenant(int tenantId) : ICurrentTenant
+    {
+        public int? TenantId { get; } = tenantId;
+    }
+
+    private sealed class TestHttpClientFactory(HttpClient client) : IHttpClientFactory
+    {
+        public HttpClient CreateClient(string name) => client;
+    }
+
+    private sealed class FakeBggMedalImageService : IBggMedalImageService
+    {
+        public Task EnsureGameMedalImageAsync(int juegoId, int bggId) => Task.CompletedTask;
+    }
+}

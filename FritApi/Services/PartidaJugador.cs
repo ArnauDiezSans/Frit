@@ -65,8 +65,7 @@ public class PartidaJugadorService
         {
             var usuarioValido = await _context.Usuarios.AnyAsync(u =>
                 u.UsuarioId == dto.UsuarioId.Value &&
-                u.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                u.Nombre != ExternalUserPolicy.ExternalUserName);
+                !u.EsUsuarioExterno);
 
             if (!usuarioValido)
             {
@@ -125,8 +124,7 @@ public class PartidaJugadorService
         {
             var usuarioValido = await _context.Usuarios.AnyAsync(u =>
                 u.UsuarioId == dto.UsuarioId.Value &&
-                u.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                u.Nombre != ExternalUserPolicy.ExternalUserName);
+                !u.EsUsuarioExterno);
 
             if (!usuarioValido)
             {

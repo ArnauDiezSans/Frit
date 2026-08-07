@@ -67,6 +67,39 @@ h1 {
   margin-bottom: 18px;
 }
 
+.section-heading-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.medal-user-filter {
+  display: grid;
+  gap: 3px;
+  color: #475467;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.medal-user-filter input {
+  width: 180px;
+  height: 34px;
+  padding: 6px 9px;
+  border: 1px solid #d0d5dd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+.medal-user-filter input:focus {
+  outline: none;
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
 .medal-category-stack {
   display: grid;
   gap: 18px;
@@ -101,36 +134,6 @@ h1 {
   font-size: 0.75rem;
   font-weight: 900;
   text-align: center;
-}
-
-.medal-category-heading-with-filter {
-  align-items: center;
-}
-
-.medal-game-filter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
-}
-
-.medal-game-filter input {
-  width: min(230px, 34vw);
-  height: 32px;
-  padding: 6px 9px;
-  border: 1px solid #d0d5dd;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #101828;
-  font: inherit;
-  font-size: 0.86rem;
-}
-
-.medal-game-filter input:focus {
-  outline: none;
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
 .medal-category-empty {
@@ -415,22 +418,21 @@ h1 {
     padding: 14px;
   }
 
+  .section-heading-actions {
+    align-items: stretch;
+  }
+
+  .medal-user-filter {
+    flex: 1;
+  }
+
+  .medal-user-filter input {
+    width: 100%;
+  }
+
   .medal-grid,
   .user-list {
     grid-template-columns: 1fr;
-  }
-
-  .medal-category-heading-with-filter {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .medal-game-filter {
-    justify-content: space-between;
-  }
-
-  .medal-game-filter input {
-    width: 100%;
   }
 
   .medal-card {

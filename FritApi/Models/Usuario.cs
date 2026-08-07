@@ -2,9 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FritApi.Models;
 
-public class Usuario
+public class Usuario : ITenantEntity
 {
     public int UsuarioId { get; set; }
+    public int TenantId { get; set; }
+    public Tenant Tenant { get; set; } = null!;
 
     [Required]
     [MaxLength(200)]
@@ -18,6 +20,9 @@ public class Usuario
 
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
+
+    public bool EsAdmin { get; set; }
+    public bool EsUsuarioExterno { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

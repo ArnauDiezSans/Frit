@@ -1,14 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
-
-function exactValueValidator(expected: string): ValidatorFn {
-  return (control: AbstractControl): ValidationErrors | null => {
-    return control.value?.trim() === expected ? null : { exactValue: true };
-  };
-}
 
 @Component({
   selector: 'app-register',
@@ -21,15 +15,18 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  readonly isAjjrr = this.route.snapshot.data['brand'] === 'ajjrr';
+  readonly loginUrl = this.isAjjrr ? '/ajjrr' : '/login';
 
   loading = false;
   error = '';
   success = '';
 
   form = this.fb.nonNullable.group({
+    tenantCodi: ['', [Validators.required, Validators.maxLength(100)]],
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    grupo: ['', [Validators.required, Validators.maxLength(200), exactValueValidator('Frit14')]],
-    observaciones: ['', [Validators.maxLength(800)]],
     password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]]
   });
 
@@ -46,15 +43,14 @@ export class RegisterComponent {
     const value = this.form.getRawValue();
 
     this.authService.register({
+      tenantCodi: value.tenantCodi,
       nombre: value.nombre,
-      grupo: value.grupo || null,
-      observaciones: value.observaciones || null,
       password: value.password
     }).subscribe({
       next: () => {
         this.loading = false;
         this.success = 'Usuari creat correctament.';
-        this.router.navigateByUrl('/login');
+        this.router.navigateByUrl(this.loginUrl);
       },
       error: err => {
         this.loading = false;
@@ -69,13 +65,22 @@ export class RegisterComponent {
           return;
         }
 
-        this.error = 'No s ha pogut crear l"usuari.';
+        if (err.status === 429) {
+          this.error = 'Massa intents. Torna-ho a provar d’aquí a uns minuts.';
+          return;
+        }
+
+        if (err.status === 503) {
+          this.error = 'El registre no està disponible temporalment.';
+          return;
+        }
+
+        this.error = "No s'ha pogut crear l'usuari.";
       }
     });
   }
 
   get nombre() { return this.form.controls.nombre; }
-  get grupo() { return this.form.controls.grupo; }
-  get observaciones() { return this.form.controls.observaciones; }
+  get tenantCodi() { return this.form.controls.tenantCodi; }
   get password() { return this.form.controls.password; }
 }

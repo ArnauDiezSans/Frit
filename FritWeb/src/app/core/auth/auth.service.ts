@@ -1,20 +1,36 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, tap, catchError, map } from 'rxjs';
 import { API_BASE_URL } from '../api/api.config';
 import { DataStoreService } from '../data/data-store.service';
 import { UiStateService } from '../data/ui-state.service';
 import { AuthUser, LoginRequest, RegisterRequest } from './auth.models';
+import { canUseTenantFeature, TenantFeature } from './tenant-features';
+import { BrandingService } from '../branding/branding.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private dataStore = inject(DataStoreService);
   private uiState = inject(UiStateService);
+  private branding = inject(BrandingService);
   private baseUrl = `${API_BASE_URL}/auth`;
 
-  currentUser: AuthUser | null = null;
+  private readonly currentUserState = signal<AuthUser | null>(null);
+  readonly currentUserSignal = this.currentUserState.asReadonly();
+  readonly isAdmin = computed(() => this.currentUserState()?.esAdmin === true);
   initialized = false;
+
+  get currentUser(): AuthUser | null {
+    return this.currentUserState();
+  }
+
+  set currentUser(user: AuthUser | null) {
+    this.currentUserState.set(user);
+    if (user) {
+      this.branding.applyForTenant(user.tenantCodi);
+    }
+  }
 
   login(data: LoginRequest): Observable<AuthUser> {
     return this.http.post<AuthUser>(`${this.baseUrl}/login`, data, {
@@ -83,5 +99,13 @@ export class AuthService {
 
   canViewHallOfFame(): boolean {
     return this.isAuthenticated();
+  }
+
+  canUseFeature(feature: TenantFeature): boolean {
+    return canUseTenantFeature(this.currentUser, feature);
+  }
+
+  canViewAudit(): boolean {
+    return this.currentUser?.potVeureAuditoria === true;
   }
 }

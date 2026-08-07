@@ -58,13 +58,9 @@ public class AQueJuguemController : ControllerBase
     }
 
     [HttpPut("remades/{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateRemada(int id, [FromBody] RemadaUpdateDto dto)
     {
-        if (!CanManageRemades())
-        {
-            return Forbid();
-        }
-
         var result = await _aQueJuguemService.UpdateRemadaAsync(id, dto);
         if (!result.Success)
         {
@@ -77,20 +73,12 @@ public class AQueJuguemController : ControllerBase
     }
 
     [HttpDelete("remades/{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteRemada(int id)
     {
-        if (!CanManageRemades())
-        {
-            return Forbid();
-        }
-
         return await _aQueJuguemService.DeleteRemadaAsync(id)
             ? NoContent()
             : NotFound();
     }
 
-    private bool CanManageRemades()
-    {
-        return string.Equals(User.FindFirstValue(ClaimTypes.Name), "Arnau", StringComparison.Ordinal);
-    }
 }

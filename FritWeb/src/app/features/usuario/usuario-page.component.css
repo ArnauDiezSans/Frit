@@ -240,9 +240,7 @@ h1 {
   border: 3px solid #98a2b3;
   border-radius: 8px;
   background: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   overflow: visible;
   padding: 0;
   color: inherit;
@@ -791,10 +789,9 @@ h1 {
   position: relative;
 }
 
-.bug-link {
+.utility-link {
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
   width: 16px;
   height: 16px;
   color: #667085;
@@ -803,11 +800,19 @@ h1 {
   justify-content: center;
 }
 
-.bug-link:hover {
+.audit-link {
+  right: 24px;
+}
+
+.bug-link {
+  right: 0;
+}
+
+.utility-link:hover {
   color: #0f766e;
 }
 
-.bug-link svg {
+.utility-link svg {
   width: 16px;
   height: 16px;
   fill: none;

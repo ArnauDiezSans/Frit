@@ -155,7 +155,7 @@
   </section>
 
   <div class="modal-backdrop" *ngIf="rowingConfigOpen()" (click)="closeRowingConfig()">
-    <section class="modal-card rowing-config-modal" (click)="$event.stopPropagation()">
+    <section class="modal-card rowing-config-modal" role="dialog" aria-modal="true" aria-label="Configurar remada" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Volem remar</h2>
@@ -211,7 +211,7 @@
   </div>
 
   <div class="modal-backdrop" *ngIf="rowingResultsOpen()" (click)="closeRowingResults()">
-    <section class="modal-card rowing-results-modal" (click)="$event.stopPropagation()">
+    <section class="modal-card rowing-results-modal" role="dialog" aria-modal="true" aria-label="Resultats de la remada" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Jocs per remar</h2>
@@ -259,7 +259,7 @@
   </div>
 
   <div class="modal-backdrop" *ngIf="remadesAdminOpen()" (click)="closeRemadesAdmin()">
-    <section class="modal-card remades-admin-modal" (click)="$event.stopPropagation()">
+    <section class="modal-card remades-admin-modal" role="dialog" aria-modal="true" aria-label="Gestió de remades" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Gestió de remades</h2>
@@ -272,15 +272,15 @@
       <p class="field-error" *ngIf="remadesError()">{{ remadesError() }}</p>
 
       <div class="remades-admin-grid" *ngIf="!remadesLoading() && remades().length > 0">
-        <div class="remada-admin-row remada-admin-header">
+        <div class="remada-admin-row remada-admin-header" [class.remada-admin-row-readonly]="!canManageRemades()">
           <span>Data</span>
           <span>Jugadors</span>
           <span>Jocs</span>
           <span>Punts</span>
-          <span>Accions</span>
+          <span *ngIf="canManageRemades()">Accions</span>
         </div>
         <ng-container *ngFor="let remada of remades(); trackBy: trackByRemadaId">
-          <div class="remada-admin-row">
+          <div class="remada-admin-row" [class.remada-admin-row-readonly]="!canManageRemades()">
             <span data-label="Data">
               <button
                 *ngIf="canManageRemades(); else plainRemadaDate"
@@ -296,7 +296,7 @@
             <span data-label="Jugadors">{{ formatRemadaPlayers(remada) }}</span>
             <span data-label="Jocs" [title]="formatRemadaGames(remada)">{{ formatRemadaGames(remada) }}</span>
             <span data-label="Punts">{{ remada.puntsPerJugador }}</span>
-            <span class="remada-actions" data-label="Accions">
+            <span *ngIf="canManageRemades()" class="remada-actions" data-label="Accions">
               <button
                 type="button"
                 class="danger-button compact-danger-button"

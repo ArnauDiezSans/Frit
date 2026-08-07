@@ -125,7 +125,7 @@
   </section>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModal()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Element pendent de comprar" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>{{ editingItemId() ? 'Editar element' : 'Nou element' }}</h2>

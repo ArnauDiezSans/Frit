@@ -22,6 +22,76 @@ namespace FritApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("FritApi.Models.AuditAuthorizedUser", b =>
+                {
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UsuarioId");
+
+                    b.ToTable("AuditAuthorizedUsers");
+                });
+
+            modelBuilder.Entity("FritApi.Models.AuditEntry", b =>
+                {
+                    b.Property<long>("AuditEntryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("AuditEntryId"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Entidad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<string>("RegistroId")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioNombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ValoresAnteriores")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ValoresNuevos")
+                        .HasColumnType("text");
+
+                    b.HasKey("AuditEntryId");
+
+                    b.HasIndex("TenantId", "CreatedAt");
+
+                    b.HasIndex("TenantId", "Entidad");
+
+                    b.HasIndex("TenantId", "UsuarioId");
+
+                    b.ToTable("AuditEntries");
+                });
+
             modelBuilder.Entity("FritApi.Models.CinePelicula", b =>
                 {
                     b.Property<int>("CinePeliculaId")
@@ -39,6 +109,9 @@ namespace FritApi.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("Grupo_pelicula");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Titulo")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -50,6 +123,8 @@ namespace FritApi.Migrations
                     b.HasKey("CinePeliculaId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioCreadorId");
 
@@ -84,10 +159,15 @@ namespace FritApi.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.HasKey("CineValoracionId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioId");
 
@@ -110,6 +190,9 @@ namespace FritApi.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("Tipus")
                         .HasColumnType("integer");
 
@@ -124,6 +207,8 @@ namespace FritApi.Migrations
                     b.HasKey("CsopaActivitatId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Tipus");
 
@@ -152,10 +237,15 @@ namespace FritApi.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.HasKey("CsopaAssistenciaId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioId");
 
@@ -179,6 +269,9 @@ namespace FritApi.Migrations
                     b.Property<decimal?>("DificultadBgg")
                         .HasPrecision(4, 2)
                         .HasColumnType("numeric(4,2)");
+
+                    b.Property<bool>("EsPropiedadTenant")
+                        .HasColumnType("boolean");
 
                     b.Property<DateOnly?>("FechaAdquisicion")
                         .HasColumnType("date");
@@ -204,6 +297,9 @@ namespace FritApi.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -214,6 +310,8 @@ namespace FritApi.Migrations
                     b.HasIndex("JuegoBaseId");
 
                     b.HasIndex("PropietarioId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Juegos");
                 });
@@ -246,7 +344,12 @@ namespace FritApi.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.HasKey("ManualMedallaId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ManualMedallas");
                 });
@@ -262,10 +365,15 @@ namespace FritApi.Migrations
                     b.Property<int>("ManualMedallaId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.HasKey("ManualMedallaUsuarioId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioId");
 
@@ -304,12 +412,17 @@ namespace FritApi.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UsuarioCreadorId")
                         .HasColumnType("integer");
 
                     b.HasKey("PartidaId");
 
                     b.HasIndex("JuegoId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioCreadorId");
 
@@ -339,10 +452,15 @@ namespace FritApi.Migrations
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.HasKey("PartidaJugadorId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioId");
 
@@ -376,12 +494,17 @@ namespace FritApi.Migrations
                     b.Property<int>("Quantitat")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
                     b.HasKey("PendentCompraId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioId");
 
@@ -410,12 +533,17 @@ namespace FritApi.Migrations
                     b.Property<int>("TempsDisponibleMinuts")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UsuarioCreadorId")
                         .HasColumnType("integer");
 
                     b.HasKey("RemadaId");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("UsuarioCreadorId");
 
@@ -444,9 +572,14 @@ namespace FritApi.Migrations
                     b.Property<int>("RemadaId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.HasKey("RemadaJuegoId");
 
                     b.HasIndex("JuegoId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("RemadaId", "JuegoId")
                         .IsUnique();
@@ -468,6 +601,9 @@ namespace FritApi.Migrations
                     b.Property<int>("RemadaId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
@@ -478,12 +614,50 @@ namespace FritApi.Migrations
 
                     b.HasKey("RemadaJugadorId");
 
+                    b.HasIndex("TenantId");
+
                     b.HasIndex("UsuarioId");
 
                     b.HasIndex("RemadaId", "UsuarioId")
                         .IsUnique();
 
                     b.ToTable("RemadaJugadors");
+                });
+
+            modelBuilder.Entity("FritApi.Models.Tenant", b =>
+                {
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TenantId"));
+
+                    b.Property<bool>("Actiu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Codi")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Nom")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("TenantId");
+
+                    b.HasIndex("Codi")
+                        .IsUnique();
+
+                    b.ToTable("Tenants");
                 });
 
             modelBuilder.Entity("FritApi.Models.Usuario", b =>
@@ -498,6 +672,16 @@ namespace FritApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("NOW()");
+
+                    b.Property<bool>("EsAdmin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("EsUsuarioExterno")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Grupo")
                         .HasMaxLength(200)
@@ -516,7 +700,15 @@ namespace FritApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.HasKey("UsuarioId");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Usuarios");
                 });
@@ -535,6 +727,9 @@ namespace FritApi.Migrations
                     b.Property<int>("Puntuacion")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
 
@@ -542,14 +737,31 @@ namespace FritApi.Migrations
 
                     b.HasIndex("JuegoId");
 
+                    b.HasIndex("TenantId");
+
                     b.HasIndex("UsuarioId", "JuegoId")
                         .IsUnique();
 
                     b.ToTable("UsuarioJuegoOrdenes");
                 });
 
+            modelBuilder.Entity("FritApi.Models.AuditAuthorizedUser", b =>
+                {
+                    b.HasOne("FritApi.Models.Usuario", null)
+                        .WithOne()
+                        .HasForeignKey("FritApi.Models.AuditAuthorizedUser", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FritApi.Models.CinePelicula", b =>
                 {
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
                         .HasForeignKey("UsuarioCreadorId")
@@ -567,6 +779,12 @@ namespace FritApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
@@ -579,6 +797,12 @@ namespace FritApi.Migrations
 
             modelBuilder.Entity("FritApi.Models.CsopaActivitat", b =>
                 {
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
                         .HasForeignKey("UsuarioCreadorId")
@@ -594,6 +818,12 @@ namespace FritApi.Migrations
                         .WithMany("Assistencies")
                         .HasForeignKey("CsopaActivitatId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
@@ -619,9 +849,24 @@ namespace FritApi.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("JuegoBase");
 
                     b.Navigation("Propietario");
+                });
+
+            modelBuilder.Entity("FritApi.Models.ManualMedalla", b =>
+                {
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FritApi.Models.ManualMedallaUsuario", b =>
@@ -630,6 +875,12 @@ namespace FritApi.Migrations
                         .WithMany("Usuarios")
                         .HasForeignKey("ManualMedallaId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
@@ -648,6 +899,12 @@ namespace FritApi.Migrations
                     b.HasOne("FritApi.Models.Juego", "Juego")
                         .WithMany("Partidas")
                         .HasForeignKey("JuegoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -670,6 +927,12 @@ namespace FritApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
@@ -682,6 +945,12 @@ namespace FritApi.Migrations
 
             modelBuilder.Entity("FritApi.Models.PendentCompra", b =>
                 {
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
@@ -693,6 +962,12 @@ namespace FritApi.Migrations
 
             modelBuilder.Entity("FritApi.Models.Remada", b =>
                 {
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "UsuarioCreador")
                         .WithMany()
                         .HasForeignKey("UsuarioCreadorId")
@@ -716,6 +991,12 @@ namespace FritApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Juego");
 
                     b.Navigation("Remada");
@@ -729,6 +1010,12 @@ namespace FritApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("FritApi.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
@@ -740,12 +1027,29 @@ namespace FritApi.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("FritApi.Models.Usuario", b =>
+                {
+                    b.HasOne("FritApi.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("FritApi.Models.UsuarioJuegoOrden", b =>
                 {
                     b.HasOne("FritApi.Models.Juego", "Juego")
                         .WithMany()
                         .HasForeignKey("JuegoId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FritApi.Models.Usuario", "Usuario")

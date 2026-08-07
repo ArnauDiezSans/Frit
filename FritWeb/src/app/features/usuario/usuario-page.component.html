@@ -43,7 +43,20 @@
       </button>
 
       <a
-        class="bug-link"
+        class="utility-link audit-link"
+        *ngIf="canViewAudit()"
+        routerLink="/app/auditoria"
+        aria-label="Obrir auditoria"
+        title="Auditoria">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7"></path>
+          <path d="M3 4v6h6"></path>
+          <path d="M12 7v5l3 2"></path>
+        </svg>
+      </a>
+
+      <a
+        class="utility-link bug-link"
         href="https://docs.google.com/spreadsheets/d/1tpd1Uy5tGfEmEQgT8V5_GIz3qeJnmJj31fLFkAXCYtA/edit?usp=sharing"
         target="_blank"
         rel="noopener noreferrer"
@@ -216,7 +229,7 @@
   </section>
 
   <div class="modal-backdrop games-modal-backdrop" *ngIf="gamesModalMedal() as medal" (click)="closeGamesModal()">
-    <section class="games-modal-card" (click)="$event.stopPropagation()">
+    <section class="games-modal-card" role="dialog" aria-modal="true" [attr.aria-label]="medal.nombre" (click)="$event.stopPropagation()">
       <div class="games-modal-header">
         <div>
           <h2>{{ medal.nombre }}</h2>
@@ -304,7 +317,7 @@
   </section>
 
   <div class="modal-backdrop" *ngIf="modalOpen()" (click)="cerrarModalPassword()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Canviar contrasenya" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Canviar contrasenya</h2>
@@ -355,7 +368,7 @@
   </div>
 
   <div class="modal-backdrop" *ngIf="profileModalOpen()" (click)="cerrarModalPerfil()">
-    <section class="modal-card" (click)="$event.stopPropagation()">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-label="Editar perfil" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div>
           <h2>Editar perfil</h2>
@@ -369,11 +382,6 @@
           <label class="form-field">
             <span>Nom</span>
             <input type="text" formControlName="nombre" />
-          </label>
-
-          <label class="form-field">
-            <span>Grup</span>
-            <input type="text" formControlName="grupo" />
           </label>
 
           <label class="form-field form-field-full">

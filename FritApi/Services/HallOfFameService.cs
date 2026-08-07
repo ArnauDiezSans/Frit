@@ -120,7 +120,7 @@ public class HallOfFameService
         _context = context;
     }
 
-    public async Task<HallOfFameDto> GetHallOfFameAsync(string? currentUserName)
+    public async Task<HallOfFameDto> GetHallOfFameAsync(bool canManageManualMedals)
     {
         var progress = await BuildAllProgressAsync();
         var entries = progress
@@ -171,7 +171,7 @@ public class HallOfFameService
 
         return new HallOfFameDto
         {
-            CanManageManualMedals = IsHallOfFameAdmin(currentUserName),
+            CanManageManualMedals = canManageManualMedals,
             Entries = entries
         };
     }
@@ -214,8 +214,7 @@ public class HallOfFameService
         var validUserIds = await _context.Usuarios
             .Where(usuario =>
                 userIds.Contains(usuario.UsuarioId) &&
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .Select(usuario => usuario.UsuarioId)
             .ToListAsync();
 
@@ -237,18 +236,18 @@ public class HallOfFameService
         return (true, null);
     }
 
-    public static bool IsHallOfFameAdmin(string? userName)
-    {
-        return string.Equals(userName, "Arnau", StringComparison.Ordinal);
-    }
-
     private async Task<List<UserMedalProgressRow>> BuildAllProgressAsync()
     {
+        var usesFritDynamicMedals = _context.CurrentTenantId == 1 ||
+            await _context.Tenants
+                .Where(tenant => tenant.TenantId == _context.CurrentTenantId)
+                .Select(tenant => tenant.Codi == "frit14")
+                .FirstOrDefaultAsync();
+
         var usuarios = await _context.Usuarios
             .AsNoTracking()
             .Where(usuario =>
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .OrderBy(usuario => usuario.Nombre)
             .ToListAsync();
         var juegos = await _context.Juegos
@@ -259,6 +258,7 @@ public class HallOfFameService
             .AsNoTracking()
             .Include(partida => partida.Juego)
             .Include(partida => partida.Jugadores)
+            .AsSplitQuery()
             .ToListAsync();
         var manualMedallas = await _context.ManualMedallas
             .AsNoTracking()
@@ -665,7 +665,11 @@ public class HallOfFameService
                     true)));
         }
 
-        return rows;
+        return usesFritDynamicMedals
+            ? rows
+            : rows
+                .Where(row => row.Progress.MedalId.StartsWith("manual:", StringComparison.Ordinal))
+                .ToList();
     }
 
     private static Dictionary<int, int> BuildCineTotalRatingsLookup(List<CinePelicula> peliculas)
@@ -1283,8 +1287,7 @@ public class HallOfFameService
 
     private static bool IsExternalUser(Usuario usuario)
     {
-        return usuario.UsuarioId == ExternalUserPolicy.ExternalUserId ||
-            usuario.Nombre == ExternalUserPolicy.ExternalUserName;
+        return usuario.EsUsuarioExterno;
     }
 
     private static bool ShouldShowInHallOfFame(MedalProgressDto progress)

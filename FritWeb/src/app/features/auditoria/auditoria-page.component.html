@@ -1,0 +1,70 @@
+<section class="dashboard-page">
+  <header class="dashboard-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Auditoria</h1>
+      <p class="subtitle">Historial immutable dels canvis desats pels usuaris.</p>
+    </div>
+    <app-menu activePage="auditoria" (logout)="logout()" />
+  </header>
+
+  <section class="content-card filters-card">
+    <form [formGroup]="filters" (ngSubmit)="applyFilters()">
+      <label>Usuari<input type="text" formControlName="usuario" /></label>
+      <label>Entitat<input type="text" formControlName="entidad" placeholder="Partida, Juego..." /></label>
+      <label>Acció
+        <select formControlName="accion">
+          <option value="">Totes</option>
+          <option value="Alta">Alta</option>
+          <option value="Modificacio">Modificació</option>
+          <option value="Eliminacio">Eliminació</option>
+        </select>
+      </label>
+      <label>Des de<input type="date" formControlName="desde" /></label>
+      <label>Fins a<input type="date" formControlName="hasta" /></label>
+      <label class="search-field">Dades o ID<input type="text" formControlName="texto" /></label>
+      <div class="filter-actions">
+        <button type="submit" class="primary-button">Filtrar</button>
+        <button type="button" class="secondary-button" (click)="clearFilters()">Netejar</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="content-card" *ngIf="loading()"><p>Carregant auditoria...</p></section>
+  <section class="content-card error-card" *ngIf="error()"><p>{{ error() }}</p></section>
+
+  <section class="content-card" *ngIf="!loading() && !error()">
+    <div class="summary">{{ total() }} canvis registrats</div>
+    <div class="table-wrapper" *ngIf="items().length; else emptyState">
+      <table>
+        <thead><tr><th>Quan</th><th>Usuari</th><th>IP</th><th>Acció</th><th>Entitat</th><th>Registre</th><th>Dades</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let item of items()">
+            <td data-label="Quan">{{ item.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td data-label="Usuari">{{ item.usuarioNombre }}</td>
+            <td data-label="IP"><code>{{ item.ip || '—' }}</code></td>
+            <td data-label="Acció"><span class="action-badge" [attr.data-action]="item.accion">{{ item.accion }}</span></td>
+            <td data-label="Entitat">{{ item.entidad }}</td>
+            <td data-label="Registre"><code>{{ item.registroId }}</code></td>
+            <td data-label="Dades">
+              <details>
+                <summary>Veure canvi</summary>
+                <div class="change-grid">
+                  <div><strong>Abans</strong><pre>{{ formatJson(item.valoresAnteriors) }}</pre></div>
+                  <div><strong>Després</strong><pre>{{ formatJson(item.valorsNous) }}</pre></div>
+                </div>
+              </details>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyState><p class="empty-state">No hi ha resultats per als filtres seleccionats.</p></ng-template>
+
+    <div class="pagination" *ngIf="totalPages() > 1">
+      <button class="secondary-button" type="button" (click)="previousPage()" [disabled]="page() === 1">Anterior</button>
+      <span>Pàgina {{ page() }} de {{ totalPages() }}</span>
+      <button class="secondary-button" type="button" (click)="nextPage()" [disabled]="page() === totalPages()">Següent</button>
+    </div>
+  </section>
+</section>

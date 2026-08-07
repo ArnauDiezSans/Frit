@@ -415,7 +415,7 @@ public class ServiceTests
             Descripcion = "Ha organitzat una jornada.",
             UsuarioIds = [anna.UsuarioId]
         });
-        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var hallOfFame = await service.GetHallOfFameAsync(true);
         var annaMedals = await service.GetUserMedalsAsync(anna.UsuarioId);
         var arnauMedals = await service.GetUserMedalsAsync(arnau.UsuarioId);
 
@@ -464,7 +464,7 @@ public class ServiceTests
         var service = new HallOfFameService(context);
 
         var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
-        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var hallOfFame = await service.GetHallOfFameAsync(true);
 
         Assert.NotNull(medals);
         var wonderFrit = medals.Medals.Single(row => row.Nombre == "WonderFrit");
@@ -574,7 +574,7 @@ public class ServiceTests
         var service = new HallOfFameService(context);
 
         var medals = await service.GetUserMedalsAsync(arnau.UsuarioId);
-        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var hallOfFame = await service.GetHallOfFameAsync(true);
 
         Assert.NotNull(medals);
         var oneMenArmy = medals.Medals.Single(row => row.Nombre == "One man army");
@@ -829,7 +829,7 @@ public class ServiceTests
         await context.SaveChangesAsync();
         var service = new HallOfFameService(context);
 
-        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var hallOfFame = await service.GetHallOfFameAsync(true);
 
         var entry = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Cinèfil Frit");
         Assert.Equal(2, entry.Medal.TargetValue);
@@ -863,7 +863,7 @@ public class ServiceTests
         await context.SaveChangesAsync();
         var service = new HallOfFameService(context);
 
-        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var hallOfFame = await service.GetHallOfFameAsync(true);
 
         var entry = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Diumenge infal·lible");
         var user = Assert.Single(entry.Users);
@@ -890,7 +890,7 @@ public class ServiceTests
         await context.SaveChangesAsync();
         var service = new HallOfFameService(context);
 
-        var hallOfFame = await service.GetHallOfFameAsync("Arnau");
+        var hallOfFame = await service.GetHallOfFameAsync(true);
 
         var soparTotal = hallOfFame.Entries.Single(row => row.Medal.Nombre == "Soparista Frit");
         Assert.Contains(soparTotal.Users, user => user.UsuarioNombre == "Arnau" && user.CurrentValue == 2);

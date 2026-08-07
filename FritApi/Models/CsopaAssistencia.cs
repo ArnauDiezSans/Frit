@@ -1,8 +1,9 @@
 namespace FritApi.Models;
 
-public class CsopaAssistencia
+public class CsopaAssistencia : ITenantEntity
 {
     public int CsopaAssistenciaId { get; set; }
+    public int TenantId { get; set; }
 
     public int CsopaActivitatId { get; set; }
     public CsopaActivitat CsopaActivitat { get; set; } = null!;

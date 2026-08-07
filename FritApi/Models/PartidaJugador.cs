@@ -2,9 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FritApi.Models;
 
-public class PartidaJugador
+public class PartidaJugador : ITenantEntity
 {
     public int PartidaJugadorId { get; set; }
+    public int TenantId { get; set; }
 
     public int PartidaId { get; set; }
     public Partida Partida { get; set; } = null!;

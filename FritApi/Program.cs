@@ -17,9 +17,14 @@
 
 using FritApi.Data;
 using FritApi.Services;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,11 +46,71 @@ builder.Services
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var userIdClaim = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+            var tenantIdClaim = context.Principal?.FindFirstValue(TenantClaims.TenantId);
+            if (!int.TryParse(userIdClaim, out var userId) ||
+                !int.TryParse(tenantIdClaim, out var tenantId))
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync();
+                return;
+            }
+
+            var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+            var user = await db.Usuarios
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(row => row.UsuarioId == userId && row.TenantId == tenantId)
+                .Select(row => new { row.UsuarioId, row.TenantId, row.Nombre, row.EsAdmin })
+                .FirstOrDefaultAsync();
+
+            if (user is null)
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync();
+                return;
+            }
+
+            var identity = new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, user.UsuarioId.ToString()),
+                new Claim(TenantClaims.TenantId, user.TenantId.ToString()),
+                new Claim(ClaimTypes.Name, user.Nombre),
+                new Claim(ClaimTypes.Role, user.EsAdmin ? "Admin" : "User")
+            ], CookieAuthenticationDefaults.AuthenticationScheme);
+
+            context.ReplacePrincipal(new ClaimsPrincipal(identity));
+        };
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(5),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+builder.Services.AddScoped<ICurrentTenant, HttpCurrentTenant>();
+builder.Services.AddScoped<IAuditContext, HttpAuditContext>();
 
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<UsuarioService>();
@@ -61,6 +126,7 @@ builder.Services.AddScoped<AQueJuguemService>();
 builder.Services.AddScoped<LaLlistaService>();
 builder.Services.AddScoped<RankingsService>();
 builder.Services.AddScoped<HallOfFameService>();
+builder.Services.AddScoped<AuditService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
@@ -69,15 +135,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+    return;
 }
 
-app.UseSwagger();
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
+app.UseForwardedHeaders();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -110,8 +183,7 @@ static string GetConnectionString(string? databaseUrl)
             Database = uri.AbsolutePath.Trim('/'),
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
-            SslMode = SslMode.Require,
-            TrustServerCertificate = true
+            SslMode = SslMode.Require
         };
 
         return builder.ConnectionString;

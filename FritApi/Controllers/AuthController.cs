@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace FritApi.Controllers;
@@ -16,55 +17,36 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly PasswordService _passwordService;
+    private readonly AuditService _auditService;
 
-    public AuthController(AppDbContext context, PasswordService passwordService)
+    public AuthController(AppDbContext context, PasswordService passwordService, AuditService auditService)
     {
         _context = context;
         _passwordService = passwordService;
+        _auditService = auditService;
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth")]
     public async Task<ActionResult<AuthUserDto>> Login([FromBody] LoginRequestDto dto)
     {
         var nombre = dto.Nombre.Trim();
 
         var usuario = await _context.Usuarios
-            .FirstOrDefaultAsync(u => u.Nombre == nombre);
+            .IgnoreQueryFilters()
+            .Include(item => item.Tenant)
+            .FirstOrDefaultAsync(item =>
+                item.Nombre == nombre &&
+                item.Tenant.Actiu);
 
-        if (usuario is null)
+        if (usuario is null || !_passwordService.VerifyPassword(usuario.PasswordHash, dto.Password))
         {
             return Unauthorized();
         }
 
-        var validPassword = _passwordService.VerifyPassword(usuario.PasswordHash, dto.Password);
-
-        if (!validPassword)
-        {
-            return Unauthorized();
-        }
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
-            new Claim(ClaimTypes.Name, usuario.Nombre)
-        };
-
-        var identity = new ClaimsIdentity(
-            claims,
-            CookieAuthenticationDefaults.AuthenticationScheme);
-
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal);
-
-        return Ok(new AuthUserDto
-        {
-            UsuarioId = usuario.UsuarioId,
-            Nombre = usuario.Nombre
-        });
+        await SignInAsync(usuario);
+        return Ok(await ToAuthUserAsync(usuario));
     }
 
     [HttpPost("logout")]
@@ -79,63 +61,82 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<AuthUserDto>> Me()
     {
-        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
         {
             return Unauthorized();
         }
 
         var usuario = await _context.Usuarios
-            .Where(u => u.UsuarioId == userId)
-            .Select(u => new AuthUserDto
-            {
-                UsuarioId = u.UsuarioId,
-                Nombre = u.Nombre
-            })
-            .FirstOrDefaultAsync();
+            .Include(item => item.Tenant)
+            .FirstOrDefaultAsync(item => item.UsuarioId == userId);
 
-        if (usuario is null)
-        {
-            return Unauthorized();
-        }
-
-        return Ok(usuario);
+        return usuario is null ? Unauthorized() : Ok(await ToAuthUserAsync(usuario));
     }
 
     [HttpPost("register")]
-[AllowAnonymous]
-public async Task<ActionResult<AuthUserDto>> Register([FromBody] UsuarioWriteDto dto)
-{
-    var nombre = dto.Nombre.Trim();
-
-    if (dto.Grupo?.Trim() != "Frit14")
+    [AllowAnonymous]
+    [EnableRateLimiting("auth")]
+    public async Task<ActionResult<AuthUserDto>> Register([FromBody] RegisterRequestDto dto)
     {
-        return BadRequest(new { message = "Codi de grup incorrecte." });
+        var nombre = dto.Nombre.Trim();
+        var tenantCodi = NormalizeTenantCode(dto.TenantCodi);
+        var tenant = await _context.Tenants
+            .FirstOrDefaultAsync(item => item.Codi == tenantCodi && item.Actiu);
+
+        if (tenant is null)
+        {
+            return BadRequest(new { message = "El grup no existeix o no està actiu." });
+        }
+
+        var exists = await _context.Usuarios
+            .IgnoreQueryFilters()
+            .AnyAsync(item => item.Nombre == nombre);
+
+        if (exists)
+        {
+            return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
+        }
+
+        var usuario = new Models.Usuario
+        {
+            TenantId = tenant.TenantId,
+            Nombre = nombre,
+            PasswordHash = _passwordService.HashPassword(dto.Password),
+            Tenant = tenant
+        };
+
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
+
+        return StatusCode(StatusCodes.Status201Created, await ToAuthUserAsync(usuario));
     }
 
-    var exists = await _context.Usuarios.AnyAsync(u => u.Nombre == nombre);
-
-    if (exists)
+    private async Task SignInAsync(Models.Usuario usuario)
     {
-        return Conflict(new { message = "Ja existeix un usuari amb aquest nom." });
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+            new(TenantClaims.TenantId, usuario.TenantId.ToString()),
+            new(ClaimTypes.Name, usuario.Nombre),
+            new(ClaimTypes.Role, usuario.EsAdmin ? "Admin" : "User")
+        };
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity));
     }
 
-    var usuario = new Models.Usuario
-    {
-        Nombre = nombre,
-        Grupo = dto.Grupo.Trim(),
-        Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim(),
-        PasswordHash = _passwordService.HashPassword(dto.Password)
-    };
-
-    _context.Usuarios.Add(usuario);
-    await _context.SaveChangesAsync();
-
-    return StatusCode(StatusCodes.Status201Created, new AuthUserDto
+    private async Task<AuthUserDto> ToAuthUserAsync(Models.Usuario usuario) => new()
     {
         UsuarioId = usuario.UsuarioId,
-        Nombre = usuario.Nombre
-    });
-}
+        Nombre = usuario.Nombre,
+        EsAdmin = usuario.EsAdmin,
+        PotVeureAuditoria = await _auditService.IsAuthorizedAsync(usuario.UsuarioId),
+        TenantId = usuario.TenantId,
+        TenantCodi = usuario.Tenant.Codi,
+        TenantNom = usuario.Tenant.Nom
+    };
+
+    private static string NormalizeTenantCode(string value) => value.Trim().ToLowerInvariant();
 }

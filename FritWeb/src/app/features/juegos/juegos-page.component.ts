@@ -154,6 +154,7 @@ export class JuegosPageComponent implements OnInit {
   private readonly mobileFiltersQuery = window.matchMedia('(max-width: 820px)');
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
+  isTenantOwnedLibrary = computed(() => this.authService.currentUser?.tenantCodi === 'ajjrr26');
   totalJuegos = computed(() => this.juegos().length);
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
   displayJuego = (juego: Juego) => juego.nombre;
@@ -476,6 +477,12 @@ export class JuegosPageComponent implements OnInit {
     }).format(value);
   }
 
+  getPropietarioJuego(juego: Juego): string {
+    return juego.esPropiedadTenant
+      ? (this.authService.currentUser?.tenantNom ?? 'Grup')
+      : this.getNombrePropietario(juego.propietarioId);
+  }
+
   formatDificultadBgg(value: number | null | undefined): string {
     return value == null ? '-' : value.toFixed(2);
   }
@@ -489,7 +496,7 @@ export class JuegosPageComponent implements OnInit {
       numeroJugadoresMin: 1,
       numeroJugadoresMax: 1,
       pvp: null,
-      propietarioId: null,
+      propietarioId: this.isTenantOwnedLibrary() ? this.authService.currentUser?.usuarioId ?? null : null,
       propietarioSearch: '',
       fechaAdquisicion: '',
       tipo: '',
@@ -669,7 +676,9 @@ export class JuegosPageComponent implements OnInit {
       numeroJugadoresMin: Number(raw.numeroJugadoresMin),
       numeroJugadoresMax: Number(raw.numeroJugadoresMax),
       pvp: raw.pvp,
-      propietarioId: Number(raw.propietarioId),
+      propietarioId: this.isTenantOwnedLibrary()
+        ? this.authService.currentUser?.usuarioId ?? 0
+        : Number(raw.propietarioId),
       fechaAdquisicion: raw.fechaAdquisicion || null,
       tipo: raw.tipo?.trim() ?? '',
       juegoBaseId: raw.juegoBaseId

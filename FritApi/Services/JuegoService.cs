@@ -136,6 +136,7 @@ public class JuegoService
                 NumeroJugadoresMax = j.NumeroJugadoresMax,
                 Pvp = j.Pvp,
                 PropietarioId = j.PropietarioId,
+                EsPropiedadTenant = j.EsPropiedadTenant,
                 FechaAdquisicion = j.FechaAdquisicion,
                 Tipo = j.Tipo,
                 JuegoBaseId = j.JuegoBaseId
@@ -157,6 +158,7 @@ public class JuegoService
                 NumeroJugadoresMax = j.NumeroJugadoresMax,
                 Pvp = j.Pvp,
                 PropietarioId = j.PropietarioId,
+                EsPropiedadTenant = j.EsPropiedadTenant,
                 FechaAdquisicion = j.FechaAdquisicion,
                 Tipo = j.Tipo,
                 JuegoBaseId = j.JuegoBaseId
@@ -164,14 +166,16 @@ public class JuegoService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<(bool Success, string? Error, JuegoDto? Juego)> CreateAsync(JuegoDto dto)
+    public async Task<(bool Success, string? Error, JuegoDto? Juego)> CreateAsync(JuegoDto dto, int currentUserId = 0)
     {
         if (dto.NumeroJugadoresMin > dto.NumeroJugadoresMax)
         {
             return (false, "El nombre mínim de jugadors no pot ser més gran que el màxim.", null);
         }
 
-        var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
+        var isTenantOwned = await IsTenantOwnedLibraryAsync();
+        var propietarioId = isTenantOwned ? currentUserId : dto.PropietarioId;
+        var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == propietarioId);
         if (!propietarioExiste)
         {
             return (false, "L'identificador del propietari indicat no existeix.", null);
@@ -194,7 +198,8 @@ public class JuegoService
             NumeroJugadoresMin = dto.NumeroJugadoresMin,
             NumeroJugadoresMax = dto.NumeroJugadoresMax,
             Pvp = dto.Pvp,
-            PropietarioId = dto.PropietarioId,
+            PropietarioId = propietarioId,
+            EsPropiedadTenant = isTenantOwned,
             FechaAdquisicion = dto.FechaAdquisicion,
             Tipo = dto.Tipo.Trim(),
             JuegoBaseId = dto.JuegoBaseId
@@ -209,10 +214,12 @@ public class JuegoService
         }
 
         dto.JuegoId = juego.JuegoId;
+        dto.PropietarioId = propietarioId;
+        dto.EsPropiedadTenant = isTenantOwned;
         return (true, null, dto);
     }
 
-    public async Task<(bool Success, string? Error, JuegoDto? Juego)> UpdateAsync(int id, JuegoDto dto)
+    public async Task<(bool Success, string? Error, JuegoDto? Juego)> UpdateAsync(int id, JuegoDto dto, int currentUserId = 0)
     {
         if (id != dto.JuegoId)
         {
@@ -230,7 +237,9 @@ public class JuegoService
             return (false, "Joc no trobat.", null);
         }
 
-        var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == dto.PropietarioId);
+        var isTenantOwned = await IsTenantOwnedLibraryAsync();
+        var propietarioId = isTenantOwned ? currentUserId : dto.PropietarioId;
+        var propietarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == propietarioId);
         if (!propietarioExiste)
         {
             return (false, "L'identificador del propietari indicat no existeix.", null);
@@ -258,7 +267,8 @@ public class JuegoService
         juego.NumeroJugadoresMin = dto.NumeroJugadoresMin;
         juego.NumeroJugadoresMax = dto.NumeroJugadoresMax;
         juego.Pvp = dto.Pvp;
-        juego.PropietarioId = dto.PropietarioId;
+        juego.PropietarioId = propietarioId;
+        juego.EsPropiedadTenant = isTenantOwned;
         juego.FechaAdquisicion = dto.FechaAdquisicion;
         juego.Tipo = dto.Tipo.Trim();
         juego.JuegoBaseId = dto.JuegoBaseId;
@@ -270,6 +280,8 @@ public class JuegoService
             await _bggMedalImageService.EnsureGameMedalImageAsync(juego.JuegoId, juego.BggId.Value);
         }
 
+        dto.PropietarioId = propietarioId;
+        dto.EsPropiedadTenant = isTenantOwned;
         return (true, null, dto);
     }
 
@@ -395,6 +407,12 @@ public class JuegoService
             ? decimal.Round(number, 2)
             : null;
     }
+
+    private Task<bool> IsTenantOwnedLibraryAsync() =>
+        _context.Tenants
+            .Where(tenant => tenant.TenantId == _context.CurrentTenantId)
+            .Select(tenant => tenant.Codi == "ajjrr26")
+            .FirstOrDefaultAsync();
 
     private static string? FirstConfiguredValue(params string?[] values)
     {

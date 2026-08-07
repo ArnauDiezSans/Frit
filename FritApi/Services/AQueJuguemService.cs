@@ -31,8 +31,7 @@ public class AQueJuguemService
         var existingUsersCount = await _context.Usuarios
             .CountAsync(usuario =>
                 usuarioIds.Contains(usuario.UsuarioId) &&
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName);
+                !usuario.EsUsuarioExterno);
 
         if (existingUsersCount != usuarioIds.Count)
         {
@@ -119,8 +118,7 @@ public class AQueJuguemService
         var usuarios = await _context.Usuarios
             .Where(usuario =>
                 usuarioIds.Contains(usuario.UsuarioId) &&
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .ToListAsync();
 
         if (usuarios.Count != usuarioIds.Count)
@@ -254,7 +252,7 @@ public class AQueJuguemService
 
     public async Task<bool> DeleteRemadaAsync(int remadaId)
     {
-        var remada = await _context.Remades.FindAsync(remadaId);
+        var remada = await _context.Remades.FirstOrDefaultAsync(item => item.RemadaId == remadaId);
         if (remada is null)
         {
             return false;
@@ -306,8 +304,7 @@ public class AQueJuguemService
         var usuarios = await _context.Usuarios
             .Where(usuario =>
                 usuarioIds.Contains(usuario.UsuarioId) &&
-                usuario.UsuarioId != ExternalUserPolicy.ExternalUserId &&
-                usuario.Nombre != ExternalUserPolicy.ExternalUserName)
+                !usuario.EsUsuarioExterno)
             .ToDictionaryAsync(usuario => usuario.UsuarioId);
         var juegos = await _context.Juegos
             .Where(juego => juegoIds.Contains(juego.JuegoId))

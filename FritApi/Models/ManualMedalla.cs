@@ -2,9 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FritApi.Models;
 
-public class ManualMedalla
+public class ManualMedalla : ITenantEntity
 {
     public int ManualMedallaId { get; set; }
+    public int TenantId { get; set; }
 
     [Required]
     [MaxLength(200)]
