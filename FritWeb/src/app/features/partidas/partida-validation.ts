@@ -21,7 +21,8 @@ export interface PartidaValidationInput {
 }
 
 export function getPartidaPlayerDisplayName(jugador: PartidaJugadorValidationInput): string {
-  return (jugador.nombreMostrado ?? jugador.usuarioSearch ?? '').trim();
+  const nombreMostrado = jugador.nombreMostrado?.trim();
+  return nombreMostrado || jugador.usuarioSearch?.trim() || '';
 }
 
 function hasSelectedPlayer(jugador: PartidaJugadorValidationInput): boolean {
