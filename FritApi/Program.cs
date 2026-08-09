@@ -25,8 +25,17 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using System.Threading.RateLimiting;
+using WebPush;
 
 var builder = WebApplication.CreateBuilder(args);
+
+if (args.Contains("--generate-vapid-keys", StringComparer.OrdinalIgnoreCase))
+{
+    var keys = VapidHelper.GenerateVapidKeys();
+    Console.WriteLine($"VAPID_PUBLIC_KEY={keys.PublicKey}");
+    Console.WriteLine($"VAPID_PRIVATE_KEY={keys.PrivateKey}");
+    return;
+}
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
@@ -127,6 +136,7 @@ builder.Services.AddScoped<LaLlistaService>();
 builder.Services.AddScoped<RankingsService>();
 builder.Services.AddScoped<HallOfFameService>();
 builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<PushNotificationService>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 

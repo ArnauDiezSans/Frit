@@ -8,6 +8,7 @@ import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/au
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { HallOfFameService, MedalGame, MedalProgress } from '../hall-of-fame/hall-of-fame.service';
 import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.service';
+import { PushNotificationService, PushNotificationStatus } from '../../core/notifications/push-notification.service';
 
 @Component({
   selector: 'app-usuario-page',
@@ -22,6 +23,7 @@ export class UsuarioPageComponent {
   private usuarioService = inject(UsuarioService);
   private hallOfFameService = inject(HallOfFameService);
   private router = inject(Router);
+  private pushNotifications = inject(PushNotificationService);
 
   loading = signal(true);
   saving = signal(false);
@@ -33,6 +35,10 @@ export class UsuarioPageComponent {
   modalOpen = signal(false);
   profileModalOpen = signal(false);
   activeUserPanel = signal<'medals' | 'favorites'>('medals');
+  notificationStatus = signal<PushNotificationStatus | null>(null);
+  notificationBusy = signal(false);
+  notificationMessage = signal('');
+  notificationError = signal('');
 
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
@@ -70,6 +76,58 @@ export class UsuarioPageComponent {
 
   ngOnInit(): void {
     this.cargarDatos();
+    this.loadNotificationStatus();
+  }
+
+  async toggleNotifications(): Promise<void> {
+    const status = this.notificationStatus();
+    if (!status || this.notificationBusy()) return;
+
+    this.notificationBusy.set(true);
+    this.notificationError.set('');
+    this.notificationMessage.set('');
+    try {
+      if (status.subscribed) {
+        await this.pushNotifications.unsubscribe();
+        this.notificationMessage.set('Notificacions desactivades en aquest dispositiu.');
+      } else {
+        await this.pushNotifications.subscribe();
+        this.notificationMessage.set('Notificacions activades en aquest dispositiu.');
+      }
+      await this.loadNotificationStatus();
+    } catch (error: unknown) {
+      this.notificationError.set(this.getNotificationError(error));
+    } finally {
+      this.notificationBusy.set(false);
+    }
+  }
+
+  async sendTestNotification(): Promise<void> {
+    this.notificationBusy.set(true);
+    this.notificationError.set('');
+    this.notificationMessage.set('');
+    try {
+      await this.pushNotifications.sendTest();
+      this.notificationMessage.set("S'ha enviat una notificació de prova.");
+    } catch (error: unknown) {
+      this.notificationError.set(this.getNotificationError(error));
+    } finally {
+      this.notificationBusy.set(false);
+    }
+  }
+
+  private async loadNotificationStatus(): Promise<void> {
+    try {
+      this.notificationStatus.set(await this.pushNotifications.getStatus());
+    } catch {
+      this.notificationError.set("No s'ha pogut consultar l'estat de les notificacions.");
+    }
+  }
+
+  private getNotificationError(error: unknown): string {
+    return error instanceof Error && error.message
+      ? error.message
+      : "No s'ha pogut completar l'operació de notificacions.";
   }
 
   cargarDatos(): void {

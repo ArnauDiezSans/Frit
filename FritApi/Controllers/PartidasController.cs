@@ -12,10 +12,12 @@ namespace FritApi.Controllers;
 public class PartidasController : ControllerBase
 {
     private readonly PartidaService _partidaService;
+    private readonly PushNotificationService _pushNotificationService;
 
-    public PartidasController(PartidaService partidaService)
+    public PartidasController(PartidaService partidaService, PushNotificationService pushNotificationService)
     {
         _partidaService = partidaService;
+        _pushNotificationService = pushNotificationService;
     }
 
     [HttpGet]
@@ -48,7 +50,12 @@ public class PartidasController : ControllerBase
             return BadRequest(new { message = result.Error });
         }
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Partida!.PartidaId }, result.Partida);
+        await _pushNotificationService.SendNewGameAsync(
+            result.Partida!.JuegoNombre ?? "un joc",
+            result.Partida.PartidaId,
+            HttpContext.RequestAborted);
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Partida.PartidaId }, result.Partida);
     }
 
     [HttpPut("{id:int}")]

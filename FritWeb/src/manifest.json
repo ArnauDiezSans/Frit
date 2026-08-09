@@ -1,6 +1,12 @@
 {
  "name": "Frit",
  "short_name": "Frit",
+ "id": "/",
+ "start_url": "/app/usuario",
+ "scope": "/",
+ "display": "standalone",
+ "background_color": "#f4f6f8",
+ "theme_color": "#0f766e",
  "icons": [
   {
    "src": "\/android-icon-192x192.png",

@@ -3,6 +3,18 @@
 ## Variables obligatòries
 
 - `DATABASE_URL`: connexió PostgreSQL.
+- `VAPID_PUBLIC_KEY`: clau pública per a les notificacions Web Push.
+- `VAPID_PRIVATE_KEY`: clau privada per a les notificacions Web Push. No s'ha de desar al repositori.
+
+Per generar una parella de claus una sola vegada:
+
+```powershell
+dotnet run --project FritApi -- --generate-vapid-keys
+```
+
+Cal copiar les dues claus resultants a les variables de Railway. No s'han de
+regenerar mentre hi hagi subscripcions actives, ja que els dispositius s'han
+subscrit amb la clau pública original.
 
 ## Migracions
 

@@ -49,6 +49,7 @@ public class AppDbContext : DbContext
     public DbSet<RemadaJuego> RemadaJocs => Set<RemadaJuego>();
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
     public DbSet<AuditAuthorizedUser> AuditAuthorizedUsers => Set<AuditAuthorizedUser>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -104,6 +105,24 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => e.Nombre)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<PushSubscription>(entity =>
+        {
+            entity.HasKey(e => e.PushSubscriptionId);
+            entity.Property(e => e.Endpoint).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.P256dh).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Auth).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
+
+            entity.HasOne(e => e.Usuario)
+                .WithMany()
+                .HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.TenantId, e.Endpoint }).IsUnique();
+            entity.HasIndex(e => new { e.TenantId, e.UsuarioId });
         });
 
         modelBuilder.Entity<Juego>(entity =>
@@ -540,7 +559,9 @@ public class AppDbContext : DbContext
 
         ChangeTracker.DetectChanges();
         return ChangeTracker.Entries()
-            .Where(entry => entry.Entity is not AuditEntry && entry.Entity is not AuditAuthorizedUser)
+            .Where(entry => entry.Entity is not AuditEntry &&
+                            entry.Entity is not AuditAuthorizedUser &&
+                            entry.Entity is not PushSubscription)
             .Where(entry => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
             .Select(entry => new PendingAudit(
                 entry,

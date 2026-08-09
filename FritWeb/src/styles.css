@@ -21,6 +21,38 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.notification-card {
+  border-left: 4px solid #2f7f7a !important;
+}
+
+.notification-card .section-heading {
+  margin-bottom: 14px;
+}
+
+.notification-card .subtitle {
+  margin-top: 6px;
+}
+
+.notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.notification-help {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #eef6f5;
+  color: #285e59;
+  line-height: 1.45;
+}
+
+.notification-warning {
+  background: #fffaeb;
+  color: #7a4b00;
+}
+
 button,
 input,
 select,
