@@ -127,8 +127,8 @@ public sealed class PushNotificationService(
             {
                 title,
                 body,
-                icon = "/android-icon-192x192.png",
-                badge = "/favicon-96x96.png",
+                icon = "/notification-icon-192x192.png",
+                badge = "/notification-badge-96x96.png",
                 data = new
                 {
                     onActionClick = new

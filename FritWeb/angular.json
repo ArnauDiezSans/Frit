@@ -42,6 +42,11 @@
                 "input": "src",
                 "output": "/"
               },
+              {
+                "glob": "notification-*.png",
+                "input": "src",
+                "output": "/"
+              },
               "src/manifest.json",
               "src/assets"
             ],
@@ -137,6 +142,11 @@
               },
               {
                 "glob": "android-icon-192x192.png",
+                "input": "src",
+                "output": "/"
+              },
+              {
+                "glob": "notification-*.png",
                 "input": "src",
                 "output": "/"
               },

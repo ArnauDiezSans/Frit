@@ -11,6 +11,7 @@
           "/favicon-*.png",
           "/apple-icon-180x180.png",
           "/android-icon-192x192.png",
+          "/notification-*.png",
           "/index.html",
           "/manifest.json",
           "/*.css",
