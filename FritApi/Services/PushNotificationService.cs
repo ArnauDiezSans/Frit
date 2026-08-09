@@ -105,6 +105,27 @@ public sealed class PushNotificationService(
         }
     }
 
+    public async Task SendSundayGreetingAsync(CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured)
+        {
+            logger.LogWarning("No s'ha enviat la notificació de diumenge perquè les claus VAPID no estan configurades.");
+            return;
+        }
+
+        var subscriptions = await context.PushSubscriptions
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        await SendAsync(
+            subscriptions,
+            "Frit",
+            "Bon diumenge",
+            "/",
+            cancellationToken);
+    }
+
     private async Task SendAsync(
         IReadOnlyCollection<Models.PushSubscription> subscriptions,
         string title,

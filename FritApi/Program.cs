@@ -137,6 +137,8 @@ builder.Services.AddScoped<RankingsService>();
 builder.Services.AddScoped<HallOfFameService>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<PushNotificationService>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddHostedService<SundayNotificationWorker>();
 
 var connectionString = GetConnectionString(builder.Configuration["DATABASE_URL"]);
 
