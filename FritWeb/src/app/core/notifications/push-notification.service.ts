@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
-import { firstValueFrom, take } from 'rxjs';
+import { catchError, firstValueFrom, of, take, timeout } from 'rxjs';
 import { API_BASE_URL } from '../api/api.config';
 
 export interface PushNotificationStatus {
@@ -35,11 +35,12 @@ export class PushNotificationService {
 
   async getStatus(): Promise<PushNotificationStatus> {
     this.configuration = await firstValueFrom(
-      this.http.get<PushConfiguration>(`${this.baseUrl}/configuracion`, { withCredentials: true })
+      this.http.get<PushConfiguration>(`${this.baseUrl}/configuracion`, { withCredentials: true }).pipe(
+        timeout(8000),
+        catchError(() => of({ configured: false, publicKey: null }))
+      )
     );
-    const subscription = this.swPush.isEnabled
-      ? await firstValueFrom(this.swPush.subscription.pipe(take(1)))
-      : null;
+    const subscription = await this.getCurrentSubscription();
 
     return {
       supported: this.swPush.isEnabled,
@@ -52,7 +53,7 @@ export class PushNotificationService {
 
   async subscribe(): Promise<void> {
     const configuration = this.configuration ?? await firstValueFrom(
-      this.http.get<PushConfiguration>(`${this.baseUrl}/configuracion`, { withCredentials: true })
+      this.http.get<PushConfiguration>(`${this.baseUrl}/configuracion`, { withCredentials: true }).pipe(timeout(8000))
     );
     this.configuration = configuration;
     if (!this.swPush.isEnabled) {
@@ -81,7 +82,7 @@ export class PushNotificationService {
   }
 
   async unsubscribe(): Promise<void> {
-    const subscription = await firstValueFrom(this.swPush.subscription.pipe(take(1)));
+    const subscription = await this.getCurrentSubscription();
     if (!subscription) return;
     await firstValueFrom(this.http.request<void>('DELETE', `${this.baseUrl}/suscripciones`, {
       body: { endpoint: subscription.endpoint },
@@ -91,7 +92,7 @@ export class PushNotificationService {
   }
 
   async sendTest(): Promise<void> {
-    const subscription = await firstValueFrom(this.swPush.subscription.pipe(take(1)));
+    const subscription = await this.getCurrentSubscription();
     if (!subscription) throw new Error("Activa les notificacions abans d'enviar una prova.");
     await firstValueFrom(
       this.http.post<void>(`${this.baseUrl}/prueba`, { endpoint: subscription.endpoint }, { withCredentials: true })
@@ -100,6 +101,15 @@ export class PushNotificationService {
 
   private isIos(): boolean {
     return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  private async getCurrentSubscription(): Promise<PushSubscription | null> {
+    if (!this.swPush.isEnabled) return null;
+    return await firstValueFrom(this.swPush.subscription.pipe(
+      take(1),
+      timeout(5000),
+      catchError(() => of(null))
+    ));
   }
 
   private isStandalone(): boolean {

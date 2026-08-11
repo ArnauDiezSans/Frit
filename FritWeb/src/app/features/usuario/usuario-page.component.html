@@ -67,7 +67,19 @@
           </small>
         </ng-container>
         <ng-template #notificationStatusLoading>
-          <span class="notification-loading">Comprovant...</span>
+          <button
+            type="button"
+            class="notification-toggle notification-toggle-loading"
+            aria-haspopup="dialog"
+            aria-label="Configurar notificacions"
+            title="Configurar notificacions"
+            (click)="openNotificationSettings()">
+            <span class="notification-toggle-track" aria-hidden="true">
+              <span class="notification-toggle-thumb"></span>
+            </span>
+            <span>Configurar notificacions</span>
+          </button>
+          <span class="notification-loading">Comprovant l'estat...</span>
         </ng-template>
         <small class="notification-feedback notification-feedback-error" *ngIf="notificationError()">
           {{ notificationError() }}
