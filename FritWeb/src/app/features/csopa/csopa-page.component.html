@@ -22,9 +22,24 @@
 
   <section class="entry-cards" *ngIf="!loading() && !error() && canPublish()">
     <section class="content-card entry-card">
-      <form [formGroup]="movieForm" (ngSubmit)="publicarPelicula()" class="movie-form">
-        <label class="form-field">
-          <span>Pel·lícula</span>
+      <form [formGroup]="entryForm" (ngSubmit)="publicarEntrada()" class="entry-form">
+        <label class="form-field entry-type-field">
+          <span>Tipus</span>
+          <app-autocomplete-select
+            [items]="filteredEntryTypes()"
+            [searchText]="entryTypeSearch()"
+            [selected]="!!selectedEntryType()"
+            [displayWith]="displayEntryType"
+            [trackBy]="trackByEntryType"
+            placeholder="Selecciona un tipus..."
+            emptyText="No hi ha tipus coincidents."
+            (searchTextChange)="updateEntryTypeSearch($event)"
+            (selectedChange)="selectEntryType($event)"
+            (cleared)="clearEntryType()" />
+        </label>
+
+        <label class="form-field" *ngIf="selectedEntryType()?.requiresTitle">
+          <span>{{ selectedEntryType()?.id === 'altres' ? 'Títol' : 'Pel·lícula' }}</span>
           <input type="text" formControlName="titulo" maxlength="300" autocomplete="off" />
         </label>
 
@@ -33,65 +48,12 @@
           <input type="date" formControlName="fecha" />
         </label>
 
-        <div class="movie-group-options">
-          <label class="checkbox-field">
-            <input
-              type="checkbox"
-              formControlName="creepyjous"
-              (change)="updateMovieGroup('creepyjous', $any($event.target).checked)" />
-            <span>Creepyjous</span>
-          </label>
-
-          <label class="checkbox-field">
-            <input
-              type="checkbox"
-              formControlName="estirarLaSetmana"
-              (change)="updateMovieGroup('estirarLaSetmana', $any($event.target).checked)" />
-            <span>Estirar la setmana</span>
-          </label>
-        </div>
-
-        <button type="submit" class="primary-button" [disabled]="savingMovie()">
-          {{ savingMovie() ? 'Publicant...' : 'Publicar' }}
+        <button type="submit" class="primary-button" [disabled]="savingEntry()">
+          {{ savingEntry() ? 'Publicant...' : 'Publicar' }}
         </button>
       </form>
 
-      <p class="field-error" *ngIf="movieFormError()">{{ movieFormError() }}</p>
-    </section>
-
-    <section class="content-card entry-card">
-      <form [formGroup]="activityForm" (ngSubmit)="publicarActivitat()" class="activity-form">
-        <label class="form-field">
-          <span>Data</span>
-          <input type="date" formControlName="fecha" />
-        </label>
-
-        <div class="type-options">
-          <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusSopar">
-            <input
-              type="checkbox"
-              [checked]="activityForm.controls.tipus.value === tipusSopar"
-              (change)="updateActivityType(tipusSopar, $any($event.target).checked)" />
-            <img src="assets/sopar.png" alt="" />
-            <span>Sopar</span>
-          </label>
-
-          <label class="type-option" [class.type-option-active]="activityForm.controls.tipus.value === tipusGymfrit">
-            <input
-              type="checkbox"
-              [checked]="activityForm.controls.tipus.value === tipusGymfrit"
-              (change)="updateActivityType(tipusGymfrit, $any($event.target).checked)" />
-            <img src="assets/gymfrit.png" alt="" />
-            <span>Gymfrit</span>
-          </label>
-        </div>
-
-        <button type="submit" class="primary-button" [disabled]="savingActivity()">
-          {{ savingActivity() ? 'Publicant...' : 'Publicar' }}
-        </button>
-      </form>
-
-      <p class="field-error" *ngIf="activityFormError()">{{ activityFormError() }}</p>
+      <p class="field-error" *ngIf="entryFormError()">{{ entryFormError() }}</p>
     </section>
   </section>
 
@@ -156,10 +118,12 @@
             (change)="updateFilter('tipus', $any($event.target).value)">
             <option value="">Tots</option>
             <option value="cine">Pel·lícules</option>
-            <option value="cine-por">Creepyjous</option>
-            <option value="cine-diumenge">Estirar la setmana</option>
+            <option value="cine-diumenge">Pel·lícules de diumenge</option>
+            <option value="cine-por">Pel·lícules de Creepyjous</option>
             <option value="sopar">Sopars</option>
+            <option value="sopar-dimarts">Sopars de dimarts</option>
             <option value="gymfrit">Gymfrits</option>
+            <option value="altres">Altres</option>
           </select>
         </label>
 

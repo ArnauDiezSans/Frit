@@ -315,7 +315,7 @@ public class HallOfFameService
         var cineTotalTarget = cineTotals.Count > 0 ? cineTotals.Values.Max() : 0;
         var cineSundayStreaks = BuildCineSundayStreakLookup(cinePeliculas, usuarios, GetFritToday(DateTime.UtcNow));
         var cineSundayTarget = cineSundayStreaks.Count > 0 ? cineSundayStreaks.Values.Max() : 0;
-        var soparTotals = BuildCsopaTotalAttendanceLookup(csopaActivitats, CsopaService.TipusSopar);
+        var soparTotals = BuildCsopaTotalAttendanceLookup(csopaActivitats, CsopaService.TipusSoparDimarts);
         var soparTotalTarget = soparTotals.Count > 0 ? soparTotals.Values.Max() : 0;
         var gymfritTotals = BuildCsopaTotalAttendanceLookup(csopaActivitats, CsopaService.TipusGymfrit);
         var gymfritTotalTarget = gymfritTotals.Count > 0 ? gymfritTotals.Values.Max() : 0;
@@ -323,7 +323,7 @@ public class HallOfFameService
         var soparTuesdayStreaks = BuildCsopaWeekdayStreakLookup(
             csopaActivitats,
             usuarios,
-            CsopaService.TipusSopar,
+            CsopaService.TipusSoparDimarts,
             DayOfWeek.Tuesday,
             today);
         var soparTuesdayTarget = soparTuesdayStreaks.Count > 0 ? soparTuesdayStreaks.Values.Max() : 0;

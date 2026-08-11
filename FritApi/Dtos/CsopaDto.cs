@@ -28,7 +28,7 @@ public class CsopaActivitatCreateDto
     public string? Titol { get; set; }
 
     [Required]
-    [Range(1, 2)]
+    [Range(1, 4)]
     public int? Tipus { get; set; }
 
     [Required]

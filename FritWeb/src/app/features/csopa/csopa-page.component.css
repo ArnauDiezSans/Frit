@@ -37,7 +37,7 @@ h1 {
 
 .entry-cards {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-columns: 1fr;
   gap: 12px;
   max-width: 1100px;
   margin: 0 auto 16px;
@@ -134,6 +134,7 @@ h1 {
 
 .movie-form,
 .activity-form,
+.entry-form,
 .rating-form,
 .attendance-form {
   display: grid;
@@ -177,6 +178,14 @@ h1 {
 
 .activity-form {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.entry-form {
+  grid-template-columns: minmax(190px, 0.9fr) minmax(220px, 1.4fr) minmax(150px, 180px) auto;
+}
+
+.entry-form > .primary-button {
+  min-width: 120px;
 }
 
 .type-options {
@@ -551,6 +560,7 @@ h1 {
   .section-heading,
   .movie-form,
   .activity-form,
+  .entry-form,
   .rating-form,
   .attendance-form,
   .edit-panel {

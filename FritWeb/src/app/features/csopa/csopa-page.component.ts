@@ -5,20 +5,32 @@ import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { isExternalUser } from '../../core/users/external-user';
+import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { CinePelicula, CineService } from '../cine/cine.service';
 import { UsuarioOption } from '../juegos/juegos.models';
 import { UsuariosService } from '../juegos/usuarios.service';
 import {
+  CSOPA_TIPUS_ALTRES,
   CSOPA_TIPUS_GYMFRIT,
   CSOPA_TIPUS_SOPAR,
+  CSOPA_TIPUS_SOPAR_DIMARTS,
   CsopaActivitat,
   CsopaService
 } from './csopa.service';
 
 type AssistenciaSortColumn = 'createdAt' | 'titol' | 'assistencies' | 'mediaNota' | 'userNota';
 type SortDirection = 'asc' | 'desc';
-type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'sopar' | 'gymfrit';
+type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'sopar' | 'sopar-dimarts' | 'gymfrit' | 'altres';
+
+interface EntryTypeOption {
+  id: AssistenciaTipus;
+  label: string;
+  source: 'cine' | 'csopa';
+  movieGroup?: number | null;
+  activityType?: number;
+  requiresTitle: boolean;
+}
 
 interface AssistenciaFilters {
   fechaDesde: string;
@@ -64,7 +76,7 @@ const EMPTY_ASSISTENCIA_FILTERS: AssistenciaFilters = {
 @Component({
   selector: 'app-csopa-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
   templateUrl: './csopa-page.component.html',
   styleUrl: './csopa-page.component.css'
 })
@@ -76,19 +88,26 @@ export class CsopaPageComponent {
   private usuariosService = inject(UsuariosService);
   private router = inject(Router);
 
-  readonly tipusSopar = CSOPA_TIPUS_SOPAR;
-  readonly tipusGymfrit = CSOPA_TIPUS_GYMFRIT;
+  readonly entryTypeOptions: EntryTypeOption[] = [
+    { id: 'cine', label: 'Pel·lícula', source: 'cine', movieGroup: null, requiresTitle: true },
+    { id: 'cine-diumenge', label: 'Pel·lícula de diumenge', source: 'cine', movieGroup: 1, requiresTitle: true },
+    { id: 'cine-por', label: 'Pel·lícula de Creepyjous', source: 'cine', movieGroup: 2, requiresTitle: true },
+    { id: 'sopar', label: 'Sopar', source: 'csopa', activityType: CSOPA_TIPUS_SOPAR, requiresTitle: false },
+    { id: 'sopar-dimarts', label: 'Sopar de dimarts', source: 'csopa', activityType: CSOPA_TIPUS_SOPAR_DIMARTS, requiresTitle: false },
+    { id: 'gymfrit', label: 'Gymfrit', source: 'csopa', activityType: CSOPA_TIPUS_GYMFRIT, requiresTitle: false },
+    { id: 'altres', label: 'Altres', source: 'csopa', activityType: CSOPA_TIPUS_ALTRES, requiresTitle: true }
+  ];
+  displayEntryType = (option: EntryTypeOption) => option.label;
+  trackByEntryType = (_: number, option: EntryTypeOption) => option.id;
 
   loading = signal(true);
-  savingMovie = signal(false);
-  savingActivity = signal(false);
+  savingEntry = signal(false);
   savingRatingKey = signal<string | null>(null);
   savingAttendanceKey = signal<string | null>(null);
   deletingRowKey = signal<string | null>(null);
   deletingAttendanceKey = signal<string | null>(null);
   error = signal('');
-  movieFormError = signal('');
-  activityFormError = signal('');
+  entryFormError = signal('');
   ratingFormError = signal('');
   attendanceFormError = signal('');
   editFormError = signal('');
@@ -104,6 +123,13 @@ export class CsopaPageComponent {
   showFilters = signal(false);
   sortColumn = signal<AssistenciaSortColumn>('createdAt');
   sortDirection = signal<SortDirection>('desc');
+  selectedEntryType = signal<EntryTypeOption | null>(this.entryTypeOptions[0]);
+  entryTypeSearch = signal(this.entryTypeOptions[0].label);
+  filteredEntryTypes = computed(() => {
+    const search = this.entryTypeSearch().trim().toLocaleLowerCase('ca');
+    if (this.selectedEntryType()?.label.toLocaleLowerCase('ca') === search) return this.entryTypeOptions;
+    return this.entryTypeOptions.filter(option => option.label.toLocaleLowerCase('ca').includes(search));
+  });
 
   canPublish = computed(() => {
     const currentUser = this.authService.currentUser;
@@ -158,16 +184,9 @@ export class CsopaPageComponent {
     return this.sortRows(filtered);
   });
 
-  movieForm = this.fb.group({
-    titulo: ['', [Validators.required, Validators.maxLength(300)]],
-    fecha: [this.getTodayInputValue(), Validators.required],
-    estirarLaSetmana: [false],
-    creepyjous: [false]
-  });
-
-  activityForm = this.fb.group({
-    fecha: [this.getTodayInputValue(), Validators.required],
-    tipus: [CSOPA_TIPUS_SOPAR, [Validators.required]]
+  entryForm = this.fb.group({
+    titulo: ['', Validators.maxLength(300)],
+    fecha: [this.getTodayInputValue(), Validators.required]
   });
 
   ratingForm = this.fb.group({
@@ -212,101 +231,74 @@ export class CsopaPageComponent {
     });
   }
 
-  publicarPelicula(): void {
+  publicarEntrada(): void {
     if (!this.canPublish()) {
       return;
     }
 
-    if (this.movieForm.invalid) {
-      this.movieForm.markAllAsTouched();
-      this.movieFormError.set('Escriu el títol de la pel·lícula.');
+    const option = this.selectedEntryType();
+    const titulo = this.entryForm.controls.titulo.value?.trim() ?? '';
+
+    if (!option || this.entryForm.invalid || (option.requiresTitle && !titulo)) {
+      this.entryForm.markAllAsTouched();
+      this.entryFormError.set(!option ? 'Selecciona un tipus.' : option.requiresTitle ? 'Escriu un títol.' : 'Indica una data vàlida.');
       return;
     }
 
-    const titulo = this.movieForm.controls.titulo.value?.trim() ?? '';
-    const fecha = this.movieForm.controls.fecha.value ?? this.getTodayInputValue();
-    const grupoPelicula = this.getMovieGroup();
+    const fecha = this.entryForm.controls.fecha.value ?? this.getTodayInputValue();
+    this.entryFormError.set('');
 
-    if (!this.confirmMovieGroupDate(grupoPelicula, fecha)) {
+    if (option.source === 'cine') {
+      const grupoPelicula = option.movieGroup ?? null;
+      if (!this.confirmMovieGroupDate(grupoPelicula, fecha)) return;
+
+      this.savingEntry.set(true);
+      this.cineService.create({ titulo, grupoPelicula, fecha }).subscribe({
+        next: pelicula => {
+          const key = this.getPeliculaKey(pelicula.cinePeliculaId);
+          this.peliculas.update(current => [pelicula, ...current]);
+          this.finishEntryCreation(key);
+        },
+        error: err => {
+          this.entryFormError.set(err?.error?.message ?? "No s'ha pogut publicar la pel·lícula.");
+          this.savingEntry.set(false);
+        }
+      });
       return;
     }
 
-    this.savingMovie.set(true);
-    this.movieFormError.set('');
+    const tipus = option.activityType!;
+    if (!this.confirmActivityDate(tipus, fecha)) return;
 
-    this.cineService.create({ titulo, grupoPelicula, fecha }).subscribe({
-      next: pelicula => {
-        const key = this.getPeliculaKey(pelicula.cinePeliculaId);
-        this.peliculas.update(current => [pelicula, ...current]);
-        this.highlightedKey.set(key);
-        window.setTimeout(() => this.highlightedKey.set(null), 2500);
-        this.movieForm.reset({
-          titulo: '',
-          fecha: this.getTodayInputValue(),
-          estirarLaSetmana: false,
-          creepyjous: false
-        });
-        this.savingMovie.set(false);
-      },
-      error: err => {
-        this.movieFormError.set(err?.error?.message ?? "No s'ha pogut publicar la pel·lícula.");
-        this.savingMovie.set(false);
-      }
-    });
-  }
-
-  publicarActivitat(): void {
-    if (!this.canPublish()) {
-      return;
-    }
-
-    if (this.activityForm.invalid) {
-      this.activityForm.markAllAsTouched();
-      this.activityFormError.set('Selecciona un tipus valid.');
-      return;
-    }
-
-    const raw = this.activityForm.getRawValue();
-    const tipus = Number(raw.tipus);
-    const fecha = raw.fecha ?? this.getTodayInputValue();
-
-    if (!this.confirmActivityDate(tipus, fecha)) {
-      return;
-    }
-
-    this.savingActivity.set(true);
-    this.activityFormError.set('');
-
-    this.csopaService.create({ tipus, fecha }).subscribe({
+    this.savingEntry.set(true);
+    this.csopaService.create({ tipus, fecha, titol: option.requiresTitle ? titulo : null }).subscribe({
       next: activitat => {
         const key = this.getActivitatKey(activitat.csopaActivitatId);
         this.activitats.update(current => [activitat, ...current]);
-        this.highlightedKey.set(key);
-        window.setTimeout(() => this.highlightedKey.set(null), 2500);
-        this.activityForm.reset({
-          fecha: this.getTodayInputValue(),
-          tipus
-        });
-        this.savingActivity.set(false);
+        this.finishEntryCreation(key);
       },
       error: err => {
-        this.activityFormError.set(err?.error?.message ?? "No s'ha pogut publicar l'activitat.");
-        this.savingActivity.set(false);
+        this.entryFormError.set(err?.error?.message ?? "No s'ha pogut publicar l'activitat.");
+        this.savingEntry.set(false);
       }
     });
   }
 
-  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous', checked: boolean): void {
-    this.movieForm.patchValue({
-      estirarLaSetmana: group === 'estirarLaSetmana' ? checked : false,
-      creepyjous: group === 'creepyjous' ? checked : false
-    });
+  updateEntryTypeSearch(value: string): void {
+    this.entryTypeSearch.set(value);
+    if (value !== this.selectedEntryType()?.label) this.selectedEntryType.set(null);
   }
 
-  updateActivityType(tipus: number, checked: boolean): void {
-    this.activityForm.patchValue({
-      tipus: checked ? tipus : null
-    });
+  selectEntryType(option: EntryTypeOption): void {
+    this.selectedEntryType.set(option);
+    this.entryTypeSearch.set(option.label);
+    this.entryFormError.set('');
+    if (!option.requiresTitle) this.entryForm.controls.titulo.setValue('');
+  }
+
+  clearEntryType(): void {
+    this.entryTypeSearch.set('');
+    this.selectedEntryType.set(null);
   }
 
   abrirValoracion(row: AssistenciaRow): void {
@@ -623,11 +615,18 @@ export class CsopaPageComponent {
   }
 
   getTipusLabel(tipus: number): string {
-    return tipus === CSOPA_TIPUS_GYMFRIT ? 'Gymfrit' : 'Sopar';
+    switch (tipus) {
+      case CSOPA_TIPUS_SOPAR_DIMARTS: return 'Sopar de dimarts';
+      case CSOPA_TIPUS_GYMFRIT: return 'Gymfrit';
+      case CSOPA_TIPUS_SOPAR: return 'Sopar';
+      default: return 'Altres';
+    }
   }
 
   getTipusIcon(tipus: number): string {
-    return tipus === CSOPA_TIPUS_GYMFRIT ? 'assets/gymfrit.png' : 'assets/sopar.png';
+    if (tipus === CSOPA_TIPUS_GYMFRIT) return 'assets/gymfrit.png';
+    if (tipus === CSOPA_TIPUS_SOPAR || tipus === CSOPA_TIPUS_SOPAR_DIMARTS) return 'assets/sopar.png';
+    return '';
   }
 
   getEditAssistencies(row: AssistenciaRow): { id: number; nombre: string }[] {
@@ -654,7 +653,7 @@ export class CsopaPageComponent {
       createdAt: pelicula.createdAt,
       titol: pelicula.titulo,
       tipus: pelicula.grupoPelicula === 2 ? 'cine-por' : pelicula.grupoPelicula === 1 ? 'cine-diumenge' : 'cine',
-      tipusLabel: pelicula.grupoPelicula === 2 ? 'Creepyjous' : pelicula.grupoPelicula === 1 ? 'Estirar la setmana' : 'Pel·lícula',
+      tipusLabel: pelicula.grupoPelicula === 2 ? 'Pel·lícula de Creepyjous' : pelicula.grupoPelicula === 1 ? 'Pel·lícula de diumenge' : 'Pel·lícula',
       tipusIcon: pelicula.grupoPelicula === 2 ? 'assets/terror.png' : pelicula.grupoPelicula === 1 ? 'assets/diumenge.png' : '',
       usuarioCreadorId: pelicula.usuarioCreadorId,
       usuarioCreadorNombre: pelicula.usuarioCreadorNombre,
@@ -674,8 +673,8 @@ export class CsopaPageComponent {
       source: 'csopa',
       id: activitat.csopaActivitatId,
       createdAt: activitat.createdAt,
-      titol: this.getTipusLabel(activitat.tipus),
-      tipus: activitat.tipus === CSOPA_TIPUS_GYMFRIT ? 'gymfrit' : 'sopar',
+      titol: activitat.tipus === CSOPA_TIPUS_ALTRES ? activitat.titol : this.getTipusLabel(activitat.tipus),
+      tipus: this.getActivityRowType(activitat.tipus),
       tipusLabel: this.getTipusLabel(activitat.tipus),
       tipusIcon: this.getTipusIcon(activitat.tipus),
       usuarioCreadorId: activitat.usuarioCreadorId,
@@ -820,18 +819,6 @@ export class CsopaPageComponent {
     return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10 ? parsed : null;
   }
 
-  private getMovieGroup(): number | null {
-    if (this.movieForm.controls.estirarLaSetmana.value) {
-      return 1;
-    }
-
-    if (this.movieForm.controls.creepyjous.value) {
-      return 2;
-    }
-
-    return null;
-  }
-
   private confirmMovieGroupDate(grupoPelicula: number | null, fecha: string): boolean {
     const day = new Date(`${fecha}T12:00:00`).getDay();
 
@@ -849,7 +836,7 @@ export class CsopaPageComponent {
   private confirmActivityDate(tipus: number, fecha: string): boolean {
     const day = new Date(`${fecha}T12:00:00`).getDay();
 
-    if (tipus === CSOPA_TIPUS_SOPAR && day !== 2) {
+    if (tipus === CSOPA_TIPUS_SOPAR_DIMARTS && day !== 2) {
       return window.confirm("Estàs publicant un sopar en una data que no és dimarts. Vols continuar?");
     }
 
@@ -858,6 +845,25 @@ export class CsopaPageComponent {
     }
 
     return true;
+  }
+
+  private getActivityRowType(tipus: number): AssistenciaTipus {
+    switch (tipus) {
+      case CSOPA_TIPUS_SOPAR_DIMARTS: return 'sopar-dimarts';
+      case CSOPA_TIPUS_GYMFRIT: return 'gymfrit';
+      case CSOPA_TIPUS_SOPAR: return 'sopar';
+      default: return 'altres';
+    }
+  }
+
+  private finishEntryCreation(key: string): void {
+    this.highlightedKey.set(key);
+    window.setTimeout(() => this.highlightedKey.set(null), 2500);
+    this.entryForm.reset({ titulo: '', fecha: this.getTodayInputValue() });
+    const defaultOption = this.entryTypeOptions[0];
+    this.selectedEntryType.set(defaultOption);
+    this.entryTypeSearch.set(defaultOption.label);
+    this.savingEntry.set(false);
   }
 
   private getTodayInputValue(): string {

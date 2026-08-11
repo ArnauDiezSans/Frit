@@ -7,8 +7,10 @@ namespace FritApi.Services;
 
 public class CsopaService
 {
-    public const int TipusSopar = 1;
+    public const int TipusSoparDimarts = 1;
     public const int TipusGymfrit = 2;
+    public const int TipusSopar = 3;
+    public const int TipusAltres = 4;
 
     private readonly AppDbContext _context;
 
@@ -54,6 +56,11 @@ public class CsopaService
         if (!dto.Fecha.HasValue)
         {
             return (false, "La data és obligatòria.", null);
+        }
+
+        if (dto.Tipus.Value == TipusAltres && string.IsNullOrWhiteSpace(dto.Titol))
+        {
+            return (false, "El títol és obligatori per a altres activitats.", null);
         }
 
         var titol = string.IsNullOrWhiteSpace(dto.Titol)
@@ -234,12 +241,18 @@ public class CsopaService
 
     private static bool IsValidTipus(int tipus)
     {
-        return tipus is TipusSopar or TipusGymfrit;
+        return tipus is TipusSoparDimarts or TipusGymfrit or TipusSopar or TipusAltres;
     }
 
     private static string GetDefaultTitol(int tipus)
     {
-        return tipus == TipusGymfrit ? "Gymfrit" : "Sopar";
+        return tipus switch
+        {
+            TipusSoparDimarts => "Sopar de dimarts",
+            TipusGymfrit => "Gymfrit",
+            TipusSopar => "Sopar",
+            _ => "Altres"
+        };
     }
 
     private static bool IsCsopaAdmin(Usuario? usuario)

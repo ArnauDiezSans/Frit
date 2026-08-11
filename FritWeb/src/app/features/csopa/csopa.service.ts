@@ -5,8 +5,10 @@ import { tap } from 'rxjs/operators';
 import { API_BASE_URL } from '../../core/api/api.config';
 import { DataStoreService } from '../../core/data/data-store.service';
 
-export const CSOPA_TIPUS_SOPAR = 1;
+export const CSOPA_TIPUS_SOPAR_DIMARTS = 1;
 export const CSOPA_TIPUS_GYMFRIT = 2;
+export const CSOPA_TIPUS_SOPAR = 3;
+export const CSOPA_TIPUS_ALTRES = 4;
 
 export interface CsopaAssistencia {
   csopaAssistenciaId: number;

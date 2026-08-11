@@ -761,7 +761,7 @@ public class ServiceTests
         var activitat = new CsopaActivitat
         {
             Titol = "Sopar antic",
-            Tipus = CsopaService.TipusSopar,
+            Tipus = CsopaService.TipusSoparDimarts,
             UsuarioCreadorId = arnau.UsuarioId,
             CreatedAt = DateTime.UtcNow.AddDays(-5)
         };
@@ -777,6 +777,36 @@ public class ServiceTests
         Assert.True(result.Success);
         Assert.Contains(result.Activitat!.Assistencies, assistencia => assistencia.UsuarioId == anna.UsuarioId);
         Assert.Single(context.CsopaAssistencies);
+    }
+
+    [Fact]
+    public async Task CsopaService_CreatesGenericDinnerAndOtherWithSeparateTypes()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(arnau);
+        await context.SaveChangesAsync();
+        var service = new CsopaService(context);
+        var date = new DateOnly(2026, 8, 11);
+
+        var dinner = await service.CreateAsync(arnau.UsuarioId, new CsopaActivitatCreateDto
+        {
+            Tipus = CsopaService.TipusSopar,
+            Fecha = date
+        });
+        var other = await service.CreateAsync(arnau.UsuarioId, new CsopaActivitatCreateDto
+        {
+            Tipus = CsopaService.TipusAltres,
+            Titol = "Torneig",
+            Fecha = date
+        });
+
+        Assert.True(dinner.Success);
+        Assert.Equal("Sopar", dinner.Activitat!.Titol);
+        Assert.Equal(CsopaService.TipusSopar, dinner.Activitat.Tipus);
+        Assert.True(other.Success);
+        Assert.Equal("Torneig", other.Activitat!.Titol);
+        Assert.Equal(CsopaService.TipusAltres, other.Activitat.Tipus);
     }
 
     [Fact]
@@ -883,8 +913,9 @@ public class ServiceTests
         var latestTuesday = GetLatestWeekdayForTest(DayOfWeek.Tuesday);
         var latestThursday = GetLatestWeekdayForTest(DayOfWeek.Thursday);
         context.CsopaActivitats.AddRange(
-            CreateCsopaActivity("Sopar 1", CsopaService.TipusSopar, arnau.UsuarioId, latestTuesday, arnau.UsuarioId, anna.UsuarioId),
-            CreateCsopaActivity("Sopar 2", CsopaService.TipusSopar, arnau.UsuarioId, latestTuesday.AddDays(-7), arnau.UsuarioId),
+            CreateCsopaActivity("Sopar 1", CsopaService.TipusSoparDimarts, arnau.UsuarioId, latestTuesday, arnau.UsuarioId, anna.UsuarioId),
+            CreateCsopaActivity("Sopar 2", CsopaService.TipusSoparDimarts, arnau.UsuarioId, latestTuesday.AddDays(-7), arnau.UsuarioId),
+            CreateCsopaActivity("Sopar genèric", CsopaService.TipusSopar, arnau.UsuarioId, latestTuesday, arnau.UsuarioId, anna.UsuarioId),
             CreateCsopaActivity("Gymfrit 1", CsopaService.TipusGymfrit, arnau.UsuarioId, latestThursday, anna.UsuarioId),
             CreateCsopaActivity("Gymfrit 2", CsopaService.TipusGymfrit, arnau.UsuarioId, latestThursday.AddDays(-7), anna.UsuarioId));
         await context.SaveChangesAsync();
