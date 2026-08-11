@@ -8,10 +8,12 @@ namespace FritApi.Services;
 public class UsuarioJuegoOrdenService
 {
     private readonly AppDbContext _context;
+    private readonly PushNotificationService? _pushNotifications;
 
-    public UsuarioJuegoOrdenService(AppDbContext context)
+    public UsuarioJuegoOrdenService(AppDbContext context, PushNotificationService? pushNotifications = null)
     {
         _context = context;
+        _pushNotifications = pushNotifications;
     }
 
     public async Task<List<UsuarioJuegoOrdenDto>?> GetOrdenAsync(int usuarioId)
@@ -78,6 +80,11 @@ public class UsuarioJuegoOrdenService
             .ToListAsync();
 
         var nextPuntuaciones = dto.Juegos.ToDictionary(j => j.JuegoId, j => j.Puntuacion);
+        var previousPuntuaciones = ordenes.ToDictionary(j => j.JuegoId, j => j.Puntuacion);
+        var changedIds = nextPuntuaciones
+            .Where(pair => previousPuntuaciones[pair.Key] != pair.Value)
+            .Select(pair => pair.Key)
+            .ToList();
 
         foreach (var orden in ordenes)
         {
@@ -85,6 +92,18 @@ public class UsuarioJuegoOrdenService
         }
 
         await _context.SaveChangesAsync();
+
+        if (_pushNotifications is not null && changedIds.Count > 0)
+        {
+            var actorName = await _context.Usuarios.Where(user => user.UsuarioId == usuarioId).Select(user => user.Nombre).SingleAsync();
+            var gameNames = await _context.Juegos.Where(game => changedIds.Contains(game.JuegoId))
+                .ToDictionaryAsync(game => game.JuegoId, game => game.Nombre);
+            var changes = changedIds.Select(gameId => new GameScoreChange(
+                gameNames[gameId],
+                previousPuntuaciones[gameId],
+                nextPuntuaciones[gameId])).ToList();
+            await _pushNotifications.SendGamePreferenceChangesAsync(usuarioId, actorName, changes);
+        }
         return (true, null);
     }
 

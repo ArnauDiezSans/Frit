@@ -53,6 +53,7 @@ public class PartidasController : ControllerBase
         await _pushNotificationService.SendNewGameAsync(
             result.Partida!.JuegoNombre ?? "un joc",
             result.Partida.PartidaId,
+            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var creatorUserId) ? creatorUserId : 0,
             HttpContext.RequestAborted);
 
         return CreatedAtAction(nameof(GetById), new { id = result.Partida.PartidaId }, result.Partida);

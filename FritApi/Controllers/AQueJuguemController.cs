@@ -12,10 +12,12 @@ namespace FritApi.Controllers;
 public class AQueJuguemController : ControllerBase
 {
     private readonly AQueJuguemService _aQueJuguemService;
+    private readonly PushNotificationService _pushNotificationService;
 
-    public AQueJuguemController(AQueJuguemService aQueJuguemService)
+    public AQueJuguemController(AQueJuguemService aQueJuguemService, PushNotificationService pushNotificationService)
     {
         _aQueJuguemService = aQueJuguemService;
+        _pushNotificationService = pushNotificationService;
     }
 
     [HttpPost("recommendations")]
@@ -47,6 +49,8 @@ public class AQueJuguemController : ControllerBase
         {
             return BadRequest(new { message = result.Error });
         }
+
+        await _pushNotificationService.SendRemadaAsync(userId, dto.UsuarioIds, HttpContext.RequestAborted);
 
         return NoContent();
     }

@@ -50,6 +50,7 @@ public class AppDbContext : DbContext
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
     public DbSet<AuditAuthorizedUser> AuditAuthorizedUsers => Set<AuditAuthorizedUser>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -123,6 +124,16 @@ public class AppDbContext : DbContext
 
             entity.HasIndex(e => new { e.TenantId, e.Endpoint }).IsUnique();
             entity.HasIndex(e => new { e.TenantId, e.UsuarioId });
+        });
+
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            entity.HasKey(e => e.NotificationPreferenceId);
+            entity.Property(e => e.PuntuacionMinima).HasDefaultValue(10);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
+            entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.TenantId, e.UsuarioId }).IsUnique();
         });
 
         modelBuilder.Entity<Juego>(entity =>

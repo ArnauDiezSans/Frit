@@ -8,7 +8,7 @@ import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/au
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { HallOfFameService, MedalGame, MedalProgress } from '../hall-of-fame/hall-of-fame.service';
 import { UsuarioDetalle, UsuarioJuegoOrden, UsuarioService } from './usuario.service';
-import { PushNotificationService, PushNotificationStatus } from '../../core/notifications/push-notification.service';
+import { NotificationPreferences, PushNotificationService, PushNotificationStatus } from '../../core/notifications/push-notification.service';
 
 @Component({
   selector: 'app-usuario-page',
@@ -38,6 +38,11 @@ export class UsuarioPageComponent {
   notificationStatus = signal<PushNotificationStatus | null>(null);
   notificationBusy = signal(false);
   notificationError = signal('');
+  notificationSettingsOpen = signal(false);
+  notificationPreferences = signal<NotificationPreferences | null>(null);
+  notificationPreferencesLoading = signal(false);
+  notificationPreferencesSaving = signal(false);
+  notificationPreferencesMessage = signal('');
 
   usuario = signal<UsuarioDetalle | null>(null);
   juegosOrdenados = signal<UsuarioJuegoOrden[]>([]);
@@ -95,6 +100,47 @@ export class UsuarioPageComponent {
       this.notificationError.set(this.getNotificationError(error));
     } finally {
       this.notificationBusy.set(false);
+    }
+  }
+
+  async openNotificationSettings(): Promise<void> {
+    this.notificationSettingsOpen.set(true);
+    this.notificationPreferencesLoading.set(true);
+    this.notificationPreferencesMessage.set('');
+    this.notificationError.set('');
+    try {
+      this.notificationPreferences.set(await this.pushNotifications.getPreferences());
+    } catch (error: unknown) {
+      this.notificationError.set(this.getNotificationError(error));
+    } finally {
+      this.notificationPreferencesLoading.set(false);
+    }
+  }
+
+  closeNotificationSettings(): void {
+    if (!this.notificationBusy() && !this.notificationPreferencesSaving()) {
+      this.notificationSettingsOpen.set(false);
+    }
+  }
+
+  updateNotificationPreference(key: keyof NotificationPreferences, value: boolean | number): void {
+    this.notificationPreferences.update(current => current ? { ...current, [key]: value } : current);
+    this.notificationPreferencesMessage.set('');
+  }
+
+  async saveNotificationPreferences(): Promise<void> {
+    const preferences = this.notificationPreferences();
+    if (!preferences || this.notificationPreferencesSaving()) return;
+    this.notificationPreferencesSaving.set(true);
+    this.notificationPreferencesMessage.set('');
+    this.notificationError.set('');
+    try {
+      this.notificationPreferences.set(await this.pushNotifications.updatePreferences(preferences));
+      this.notificationPreferencesMessage.set('Preferències desades.');
+    } catch (error: unknown) {
+      this.notificationError.set(this.getNotificationError(error));
+    } finally {
+      this.notificationPreferencesSaving.set(false);
     }
   }
 

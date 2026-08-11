@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using FritApi.Data;
+using FritApi.Dtos;
 using FritApi.Models;
 using Microsoft.EntityFrameworkCore;
 using WebPush;
@@ -17,6 +18,26 @@ public sealed class PushNotificationService(
     public string? PublicKey => configuration["VAPID_PUBLIC_KEY"];
     private string? PrivateKey => configuration["VAPID_PRIVATE_KEY"];
     public bool IsConfigured => !string.IsNullOrWhiteSpace(PublicKey) && !string.IsNullOrWhiteSpace(PrivateKey);
+
+    public async Task<NotificationPreferenceDto> GetPreferencesAsync(int usuarioId)
+    {
+        var preference = await GetOrCreatePreferenceAsync(usuarioId);
+        return ToDto(preference);
+    }
+
+    public async Task<NotificationPreferenceDto> UpdatePreferencesAsync(int usuarioId, NotificationPreferenceDto dto)
+    {
+        var preference = await GetOrCreatePreferenceAsync(usuarioId);
+        preference.NuevaPartida = dto.NuevaPartida;
+        preference.NuevaRemada = dto.NuevaRemada;
+        preference.Encuesta = dto.Encuesta;
+        preference.CambioPreferenciaJuego = dto.CambioPreferenciaJuego;
+        preference.PuntuacionMinima = dto.PuntuacionMinima;
+        preference.RecordatorioDomingo = dto.RecordatorioDomingo;
+        preference.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+        return ToDto(preference);
+    }
 
     public async Task UpsertAsync(int usuarioId, string endpoint, string p256dh, string auth)
     {
@@ -78,7 +99,7 @@ public sealed class PushNotificationService(
         return true;
     }
 
-    public async Task SendNewGameAsync(string gameName, int partidaId, CancellationToken cancellationToken = default)
+    public async Task SendNewGameAsync(string gameName, int partidaId, int creatorUserId, CancellationToken cancellationToken = default)
     {
         if (!IsConfigured)
         {
@@ -88,9 +109,11 @@ public sealed class PushNotificationService(
 
         try
         {
-            var subscriptions = await context.PushSubscriptions
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
+            var subscriptions = await GetCategorySubscriptionsAsync(
+                preference => preference.NuevaPartida,
+                creatorUserId,
+                false,
+                cancellationToken);
 
             await SendAsync(
                 subscriptions,
@@ -105,6 +128,74 @@ public sealed class PushNotificationService(
         }
     }
 
+    public async Task SendRemadaAsync(int creatorUserId, IReadOnlyCollection<int> participantIds, CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured) return;
+        try
+        {
+            var names = await context.Usuarios.AsNoTracking()
+                .Where(user => participantIds.Contains(user.UsuarioId))
+                .Select(user => user.Nombre)
+                .ToListAsync(cancellationToken);
+            var subscriptions = await GetCategorySubscriptionsAsync(
+                preference => preference.NuevaRemada,
+                creatorUserId,
+                false,
+                cancellationToken);
+            var participants = names.Count == 0 ? "Uns usuaris" : string.Join(", ", names);
+            await SendAsync(subscriptions, "Nova remada", $"{participants} han remat.", "/app/remar", cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "No s'han pogut preparar les notificacions de la remada.");
+        }
+    }
+
+    public async Task SendSurveyAsync(int creatorUserId, string title, string url, CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured) return;
+        var subscriptions = await GetCategorySubscriptionsAsync(
+            preference => preference.Encuesta,
+            creatorUserId,
+            false,
+            cancellationToken);
+        await SendAsync(subscriptions, "Nova enquesta", title, url, cancellationToken);
+    }
+
+    public async Task SendGamePreferenceChangesAsync(
+        int actorUserId,
+        string actorName,
+        IReadOnlyCollection<GameScoreChange> changes,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured || changes.Count == 0) return;
+        try
+        {
+            var preferences = await context.NotificationPreferences.AsNoTracking()
+                .Where(row => row.CambioPreferenciaJuego && row.UsuarioId != actorUserId)
+                .ToListAsync(cancellationToken);
+            foreach (var group in preferences.GroupBy(preference => preference.PuntuacionMinima))
+            {
+                var relevantChanges = changes.Where(change =>
+                    change.OldScore >= group.Key || change.NewScore >= group.Key).ToList();
+                if (relevantChanges.Count == 0) continue;
+                var recipientIds = group.Select(preference => preference.UsuarioId).ToList();
+                var subscriptions = await context.PushSubscriptions.AsNoTracking()
+                    .Where(row => recipientIds.Contains(row.UsuarioId))
+                    .ToListAsync(cancellationToken);
+                var firstChange = relevantChanges[0];
+                var body = relevantChanges.Count == 1
+                    ? $"{actorName} ha canviat {firstChange.GameName} de {firstChange.OldScore} a {firstChange.NewScore}."
+                    : $"{actorName} ha canviat {relevantChanges.Count} preferències dins del teu rang.";
+                await SendAsync(subscriptions, "Preferències de jocs", body, "/app/usuario", cancellationToken);
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "No s'han pogut preparar les notificacions de preferències de {UsuarioId}.", actorUserId);
+        }
+    }
+
     public async Task SendSundayGreetingAsync(CancellationToken cancellationToken = default)
     {
         if (!IsConfigured)
@@ -113,10 +204,11 @@ public sealed class PushNotificationService(
             return;
         }
 
-        var subscriptions = await context.PushSubscriptions
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var subscriptions = await GetCategorySubscriptionsAsync(
+            preference => preference.RecordatorioDomingo,
+            null,
+            true,
+            cancellationToken);
 
         await SendAsync(
             subscriptions,
@@ -125,6 +217,47 @@ public sealed class PushNotificationService(
             "/",
             cancellationToken);
     }
+
+    private async Task<List<Models.PushSubscription>> GetCategorySubscriptionsAsync(
+        System.Linq.Expressions.Expression<Func<NotificationPreference, bool>> categoryFilter,
+        int? excludedUserId,
+        bool ignoreQueryFilters,
+        CancellationToken cancellationToken)
+    {
+        var preferenceQuery = context.NotificationPreferences.AsNoTracking();
+        var subscriptionQuery = context.PushSubscriptions.AsNoTracking();
+        if (ignoreQueryFilters)
+        {
+            preferenceQuery = preferenceQuery.IgnoreQueryFilters();
+            subscriptionQuery = subscriptionQuery.IgnoreQueryFilters();
+        }
+        var recipientIds = await preferenceQuery
+            .Where(categoryFilter)
+            .Where(row => !excludedUserId.HasValue || row.UsuarioId != excludedUserId.Value)
+            .Select(row => row.UsuarioId)
+            .ToListAsync(cancellationToken);
+        return await subscriptionQuery.Where(row => recipientIds.Contains(row.UsuarioId)).ToListAsync(cancellationToken);
+    }
+
+    private async Task<NotificationPreference> GetOrCreatePreferenceAsync(int usuarioId)
+    {
+        var preference = await context.NotificationPreferences.FirstOrDefaultAsync(row => row.UsuarioId == usuarioId);
+        if (preference is not null) return preference;
+        preference = new NotificationPreference { UsuarioId = usuarioId };
+        context.NotificationPreferences.Add(preference);
+        await context.SaveChangesAsync();
+        return preference;
+    }
+
+    private static NotificationPreferenceDto ToDto(NotificationPreference preference) => new()
+    {
+        NuevaPartida = preference.NuevaPartida,
+        NuevaRemada = preference.NuevaRemada,
+        Encuesta = preference.Encuesta,
+        CambioPreferenciaJuego = preference.CambioPreferenciaJuego,
+        PuntuacionMinima = preference.PuntuacionMinima,
+        RecordatorioDomingo = preference.RecordatorioDomingo
+    };
 
     private async Task SendAsync(
         IReadOnlyCollection<Models.PushSubscription> subscriptions,
@@ -189,3 +322,5 @@ public sealed class PushNotificationService(
         }
     }
 }
+
+public sealed record GameScoreChange(string GameName, int OldScore, int NewScore);

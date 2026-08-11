@@ -16,6 +16,20 @@ public sealed class NotificacionesController(PushNotificationService pushService
     public ActionResult<PushConfigurationDto> GetConfiguration() =>
         Ok(new PushConfigurationDto(pushService.IsConfigured, pushService.IsConfigured ? pushService.PublicKey : null));
 
+    [HttpGet("preferencias")]
+    public async Task<ActionResult<NotificationPreferenceDto>> GetPreferences()
+    {
+        if (!TryGetUserId(out var usuarioId)) return Unauthorized();
+        return Ok(await pushService.GetPreferencesAsync(usuarioId));
+    }
+
+    [HttpPut("preferencias")]
+    public async Task<ActionResult<NotificationPreferenceDto>> UpdatePreferences([FromBody] NotificationPreferenceDto dto)
+    {
+        if (!TryGetUserId(out var usuarioId)) return Unauthorized();
+        return Ok(await pushService.UpdatePreferencesAsync(usuarioId, dto));
+    }
+
     [HttpPost("suscripciones")]
     public async Task<IActionResult> Subscribe([FromBody] PushSubscriptionDto dto)
     {

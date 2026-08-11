@@ -5,12 +5,47 @@ using FritApi.Models;
 using FritApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace FritApi.Tests;
 
 public class ServiceTests
 {
+    [Fact]
+    public async Task PushNotificationService_PreferencesDefaultToDisabledAndCanBeUpdated()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(user);
+        await context.SaveChangesAsync();
+        var service = new PushNotificationService(
+            context,
+            new ConfigurationBuilder().Build(),
+            NullLogger<PushNotificationService>.Instance);
+
+        var defaults = await service.GetPreferencesAsync(user.UsuarioId);
+
+        Assert.False(defaults.NuevaPartida);
+        Assert.False(defaults.NuevaRemada);
+        Assert.False(defaults.Encuesta);
+        Assert.False(defaults.CambioPreferenciaJuego);
+        Assert.False(defaults.RecordatorioDomingo);
+        Assert.Equal(10, defaults.PuntuacionMinima);
+
+        var updated = await service.UpdatePreferencesAsync(user.UsuarioId, new NotificationPreferenceDto
+        {
+            NuevaPartida = true,
+            CambioPreferenciaJuego = true,
+            PuntuacionMinima = 8
+        });
+
+        Assert.True(updated.NuevaPartida);
+        Assert.True(updated.CambioPreferenciaJuego);
+        Assert.Equal(8, updated.PuntuacionMinima);
+        Assert.Single(context.NotificationPreferences);
+    }
+
     [Fact]
     public void PasswordService_VerifiesHashedPassword()
     {

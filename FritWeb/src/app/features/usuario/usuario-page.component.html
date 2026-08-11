@@ -42,17 +42,16 @@
           <button
             type="button"
             class="notification-toggle"
-            role="switch"
             [class.notification-toggle-active]="status.subscribed"
-            [attr.aria-checked]="status.subscribed"
-            [attr.aria-label]="status.subscribed ? 'Desactivar notificacions' : 'Activar notificacions'"
-            [title]="status.subscribed ? 'Desactivar notificacions' : 'Activar notificacions'"
-            [disabled]="notificationBusy() || !status.configured || !status.supported || status.permission === 'denied'"
-            (click)="toggleNotifications()">
+            aria-haspopup="dialog"
+            aria-label="Configurar notificacions"
+            title="Configurar notificacions"
+            [disabled]="notificationBusy()"
+            (click)="openNotificationSettings()">
             <span class="notification-toggle-track" aria-hidden="true">
               <span class="notification-toggle-thumb"></span>
             </span>
-            <span>{{ notificationBusy() ? 'Processant...' : (status.subscribed ? 'Activades' : 'Desactivades') }}</span>
+            <span>{{ status.subscribed ? 'Desactivar notificacions' : 'Activar notificacions' }}</span>
           </button>
           <small class="notification-feedback" *ngIf="status.needsIosInstallation">
             Afegeix Frit a la pantalla d'inici per activar-les.
@@ -438,6 +437,78 @@
           </button>
         </div>
       </form>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="notificationSettingsOpen()" (click)="closeNotificationSettings()">
+    <section class="modal-card notification-settings-modal" role="dialog" aria-modal="true" aria-label="Configurar notificacions" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>Configurar notificacions</h2>
+          <p class="subtitle">Escull quins avisos vols rebre en els dispositius activats.</p>
+        </div>
+        <button type="button" class="ghost-button" (click)="closeNotificationSettings()">Tancar</button>
+      </div>
+
+      <div class="notification-device" *ngIf="notificationStatus() as status">
+        <div>
+          <strong>Notificacions en aquest dispositiu</strong>
+          <span>{{ status.subscribed ? 'Activades' : 'Desactivades' }}</span>
+        </div>
+        <button
+          type="button"
+          [class.primary-button]="!status.subscribed"
+          [class.secondary-button]="status.subscribed"
+          [disabled]="notificationBusy() || !status.configured || !status.supported || status.permission === 'denied'"
+          (click)="toggleNotifications()">
+          {{ notificationBusy() ? 'Processant...' : (status.subscribed ? 'Desactivar' : 'Activar') }}
+        </button>
+      </div>
+
+      <p class="subtitle" *ngIf="notificationPreferencesLoading()">Carregant preferències...</p>
+
+      <div class="notification-preferences" *ngIf="notificationPreferences() as preferences">
+        <label class="notification-option">
+          <input type="checkbox" [checked]="preferences.nuevaPartida" (change)="updateNotificationPreference('nuevaPartida', $any($event.target).checked)" />
+          <span><strong>Nova partida creada</strong><small>Quan algú registra una partida.</small></span>
+        </label>
+        <label class="notification-option">
+          <input type="checkbox" [checked]="preferences.nuevaRemada" (change)="updateNotificationPreference('nuevaRemada', $any($event.target).checked)" />
+          <span><strong>Usuaris han remat</strong><small>Quan es registra una nova remada.</small></span>
+        </label>
+        <label class="notification-option">
+          <input type="checkbox" [checked]="preferences.encuesta" (change)="updateNotificationPreference('encuesta', $any($event.target).checked)" />
+          <span><strong>Enquestes</strong><small>Preparat per a les futures enquestes.</small></span>
+        </label>
+        <div class="notification-option notification-score-option">
+          <label>
+            <input type="checkbox" [checked]="preferences.cambioPreferenciaJuego" (change)="updateNotificationPreference('cambioPreferenciaJuego', $any($event.target).checked)" />
+            <span><strong>Canvis en preferències de jocs</strong><small>Quan un joc entra o surt del rang seleccionat.</small></span>
+          </label>
+          <label class="notification-range">
+            <span>Rang</span>
+            <select [disabled]="!preferences.cambioPreferenciaJuego" [value]="preferences.puntuacionMinima" (change)="updateNotificationPreference('puntuacionMinima', +$any($event.target).value)">
+              <option *ngFor="let score of scoreValues.slice(0, 11); trackBy: trackByScore" [value]="score">
+                {{ score === 10 ? 'Només 10' : 'Del 10 al ' + score }}
+              </option>
+            </select>
+          </label>
+        </div>
+        <label class="notification-option">
+          <input type="checkbox" [checked]="preferences.recordatorioDomingo" (change)="updateNotificationPreference('recordatorioDomingo', $any($event.target).checked)" />
+          <span><strong>Recordatori de diumenge</strong><small>Rep la salutació de diumenge de Frit.</small></span>
+        </label>
+      </div>
+
+      <p class="success-message" *ngIf="notificationPreferencesMessage()">{{ notificationPreferencesMessage() }}</p>
+      <p class="field-error" *ngIf="notificationError()">{{ notificationError() }}</p>
+
+      <div class="modal-actions">
+        <button type="button" class="ghost-button" (click)="closeNotificationSettings()">Cancel·lar</button>
+        <button type="button" class="primary-button" [disabled]="notificationPreferencesLoading() || notificationPreferencesSaving() || !notificationPreferences()" (click)="saveNotificationPreferences()">
+          {{ notificationPreferencesSaving() ? 'Desant...' : 'Desar preferències' }}
+        </button>
+      </div>
     </section>
   </div>
 </section>

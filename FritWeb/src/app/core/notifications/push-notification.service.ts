@@ -12,6 +12,15 @@ export interface PushNotificationStatus {
   needsIosInstallation: boolean;
 }
 
+export interface NotificationPreferences {
+  nuevaPartida: boolean;
+  nuevaRemada: boolean;
+  encuesta: boolean;
+  cambioPreferenciaJuego: boolean;
+  puntuacionMinima: number;
+  recordatorioDomingo: boolean;
+}
+
 interface PushConfiguration {
   configured: boolean;
   publicKey: string | null;
@@ -56,6 +65,18 @@ export class PushNotificationService {
     const subscription = await this.swPush.requestSubscription({ serverPublicKey: configuration.publicKey });
     await firstValueFrom(
       this.http.post<void>(`${this.baseUrl}/suscripciones`, subscription.toJSON(), { withCredentials: true })
+    );
+  }
+
+  async getPreferences(): Promise<NotificationPreferences> {
+    return await firstValueFrom(
+      this.http.get<NotificationPreferences>(`${this.baseUrl}/preferencias`, { withCredentials: true })
+    );
+  }
+
+  async updatePreferences(preferences: NotificationPreferences): Promise<NotificationPreferences> {
+    return await firstValueFrom(
+      this.http.put<NotificationPreferences>(`${this.baseUrl}/preferencias`, preferences, { withCredentials: true })
     );
   }
 
