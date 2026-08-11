@@ -30,10 +30,6 @@
   order: 3;
 }
 
-.menu-la-llista {
-  order: 5;
-}
-
 .menu-assistencia {
   order: 6;
 }
@@ -42,7 +38,7 @@
   order: 8;
 }
 
-.menu-a-que-juguem {
+.menu-remar {
   order: 9;
 }
 
@@ -218,15 +214,11 @@
     order: 3;
   }
 
-  .menu-la-llista {
-    order: 4;
-  }
-
   .menu-pendent-compra {
     order: 5;
   }
 
-  .menu-a-que-juguem {
+  .menu-remar {
     order: 6;
   }
 
@@ -257,14 +249,10 @@
   .menu-partidas,
   .menu-rankings,
   .menu-hall-of-fame,
-  .menu-a-que-juguem,
+  .menu-remar,
   .menu-juegos,
   .menu-primary-action {
     grid-column: span 10;
-  }
-
-  .menu-la-llista {
-    grid-column: span 7;
   }
 
   .menu-pendent-compra {

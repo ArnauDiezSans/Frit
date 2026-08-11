@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { DataStoreService } from '../../core/data/data-store.service';
 
-export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'assistencia' | 'usuario' | 'auditoria';
+export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'remar' | 'assistencia' | 'usuario' | 'auditoria';
 
 @Component({
   selector: 'app-menu',

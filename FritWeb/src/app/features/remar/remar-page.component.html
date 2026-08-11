@@ -1,0 +1,32 @@
+<section class="remar-page">
+  <header class="remar-header">
+    <div>
+      <p class="eyebrow">Frit</p>
+      <h1>Remar</h1>
+      <p class="subtitle">Troba el pròxim joc o consulta els que fa més temps que esperen.</p>
+    </div>
+
+    <app-menu activePage="remar" (logout)="logout()" />
+  </header>
+
+  <nav class="view-switch" aria-label="Vista de Remar">
+    <button
+      type="button"
+      [class.view-switch-active]="activeView() === 'a-que-juguem'"
+      [attr.aria-pressed]="activeView() === 'a-que-juguem'"
+      (click)="selectView('a-que-juguem')">
+      A què juguem?
+    </button>
+    <button
+      *ngIf="canUseLaLlista()"
+      type="button"
+      [class.view-switch-active]="activeView() === 'la-llista'"
+      [attr.aria-pressed]="activeView() === 'la-llista'"
+      (click)="selectView('la-llista')">
+      La llista
+    </button>
+  </nav>
+
+  <app-a-que-juguem-page *ngIf="activeView() === 'a-que-juguem'" [embedded]="true" />
+  <app-la-llista-page *ngIf="activeView() === 'la-llista' && canUseLaLlista()" [embedded]="true" />
+</section>

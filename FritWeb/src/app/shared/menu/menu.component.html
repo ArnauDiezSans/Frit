@@ -22,14 +22,6 @@
     Rankings
   </button>
   <button
-    *ngIf="canUseLaLlista()"
-    type="button"
-    class="menu-button menu-la-llista"
-    [class.menu-button-active]="activePage === 'laLlista'"
-    routerLink="/app/la-llista">
-    La llista
-  </button>
-  <button
     type="button"
     class="menu-button menu-pendent-compra"
     [class.menu-button-active]="activePage === 'pendentCompra'"
@@ -38,10 +30,10 @@
   </button>
   <button
     type="button"
-    class="menu-button menu-a-que-juguem"
-    [class.menu-button-active]="activePage === 'aQueJuguem'"
-    routerLink="/app/a-que-juguem">
-    A què juguem?
+    class="menu-button menu-remar"
+    [class.menu-button-active]="activePage === 'remar'"
+    routerLink="/app/remar">
+    Remar
   </button>
 
   <button

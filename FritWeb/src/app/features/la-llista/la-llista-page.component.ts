@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
@@ -13,6 +13,7 @@ import { LaLlistaItem, LaLlistaService } from './la-llista.service';
   styleUrl: './la-llista-page.component.css'
 })
 export class LaLlistaPageComponent {
+  @Input() embedded = false;
   private authService = inject(AuthService);
   private laLlistaService = inject(LaLlistaService);
   private router = inject(Router);

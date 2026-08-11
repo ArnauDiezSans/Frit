@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, Input, computed, inject, signal } from '@angular/core';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -28,6 +28,7 @@ interface RowingRecommendation extends AQueJuguemRecommendation {
   styleUrl: './a-que-juguem-page.component.css'
 })
 export class AQueJuguemPageComponent {
+  @Input() embedded = false;
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private usuariosService = inject(UsuariosService);
