@@ -63,9 +63,15 @@ export class PushNotificationService {
       throw new Error('Les notificacions encara no estan configurades al servidor.');
     }
 
-    const subscription = await this.swPush.requestSubscription({ serverPublicKey: configuration.publicKey });
-    await firstValueFrom(
-      this.http.post<void>(`${this.baseUrl}/suscripciones`, subscription.toJSON(), { withCredentials: true })
+    const subscription = await this.withTimeout(
+      this.swPush.requestSubscription({ serverPublicKey: configuration.publicKey }),
+      15000,
+      "El navegador no ha pogut activar les notificacions. Torna-ho a provar o revisa els permisos."
+    );
+    await this.withTimeout(
+      firstValueFrom(this.http.post<void>(`${this.baseUrl}/suscripciones`, subscription.toJSON(), { withCredentials: true })),
+      10000,
+      "El servidor no ha pogut desar l'activació de les notificacions."
     );
   }
 
@@ -84,11 +90,19 @@ export class PushNotificationService {
   async unsubscribe(): Promise<void> {
     const subscription = await this.getCurrentSubscription();
     if (!subscription) return;
-    await firstValueFrom(this.http.request<void>('DELETE', `${this.baseUrl}/suscripciones`, {
-      body: { endpoint: subscription.endpoint },
-      withCredentials: true
-    }));
-    await this.swPush.unsubscribe();
+    await this.withTimeout(
+      firstValueFrom(this.http.request<void>('DELETE', `${this.baseUrl}/suscripciones`, {
+        body: { endpoint: subscription.endpoint },
+        withCredentials: true
+      })),
+      10000,
+      "El servidor no ha pogut desar la desactivació de les notificacions."
+    );
+    await this.withTimeout(
+      this.swPush.unsubscribe(),
+      10000,
+      "El navegador no ha pogut desactivar les notificacions. Torna-ho a provar."
+    );
   }
 
   async sendTest(): Promise<void> {
@@ -110,6 +124,18 @@ export class PushNotificationService {
       timeout(5000),
       catchError(() => of(null))
     ));
+  }
+
+  private async withTimeout<T>(promise: Promise<T>, milliseconds: number, message: string): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(message)), milliseconds);
+    });
+    try {
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    }
   }
 
   private isStandalone(): boolean {
