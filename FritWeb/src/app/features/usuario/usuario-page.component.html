@@ -35,6 +35,45 @@
         <span class="info-label">Membre des de</span>
         <strong>{{ formatFecha(user.createdAt) }}</strong>
       </div>
+
+      <div class="notification-control">
+        <span class="info-label">Notificacions</span>
+        <ng-container *ngIf="notificationStatus() as status; else notificationStatusLoading">
+          <button
+            type="button"
+            class="notification-toggle"
+            role="switch"
+            [class.notification-toggle-active]="status.subscribed"
+            [attr.aria-checked]="status.subscribed"
+            [attr.aria-label]="status.subscribed ? 'Desactivar notificacions' : 'Activar notificacions'"
+            [title]="status.subscribed ? 'Desactivar notificacions' : 'Activar notificacions'"
+            [disabled]="notificationBusy() || !status.configured || !status.supported || status.permission === 'denied'"
+            (click)="toggleNotifications()">
+            <span class="notification-toggle-track" aria-hidden="true">
+              <span class="notification-toggle-thumb"></span>
+            </span>
+            <span>{{ notificationBusy() ? 'Processant...' : (status.subscribed ? 'Activades' : 'Desactivades') }}</span>
+          </button>
+          <small class="notification-feedback" *ngIf="status.needsIosInstallation">
+            Afegeix Frit a la pantalla d'inici per activar-les.
+          </small>
+          <small class="notification-feedback notification-feedback-error" *ngIf="!status.configured">
+            No configurades al servidor.
+          </small>
+          <small class="notification-feedback notification-feedback-error" *ngIf="!status.supported && !status.needsIosInstallation">
+            No compatibles amb aquest navegador.
+          </small>
+          <small class="notification-feedback notification-feedback-error" *ngIf="status.permission === 'denied'">
+            Bloquejades al navegador.
+          </small>
+        </ng-container>
+        <ng-template #notificationStatusLoading>
+          <span class="notification-loading">Comprovant...</span>
+        </ng-template>
+        <small class="notification-feedback notification-feedback-error" *ngIf="notificationError()">
+          {{ notificationError() }}
+        </small>
+      </div>
     </div>
 
     <div class="user-actions">
@@ -75,59 +114,6 @@
         </svg>
       </a>
     </div>
-  </section>
-
-  <section class="content-card notification-card" *ngIf="!loading() && !error()">
-    <div class="section-heading">
-      <div>
-        <h2>Notificacions</h2>
-        <p class="subtitle">Rep avisos de Frit en aquest dispositiu.</p>
-      </div>
-      <span class="status-text" *ngIf="notificationStatus() as status">
-        {{ status.subscribed ? 'Activades' : 'Desactivades' }}
-      </span>
-    </div>
-
-    <ng-container *ngIf="notificationStatus() as status; else notificationLoading">
-      <div class="notification-help" *ngIf="status.needsIosInstallation">
-        En un iPhone, obre Frit des de la icona de la pantalla d'inici. A Safari, toca Compartir i després
-        «Afegir a la pantalla d'inici».
-      </div>
-      <div class="notification-help notification-warning" *ngIf="!status.configured">
-        Les notificacions encara no estan configurades al servidor.
-      </div>
-      <div class="notification-help notification-warning" *ngIf="!status.supported && !status.needsIosInstallation">
-        Aquest navegador o mode de navegació no admet notificacions push.
-      </div>
-      <div class="notification-help notification-warning" *ngIf="status.permission === 'denied'">
-        Has bloquejat les notificacions. Torna a permetre-les des de la configuració del navegador o del telèfon.
-      </div>
-
-      <div class="notification-actions">
-        <button
-          type="button"
-          [class.primary-button]="!status.subscribed"
-          [class.secondary-button]="status.subscribed"
-          [disabled]="notificationBusy() || !status.configured || !status.supported || status.permission === 'denied'"
-          (click)="toggleNotifications()">
-          {{ notificationBusy() ? 'Processant...' : (status.subscribed ? 'Desactivar notificacions' : 'Activar notificacions') }}
-        </button>
-        <button
-          type="button"
-          class="secondary-button"
-          *ngIf="status.subscribed"
-          [disabled]="notificationBusy()"
-          (click)="sendTestNotification()">
-          Enviar notificació de prova
-        </button>
-      </div>
-    </ng-container>
-
-    <ng-template #notificationLoading>
-      <p class="subtitle">Comprovant notificacions...</p>
-    </ng-template>
-    <p class="success-message" *ngIf="notificationMessage()">{{ notificationMessage() }}</p>
-    <p class="field-error" *ngIf="notificationError()">{{ notificationError() }}</p>
   </section>
 
   <div class="user-section-switch" *ngIf="!loading() && !error() && canViewMedals()">

@@ -37,7 +37,6 @@ export class UsuarioPageComponent {
   activeUserPanel = signal<'medals' | 'favorites'>('medals');
   notificationStatus = signal<PushNotificationStatus | null>(null);
   notificationBusy = signal(false);
-  notificationMessage = signal('');
   notificationError = signal('');
 
   usuario = signal<UsuarioDetalle | null>(null);
@@ -85,30 +84,13 @@ export class UsuarioPageComponent {
 
     this.notificationBusy.set(true);
     this.notificationError.set('');
-    this.notificationMessage.set('');
     try {
       if (status.subscribed) {
         await this.pushNotifications.unsubscribe();
-        this.notificationMessage.set('Notificacions desactivades en aquest dispositiu.');
       } else {
         await this.pushNotifications.subscribe();
-        this.notificationMessage.set('Notificacions activades en aquest dispositiu.');
       }
       await this.loadNotificationStatus();
-    } catch (error: unknown) {
-      this.notificationError.set(this.getNotificationError(error));
-    } finally {
-      this.notificationBusy.set(false);
-    }
-  }
-
-  async sendTestNotification(): Promise<void> {
-    this.notificationBusy.set(true);
-    this.notificationError.set('');
-    this.notificationMessage.set('');
-    try {
-      await this.pushNotifications.sendTest();
-      this.notificationMessage.set("S'ha enviat una notificació de prova.");
     } catch (error: unknown) {
       this.notificationError.set(this.getNotificationError(error));
     } finally {

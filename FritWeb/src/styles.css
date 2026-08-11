@@ -278,3 +278,56 @@ body.brand-ajjrr .eyebrow::after {
   content: 'AJJRR';
   font-size: 0.8rem;
 }
+/* Compact notification switch used in the user summary bar. */
+.notification-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #475467;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notification-toggle-track {
+  position: relative;
+  width: 38px;
+  height: 22px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #98a2b3;
+  transition: background 160ms ease;
+}
+
+.notification-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.3);
+  transition: transform 160ms ease;
+}
+
+.notification-toggle-active { color: #0f766e; }
+.notification-toggle-active .notification-toggle-track { background: #0f766e; }
+.notification-toggle-active .notification-toggle-thumb { transform: translateX(16px); }
+.notification-toggle:focus-visible { outline: 3px solid rgba(15, 118, 110, 0.2); outline-offset: 4px; border-radius: 4px; }
+.notification-toggle:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.notification-loading,
+.notification-feedback {
+  display: block;
+  margin-top: 4px;
+  color: #667085;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.notification-feedback-error { color: #b42318; }
