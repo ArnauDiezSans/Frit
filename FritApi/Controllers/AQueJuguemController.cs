@@ -50,7 +50,7 @@ public class AQueJuguemController : ControllerBase
             return BadRequest(new { message = result.Error });
         }
 
-        await _pushNotificationService.SendRemadaAsync(userId, dto.UsuarioIds, HttpContext.RequestAborted);
+        await _pushNotificationService.SendRemadaAsync(userId, dto.UsuarioIds, dto.PuntsPerJugador, HttpContext.RequestAborted);
 
         return NoContent();
     }

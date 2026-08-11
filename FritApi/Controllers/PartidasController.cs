@@ -50,13 +50,18 @@ public class PartidasController : ControllerBase
             return BadRequest(new { message = result.Error });
         }
 
-        await _pushNotificationService.SendNewGameAsync(
-            result.Partida!.JuegoNombre ?? "un joc",
-            result.Partida.PartidaId,
-            int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var creatorUserId) ? creatorUserId : 0,
-            HttpContext.RequestAborted);
+        return CreatedAtAction(nameof(GetById), new { id = result.Partida!.PartidaId }, result.Partida);
+    }
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Partida.PartidaId }, result.Partida);
+    [HttpPost("{id:int}/notificacion")]
+    public async Task<IActionResult> NotifyCreated(int id)
+    {
+        var partida = await _partidaService.GetByIdAsync(id);
+        if (partida is null) return NotFound();
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) || partida.UsuarioCreadorId != userId)
+            return Forbid();
+        await _pushNotificationService.SendNewGameAsync(id, userId, HttpContext.RequestAborted);
+        return NoContent();
     }
 
     [HttpPut("{id:int}")]

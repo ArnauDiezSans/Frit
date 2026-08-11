@@ -15,6 +15,7 @@ export interface PushNotificationStatus {
 export interface NotificationPreferences {
   nuevaPartida: boolean;
   nuevaRemada: boolean;
+  votacionPelicula: boolean;
   encuesta: boolean;
   cambioPreferenciaJuego: boolean;
   puntuacionMinima: number;

@@ -28,6 +28,7 @@ public class ServiceTests
 
         Assert.False(defaults.NuevaPartida);
         Assert.False(defaults.NuevaRemada);
+        Assert.False(defaults.VotacionPelicula);
         Assert.False(defaults.Encuesta);
         Assert.False(defaults.CambioPreferenciaJuego);
         Assert.False(defaults.RecordatorioDomingo);

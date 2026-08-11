@@ -489,6 +489,10 @@
           <span><strong>Usuaris han remat</strong><small>Quan es registra una nova remada.</small></span>
         </label>
         <label class="notification-option">
+          <input type="checkbox" [checked]="preferences.votacionPelicula" (change)="updateNotificationPreference('votacionPelicula', $any($event.target).checked)" />
+          <span><strong>Votar una pel·lícula</strong><small>Quan constes com a assistent i ja la pots valorar.</small></span>
+        </label>
+        <label class="notification-option">
           <input type="checkbox" [checked]="preferences.encuesta" (change)="updateNotificationPreference('encuesta', $any($event.target).checked)" />
           <span><strong>Enquestes</strong><small>Preparat per a les futures enquestes.</small></span>
         </label>

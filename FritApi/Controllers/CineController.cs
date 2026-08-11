@@ -12,10 +12,12 @@ namespace FritApi.Controllers;
 public class CineController : ControllerBase
 {
     private readonly CineService _cineService;
+    private readonly PushNotificationService _pushNotificationService;
 
-    public CineController(CineService cineService)
+    public CineController(CineService cineService, PushNotificationService pushNotificationService)
     {
         _cineService = cineService;
+        _pushNotificationService = pushNotificationService;
     }
 
     [HttpGet]
@@ -100,6 +102,12 @@ public class CineController : ControllerBase
             }
 
             return BadRequest(new { message = result.Error });
+        }
+
+        if (dto.UsuarioId.HasValue)
+        {
+            await _pushNotificationService.SendMovieVotingAsync(
+                dto.UsuarioId.Value, id, result.Pelicula!.Titulo, HttpContext.RequestAborted);
         }
 
         return Ok(result.Pelicula);

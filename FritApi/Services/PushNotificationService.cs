@@ -30,6 +30,7 @@ public sealed class PushNotificationService(
         var preference = await GetOrCreatePreferenceAsync(usuarioId);
         preference.NuevaPartida = dto.NuevaPartida;
         preference.NuevaRemada = dto.NuevaRemada;
+        preference.VotacionPelicula = dto.VotacionPelicula;
         preference.Encuesta = dto.Encuesta;
         preference.CambioPreferenciaJuego = dto.CambioPreferenciaJuego;
         preference.PuntuacionMinima = dto.PuntuacionMinima;
@@ -99,7 +100,7 @@ public sealed class PushNotificationService(
         return true;
     }
 
-    public async Task SendNewGameAsync(string gameName, int partidaId, int creatorUserId, CancellationToken cancellationToken = default)
+    public async Task SendNewGameAsync(int partidaId, int creatorUserId, CancellationToken cancellationToken = default)
     {
         if (!IsConfigured)
         {
@@ -109,6 +110,17 @@ public sealed class PushNotificationService(
 
         try
         {
+            var partida = await context.Partidas.AsNoTracking()
+                .Where(row => row.PartidaId == partidaId)
+                .Select(row => new
+                {
+                    GameName = row.Juego.Nombre,
+                    Players = row.Jugadores.OrderBy(player => player.Posicion)
+                        .Select(player => new { player.NombreMostrado, player.Puntos })
+                        .ToList()
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+            if (partida is null) return;
             var subscriptions = await GetCategorySubscriptionsAsync(
                 preference => preference.NuevaPartida,
                 creatorUserId,
@@ -118,7 +130,7 @@ public sealed class PushNotificationService(
             await SendAsync(
                 subscriptions,
                 "Nova partida registrada",
-                $"S'ha registrat una partida de {gameName}.",
+                BuildPlayerScores(partida.GameName, partida.Players.Select(player => (player.NombreMostrado, player.Puntos))),
                 $"/app/partidas?partidaId={partidaId}",
                 cancellationToken);
         }
@@ -128,7 +140,7 @@ public sealed class PushNotificationService(
         }
     }
 
-    public async Task SendRemadaAsync(int creatorUserId, IReadOnlyCollection<int> participantIds, CancellationToken cancellationToken = default)
+    public async Task SendRemadaAsync(int creatorUserId, IReadOnlyCollection<int> participantIds, int pointsPerPlayer, CancellationToken cancellationToken = default)
     {
         if (!IsConfigured) return;
         try
@@ -142,12 +154,33 @@ public sealed class PushNotificationService(
                 creatorUserId,
                 false,
                 cancellationToken);
-            var participants = names.Count == 0 ? "Uns usuaris" : string.Join(", ", names);
-            await SendAsync(subscriptions, "Nova remada", $"{participants} han remat.", "/app/remar", cancellationToken);
+            var participants = names.Count == 0
+                ? "Uns usuaris"
+                : string.Join(", ", names.Select(name => $"{name}: {pointsPerPlayer} punts"));
+            await SendAsync(subscriptions, "Nova remada", $"{participants}.", "/app/remar", cancellationToken);
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "No s'han pogut preparar les notificacions de la remada.");
+        }
+    }
+
+    public async Task SendMovieVotingAsync(int usuarioId, int peliculaId, string title, CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured) return;
+        try
+        {
+            var enabled = await context.NotificationPreferences.AsNoTracking()
+                .AnyAsync(row => row.UsuarioId == usuarioId && row.VotacionPelicula, cancellationToken);
+            if (!enabled) return;
+            var subscriptions = await context.PushSubscriptions.AsNoTracking()
+                .Where(row => row.UsuarioId == usuarioId)
+                .ToListAsync(cancellationToken);
+            await SendAsync(subscriptions, "Ja pots votar", $"Ja pots valorar {title}.", $"/app/cine?peliculaId={peliculaId}", cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "No s'ha pogut preparar la notificació de votació de la pel·lícula {PeliculaId}.", peliculaId);
         }
     }
 
@@ -253,11 +286,21 @@ public sealed class PushNotificationService(
     {
         NuevaPartida = preference.NuevaPartida,
         NuevaRemada = preference.NuevaRemada,
+        VotacionPelicula = preference.VotacionPelicula,
         Encuesta = preference.Encuesta,
         CambioPreferenciaJuego = preference.CambioPreferenciaJuego,
         PuntuacionMinima = preference.PuntuacionMinima,
         RecordatorioDomingo = preference.RecordatorioDomingo
     };
+
+    private static string BuildPlayerScores(string gameName, IEnumerable<(string Name, decimal? Points)> players)
+    {
+        var details = string.Join(", ", players.Select(player =>
+            player.Points.HasValue ? $"{player.Name}: {player.Points:0.##} punts" : $"{player.Name}: sense punts"));
+        return string.IsNullOrWhiteSpace(details)
+            ? $"S'ha registrat una partida de {gameName}."
+            : $"{gameName} — {details}.";
+    }
 
     private async Task SendAsync(
         IReadOnlyCollection<Models.PushSubscription> subscriptions,

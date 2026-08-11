@@ -32,6 +32,10 @@ export class PartidasService {
     );
   }
 
+  notifyCreated(id: number): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/notificacion`, {}, { withCredentials: true });
+  }
+
   update(id: number, data: Partida): Observable<Partida> {
     return this.http.put<Partida>(`${this.baseUrl}/${id}`, data, {
       withCredentials: true

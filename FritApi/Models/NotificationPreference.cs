@@ -10,6 +10,7 @@ public class NotificationPreference : ITenantEntity
     public Usuario Usuario { get; set; } = null!;
     public bool NuevaPartida { get; set; }
     public bool NuevaRemada { get; set; }
+    public bool VotacionPelicula { get; set; }
     public bool Encuesta { get; set; }
     public bool CambioPreferenciaJuego { get; set; }
     [Range(0, 10)]

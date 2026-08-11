@@ -848,10 +848,9 @@ export class PartidasPageComponent implements OnInit {
       : this.partidasService.create(partidaPayload).pipe(
           switchMap(partidaCreada =>
             this.createPartidaJugadores(partidaCreada.partidaId, jugadores).pipe(
-              map(jugadoresCreados => ({
-                partida: partidaCreada,
-                jugadores: jugadoresCreados
-              }))
+              switchMap(jugadoresCreados => this.partidasService.notifyCreated(partidaCreada.partidaId).pipe(
+                map(() => ({ partida: partidaCreada, jugadores: jugadoresCreados }))
+              ))
             )
           )
         );
