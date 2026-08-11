@@ -178,7 +178,19 @@
 
       <div class="rowing-form-grid">
         <label class="form-field">
-          <span>Temps disponible (minuts)</span>
+          <span>Temps mínim (minuts)</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            placeholder="Ex. 60"
+            [value]="rowingMinimumTime()"
+            (input)="onRowingMinimumTimeInput($any($event.target).value)" />
+        </label>
+
+        <label class="form-field">
+          <span>Temps màxim (minuts)</span>
           <input
             type="number"
             min="1"
@@ -199,6 +211,8 @@
         </label>
       </div>
 
+      <p class="field-error" *ngIf="getRowingTimeValidationError()">{{ getRowingTimeValidationError() }}</p>
+
       <p class="field-error" *ngIf="rowingError()">{{ rowingError() }}</p>
 
       <div class="modal-actions">
@@ -215,7 +229,7 @@
       <div class="modal-header">
         <div>
           <h2>Jocs per remar</h2>
-          <p>{{ getSelectedPlayerNames().join(', ') }} · {{ rowingTime() }} minuts</p>
+          <p>{{ getSelectedPlayerNames().join(', ') }} · de {{ rowingMinimumTime() }} a {{ rowingTime() }} minuts</p>
         </div>
       </div>
 
@@ -314,7 +328,11 @@
                 <input type="datetime-local" [value]="editRemadaDate()" (input)="editRemadaDate.set($any($event.target).value)" />
               </label>
               <label class="form-field">
-                <span>Temps disponible</span>
+                <span>Temps mínim</span>
+                <input type="number" min="1" [value]="editRemadaMinimumTime()" (input)="editRemadaMinimumTime.set($any($event.target).value)" />
+              </label>
+              <label class="form-field">
+                <span>Temps màxim</span>
                 <input type="number" min="1" [value]="editRemadaTime()" (input)="editRemadaTime.set($any($event.target).value)" />
               </label>
               <label class="form-field">

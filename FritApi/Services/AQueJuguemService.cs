@@ -88,6 +88,11 @@ public class AQueJuguemService
         int usuarioCreadorId,
         RemadaCreateDto dto)
     {
+        if (dto.TempsDisponibleMinuts - dto.TempsMinimMinuts < 30)
+        {
+            return (false, "El temps mínim ha de ser almenys 30 minuts inferior al màxim.");
+        }
+
         var expectedPoints = dto.NombreJocs switch
         {
             1 => 3,
@@ -141,6 +146,7 @@ public class AQueJuguemService
         {
             UsuarioCreadorId = usuarioCreadorId,
             TempsDisponibleMinuts = dto.TempsDisponibleMinuts,
+            TempsMinimMinuts = dto.TempsMinimMinuts,
             NombreJocs = dto.NombreJocs,
             PuntsPerJugador = dto.PuntsPerJugador,
             Jugadors = usuarioIds.Select(usuarioId => new RemadaJugador
@@ -175,6 +181,7 @@ public class AQueJuguemService
                 RemadaId = remada.RemadaId,
                 CreatedAt = remada.CreatedAt,
                 TempsDisponibleMinuts = remada.TempsDisponibleMinuts,
+                TempsMinimMinuts = remada.TempsMinimMinuts,
                 NombreJocs = remada.NombreJocs,
                 PuntsPerJugador = remada.PuntsPerJugador,
                 Jugadors = remada.Jugadors
@@ -203,6 +210,11 @@ public class AQueJuguemService
         int remadaId,
         RemadaUpdateDto dto)
     {
+        if (dto.TempsDisponibleMinuts - dto.TempsMinimMinuts < 30)
+        {
+            return (false, "El temps mínim ha de ser almenys 30 minuts inferior al màxim.");
+        }
+
         var validation = await ValidateRemadaDataAsync(
             dto.NombreJocs,
             dto.PuntsPerJugador,
@@ -228,6 +240,7 @@ public class AQueJuguemService
             ? DateTime.SpecifyKind(dto.CreatedAt, DateTimeKind.Utc)
             : dto.CreatedAt.ToUniversalTime();
         remada.TempsDisponibleMinuts = dto.TempsDisponibleMinuts;
+        remada.TempsMinimMinuts = dto.TempsMinimMinuts;
         remada.NombreJocs = dto.NombreJocs;
         remada.PuntsPerJugador = dto.PuntsPerJugador;
 

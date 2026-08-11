@@ -1166,6 +1166,7 @@ public class ServiceTests
         var service = new AQueJuguemService(context, new UsuarioJuegoOrdenService(context));
         var result = await service.RegisterRemadaAsync(user.UsuarioId, new RemadaCreateDto
         {
+            TempsMinimMinuts = 60,
             TempsDisponibleMinuts = 90,
             NombreJocs = 1,
             PuntsPerJugador = -1,
@@ -1177,6 +1178,27 @@ public class ServiceTests
         var remada = await context.Remades.Include(item => item.Jugadors).SingleAsync();
         Assert.Equal(-1, remada.PuntsPerJugador);
         Assert.Equal(-1, Assert.Single(remada.Jugadors).Punts);
+        Assert.Equal(60, remada.TempsMinimMinuts);
+    }
+
+    [Fact]
+    public async Task AQueJuguemService_RejectsRowingWhenMinimumTimeIsNotThirtyMinutesBelowMaximum()
+    {
+        await using var context = CreateContext();
+        var service = new AQueJuguemService(context, new UsuarioJuegoOrdenService(context));
+
+        var result = await service.RegisterRemadaAsync(1, new RemadaCreateDto
+        {
+            TempsMinimMinuts = 70,
+            TempsDisponibleMinuts = 90,
+            NombreJocs = 1,
+            PuntsPerJugador = 3,
+            UsuarioIds = [1],
+            JuegoIds = [1]
+        });
+
+        Assert.False(result.Success);
+        Assert.Equal("El temps mínim ha de ser almenys 30 minuts inferior al màxim.", result.Error);
     }
 
     private static AppDbContext CreateContext()
