@@ -15,7 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => firstValueFrom(inject(AuthService).initializeAuth())),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
-      registrationStrategy: 'registerWhenStable:30000'
+      registrationStrategy: 'registerImmediately'
     })
   ]
 };
