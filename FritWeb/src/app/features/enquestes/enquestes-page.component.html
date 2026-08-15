@@ -27,6 +27,9 @@
   <article class="dialog detail-dialog" (click)="$event.stopPropagation()">
     <header class="dialog-header"><div><span class="status" [class.open]="d.resumen.estado === Estado.Publicada">{{ statusLabel(d.resumen.estado) }}</span><h2>{{ d.resumen.titulo }}</h2><p>{{ d.resumen.descripcion }}</p></div><button class="icon" (click)="closeDetail()" aria-label="Tancar">×</button></header>
     <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.fechaCierre">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
+    <p class="participants" *ngIf="!d.resumen.esAnonima">
+      <b>Han votat:</b> {{ d.participants?.length ? d.participants?.join(', ') : 'encara ningú' }}
+    </p>
 
     <section *ngIf="d.resumen.esDestinatario && d.resumen.estado === Estado.Publicada && (!d.resumen.haRespondido || d.permiteEditarRespuesta)" class="questions">
       <div class="question" *ngFor="let q of d.preguntas; let i = index" [hidden]="!isQuestionVisible(q)">

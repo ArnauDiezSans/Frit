@@ -16,7 +16,7 @@ public record EncuestaResultadoPreguntaDto(int EncuestaPreguntaId, string Texto,
 public record EncuestaDetalleDto(EncuestaResumenDto Resumen, bool PermiteEditarRespuesta,
     EncuestaVisibilidadResultados VisibilidadResultados, List<EncuestaPreguntaDto> Preguntas,
     List<EncuestaRespuestaValorDto>? MiRespuesta, List<EncuestaResultadoPreguntaDto>? Resultados,
-    List<string>? Pendientes, List<int>? DestinatarioIds);
+    List<string>? Pendientes, List<int>? DestinatarioIds, List<string>? Participants);
 
 public class EncuestaWriteDto
 {

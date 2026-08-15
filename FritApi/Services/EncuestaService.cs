@@ -46,7 +46,10 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
                 v.Opciones.Select(o => o.EncuestaOpcionId).ToList())).ToList(),
             canSeeResults ? BuildResults(encuesta) : null,
             pending,
-            canManage ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList() : null);
+            canManage ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList() : null,
+            encuesta.EsAnonima
+                ? null
+                : encuesta.Respuestas.Select(r => r.Usuario.Nombre).OrderBy(name => name).ToList());
     }
 
     public async Task<(bool Success, string? Error, int Id)> CreateAsync(int userId, EncuestaWriteDto dto)
@@ -169,6 +172,7 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
     private IQueryable<Encuesta> FullQuery() => context.Encuestas
         .Include(e => e.UsuarioCreador).Include(e => e.Destinatarios).ThenInclude(d => d.Usuario)
         .Include(e => e.Preguntas).ThenInclude(q => q.Opciones)
+        .Include(e => e.Respuestas).ThenInclude(r => r.Usuario)
         .Include(e => e.Respuestas).ThenInclude(r => r.Valores).ThenInclude(v => v.Opciones);
 
     private async Task<string?> ValidateAsync(EncuestaWriteDto dto)

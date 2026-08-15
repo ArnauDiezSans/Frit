@@ -175,7 +175,7 @@
     right: 0;
     z-index: 50;
     display: none;
-    width: min(88vw, 340px);
+    width: min(92vw, 560px);
     padding: 10px;
     border: 1px solid #e4e7ec;
     border-radius: 14px;
@@ -186,7 +186,7 @@
 
   .app-menu-open {
     display: grid;
-    grid-template-columns: repeat(20, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .menu-button {
@@ -247,32 +247,27 @@
   }
 
   .menu-partidas,
+  .menu-enquestes,
   .menu-rankings,
   .menu-hall-of-fame,
+  .menu-pendent-compra,
   .menu-remar,
   .menu-juegos,
+  .menu-assistencia,
   .menu-primary-action {
-    grid-column: span 10;
-  }
-
-  .menu-pendent-compra {
-    grid-column: span 13;
-  }
-
-  .menu-assistencia {
-    grid-column: span 12;
+    grid-column: auto;
   }
 
   .refresh-icon-button {
-    grid-column: span 3;
+    grid-column: auto;
   }
 
   .menu-usuario {
-    grid-column: span 10;
+    grid-column: auto;
   }
 
   .logout-button {
-    grid-column: span 7;
+    grid-column: auto;
   }
 
   .refresh-icon-button {
@@ -282,6 +277,10 @@
 }
 
 @media (max-width: 520px) {
+  .app-menu-open {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .menu-button {
     padding: 0 10px;
     font-size: 0.92rem;
