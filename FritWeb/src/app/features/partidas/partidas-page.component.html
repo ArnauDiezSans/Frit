@@ -256,7 +256,7 @@
 
         <tbody>
           <tr
-            *ngFor="let partida of partidasFiltradasOrdenadas(); let i = index; trackBy: trackByPartidaId"
+            *ngFor="let partida of partidasPaginadas(); let i = index; trackBy: trackByPartidaId"
             [class.row-highlight]="highlightedPartidaId() === partida.partidaId"
             [class.row-expanded]="expandedPartidaId() === partida.partidaId"
             (click)="togglePartidaDetail(partida.partidaId)">
@@ -268,9 +268,9 @@
                 title="Editar partida"
                 aria-label="Editar partida"
                 (click)="abrirEditarPartida(partida.partidaId, $event)">
-                {{ i + 1 }}
+                {{ rowNumber(i) }}
               </button>
-              <ng-template #plainRowNumber>{{ i + 1 }}</ng-template>
+              <ng-template #plainRowNumber>{{ rowNumber(i) }}</ng-template>
             </td>
             <td *ngIf="visibleColumns().fecha" class="partida-date" data-label="Data">
               <span class="cell-value cell-title cell-date">{{ formatFecha(partida.fecha) }}</span>
@@ -340,6 +340,21 @@
         </tbody>
       </table>
     </div>
+
+    <nav class="table-pagination" *ngIf="totalPages() > 1" aria-label="Paginació de partides">
+      <span>
+        {{ firstVisiblePartida() }}–{{ lastVisiblePartida() }} de {{ partidasFiltradasOrdenadas().length }}
+      </span>
+      <div class="pagination-actions">
+        <button type="button" class="ghost-button" [disabled]="effectivePage() <= 1" (click)="previousPage()">
+          Anterior
+        </button>
+        <span>Pàgina {{ effectivePage() }} de {{ totalPages() }}</span>
+        <button type="button" class="ghost-button" [disabled]="effectivePage() >= totalPages()" (click)="nextPage()">
+          Següent
+        </button>
+      </div>
+    </nav>
 
     <div class="empty-state" *ngIf="partidasFiltradasOrdenadas().length === 0">
       <h3>No hi ha partides registrades</h3>

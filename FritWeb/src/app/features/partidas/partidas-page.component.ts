@@ -113,6 +113,8 @@ const EMPTY_FILTERS: PartidasFilters = {
   observaciones: ''
 };
 
+const PARTIDAS_PAGE_SIZE = 50;
+
 @Component({
   selector: 'app-partidas-page',
   standalone: true,
@@ -150,6 +152,7 @@ export class PartidasPageComponent implements OnInit {
   partidaJugadores = signal<PartidaJugador[]>([]);
   highlightedPartidaId = signal<number | null>(null);
   expandedPartidaId = signal<number | null>(null);
+  currentPage = signal(1);
 
   filters = signal<PartidasFilters>({
     ...EMPTY_FILTERS,
@@ -194,11 +197,18 @@ export class PartidasPageComponent implements OnInit {
     const partidas = this.partidas();
     const juegos = this.juegos();
     const partidaJugadores = this.partidaJugadores();
+    const juegosById = new Map(juegos.map(juego => [juego.juegoId, juego]));
+    const jugadoresByPartidaId = new Map<number, PartidaJugador[]>();
+
+    for (const jugador of partidaJugadores) {
+      const jugadores = jugadoresByPartidaId.get(jugador.partidaId) ?? [];
+      jugadores.push(jugador);
+      jugadoresByPartidaId.set(jugador.partidaId, jugadores);
+    }
 
     return partidas.map(partida => {
-      const juego = juegos.find(item => item.juegoId === partida.juegoId);
-      const jugadoresPartida = partidaJugadores
-        .filter(jugador => jugador.partidaId === partida.partidaId)
+      const juego = juegosById.get(partida.juegoId);
+      const jugadoresPartida = [...(jugadoresByPartidaId.get(partida.partidaId) ?? [])]
         .sort((a, b) => a.posicion - b.posicion);
 
       const resultadoJugadores = jugadoresPartida.length
@@ -257,11 +267,29 @@ export class PartidasPageComponent implements OnInit {
     const sortColumn = this.sortColumn();
     const sortDirection = this.sortDirection();
     const rows = [...this.partidasGrid()];
+    const fechaDesde = this.parseDateOnly(filters.fechaDesde);
+    const fechaHasta = this.parseDateOnly(filters.fechaHasta);
+    const juegoNombre = filters.juegoNombre.trim().toLowerCase();
+    const duracionMin = this.parseNumberFilter(filters.duracionMinutosMin);
+    const duracionMax = this.parseNumberFilter(filters.duracionMinutosMax);
+    const jugadoresMin = this.parseNumberFilter(filters.numeroJugadoresMin);
+    const jugadoresMax = this.parseNumberFilter(filters.numeroJugadoresMax);
+    const posicionUsuario = this.parseNumberFilter(filters.posicionUsuario);
+    const usuarioPosicionId = Number(filters.usuarioPosicionId);
+    const resultadoJugadores = filters.resultadoJugadores.trim();
+    const observaciones = filters.observaciones.trim().toLowerCase();
+    const partidasPosicionUsuario = posicionUsuario !== null && usuarioPosicionId
+      ? new Set(
+          this.partidaJugadores()
+            .filter(jugador =>
+              jugador.usuarioId === usuarioPosicionId && jugador.posicion === posicionUsuario
+            )
+            .map(jugador => jugador.partidaId)
+        )
+      : null;
 
     const filtered = rows.filter(row => {
       const rowDate = this.parseDateOnly(row.fecha);
-      const fechaDesde = this.parseDateOnly(filters.fechaDesde);
-      const fechaHasta = this.parseDateOnly(filters.fechaHasta);
 
       if (fechaDesde !== null && (rowDate === null || rowDate < fechaDesde)) {
         return false;
@@ -272,14 +300,12 @@ export class PartidasPageComponent implements OnInit {
       }
 
       if (
-        filters.juegoNombre.trim() &&
-        !row.juegoNombre.toLowerCase().includes(filters.juegoNombre.trim().toLowerCase())
+        juegoNombre &&
+        !row.juegoNombre.toLowerCase().includes(juegoNombre)
       ) {
         return false;
       }
 
-      const duracionMin = this.parseNumberFilter(filters.duracionMinutosMin);
-      const duracionMax = this.parseNumberFilter(filters.duracionMinutosMax);
       const duracion = row.duracionMinutos;
 
       if (duracionMin !== null && (duracion === null || duracion < duracionMin)) {
@@ -290,9 +316,6 @@ export class PartidasPageComponent implements OnInit {
         return false;
       }
 
-      const jugadoresMin = this.parseNumberFilter(filters.numeroJugadoresMin);
-      const jugadoresMax = this.parseNumberFilter(filters.numeroJugadoresMax);
-
       if (jugadoresMin !== null && row.numeroJugadores < jugadoresMin) {
         return false;
       }
@@ -301,33 +324,22 @@ export class PartidasPageComponent implements OnInit {
         return false;
       }
 
-      const posicionUsuario = this.parseNumberFilter(filters.posicionUsuario);
-      const usuarioPosicionId = Number(filters.usuarioPosicionId);
-
-      if (posicionUsuario !== null && usuarioPosicionId) {
-        const hasMatchingPlayer = this.partidaJugadores().some(jugador =>
-          jugador.partidaId === row.partidaId &&
-          jugador.usuarioId === usuarioPosicionId &&
-          jugador.posicion === posicionUsuario
-        );
-
-        if (!hasMatchingPlayer) {
-          return false;
-        }
+      if (partidasPosicionUsuario && !partidasPosicionUsuario.has(row.partidaId)) {
+        return false;
       }
 
       if (
-        filters.resultadoJugadores.trim() &&
-        !this.matchesAllTerms(row.resultadoJugadores, filters.resultadoJugadores)
+        resultadoJugadores &&
+        !this.matchesAllTerms(row.resultadoJugadores, resultadoJugadores)
       ) {
         return false;
       }
 
       if (
-        filters.observaciones.trim() &&
+        observaciones &&
         !(row.observaciones || '-')
           .toLowerCase()
-          .includes(filters.observaciones.trim().toLowerCase())
+          .includes(observaciones)
       ) {
         return false;
       }
@@ -375,6 +387,31 @@ export class PartidasPageComponent implements OnInit {
 
     return filtered;
   });
+
+  totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.partidasFiltradasOrdenadas().length / PARTIDAS_PAGE_SIZE))
+  );
+
+  effectivePage = computed(() => Math.min(this.currentPage(), this.totalPages()));
+
+  partidasPaginadas = computed(() => {
+    const page = this.effectivePage();
+    const start = (page - 1) * PARTIDAS_PAGE_SIZE;
+    return this.partidasFiltradasOrdenadas().slice(start, start + PARTIDAS_PAGE_SIZE);
+  });
+
+  firstVisiblePartida = computed(() =>
+    this.partidasFiltradasOrdenadas().length === 0
+      ? 0
+      : (this.effectivePage() - 1) * PARTIDAS_PAGE_SIZE + 1
+  );
+
+  lastVisiblePartida = computed(() =>
+    Math.min(
+      this.firstVisiblePartida() + PARTIDAS_PAGE_SIZE - 1,
+      this.partidasFiltradasOrdenadas().length
+    )
+  );
 
   form = this.fb.group({
     juegoId: [null as number | null, Validators.required],
@@ -449,6 +486,7 @@ export class PartidasPageComponent implements OnInit {
         this.usuarios.set(result.usuarios);
         this.filteredUsuarios.set(result.usuarios);
         this.partidaJugadores.set(result.partidaJugadores);
+        this.currentPage.set(1);
         this.loading.set(false);
       },
       error: () => {
@@ -889,10 +927,12 @@ export class PartidasPageComponent implements OnInit {
       ...current,
       [field]: value
     }));
+    this.currentPage.set(1);
   }
 
   clearAllFilters(): void {
     this.filters.set({ ...EMPTY_FILTERS });
+    this.currentPage.set(1);
   }
 
   toggleFilters(): void {
@@ -938,6 +978,7 @@ export class PartidasPageComponent implements OnInit {
   }
 
   setSort(column: SortColumn): void {
+    this.currentPage.set(1);
     if (this.sortColumn() !== column) {
       this.sortColumn.set(column);
       this.sortDirection.set('desc');
@@ -951,6 +992,20 @@ export class PartidasPageComponent implements OnInit {
 
     this.sortColumn.set(null);
     this.sortDirection.set(null);
+  }
+
+  previousPage(): void {
+    this.currentPage.update(page => Math.max(1, page - 1));
+    this.expandedPartidaId.set(null);
+  }
+
+  nextPage(): void {
+    this.currentPage.update(page => Math.min(this.totalPages(), page + 1));
+    this.expandedPartidaId.set(null);
+  }
+
+  rowNumber(index: number): number {
+    return (this.effectivePage() - 1) * PARTIDAS_PAGE_SIZE + index + 1;
   }
 
   getSortIndicator(column: SortColumn): string {
