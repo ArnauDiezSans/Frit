@@ -11,8 +11,9 @@
 }
 
 .app-menu {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 12px;
   width: 100%;
 }
@@ -66,7 +67,6 @@
 }
 
 .menu-button {
-  width: 100%;
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid #0f766e;
@@ -118,8 +118,7 @@
 }
 
 .session-actions {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  display: inline-flex;
   align-items: stretch;
   gap: 8px;
 }
