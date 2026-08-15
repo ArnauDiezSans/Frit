@@ -1,8 +1,12 @@
 <main class="survey-page">
   <header class="page-header">
     <div><p class="eyebrow">Participació</p><h1>Enquestes</h1><p>Consulta, respon i conserva les decisions del grup.</p></div>
-    <app-menu activePage="enquestes" [primaryLabel]="isAdmin ? 'Nova enquesta' : ''" (primaryAction)="newSurvey()" (logout)="logout()" />
+    <app-menu activePage="enquestes" (logout)="logout()" />
   </header>
+
+  <div class="page-actions" *ngIf="isAdmin">
+    <button class="primary create-button" (click)="newSurvey()">+ Nova enquesta</button>
+  </div>
 
   <p class="notice success" *ngIf="message()">{{ message() }}</p>
   <p class="notice error" *ngIf="error()">{{ error() }}</p>
