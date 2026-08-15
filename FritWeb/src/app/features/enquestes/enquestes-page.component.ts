@@ -62,6 +62,7 @@ export class EnquestesPageComponent {
   logout(): void { this.auth.logout().subscribe(() => this.router.navigateByUrl('/login')); }
   statusLabel(s: EncuestaEstado): string { return ['Esborrany', 'Oberta', 'Tancada'][s]; }
   typeLabel(t: PreguntaTipo): string { return ['Opció única', 'Opció múltiple', 'Text curt', 'Text llarg', 'Escala'][t]; }
+  trackByIndex(index: number): number { return index; }
   private refreshList(): void { this.service.list().subscribe(rows => this.surveys.set(rows)); }
   private emptyDraft(): EncuestaWrite { return { titulo: '', descripcion: '', esAnonima: false, permiteEditarRespuesta: true, visibilidadResultados: VisibilidadResultados.DespuesDeResponder, fechaCierre: null, destinatarioIds: [], preguntas: [this.emptyQuestion()] }; }
   private emptyQuestion(): PreguntaWrite { return { tipo: PreguntaTipo.OpcionUnica, texto: '', ayuda: '', obligatoria: true, opciones: ['', ''] }; }
