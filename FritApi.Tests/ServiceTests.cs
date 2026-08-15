@@ -1236,7 +1236,7 @@ public class ServiceTests
         });
 
         Assert.True(created.Success);
-        Assert.True((await service.PublishAsync(created.Id, admin.UsuarioId)).Success);
+        Assert.True((await service.PublishAsync(created.Id, admin.UsuarioId, false)).Success);
         var detail = await service.GetAsync(created.Id, member.UsuarioId, false);
         var optionId = detail!.Preguntas[0].Opciones[0].EncuestaOpcionId;
         var submitted = await service.SubmitAsync(created.Id, member.UsuarioId,

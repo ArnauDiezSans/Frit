@@ -18,11 +18,9 @@ export class EnquestesPageComponent {
   detail = signal<EncuestaDetalle | null>(null); editorOpen = signal(false); editingId = signal<number | null>(null); users = signal<UsuarioOption[]>([]);
   answers: Record<number, RespuestaValor> = {};
   draft: EncuestaWrite = this.emptyDraft();
-  get isAdmin(): boolean { return this.auth.currentUser?.esAdmin === true; }
-
   ngOnInit(): void {
     this.load();
-    if (this.isAdmin) this.usersService.getJugadores().subscribe(users => this.users.set(users));
+    this.usersService.getJugadores().subscribe(users => this.users.set(users));
   }
   load(): void {
     this.loading.set(true); this.service.list().subscribe({ next: rows => { this.surveys.set(rows); this.loading.set(false); const id = Number(this.route.snapshot.queryParamMap.get('enquestaId')); if (id) this.open(id); }, error: () => { this.error.set("No s'han pogut carregar les enquestes."); this.loading.set(false); } });

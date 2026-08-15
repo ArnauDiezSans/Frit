@@ -4,7 +4,7 @@
     <app-menu activePage="enquestes" (logout)="logout()" />
   </header>
 
-  <div class="page-actions" *ngIf="isAdmin">
+  <div class="page-actions">
     <button class="primary create-button" (click)="newSurvey()">+ Nova enquesta</button>
   </div>
 
@@ -18,7 +18,7 @@
       <span class="pending" *ngIf="survey.estado === Estado.Publicada && survey.esDestinatario && !survey.haRespondido">Pendent de respondre</span>
       <span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span>
     </button>
-    <div class="empty" *ngIf="surveys().length === 0"><h2>Encara no hi ha enquestes</h2><p *ngIf="isAdmin">Crea la primera enquesta del grup.</p></div>
+    <div class="empty" *ngIf="surveys().length === 0"><h2>Encara no hi ha enquestes</h2><p>Crea la primera enquesta del grup.</p></div>
   </section>
   <ng-template #loadingTpl><p class="loading">Carregant enquestes...</p></ng-template>
 </main>
@@ -52,7 +52,7 @@
     </section>
     <ng-template #hiddenResults><p class="locked" *ngIf="d.resumen.estado !== Estado.Borrador">Els resultats encara no són visibles.</p></ng-template>
 
-    <section class="admin-panel" *ngIf="isAdmin"><h3>Gestió</h3><p *ngIf="d.pendientes?.length"><b>Pendents:</b> {{ d.pendientes?.join(', ') }}</p><div class="actions">
+    <section class="admin-panel" *ngIf="d.resumen.puedeGestionar"><h3>Gestió</h3><p *ngIf="d.pendientes?.length"><b>Pendents:</b> {{ d.pendientes?.join(', ') }}</p><div class="actions">
       <button *ngIf="d.resumen.estado === Estado.Borrador" (click)="editDraft()">Editar</button><button class="primary" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('publish')">Publicar i notificar</button>
       <button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Tancar</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('delete')">Eliminar</button>
     </div></section>
@@ -62,7 +62,7 @@
 <div class="backdrop" *ngIf="editorOpen()" (click)="editorOpen.set(false)">
   <article class="dialog editor-dialog" (click)="$event.stopPropagation()"><header class="dialog-header"><div><p class="eyebrow">Editor</p><h2>{{ editingId() ? 'Editar enquesta' : 'Nova enquesta' }}</h2></div><button class="icon" (click)="editorOpen.set(false)">×</button></header>
     <div class="form-grid"><label class="full"><span>Títol</span><input [(ngModel)]="draft.titulo" maxlength="200"></label><label class="full"><span>Descripció</span><textarea [(ngModel)]="draft.descripcion" rows="3" maxlength="1200"></textarea></label>
-      <label><span>Data de tancament</span><input type="datetime-local" [(ngModel)]="draft.fechaCierre"></label><label><span>Visibilitat dels resultats</span><select [(ngModel)]="draft.visibilidadResultados"><option [ngValue]="Visibilidad.Administradores">Només administradors</option><option [ngValue]="Visibilidad.DespuesDeResponder">Després de respondre</option><option [ngValue]="Visibilidad.AlCerrar">Quan es tanqui</option><option [ngValue]="Visibilidad.Siempre">Sempre</option></select></label>
+      <label><span>Data de tancament</span><input type="datetime-local" [(ngModel)]="draft.fechaCierre"></label><label><span>Visibilitat dels resultats</span><select [(ngModel)]="draft.visibilidadResultados"><option [ngValue]="Visibilidad.Administradores">Només creador i administradors</option><option [ngValue]="Visibilidad.DespuesDeResponder">Després de respondre</option><option [ngValue]="Visibilidad.AlCerrar">Quan es tanqui</option><option [ngValue]="Visibilidad.Siempre">Sempre</option></select></label>
       <label class="check"><input type="checkbox" [(ngModel)]="draft.esAnonima">Respostes anònimes als resultats</label><label class="check"><input type="checkbox" [(ngModel)]="draft.permiteEditarRespuesta">Permetre editar la resposta</label>
     </div>
     <details class="recipients"><summary>Destinataris <small>{{ draft.destinatarioIds.length ? draft.destinatarioIds.length + ' seleccionats' : 'tot el grup' }}</small></summary><p>Si no selecciones ningú, s’enviarà a tot el grup.</p><div><label class="check" *ngFor="let user of users()"><input type="checkbox" [checked]="draft.destinatarioIds.includes(user.usuarioId)" (change)="toggleRecipient(user.usuarioId, $any($event.target).checked)">{{ user.nombre }}</label></div></details>

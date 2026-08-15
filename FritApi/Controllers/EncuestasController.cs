@@ -20,38 +20,38 @@ public sealed class EncuestasController(EncuestaService service) : ControllerBas
         return result is null ? NotFound() : Ok(result);
     }
 
-    [HttpPost, Authorize(Roles = "Admin")]
+    [HttpPost]
     public async Task<IActionResult> Create([FromBody] EncuestaWriteDto dto)
     {
         var result = await service.CreateAsync(UserId, dto);
         return result.Success ? CreatedAtAction(nameof(Get), new { id = result.Id }, new { encuestaId = result.Id }) : BadRequest(new { message = result.Error });
     }
 
-    [HttpPut("{id:int}"), Authorize(Roles = "Admin")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] EncuestaWriteDto dto)
     {
-        var result = await service.UpdateAsync(id, dto);
+        var result = await service.UpdateAsync(id, UserId, User.IsInRole("Admin"), dto);
         return result.Success ? NoContent() : BadRequest(new { message = result.Error });
     }
 
-    [HttpPost("{id:int}/publicar"), Authorize(Roles = "Admin")]
+    [HttpPost("{id:int}/publicar")]
     public async Task<IActionResult> Publish(int id)
     {
-        var result = await service.PublishAsync(id, UserId);
+        var result = await service.PublishAsync(id, UserId, User.IsInRole("Admin"));
         return result.Success ? NoContent() : BadRequest(new { message = result.Error });
     }
 
-    [HttpPost("{id:int}/cerrar"), Authorize(Roles = "Admin")]
+    [HttpPost("{id:int}/cerrar")]
     public async Task<IActionResult> Close(int id)
     {
-        var result = await service.CloseAsync(id);
+        var result = await service.CloseAsync(id, UserId, User.IsInRole("Admin"));
         return result.Success ? NoContent() : BadRequest(new { message = result.Error });
     }
 
-    [HttpPost("{id:int}/recordar"), Authorize(Roles = "Admin")]
+    [HttpPost("{id:int}/recordar")]
     public async Task<IActionResult> Remind(int id)
     {
-        var result = await service.RemindAsync(id, UserId);
+        var result = await service.RemindAsync(id, UserId, User.IsInRole("Admin"));
         return result.Success ? Ok(new { destinatarios = result.Count }) : BadRequest(new { message = result.Error });
     }
 
@@ -62,10 +62,10 @@ public sealed class EncuestasController(EncuestaService service) : ControllerBas
         return result.Success ? NoContent() : BadRequest(new { message = result.Error });
     }
 
-    [HttpDelete("{id:int}"), Authorize(Roles = "Admin")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await service.DeleteAsync(id);
+        var result = await service.DeleteAsync(id, UserId, User.IsInRole("Admin"));
         return result.Success ? NoContent() : BadRequest(new { message = result.Error });
     }
 

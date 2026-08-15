@@ -14,8 +14,8 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
             .Include(e => e.UsuarioCreador)
             .Include(e => e.Destinatarios)
             .Include(e => e.Respuestas)
-            .Where(e => (isAdmin || e.Estado != EncuestaEstado.Borrador) &&
-                        (isAdmin || e.Destinatarios.Count == 0 || e.Destinatarios.Any(d => d.UsuarioId == userId)))
+            .Where(e => (isAdmin || e.UsuarioCreadorId == userId || e.Estado != EncuestaEstado.Borrador) &&
+                        (isAdmin || e.UsuarioCreadorId == userId || e.Destinatarios.Count == 0 || e.Destinatarios.Any(d => d.UsuarioId == userId)))
             .OrderByDescending(e => e.Estado == EncuestaEstado.Publicada)
             .ThenByDescending(e => e.CreatedAt)
             .ToListAsync();
@@ -26,16 +26,17 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
     public async Task<EncuestaDetalleDto?> GetAsync(int id, int userId, bool isAdmin)
     {
         var encuesta = await FullQuery().AsNoTracking().FirstOrDefaultAsync(e => e.EncuestaId == id);
-        if (encuesta is null || (!isAdmin && encuesta.Estado == EncuestaEstado.Borrador) ||
-            (!isAdmin && encuesta.Destinatarios.Count > 0 && encuesta.Destinatarios.All(d => d.UsuarioId != userId))) return null;
+        var canManage = encuesta is not null && (isAdmin || encuesta.UsuarioCreadorId == userId);
+        if (encuesta is null || (!canManage && encuesta.Estado == EncuestaEstado.Borrador) ||
+            (!canManage && encuesta.Destinatarios.Count > 0 && encuesta.Destinatarios.All(d => d.UsuarioId != userId))) return null;
 
         var activeUsers = await context.Usuarios.AsNoTracking().CountAsync(u => !u.EsUsuarioExterno);
         var mine = encuesta.Respuestas.FirstOrDefault(r => r.UsuarioId == userId);
         var effectiveClosed = IsClosed(encuesta);
-        var canSeeResults = isAdmin || encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.Siempre ||
+        var canSeeResults = canManage || encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.Siempre ||
             encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.DespuesDeResponder && mine is not null ||
             encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.AlCerrar && effectiveClosed;
-        var pending = isAdmin ? await GetPendingNamesAsync(encuesta) : null;
+        var pending = canManage ? await GetPendingNamesAsync(encuesta) : null;
         return new EncuestaDetalleDto(
             ToSummary(encuesta, userId, isAdmin, activeUsers, DateTime.UtcNow),
             encuesta.PermiteEditarRespuesta,
@@ -45,7 +46,7 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
                 v.Opciones.Select(o => o.EncuestaOpcionId).ToList())).ToList(),
             canSeeResults ? BuildResults(encuesta) : null,
             pending,
-            isAdmin ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList() : null);
+            canManage ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList() : null);
     }
 
     public async Task<(bool Success, string? Error, int Id)> CreateAsync(int userId, EncuestaWriteDto dto)
@@ -59,11 +60,12 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         return (true, null, encuesta.EncuestaId);
     }
 
-    public async Task<(bool Success, string? Error)> UpdateAsync(int id, EncuestaWriteDto dto)
+    public async Task<(bool Success, string? Error)> UpdateAsync(int id, int actorId, bool isAdmin, EncuestaWriteDto dto)
     {
         var encuesta = await context.Encuestas.Include(e => e.Preguntas).ThenInclude(q => q.Opciones)
             .Include(e => e.Destinatarios).FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
+        if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
         if (encuesta.Estado != EncuestaEstado.Borrador) return (false, "Només es poden editar els esborranys.");
         var error = await ValidateAsync(dto);
         if (error is not null) return (false, error);
@@ -76,11 +78,12 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         return (true, null);
     }
 
-    public async Task<(bool Success, string? Error)> PublishAsync(int id, int actorId)
+    public async Task<(bool Success, string? Error)> PublishAsync(int id, int actorId, bool isAdmin)
     {
         var encuesta = await context.Encuestas.Include(e => e.Preguntas).Include(e => e.Destinatarios)
             .FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
+        if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
         if (encuesta.Estado != EncuestaEstado.Borrador) return (false, "L’enquesta ja s’ha publicat.");
         if (encuesta.Preguntas.Count == 0) return (false, "L’enquesta no té preguntes.");
         encuesta.Estado = EncuestaEstado.Publicada;
@@ -92,20 +95,22 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         return (true, null);
     }
 
-    public async Task<(bool Success, string? Error)> CloseAsync(int id)
+    public async Task<(bool Success, string? Error)> CloseAsync(int id, int actorId, bool isAdmin)
     {
         var encuesta = await context.Encuestas.FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
+        if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
         encuesta.Estado = EncuestaEstado.Cerrada;
         encuesta.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
         return (true, null);
     }
 
-    public async Task<(bool Success, string? Error)> DeleteAsync(int id)
+    public async Task<(bool Success, string? Error)> DeleteAsync(int id, int actorId, bool isAdmin)
     {
         var encuesta = await context.Encuestas.FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
+        if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
         if (encuesta.Estado != EncuestaEstado.Borrador) return (false, "Només es poden eliminar els esborranys.");
         context.Encuestas.Remove(encuesta);
         await context.SaveChangesAsync();
@@ -145,11 +150,12 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         return (true, null);
     }
 
-    public async Task<(bool Success, string? Error, int Count)> RemindAsync(int id, int actorId)
+    public async Task<(bool Success, string? Error, int Count)> RemindAsync(int id, int actorId, bool isAdmin)
     {
         var encuesta = await context.Encuestas.AsNoTracking().Include(e => e.Destinatarios).Include(e => e.Respuestas)
             .FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.", 0);
+        if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.", 0);
         if (encuesta.Estado != EncuestaEstado.Publicada || IsClosed(encuesta)) return (false, "L’enquesta no està oberta.", 0);
         var targetIds = encuesta.Destinatarios.Count > 0
             ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList()
@@ -255,7 +261,8 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         new(e.EncuestaId, e.Titulo, e.Descripcion, e.Estado == EncuestaEstado.Publicada && e.FechaCierre <= now ? EncuestaEstado.Cerrada : e.Estado,
             e.EsAnonima, e.FechaCierre, e.CreatedAt, e.UsuarioCreador.Nombre, e.Respuestas.Any(r => r.UsuarioId == userId),
             e.Destinatarios.Count == 0 || e.Destinatarios.Any(d => d.UsuarioId == userId),
-            e.Respuestas.Count, e.Destinatarios.Count == 0 ? allUsers : e.Destinatarios.Count, isAdmin);
+            e.Respuestas.Count, e.Destinatarios.Count == 0 ? allUsers : e.Destinatarios.Count,
+            isAdmin || e.UsuarioCreadorId == userId);
     private static bool IsClosed(Encuesta e) => e.Estado == EncuestaEstado.Cerrada || e.FechaCierre is not null && e.FechaCierre <= DateTime.UtcNow;
 
     private async Task<List<string>> GetPendingNamesAsync(Encuesta e)
