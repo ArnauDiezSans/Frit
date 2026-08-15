@@ -137,6 +137,7 @@ builder.Services.AddScoped<RankingsService>();
 builder.Services.AddScoped<HallOfFameService>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<PushNotificationService>();
+builder.Services.AddScoped<EncuestaService>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHostedService<SundayNotificationWorker>();
 

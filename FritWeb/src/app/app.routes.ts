@@ -18,6 +18,7 @@ export const routes: Routes = [
   { path: 'app/cine', redirectTo: 'app/assistencia', pathMatch: 'full' },
   { path: 'app/csopa', redirectTo: 'app/assistencia', pathMatch: 'full' },
   { path: 'app/usuario', loadComponent: () => import('./features/usuario/usuario-page.component').then(m => m.UsuarioPageComponent), canActivate: [authGuard] },
+  { path: 'app/enquestes', loadComponent: () => import('./features/enquestes/enquestes-page.component').then(m => m.EnquestesPageComponent), canActivate: [authGuard] },
   { path: 'app/auditoria', loadComponent: () => import('./features/auditoria/auditoria-page.component').then(m => m.AuditoriaPageComponent), canActivate: [auditGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' }

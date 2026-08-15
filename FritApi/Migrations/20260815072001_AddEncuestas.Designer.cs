@@ -3,6 +3,7 @@ using System;
 using FritApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FritApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260815072001_AddEncuestas")]
+    partial class AddEncuestas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -388,12 +391,6 @@ namespace FritApi.Migrations
                     b.Property<string>("Ayuda")
                         .HasMaxLength(800)
                         .HasColumnType("character varying(800)");
-
-                    b.Property<int?>("CondicionOpcionOrden")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("CondicionPreguntaOrden")
-                        .HasColumnType("integer");
 
                     b.Property<int>("EncuestaId")
                         .HasColumnType("integer");

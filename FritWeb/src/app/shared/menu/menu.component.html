@@ -16,6 +16,15 @@
   (click)="closeMenu()">
   <button
     type="button"
+    class="menu-button menu-enquestes"
+    [class.menu-button-active]="activePage === 'enquestes'"
+    routerLink="/app/enquestes">
+    Enquestes
+    <span class="menu-badge" *ngIf="pendingSurveys > 0">{{ pendingSurveys }}</span>
+  </button>
+
+  <button
+    type="button"
     class="menu-button menu-rankings"
     [class.menu-button-active]="activePage === 'rankings'"
     routerLink="/app/rankings">

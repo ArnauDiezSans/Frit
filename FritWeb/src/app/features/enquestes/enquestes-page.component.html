@@ -1,0 +1,73 @@
+<main class="survey-page">
+  <header class="page-header">
+    <div><p class="eyebrow">Participació</p><h1>Enquestes</h1><p>Consulta, respon i conserva les decisions del grup.</p></div>
+    <app-menu activePage="enquestes" [primaryLabel]="isAdmin ? 'Nova enquesta' : ''" (primaryAction)="newSurvey()" (logout)="logout()" />
+  </header>
+
+  <p class="notice success" *ngIf="message()">{{ message() }}</p>
+  <p class="notice error" *ngIf="error()">{{ error() }}</p>
+  <section class="survey-list" *ngIf="!loading(); else loadingTpl">
+    <button class="survey-card" *ngFor="let survey of surveys()" (click)="open(survey.encuestaId)">
+      <span class="status" [class.open]="survey.estado === Estado.Publicada">{{ statusLabel(survey.estado) }}</span>
+      <span class="survey-title">{{ survey.titulo }}</span><span class="survey-description">{{ survey.descripcion || 'Sense descripció' }}</span>
+      <span class="survey-meta"><b>{{ survey.respuestas }}/{{ survey.destinatarios }}</b> respostes · {{ survey.esAnonima ? 'Anònima' : 'Identificada' }}</span>
+      <span class="pending" *ngIf="survey.estado === Estado.Publicada && survey.esDestinatario && !survey.haRespondido">Pendent de respondre</span>
+      <span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span>
+    </button>
+    <div class="empty" *ngIf="surveys().length === 0"><h2>Encara no hi ha enquestes</h2><p *ngIf="isAdmin">Crea la primera enquesta del grup.</p></div>
+  </section>
+  <ng-template #loadingTpl><p class="loading">Carregant enquestes...</p></ng-template>
+</main>
+
+<div class="backdrop" *ngIf="detail() as d" (click)="closeDetail()">
+  <article class="dialog detail-dialog" (click)="$event.stopPropagation()">
+    <header class="dialog-header"><div><span class="status" [class.open]="d.resumen.estado === Estado.Publicada">{{ statusLabel(d.resumen.estado) }}</span><h2>{{ d.resumen.titulo }}</h2><p>{{ d.resumen.descripcion }}</p></div><button class="icon" (click)="closeDetail()" aria-label="Tancar">×</button></header>
+    <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.fechaCierre">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
+
+    <section *ngIf="d.resumen.esDestinatario && d.resumen.estado === Estado.Publicada && (!d.resumen.haRespondido || d.permiteEditarRespuesta)" class="questions">
+      <div class="question" *ngFor="let q of d.preguntas; let i = index" [hidden]="!isQuestionVisible(q)">
+        <h3>{{ i + 1 }}. {{ q.texto }} <small *ngIf="!q.obligatoria">Opcional</small></h3><p *ngIf="q.ayuda">{{ q.ayuda }}</p>
+        <div class="choice" *ngFor="let option of q.opciones">
+          <input *ngIf="q.tipo === PreguntaTipo.OpcionUnica" type="radio" [attr.aria-label]="option.texto" [name]="'q'+q.encuestaPreguntaId" [checked]="answers[q.encuestaPreguntaId].opcionIds.includes(option.encuestaOpcionId)" (change)="setSingle(q.encuestaPreguntaId, option.encuestaOpcionId)">
+          <input *ngIf="q.tipo === PreguntaTipo.OpcionMultiple" type="checkbox" [attr.aria-label]="option.texto" [checked]="answers[q.encuestaPreguntaId].opcionIds.includes(option.encuestaOpcionId)" (change)="setMultiple(q.encuestaPreguntaId, option.encuestaOpcionId, $any($event.target).checked)"><span>{{ option.texto }}</span>
+        </div>
+        <input class="text-input" *ngIf="q.tipo === PreguntaTipo.TextoCorto" [(ngModel)]="answers[q.encuestaPreguntaId].texto" maxlength="4000">
+        <textarea *ngIf="q.tipo === PreguntaTipo.TextoLargo" [(ngModel)]="answers[q.encuestaPreguntaId].texto" rows="4" maxlength="4000"></textarea>
+        <div class="scale" *ngIf="q.tipo === PreguntaTipo.Escala"><label *ngFor="let n of [].constructor((q.maximo || 5) - (q.minimo || 1) + 1); let x = index"><input type="radio" [name]="'q'+q.encuestaPreguntaId" [checked]="answers[q.encuestaPreguntaId].numero === x + (q.minimo || 1)" (change)="answers[q.encuestaPreguntaId].numero = x + (q.minimo || 1)"><span>{{ x + (q.minimo || 1) }}</span></label></div>
+      </div>
+      <button class="primary" [disabled]="busy()" (click)="submit()">{{ d.resumen.haRespondido ? 'Actualitzar resposta' : 'Enviar resposta' }}</button>
+    </section>
+    <p class="locked" *ngIf="d.resumen.estado === Estado.Cerrada">Aquesta enquesta està tancada.</p>
+    <p class="locked" *ngIf="d.resumen.haRespondido && !d.permiteEditarRespuesta">La teva resposta ja està registrada i no es pot editar.</p>
+
+    <section class="results" *ngIf="d.resultados; else hiddenResults"><h2>Resultats</h2>
+      <div class="result" *ngFor="let result of d.resultados"><h3>{{ result.texto }}</h3><p *ngIf="result.media !== null && result.media !== undefined">Mitjana: <b>{{ result.media }}</b></p>
+        <div class="bar-row" *ngFor="let option of result.opciones"><div><span>{{ option.texto }}</span><b>{{ option.votos }} · {{ option.porcentaje }}%</b></div><div class="bar"><span [style.width.%]="option.porcentaje"></span></div></div>
+        <blockquote *ngFor="let text of result.textos">{{ text }}</blockquote>
+      </div>
+    </section>
+    <ng-template #hiddenResults><p class="locked" *ngIf="d.resumen.estado !== Estado.Borrador">Els resultats encara no són visibles.</p></ng-template>
+
+    <section class="admin-panel" *ngIf="isAdmin"><h3>Gestió</h3><p *ngIf="d.pendientes?.length"><b>Pendents:</b> {{ d.pendientes?.join(', ') }}</p><div class="actions">
+      <button *ngIf="d.resumen.estado === Estado.Borrador" (click)="editDraft()">Editar</button><button class="primary" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('publish')">Publicar i notificar</button>
+      <button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Tancar</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('delete')">Eliminar</button>
+    </div></section>
+  </article>
+</div>
+
+<div class="backdrop" *ngIf="editorOpen()" (click)="editorOpen.set(false)">
+  <article class="dialog editor-dialog" (click)="$event.stopPropagation()"><header class="dialog-header"><div><p class="eyebrow">Editor</p><h2>{{ editingId() ? 'Editar enquesta' : 'Nova enquesta' }}</h2></div><button class="icon" (click)="editorOpen.set(false)">×</button></header>
+    <div class="form-grid"><label class="full"><span>Títol</span><input [(ngModel)]="draft.titulo" maxlength="200"></label><label class="full"><span>Descripció</span><textarea [(ngModel)]="draft.descripcion" rows="3" maxlength="1200"></textarea></label>
+      <label><span>Data de tancament</span><input type="datetime-local" [(ngModel)]="draft.fechaCierre"></label><label><span>Visibilitat dels resultats</span><select [(ngModel)]="draft.visibilidadResultados"><option [ngValue]="Visibilidad.Administradores">Només administradors</option><option [ngValue]="Visibilidad.DespuesDeResponder">Després de respondre</option><option [ngValue]="Visibilidad.AlCerrar">Quan es tanqui</option><option [ngValue]="Visibilidad.Siempre">Sempre</option></select></label>
+      <label class="check"><input type="checkbox" [(ngModel)]="draft.esAnonima">Respostes anònimes als resultats</label><label class="check"><input type="checkbox" [(ngModel)]="draft.permiteEditarRespuesta">Permetre editar la resposta</label>
+    </div>
+    <details class="recipients"><summary>Destinataris <small>{{ draft.destinatarioIds.length ? draft.destinatarioIds.length + ' seleccionats' : 'tot el grup' }}</small></summary><p>Si no selecciones ningú, s’enviarà a tot el grup.</p><div><label class="check" *ngFor="let user of users()"><input type="checkbox" [checked]="draft.destinatarioIds.includes(user.usuarioId)" (change)="toggleRecipient(user.usuarioId, $any($event.target).checked)">{{ user.nombre }}</label></div></details>
+    <section class="question-editor" *ngFor="let q of draft.preguntas; let i = index"><header><b>Pregunta {{ i + 1 }}</b><button class="danger" (click)="removeQuestion(i)" [disabled]="draft.preguntas.length === 1">Eliminar</button></header>
+      <div class="form-grid"><label class="full"><span>Pregunta</span><input [(ngModel)]="q.texto" maxlength="500"></label><label><span>Tipus</span><select [(ngModel)]="q.tipo" (ngModelChange)="typeChanged(q)"><option [ngValue]="PreguntaTipo.OpcionUnica">Opció única</option><option [ngValue]="PreguntaTipo.OpcionMultiple">Opció múltiple</option><option [ngValue]="PreguntaTipo.TextoCorto">Text curt</option><option [ngValue]="PreguntaTipo.TextoLargo">Text llarg</option><option [ngValue]="PreguntaTipo.Escala">Escala</option></select></label><label class="check"><input type="checkbox" [(ngModel)]="q.obligatoria">Obligatòria</label><label class="full"><span>Ajuda opcional</span><input [(ngModel)]="q.ayuda"></label>
+        <ng-container *ngIf="q.tipo === PreguntaTipo.Escala"><label><span>Mínim</span><input type="number" [(ngModel)]="q.minimo"></label><label><span>Màxim</span><input type="number" [(ngModel)]="q.maximo"></label></ng-container>
+        <ng-container *ngIf="conditionSources(i).length"><label class="full"><span>Mostrar només si...</span><select [(ngModel)]="q.condicionPreguntaOrden" (ngModelChange)="conditionChanged(q)"><option [ngValue]="null">Sempre visible</option><option *ngFor="let source of conditionSources(i)" [ngValue]="source.index">{{ source.index + 1 }}. {{ source.question.texto || 'Pregunta sense títol' }}</option></select></label><label class="full" *ngIf="q.condicionPreguntaOrden !== null && q.condicionPreguntaOrden !== undefined"><span>...la resposta és</span><select [(ngModel)]="q.condicionOpcionOrden"><option *ngFor="let option of conditionOptions(q); let optionIndex = index" [ngValue]="optionIndex">{{ option || 'Opció ' + (optionIndex + 1) }}</option></select></label></ng-container>
+      </div><div class="options" *ngIf="hasOptions(q)"><label *ngFor="let option of q.opciones; let oi = index"><span>Opció {{ oi + 1 }}</span><input [(ngModel)]="q.opciones[oi]" maxlength="300"><button class="icon small" (click)="removeOption(q, oi)" [disabled]="q.opciones.length === 2">×</button></label><button (click)="addOption(q)">+ Afegir opció</button></div>
+    </section>
+    <div class="editor-actions"><button (click)="addQuestion()">+ Afegir pregunta</button><span></span><button (click)="editorOpen.set(false)">Cancel·lar</button><button class="primary" [disabled]="busy()" (click)="save()">Desar esborrany</button></div>
+  </article>
+</div>

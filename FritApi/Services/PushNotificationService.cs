@@ -184,7 +184,7 @@ public sealed class PushNotificationService(
         }
     }
 
-    public async Task SendSurveyAsync(int creatorUserId, string title, string url, CancellationToken cancellationToken = default)
+    public async Task SendSurveyAsync(int creatorUserId, string title, string url, IReadOnlyCollection<int>? recipientIds = null, CancellationToken cancellationToken = default)
     {
         if (!IsConfigured) return;
         var subscriptions = await GetCategorySubscriptionsAsync(
@@ -192,7 +192,23 @@ public sealed class PushNotificationService(
             creatorUserId,
             false,
             cancellationToken);
+        if (recipientIds is { Count: > 0 })
+        {
+            subscriptions = subscriptions.Where(subscription => recipientIds.Contains(subscription.UsuarioId)).ToList();
+        }
         await SendAsync(subscriptions, "Nova enquesta", title, url, cancellationToken);
+    }
+
+    public async Task SendSurveyReminderAsync(string title, string url, IReadOnlyCollection<int> recipientIds, CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured || recipientIds.Count == 0) return;
+        var subscriptions = await GetCategorySubscriptionsAsync(
+            preference => preference.Encuesta,
+            null,
+            false,
+            cancellationToken);
+        subscriptions = subscriptions.Where(subscription => recipientIds.Contains(subscription.UsuarioId)).ToList();
+        await SendAsync(subscriptions, "Enquesta pendent", $"Encara pots respondre: {title}", url, cancellationToken);
     }
 
     public async Task SendGamePreferenceChangesAsync(

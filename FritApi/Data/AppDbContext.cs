@@ -51,6 +51,13 @@ public class AppDbContext : DbContext
     public DbSet<AuditAuthorizedUser> AuditAuthorizedUsers => Set<AuditAuthorizedUser>();
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<Encuesta> Encuestas => Set<Encuesta>();
+    public DbSet<EncuestaPregunta> EncuestaPreguntas => Set<EncuestaPregunta>();
+    public DbSet<EncuestaOpcion> EncuestaOpciones => Set<EncuestaOpcion>();
+    public DbSet<EncuestaDestinatario> EncuestaDestinatarios => Set<EncuestaDestinatario>();
+    public DbSet<EncuestaRespuesta> EncuestaRespuestas => Set<EncuestaRespuesta>();
+    public DbSet<EncuestaRespuestaValor> EncuestaRespuestaValores => Set<EncuestaRespuestaValor>();
+    public DbSet<EncuestaRespuestaOpcion> EncuestaRespuestaOpciones => Set<EncuestaRespuestaOpcion>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -134,6 +141,69 @@ public class AppDbContext : DbContext
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
             entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => new { e.TenantId, e.UsuarioId }).IsUnique();
+        });
+
+        modelBuilder.Entity<Encuesta>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaId);
+            entity.Property(e => e.Titulo).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Descripcion).HasMaxLength(1200);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
+            entity.HasOne(e => e.UsuarioCreador).WithMany().HasForeignKey(e => e.UsuarioCreadorId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.TenantId, e.Estado, e.FechaCierre });
+        });
+
+        modelBuilder.Entity<EncuestaPregunta>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaPreguntaId);
+            entity.Property(e => e.Texto).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Ayuda).HasMaxLength(800);
+            entity.HasOne(e => e.Encuesta).WithMany(e => e.Preguntas).HasForeignKey(e => e.EncuestaId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.EncuestaId, e.Orden });
+        });
+
+        modelBuilder.Entity<EncuestaOpcion>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaOpcionId);
+            entity.Property(e => e.Texto).IsRequired().HasMaxLength(300);
+            entity.HasOne(e => e.Pregunta).WithMany(e => e.Opciones).HasForeignKey(e => e.EncuestaPreguntaId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.EncuestaPreguntaId, e.Orden });
+        });
+
+        modelBuilder.Entity<EncuestaDestinatario>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaDestinatarioId);
+            entity.HasOne(e => e.Encuesta).WithMany(e => e.Destinatarios).HasForeignKey(e => e.EncuestaId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.EncuestaId, e.UsuarioId }).IsUnique();
+        });
+
+        modelBuilder.Entity<EncuestaRespuesta>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaRespuestaId);
+            entity.Property(e => e.SubmittedAt).HasDefaultValueSql("NOW()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("NOW()");
+            entity.HasOne(e => e.Encuesta).WithMany(e => e.Respuestas).HasForeignKey(e => e.EncuestaId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.EncuestaId, e.UsuarioId }).IsUnique();
+        });
+
+        modelBuilder.Entity<EncuestaRespuestaValor>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaRespuestaValorId);
+            entity.Property(e => e.Texto).HasMaxLength(4000);
+            entity.HasOne(e => e.Respuesta).WithMany(e => e.Valores).HasForeignKey(e => e.EncuestaRespuestaId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Pregunta).WithMany().HasForeignKey(e => e.EncuestaPreguntaId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.EncuestaRespuestaId, e.EncuestaPreguntaId }).IsUnique();
+        });
+
+        modelBuilder.Entity<EncuestaRespuestaOpcion>(entity =>
+        {
+            entity.HasKey(e => e.EncuestaRespuestaOpcionId);
+            entity.HasOne(e => e.Valor).WithMany(e => e.Opciones).HasForeignKey(e => e.EncuestaRespuestaValorId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Opcion).WithMany().HasForeignKey(e => e.EncuestaOpcionId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.EncuestaRespuestaValorId, e.EncuestaOpcionId }).IsUnique();
         });
 
         modelBuilder.Entity<Juego>(entity =>

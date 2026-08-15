@@ -12,6 +12,7 @@ public class AuthorizationTests
     [InlineData(typeof(PartidasController))]
     [InlineData(typeof(PartidaJugadoresController))]
     [InlineData(typeof(AuditoriaController))]
+    [InlineData(typeof(EncuestasController))]
     public void DataControllers_RequireAuthentication(Type controllerType)
     {
         Assert.NotNull(controllerType.GetCustomAttribute<AuthorizeAttribute>());
@@ -29,6 +30,12 @@ public class AuthorizationTests
     [InlineData(typeof(AQueJuguemController), "DeleteRemada")]
     [InlineData(typeof(HallOfFameController), "CreateManualMedal")]
     [InlineData(typeof(TenantsController), "Create")]
+    [InlineData(typeof(EncuestasController), "Create")]
+    [InlineData(typeof(EncuestasController), "Update")]
+    [InlineData(typeof(EncuestasController), "Publish")]
+    [InlineData(typeof(EncuestasController), "Close")]
+    [InlineData(typeof(EncuestasController), "Remind")]
+    [InlineData(typeof(EncuestasController), "Delete")]
     public void AdministrativeEndpoints_RequireAdminRole(Type controllerType, string methodName)
     {
         var method = controllerType.GetMethod(methodName);

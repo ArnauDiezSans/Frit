@@ -1202,6 +1202,53 @@ public class ServiceTests
         Assert.Equal("El temps mínim ha de ser almenys 30 minuts inferior al màxim.", result.Error);
     }
 
+    [Fact]
+    public async Task EncuestaService_CreatesPublishesAndAggregatesResponses()
+    {
+        await using var context = CreateContext();
+        var admin = new Usuario { Nombre = "Admin", PasswordHash = "hash", EsAdmin = true };
+        var member = new Usuario { Nombre = "Membre", PasswordHash = "hash" };
+        context.Usuarios.AddRange(admin, member);
+        await context.SaveChangesAsync();
+        var push = new PushNotificationService(context, new ConfigurationBuilder().Build(), NullLogger<PushNotificationService>.Instance);
+        var service = new EncuestaService(context, push);
+        var created = await service.CreateAsync(admin.UsuarioId, new EncuestaWriteDto
+        {
+            Titulo = "Quin joc triem?",
+            EsAnonima = true,
+            VisibilidadResultados = EncuestaVisibilidadResultados.DespuesDeResponder,
+            Preguntas =
+            [
+                new EncuestaPreguntaWriteDto
+                {
+                    Tipo = EncuestaPreguntaTipo.OpcionUnica,
+                    Texto = "Joc preferit",
+                    Opciones = ["Catan", "Carcassonne"]
+                },
+                new EncuestaPreguntaWriteDto
+                {
+                    Tipo = EncuestaPreguntaTipo.TextoCorto,
+                    Texto = "Per què Carcassonne?",
+                    CondicionPreguntaOrden = 0,
+                    CondicionOpcionOrden = 1
+                }
+            ]
+        });
+
+        Assert.True(created.Success);
+        Assert.True((await service.PublishAsync(created.Id, admin.UsuarioId)).Success);
+        var detail = await service.GetAsync(created.Id, member.UsuarioId, false);
+        var optionId = detail!.Preguntas[0].Opciones[0].EncuestaOpcionId;
+        var submitted = await service.SubmitAsync(created.Id, member.UsuarioId,
+            new EncuestaSubmitDto([new EncuestaRespuestaValorDto(detail.Preguntas[0].EncuestaPreguntaId, null, null, [optionId])]));
+
+        Assert.True(submitted.Success);
+        var result = await service.GetAsync(created.Id, member.UsuarioId, false);
+        Assert.True(result!.Resumen.HaRespondido);
+        Assert.Equal(1, result.Resultados![0].Opciones[0].Votos);
+        Assert.Equal(100m, result.Resultados[0].Opciones[0].Porcentaje);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

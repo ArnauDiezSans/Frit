@@ -3,8 +3,9 @@ import { Component, EventEmitter, HostListener, Input, Output } from '@angular/c
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { DataStoreService } from '../../core/data/data-store.service';
+import { EncuestaEstado, EnquestesService } from '../../features/enquestes/enquestes.service';
 
-export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'remar' | 'assistencia' | 'usuario' | 'auditoria';
+export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'remar' | 'assistencia' | 'enquestes' | 'usuario' | 'auditoria';
 
 @Component({
   selector: 'app-menu',
@@ -17,7 +18,8 @@ export class MenuComponent {
   constructor(
     private authService: AuthService,
     private dataStore: DataStoreService,
-    private router: Router
+    private router: Router,
+    private enquestesService: EnquestesService
   ) {}
 
   @Input({ required: true }) activePage!: MenuPage;
@@ -27,6 +29,14 @@ export class MenuComponent {
   @Output() logout = new EventEmitter<void>();
 
   menuOpen = false;
+  pendingSurveys = 0;
+
+  ngOnInit(): void {
+    this.enquestesService.list().subscribe({
+      next: surveys => this.pendingSurveys = surveys.filter(survey => survey.estado === EncuestaEstado.Publicada && survey.esDestinatario && !survey.haRespondido).length,
+      error: () => this.pendingSurveys = 0
+    });
+  }
 
   @HostListener('window:click')
   onWindowClick(): void {
