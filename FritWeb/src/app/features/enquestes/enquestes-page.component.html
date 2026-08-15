@@ -27,9 +27,6 @@
   <article class="dialog detail-dialog" (click)="$event.stopPropagation()">
     <header class="dialog-header"><div><span class="status" [class.open]="d.resumen.estado === Estado.Publicada">{{ statusLabel(d.resumen.estado) }}</span><h2>{{ d.resumen.titulo }}</h2><p>{{ d.resumen.descripcion }}</p></div><button class="icon" (click)="closeDetail()" aria-label="Tancar">×</button></header>
     <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.fechaCierre">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
-    <p class="participants" *ngIf="!d.resumen.esAnonima">
-      <b>Han votat:</b> {{ d.participants?.length ? d.participants?.join(', ') : 'encara ningú' }}
-    </p>
 
     <section *ngIf="d.resumen.esDestinatario && d.resumen.estado === Estado.Publicada && (!d.resumen.haRespondido || d.permiteEditarRespuesta)" class="questions">
       <div class="question" *ngFor="let q of d.preguntas; let i = index" [hidden]="!isQuestionVisible(q)">
@@ -49,7 +46,7 @@
 
     <section class="results" *ngIf="d.resultados; else hiddenResults"><h2>Resultats</h2>
       <div class="result" *ngFor="let result of d.resultados"><h3>{{ result.texto }}</h3><p *ngIf="result.media !== null && result.media !== undefined">Mitjana: <b>{{ result.media }}</b></p>
-        <div class="bar-row" *ngFor="let option of result.opciones"><div><span>{{ option.texto }}</span><b>{{ option.votos }} · {{ option.porcentaje }}%</b></div><div class="bar"><span [style.width.%]="option.porcentaje"></span></div></div>
+        <div class="bar-row" *ngFor="let option of result.opciones"><div><span>{{ option.texto }}</span><b>{{ option.votos }} · {{ option.porcentaje }}%</b></div><div class="bar"><span [style.width.%]="option.porcentaje"></span></div><p class="option-voters" *ngIf="option.votantes?.length">{{ option.votantes?.join(', ') }}</p></div>
         <blockquote *ngFor="let text of result.textos">{{ text }}</blockquote>
       </div>
     </section>
@@ -65,7 +62,7 @@
 <div class="backdrop" *ngIf="editorOpen()" (click)="editorOpen.set(false)">
   <article class="dialog editor-dialog" (click)="$event.stopPropagation()"><header class="dialog-header"><div><p class="eyebrow">Editor</p><h2>{{ editingId() ? 'Editar enquesta' : 'Nova enquesta' }}</h2></div><button class="icon" (click)="editorOpen.set(false)">×</button></header>
     <div class="form-grid"><label class="full"><span>Títol</span><input [(ngModel)]="draft.titulo" maxlength="200"></label><label class="full"><span>Descripció</span><textarea [(ngModel)]="draft.descripcion" rows="3" maxlength="1200"></textarea></label>
-      <label><span>Data de tancament</span><input type="datetime-local" [(ngModel)]="draft.fechaCierre"></label><label><span>Visibilitat dels resultats</span><select [(ngModel)]="draft.visibilidadResultados"><option [ngValue]="Visibilidad.Administradores">Només creador i administradors</option><option [ngValue]="Visibilidad.DespuesDeResponder">Després de respondre</option><option [ngValue]="Visibilidad.AlCerrar">Quan es tanqui</option><option [ngValue]="Visibilidad.Siempre">Sempre</option></select></label>
+      <label class="full"><span>Data de tancament</span><input type="datetime-local" [(ngModel)]="draft.fechaCierre"></label>
       <label class="check"><input type="checkbox" [(ngModel)]="draft.esAnonima">Respostes anònimes als resultats</label><label class="check"><input type="checkbox" [(ngModel)]="draft.permiteEditarRespuesta">Permetre editar la resposta</label>
     </div>
     <details class="recipients"><summary>Destinataris <small>{{ draft.destinatarioIds.length ? draft.destinatarioIds.length + ' seleccionats' : 'tot el grup' }}</small></summary><p>Si no selecciones ningú, s’enviarà a tot el grup.</p><div><label class="check" *ngFor="let user of users()"><input type="checkbox" [checked]="draft.destinatarioIds.includes(user.usuarioId)" (change)="toggleRecipient(user.usuarioId, $any($event.target).checked)">{{ user.nombre }}</label></div></details>

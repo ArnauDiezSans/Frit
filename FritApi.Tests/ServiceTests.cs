@@ -1215,7 +1215,7 @@ public class ServiceTests
         var created = await service.CreateAsync(admin.UsuarioId, new EncuestaWriteDto
         {
             Titulo = "Quin joc triem?",
-            EsAnonima = true,
+            EsAnonima = false,
             VisibilidadResultados = EncuestaVisibilidadResultados.DespuesDeResponder,
             Preguntas =
             [
@@ -1238,7 +1238,8 @@ public class ServiceTests
         Assert.True(created.Success);
         Assert.True((await service.PublishAsync(created.Id, admin.UsuarioId, false)).Success);
         var detail = await service.GetAsync(created.Id, member.UsuarioId, false);
-        var optionId = detail!.Preguntas[0].Opciones[0].EncuestaOpcionId;
+        Assert.Null(detail!.Resultados);
+        var optionId = detail.Preguntas[0].Opciones[0].EncuestaOpcionId;
         var submitted = await service.SubmitAsync(created.Id, member.UsuarioId,
             new EncuestaSubmitDto([new EncuestaRespuestaValorDto(detail.Preguntas[0].EncuestaPreguntaId, null, null, [optionId])]));
 
@@ -1247,6 +1248,7 @@ public class ServiceTests
         Assert.True(result!.Resumen.HaRespondido);
         Assert.Equal(1, result.Resultados![0].Opciones[0].Votos);
         Assert.Equal(100m, result.Resultados[0].Opciones[0].Porcentaje);
+        Assert.Equal(["Membre"], result.Resultados[0].Opciones[0].Votantes);
     }
 
     private static AppDbContext CreateContext()

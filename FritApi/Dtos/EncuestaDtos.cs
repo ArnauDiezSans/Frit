@@ -10,13 +10,14 @@ public record EncuestaResumenDto(int EncuestaId, string Titulo, string? Descripc
     bool EsAnonima, DateTime? FechaCierre, DateTime CreatedAt, string CreadorNombre, bool HaRespondido,
     bool EsDestinatario, int Respuestas, int Destinatarios, bool PuedeGestionar);
 public record EncuestaRespuestaValorDto(int EncuestaPreguntaId, string? Texto, int? Numero, List<int> OpcionIds);
-public record EncuestaResultadoOpcionDto(int EncuestaOpcionId, string Texto, int Votos, decimal Porcentaje);
+public record EncuestaResultadoOpcionDto(int EncuestaOpcionId, string Texto, int Votos, decimal Porcentaje,
+    List<string>? Votantes);
 public record EncuestaResultadoPreguntaDto(int EncuestaPreguntaId, string Texto, EncuestaPreguntaTipo Tipo,
     int Respuestas, decimal? Media, List<EncuestaResultadoOpcionDto> Opciones, List<string> Textos);
 public record EncuestaDetalleDto(EncuestaResumenDto Resumen, bool PermiteEditarRespuesta,
     EncuestaVisibilidadResultados VisibilidadResultados, List<EncuestaPreguntaDto> Preguntas,
     List<EncuestaRespuestaValorDto>? MiRespuesta, List<EncuestaResultadoPreguntaDto>? Resultados,
-    List<string>? Pendientes, List<int>? DestinatarioIds, List<string>? Participants);
+    List<string>? Pendientes, List<int>? DestinatarioIds);
 
 public class EncuestaWriteDto
 {

@@ -32,10 +32,7 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
 
         var activeUsers = await context.Usuarios.AsNoTracking().CountAsync(u => !u.EsUsuarioExterno);
         var mine = encuesta.Respuestas.FirstOrDefault(r => r.UsuarioId == userId);
-        var effectiveClosed = IsClosed(encuesta);
-        var canSeeResults = canManage || encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.Siempre ||
-            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.DespuesDeResponder && mine is not null ||
-            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.AlCerrar && effectiveClosed;
+        var canSeeResults = canManage || mine is not null;
         var pending = canManage ? await GetPendingNamesAsync(encuesta) : null;
         return new EncuestaDetalleDto(
             ToSummary(encuesta, userId, isAdmin, activeUsers, DateTime.UtcNow),
@@ -46,10 +43,7 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
                 v.Opciones.Select(o => o.EncuestaOpcionId).ToList())).ToList(),
             canSeeResults ? BuildResults(encuesta) : null,
             pending,
-            canManage ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList() : null,
-            encuesta.EsAnonima
-                ? null
-                : encuesta.Respuestas.Select(r => r.Usuario.Nombre).OrderBy(name => name).ToList());
+            canManage ? encuesta.Destinatarios.Select(d => d.UsuarioId).ToList() : null);
     }
 
     public async Task<(bool Success, string? Error, int Id)> CreateAsync(int userId, EncuestaWriteDto dto)
@@ -282,7 +276,17 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         var options = q.Opciones.OrderBy(o => o.Orden).Select(o =>
         {
             var votes = values.Count(v => v.Opciones.Any(selected => selected.EncuestaOpcionId == o.EncuestaOpcionId));
-            return new EncuestaResultadoOpcionDto(o.EncuestaOpcionId, o.Texto, votes, values.Count == 0 ? 0 : Math.Round(votes * 100m / values.Count, 1));
+            var voters = e.EsAnonima
+                ? null
+                : e.Respuestas
+                    .Where(response => response.Valores.Any(value =>
+                        value.EncuestaPreguntaId == q.EncuestaPreguntaId &&
+                        value.Opciones.Any(selected => selected.EncuestaOpcionId == o.EncuestaOpcionId)))
+                    .Select(response => response.Usuario.Nombre)
+                    .OrderBy(name => name)
+                    .ToList();
+            return new EncuestaResultadoOpcionDto(o.EncuestaOpcionId, o.Texto, votes,
+                values.Count == 0 ? 0 : Math.Round(votes * 100m / values.Count, 1), voters);
         }).ToList();
         var numbers = values.Where(v => v.Numero is not null).Select(v => v.Numero!.Value).ToList();
         return new EncuestaResultadoPreguntaDto(q.EncuestaPreguntaId, q.Texto, q.Tipo, values.Count,

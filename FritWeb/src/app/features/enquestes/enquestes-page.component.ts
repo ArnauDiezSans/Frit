@@ -13,7 +13,7 @@ import { EncuestaDetalle, EncuestaEstado, EncuestaResumen, EncuestaWrite, Enques
 export class EnquestesPageComponent {
   private service = inject(EnquestesService); private auth = inject(AuthService); private usersService = inject(UsuariosService);
   private route = inject(ActivatedRoute); private router = inject(Router);
-  readonly PreguntaTipo = PreguntaTipo; readonly Estado = EncuestaEstado; readonly Visibilidad = VisibilidadResultados;
+  readonly PreguntaTipo = PreguntaTipo; readonly Estado = EncuestaEstado;
   loading = signal(true); busy = signal(false); error = signal(''); message = signal(''); surveys = signal<EncuestaResumen[]>([]);
   detail = signal<EncuestaDetalle | null>(null); editorOpen = signal(false); editingId = signal<number | null>(null); users = signal<UsuarioOption[]>([]);
   answers: Record<number, RespuestaValor> = {};
