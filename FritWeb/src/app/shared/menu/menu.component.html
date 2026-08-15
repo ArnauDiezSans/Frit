@@ -78,6 +78,14 @@
     {{ primaryLabel }}
   </button>
 
+  <button
+    type="button"
+    class="menu-button menu-usuario"
+    [class.menu-button-active]="activePage === 'usuario'"
+    routerLink="/app/usuario">
+    Usuari
+  </button>
+
   <div class="session-actions">
     <button
       type="button"
@@ -89,14 +97,6 @@
         <path d="M20 6v5h-5"></path>
         <path d="M19 11a7 7 0 1 0-2.05 4.95"></path>
       </svg>
-    </button>
-
-    <button
-      type="button"
-      class="menu-button menu-usuario"
-      [class.menu-button-active]="activePage === 'usuario'"
-      routerLink="/app/usuario">
-      Usuari
     </button>
 
     <button type="button" class="menu-button logout-button" (click)="onLogout()">Sortir</button>

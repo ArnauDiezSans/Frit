@@ -1,6 +1,6 @@
 :host {
-  flex: 0 1 560px;
-  max-width: 560px;
+  flex: 1 1 720px;
+  max-width: 760px;
   min-width: 0;
   margin-left: auto;
   position: relative;
@@ -11,10 +11,9 @@
 }
 
 .app-menu {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
-  flex-wrap: wrap;
   width: 100%;
 }
 
@@ -26,32 +25,32 @@
   order: 2;
 }
 
-.menu-hall-of-fame {
+.menu-pendent-compra {
   order: 3;
+}
+
+.menu-remar {
+  order: 4;
+}
+
+.menu-juegos {
+  order: 5;
 }
 
 .menu-assistencia {
   order: 6;
 }
 
-.menu-pendent-compra {
-  order: 8;
-}
-
-.menu-remar {
-  order: 9;
-}
-
-.menu-juegos {
-  order: 4;
+.menu-enquestes {
+  order: 7;
 }
 
 .menu-primary-action {
-  order: 10;
+  order: 8;
 }
 
 .session-actions {
-  order: 11;
+  order: 10;
 }
 
 .refresh-icon-button {
@@ -59,7 +58,7 @@
 }
 
 .menu-usuario {
-  order: 10;
+  order: 9;
 }
 
 .logout-button {
@@ -67,6 +66,7 @@
 }
 
 .menu-button {
+  width: 100%;
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid #0f766e;
@@ -118,7 +118,8 @@
 }
 
 .session-actions {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
   align-items: stretch;
   gap: 8px;
 }
@@ -186,7 +187,7 @@
 
   .app-menu-open {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
   .menu-button {
@@ -198,8 +199,11 @@
   }
 
   .session-actions {
-    display: contents;
-    order: initial;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 4fr);
+    grid-column: span 5;
+    gap: 8px;
+    order: 10;
   }
 
   .menu-partidas {
@@ -210,43 +214,34 @@
     order: 2;
   }
 
-  .menu-hall-of-fame {
+  .menu-pendent-compra {
     order: 3;
   }
 
-  .menu-pendent-compra {
-    order: 5;
-  }
-
   .menu-remar {
-    order: 6;
+    order: 4;
   }
 
   .menu-juegos {
-    order: 7;
+    order: 5;
   }
 
   .menu-assistencia {
-    order: 8;
+    order: 6;
+  }
+
+  .menu-enquestes {
+    order: 7;
   }
 
   .menu-primary-action {
-    order: 10;
-  }
-
-  .refresh-icon-button {
-    order: 11;
+    order: 8;
   }
 
   .menu-usuario {
-    order: 12;
+    order: 9;
   }
 
-  .logout-button {
-    order: 13;
-  }
-
-  .menu-partidas,
   .menu-enquestes,
   .menu-rankings,
   .menu-hall-of-fame,
@@ -254,19 +249,18 @@
   .menu-remar,
   .menu-juegos,
   .menu-assistencia,
-  .menu-primary-action {
-    grid-column: auto;
-  }
-
-  .refresh-icon-button {
-    grid-column: auto;
-  }
-
   .menu-usuario {
-    grid-column: auto;
+    grid-column: span 5;
   }
 
-  .logout-button {
+  .menu-partidas,
+  .menu-primary-action {
+    grid-column: 1 / -1;
+  }
+
+  .session-actions .refresh-icon-button,
+  .session-actions .logout-button {
+    order: initial;
     grid-column: auto;
   }
 
@@ -277,10 +271,6 @@
 }
 
 @media (max-width: 520px) {
-  .app-menu-open {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .menu-button {
     padding: 0 10px;
     font-size: 0.92rem;
