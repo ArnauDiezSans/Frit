@@ -1,70 +1,69 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { UsuariosService } from '../juegos/usuarios.service';
 import { UsuarioOption } from '../juegos/juegos.models';
 import { EncuestaDetalle, EncuestaEstado, EncuestaResumen, EncuestaWrite, EnquestesService, PreguntaTipo, PreguntaWrite, RespuestaValor, VisibilidadResultados } from './enquestes.service';
 
+interface PollDraft { pregunta: string; respostes: string[]; durada: number; multiple: boolean; editable: boolean; anonima: boolean; }
+
 @Component({ selector: 'app-enquestes-page', standalone: true, imports: [CommonModule, FormsModule, MenuComponent], templateUrl: './enquestes-page.component.html', styleUrl: './enquestes-page.component.css' })
-export class EnquestesPageComponent {
+export class EnquestesPageComponent implements OnDestroy {
   private service = inject(EnquestesService); private auth = inject(AuthService); private usersService = inject(UsuariosService);
   private route = inject(ActivatedRoute); private router = inject(Router);
   readonly PreguntaTipo = PreguntaTipo; readonly Estado = EncuestaEstado;
   loading = signal(true); busy = signal(false); error = signal(''); message = signal(''); surveys = signal<EncuestaResumen[]>([]);
   detail = signal<EncuestaDetalle | null>(null); editorOpen = signal(false); editingId = signal<number | null>(null); users = signal<UsuarioOption[]>([]);
-  answers: Record<number, RespuestaValor> = {};
-  draft: EncuestaWrite = this.emptyDraft();
+  activeView = signal<'enquestes' | 'votacions'>('enquestes'); pollEditorOpen = signal(false); now = signal(Date.now());
+  answers: Record<number, RespuestaValor> = {}; draft: EncuestaWrite = this.emptyDraft(); pollDraft: PollDraft = this.emptyPoll();
+  readonly durations = [['30 segons',30],['45 segons',45],['1 minut',60],['2 minuts',120],['3 minuts',180],['5 minuts',300],['10 minuts',600],['15 minuts',900],['30 minuts',1800],['1 hora',3600],['2 hores',7200],['6 hores',21600],['12 hores',43200],['1 dia',86400],['2 dies',172800],['3 dies',259200],['5 dies',432000],['7 dies',604800],['10 dies',864000]] as const;
+  private timer?: ReturnType<typeof setInterval>; private refreshedClosedId?: number;
+
   ngOnInit(): void {
-    this.load();
-    this.usersService.getJugadores().subscribe(users => this.users.set(users));
+    this.activeView.set(this.route.snapshot.queryParamMap.get('vista') === 'votacions' ? 'votacions' : 'enquestes');
+    this.load(); this.usersService.getJugadores().subscribe(users => this.users.set(users));
+    this.timer = setInterval(() => { this.now.set(Date.now()); const d = this.detail(); if (d?.resumen.esVotacion && d.resumen.estado === EncuestaEstado.Publicada && this.remainingSeconds(d.resumen) <= 0 && this.refreshedClosedId !== d.resumen.encuestaId) { this.refreshedClosedId = d.resumen.encuestaId; this.open(d.resumen.encuestaId); this.refreshList(); } }, 1000);
   }
-  load(): void {
-    this.loading.set(true); this.service.list().subscribe({ next: rows => { this.surveys.set(rows); this.loading.set(false); const id = Number(this.route.snapshot.queryParamMap.get('enquestaId')); if (id) this.open(id); }, error: () => { this.error.set("No s'han pogut carregar les enquestes."); this.loading.set(false); } });
-  }
-  open(id: number): void {
-    this.error.set(''); this.service.get(id).subscribe({ next: detail => { this.detail.set(detail); this.answers = {}; for (const q of detail.preguntas) this.answers[q.encuestaPreguntaId] = detail.miRespuesta?.find(a => a.encuestaPreguntaId === q.encuestaPreguntaId) ?? { encuestaPreguntaId: q.encuestaPreguntaId, opcionIds: [] }; }, error: () => this.error.set("No s'ha pogut obrir l'enquesta.") });
-  }
+  ngOnDestroy(): void { if (this.timer) clearInterval(this.timer); }
+  load(): void { this.loading.set(true); this.service.list().subscribe({ next: rows => { this.surveys.set(rows); this.loading.set(false); const id = Number(this.route.snapshot.queryParamMap.get('enquestaId')); if (id) this.open(id); }, error: () => { this.error.set("No s'han pogut carregar les enquestes."); this.loading.set(false); } }); }
+  open(id: number): void { this.error.set(''); this.service.get(id).subscribe({ next: detail => { this.detail.set(detail); this.activeView.set(detail.resumen.esVotacion ? 'votacions' : 'enquestes'); this.prepareAnswers(detail); }, error: () => this.error.set("No s'ha pogut obrir.") }); }
   closeDetail(): void { this.detail.set(null); this.router.navigate([], { queryParams: { enquestaId: null }, queryParamsHandling: 'merge' }); }
+  setView(view: 'enquestes' | 'votacions'): void { this.activeView.set(view); this.detail.set(null); this.router.navigate([], { queryParams: { vista: view, enquestaId: null }, queryParamsHandling: 'merge' }); }
+  visibleSurveys(): EncuestaResumen[] { return this.surveys().filter(item => item.esVotacion === (this.activeView() === 'votacions')); }
+
   newSurvey(): void { this.editingId.set(null); this.draft = this.emptyDraft(); this.editorOpen.set(true); }
-  editDraft(): void {
-    const d = this.detail(); if (!d || d.resumen.estado !== EncuestaEstado.Borrador) return;
-    this.editingId.set(d.resumen.encuestaId); this.draft = { titulo: d.resumen.titulo, descripcion: d.resumen.descripcion, esAnonima: d.resumen.esAnonima, permiteEditarRespuesta: d.permiteEditarRespuesta, visibilidadResultados: d.visibilidadResultados, fechaCierre: d.resumen.fechaCierre ? this.toLocalDate(d.resumen.fechaCierre) : null, destinatarioIds: d.destinatarioIds ?? [], preguntas: d.preguntas.map(q => ({ tipo: q.tipo, texto: q.texto, ayuda: q.ayuda, obligatoria: q.obligatoria, minimo: q.minimo, maximo: q.maximo, condicionPreguntaOrden: q.condicionPreguntaOrden, condicionOpcionOrden: q.condicionOpcionOrden, opciones: q.opciones.map(o => o.texto) })) }; this.editorOpen.set(true);
+  newPoll(): void { this.pollDraft = this.emptyPoll(); this.pollEditorOpen.set(true); }
+  pollAnswerChanged(index: number): void { if (index === this.pollDraft.respostes.length - 1 && this.pollDraft.respostes[index].trim() && this.pollDraft.respostes.length < 6) this.pollDraft.respostes.push(''); }
+  removePollAnswer(index: number): void { if (this.pollDraft.respostes.length > 1) this.pollDraft.respostes.splice(index, 1); }
+  publishPoll(): void {
+    const options = this.pollDraft.respostes.map(value => value.trim()).filter(Boolean); const question = this.pollDraft.pregunta.trim();
+    if (!question || options.length < 2) { this.error.set('Escriu la pregunta i almenys dues respostes.'); return; }
+    const payload: EncuestaWrite = { esVotacion: true, titulo: question, descripcion: '', esAnonima: this.pollDraft.anonima, permiteEditarRespuesta: this.pollDraft.editable, visibilidadResultados: VisibilidadResultados.AlCerrar, fechaCierre: new Date(Date.now() + this.durations[this.pollDraft.durada][1] * 1000).toISOString(), destinatarioIds: [], preguntas: [{ tipo: this.pollDraft.multiple ? PreguntaTipo.OpcionMultiple : PreguntaTipo.OpcionUnica, texto: question, obligatoria: true, opciones: options }] };
+    this.busy.set(true); this.service.create(payload).pipe(switchMap(created => this.service.publish(created.encuestaId).pipe(switchMap(() => this.service.get(created.encuestaId))))).subscribe({ next: detail => { this.busy.set(false); this.pollEditorOpen.set(false); this.message.set('Votació publicada i notificació enviada.'); this.detail.set(detail); this.prepareAnswers(detail); this.refreshList(); }, error: err => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut publicar la votació."); } });
   }
+
+  editDraft(): void { const d = this.detail(); if (!d || d.resumen.estado !== EncuestaEstado.Borrador || d.resumen.esVotacion) return; this.editingId.set(d.resumen.encuestaId); this.draft = { esVotacion: false, titulo: d.resumen.titulo, descripcion: d.resumen.descripcion, esAnonima: d.resumen.esAnonima, permiteEditarRespuesta: d.permiteEditarRespuesta, visibilidadResultados: d.visibilidadResultados, fechaCierre: d.resumen.fechaCierre ? this.toLocalDate(d.resumen.fechaCierre) : null, destinatarioIds: d.destinatarioIds ?? [], preguntas: d.preguntas.map(q => ({ tipo: q.tipo, texto: q.texto, ayuda: q.ayuda, obligatoria: q.obligatoria, minimo: q.minimo, maximo: q.maximo, condicionPreguntaOrden: q.condicionPreguntaOrden, condicionOpcionOrden: q.condicionOpcionOrden, opciones: q.opciones.map(o => o.texto) })) }; this.editorOpen.set(true); }
   addQuestion(): void { this.draft.preguntas.push(this.emptyQuestion()); }
   removeQuestion(index: number): void { if (this.draft.preguntas.length <= 1) return; this.draft.preguntas.splice(index, 1); for (const q of this.draft.preguntas) { if (q.condicionPreguntaOrden === index) { q.condicionPreguntaOrden = null; q.condicionOpcionOrden = null; } else if (q.condicionPreguntaOrden !== null && q.condicionPreguntaOrden !== undefined && q.condicionPreguntaOrden > index) q.condicionPreguntaOrden--; } }
-  addOption(q: PreguntaWrite): void { q.opciones.push(''); }
-  removeOption(q: PreguntaWrite, index: number): void { if (q.opciones.length > 2) q.opciones.splice(index, 1); }
-  typeChanged(q: PreguntaWrite): void { q.opciones = this.hasOptions(q) ? (q.opciones.length >= 2 ? q.opciones : ['', '']) : []; if (q.tipo === PreguntaTipo.Escala) { q.minimo ??= 1; q.maximo ??= 5; } if (!this.hasOptions(q)) { const index = this.draft.preguntas.indexOf(q); for (const dependent of this.draft.preguntas) if (dependent.condicionPreguntaOrden === index) { dependent.condicionPreguntaOrden = null; dependent.condicionOpcionOrden = null; } } }
+  addOption(q: PreguntaWrite): void { q.opciones.push(''); } removeOption(q: PreguntaWrite, index: number): void { if (q.opciones.length > 2) q.opciones.splice(index, 1); }
+  typeChanged(q: PreguntaWrite): void { q.opciones = this.hasOptions(q) ? (q.opciones.length >= 2 ? q.opciones : ['', '']) : []; if (q.tipo === PreguntaTipo.Escala) { q.minimo ??= 1; q.maximo ??= 5; } }
   hasOptions(q: PreguntaWrite): boolean { return q.tipo === PreguntaTipo.OpcionUnica || q.tipo === PreguntaTipo.OpcionMultiple; }
   toggleRecipient(id: number, checked: boolean): void { this.draft.destinatarioIds = checked ? [...this.draft.destinatarioIds, id] : this.draft.destinatarioIds.filter(x => x !== id); }
-  save(): void {
-    if (!this.draft.titulo.trim() || this.draft.preguntas.some(q => !q.texto.trim() || this.hasOptions(q) && q.opciones.some(o => !o.trim()))) { this.error.set('Revisa el títol, les preguntes i les opcions.'); return; }
-    const payload = { ...this.draft, fechaCierre: this.draft.fechaCierre ? new Date(this.draft.fechaCierre).toISOString() : null };
-    this.busy.set(true); const id = this.editingId(); const req: Observable<unknown> = id ? this.service.update(id, payload) : this.service.create(payload);
-    req.subscribe({ next: (result: any) => { this.busy.set(false); this.editorOpen.set(false); this.message.set('Esborrany desat.'); this.load(); this.open(id ?? result.encuestaId); }, error: (err: any) => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut desar."); } });
-  }
-  submit(): void { const d = this.detail(); if (!d) return; this.busy.set(true); const visibleAnswers = d.preguntas.filter(q => this.isQuestionVisible(q)).map(q => this.answers[q.encuestaPreguntaId]); this.service.submit(d.resumen.encuestaId, visibleAnswers).subscribe({ next: () => { this.busy.set(false); this.message.set('Resposta desada.'); this.open(d.resumen.encuestaId); this.refreshList(); }, error: err => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut desar la resposta."); } }); }
-  setSingle(questionId: number, optionId: number): void { this.answers[questionId].opcionIds = [optionId]; }
-  setMultiple(questionId: number, optionId: number, checked: boolean): void { const ids = this.answers[questionId].opcionIds; this.answers[questionId].opcionIds = checked ? [...ids, optionId] : ids.filter(id => id !== optionId); }
+  save(): void { if (!this.draft.titulo.trim() || this.draft.preguntas.some(q => !q.texto.trim() || this.hasOptions(q) && q.opciones.some(o => !o.trim()))) { this.error.set('Revisa el títol, les preguntes i les opcions.'); return; } const payload = { ...this.draft, fechaCierre: this.draft.fechaCierre ? new Date(this.draft.fechaCierre).toISOString() : null }; this.busy.set(true); const id = this.editingId(); const req: Observable<unknown> = id ? this.service.update(id, payload) : this.service.create(payload); req.subscribe({ next: (result: any) => { this.busy.set(false); this.editorOpen.set(false); this.message.set('Esborrany desat.'); this.load(); this.open(id ?? result.encuestaId); }, error: (err: any) => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut desar."); } }); }
+  submit(): void { const d = this.detail(); if (!d) return; this.busy.set(true); const values = d.preguntas.filter(q => this.isQuestionVisible(q)).map(q => this.answers[q.encuestaPreguntaId]); this.service.submit(d.resumen.encuestaId, values).subscribe({ next: () => { this.busy.set(false); this.message.set(d.resumen.esVotacion ? 'Vot registrat.' : 'Resposta desada.'); this.open(d.resumen.encuestaId); this.refreshList(); }, error: err => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut desar la resposta."); } }); }
+  setSingle(questionId: number, optionId: number): void { this.answers[questionId].opcionIds = [optionId]; } setMultiple(questionId: number, optionId: number, checked: boolean): void { const ids = this.answers[questionId].opcionIds; this.answers[questionId].opcionIds = checked ? [...ids, optionId] : ids.filter(id => id !== optionId); }
   isQuestionVisible(question: EncuestaDetalle['preguntas'][number]): boolean { const d = this.detail(); if (!d || question.condicionPreguntaOrden === null || question.condicionPreguntaOrden === undefined) return true; const source = d.preguntas.find(q => q.orden === question.condicionPreguntaOrden); if (!source || !this.isQuestionVisible(source)) return false; const option = source.opciones.find(o => o.orden === question.condicionOpcionOrden); return !!option && this.answers[source.encuestaPreguntaId]?.opcionIds.includes(option.encuestaOpcionId); }
-  conditionSources(index: number): { question: PreguntaWrite; index: number }[] { return this.draft.preguntas.slice(0, index).map((question, sourceIndex) => ({ question, index: sourceIndex })).filter(item => this.hasOptions(item.question)); }
-  conditionOptions(question: PreguntaWrite): string[] { const index = question.condicionPreguntaOrden; return index === null || index === undefined ? [] : this.draft.preguntas[index]?.opciones ?? []; }
-  conditionChanged(question: PreguntaWrite): void { if (question.condicionPreguntaOrden === null || question.condicionPreguntaOrden === undefined) question.condicionOpcionOrden = null; else question.condicionOpcionOrden = 0; }
-  manage(action: 'publish' | 'close' | 'remind' | 'delete'): void {
-    const d = this.detail(); if (!d) return; if (action === 'delete' && !confirm('Eliminar aquest esborrany?')) return;
-    this.busy.set(true); const requests: Record<typeof action, Observable<unknown>> = { publish: this.service.publish(d.resumen.encuestaId), close: this.service.close(d.resumen.encuestaId), remind: this.service.remind(d.resumen.encuestaId), delete: this.service.delete(d.resumen.encuestaId) };
-    requests[action].subscribe({ next: (result: any) => { this.busy.set(false); this.message.set(action === 'remind' ? `Recordatori enviat a ${result.destinatarios} persones.` : 'Canvi desat.'); if (action === 'delete') this.closeDetail(); else this.open(d.resumen.encuestaId); this.refreshList(); }, error: (err: any) => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut completar l'acció."); } });
-  }
-  logout(): void { this.auth.logout().subscribe(() => this.router.navigateByUrl('/login')); }
-  statusLabel(s: EncuestaEstado): string { return ['Esborrany', 'Oberta', 'Tancada'][s]; }
-  typeLabel(t: PreguntaTipo): string { return ['Opció única', 'Opció múltiple', 'Text curt', 'Text llarg', 'Escala'][t]; }
-  trackByIndex(index: number): number { return index; }
-  private refreshList(): void { this.service.list().subscribe(rows => this.surveys.set(rows)); }
-  private emptyDraft(): EncuestaWrite { return { titulo: '', descripcion: '', esAnonima: false, permiteEditarRespuesta: true, visibilidadResultados: VisibilidadResultados.DespuesDeResponder, fechaCierre: null, destinatarioIds: [], preguntas: [this.emptyQuestion()] }; }
-  private emptyQuestion(): PreguntaWrite { return { tipo: PreguntaTipo.OpcionUnica, texto: '', ayuda: '', obligatoria: true, opciones: ['', ''] }; }
+  conditionSources(index: number): { question: PreguntaWrite; index: number }[] { return this.draft.preguntas.slice(0, index).map((question, sourceIndex) => ({ question, index: sourceIndex })).filter(item => this.hasOptions(item.question)); } conditionOptions(question: PreguntaWrite): string[] { const index = question.condicionPreguntaOrden; return index === null || index === undefined ? [] : this.draft.preguntas[index]?.opciones ?? []; } conditionChanged(question: PreguntaWrite): void { if (question.condicionPreguntaOrden === null || question.condicionPreguntaOrden === undefined) question.condicionOpcionOrden = null; else question.condicionOpcionOrden = 0; }
+  manage(action: 'publish' | 'close' | 'remind' | 'delete'): void { const d = this.detail(); if (!d) return; if (action === 'delete' && !confirm(d.resumen.esVotacion ? 'Eliminar aquesta votació sense vots?' : 'Eliminar aquest esborrany?')) return; this.busy.set(true); const requests: Record<typeof action, Observable<unknown>> = { publish: this.service.publish(d.resumen.encuestaId), close: this.service.close(d.resumen.encuestaId), remind: this.service.remind(d.resumen.encuestaId), delete: this.service.delete(d.resumen.encuestaId) }; requests[action].subscribe({ next: (result: any) => { this.busy.set(false); this.message.set(action === 'remind' ? `Recordatori enviat a ${result.destinatarios} persones.` : 'Canvi desat.'); if (action === 'delete') this.closeDetail(); else this.open(d.resumen.encuestaId); this.refreshList(); }, error: (err: any) => { this.busy.set(false); this.error.set(err?.error?.message ?? "No s'ha pogut completar l'acció."); } }); }
+  logout(): void { this.auth.logout().subscribe(() => this.router.navigateByUrl('/login')); } statusLabel(s: EncuestaEstado): string { return ['Esborrany', 'Oberta', 'Tancada'][s]; } typeLabel(t: PreguntaTipo): string { return ['Opció única', 'Opció múltiple', 'Text curt', 'Text llarg', 'Escala'][t]; } trackByIndex(index: number): number { return index; }
+  remainingSeconds(survey: EncuestaResumen): number { return survey.fechaCierre ? Math.max(0, Math.ceil((new Date(survey.fechaCierre).getTime() - this.now()) / 1000)) : 0; }
+  countdown(survey: EncuestaResumen): string { const total = this.remainingSeconds(survey); if (!total) return 'Finalitzada'; const days = Math.floor(total / 86400), hours = Math.floor(total % 86400 / 3600), minutes = Math.floor(total % 3600 / 60), seconds = total % 60; return days ? `${days}d ${hours}h` : hours ? `${hours}h ${minutes}min` : minutes ? `${minutes}min ${seconds}s` : `${seconds}s`; }
+  private refreshList(): void { this.service.list().subscribe(rows => this.surveys.set(rows)); } private prepareAnswers(detail: EncuestaDetalle): void { this.answers = {}; for (const q of detail.preguntas) this.answers[q.encuestaPreguntaId] = detail.miRespuesta?.find(a => a.encuestaPreguntaId === q.encuestaPreguntaId) ?? { encuestaPreguntaId: q.encuestaPreguntaId, opcionIds: [] }; }
+  private emptyPoll(): PollDraft { return { pregunta: '', respostes: [''], durada: 2, multiple: false, editable: true, anonima: false }; }
+  private emptyDraft(): EncuestaWrite { return { esVotacion: false, titulo: '', descripcion: '', esAnonima: false, permiteEditarRespuesta: true, visibilidadResultados: VisibilidadResultados.DespuesDeResponder, fechaCierre: null, destinatarioIds: [], preguntas: [this.emptyQuestion()] }; } private emptyQuestion(): PreguntaWrite { return { tipo: PreguntaTipo.OpcionUnica, texto: '', ayuda: '', obligatoria: true, opciones: ['', ''] }; }
   private toLocalDate(value: string): string { const d = new Date(value); const pad = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
 }

@@ -211,6 +211,17 @@ public sealed class PushNotificationService(
         await SendAsync(subscriptions, "Enquesta pendent", $"Encara pots respondre: {title}", url, cancellationToken);
     }
 
+    public async Task SendPollAsync(int creatorUserId, string question, string url, CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured) return;
+        var subscriptions = await GetCategorySubscriptionsAsync(
+            preference => preference.Encuesta,
+            creatorUserId,
+            false,
+            cancellationToken);
+        await SendAsync(subscriptions, "Nova votació", question, url, cancellationToken);
+    }
+
     public async Task SendGamePreferenceChangesAsync(
         int actorUserId,
         string actorName,

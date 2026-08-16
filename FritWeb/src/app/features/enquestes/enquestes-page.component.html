@@ -1,24 +1,23 @@
 <main class="survey-page">
   <header class="page-header">
-    <div><p class="eyebrow">Participació</p><h1>Enquestes</h1><p>Consulta, respon i conserva les decisions del grup.</p></div>
+    <div><p class="eyebrow">Participació</p><h1>{{ activeView() === 'enquestes' ? 'Enquestes' : 'Votacions' }}</h1><p>Consulta, respon i conserva les decisions del grup.</p></div>
     <app-menu activePage="enquestes" (logout)="logout()" />
   </header>
 
-  <div class="page-actions">
-    <button class="primary create-button" (click)="newSurvey()">+ Nova enquesta</button>
-  </div>
+  <nav class="view-switch" aria-label="Vista de participació"><button [class.active]="activeView() === 'enquestes'" (click)="setView('enquestes')">Enquestes</button><button [class.active]="activeView() === 'votacions'" (click)="setView('votacions')">Votacions</button></nav>
+  <div class="page-actions"><button class="primary create-button" (click)="activeView() === 'enquestes' ? newSurvey() : newPoll()">+ {{ activeView() === 'enquestes' ? 'Nova enquesta' : 'Nova pregunta' }}</button></div>
 
   <p class="notice success" *ngIf="message()">{{ message() }}</p>
   <p class="notice error" *ngIf="error()">{{ error() }}</p>
   <section class="survey-list" *ngIf="!loading(); else loadingTpl">
-    <button class="survey-card" *ngFor="let survey of surveys()" (click)="open(survey.encuestaId)">
+    <button class="survey-card" *ngFor="let survey of visibleSurveys()" (click)="open(survey.encuestaId)">
       <span class="status" [class.open]="survey.estado === Estado.Publicada">{{ statusLabel(survey.estado) }}</span>
-      <span class="survey-title">{{ survey.titulo }}</span><span class="survey-description">{{ survey.descripcion || 'Sense descripció' }}</span>
+      <span class="survey-title">{{ survey.titulo }}</span><span class="survey-description" *ngIf="!survey.esVotacion">{{ survey.descripcion || 'Sense descripció' }}</span><span class="poll-countdown" *ngIf="survey.esVotacion && survey.estado === Estado.Publicada">⏱ {{ countdown(survey) }}</span>
       <span class="survey-meta"><b>{{ survey.respuestas }}/{{ survey.destinatarios }}</b> respostes · {{ survey.esAnonima ? 'Anònima' : 'Identificada' }}</span>
       <span class="pending" *ngIf="survey.estado === Estado.Publicada && survey.esDestinatario && !survey.haRespondido">Pendent de respondre</span>
       <span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span>
     </button>
-    <div class="empty" *ngIf="surveys().length === 0"><h2>Encara no hi ha enquestes</h2><p>Crea la primera enquesta del grup.</p></div>
+    <div class="empty" *ngIf="visibleSurveys().length === 0"><h2>Encara no hi ha {{ activeView() }}</h2><p>Crea la primera proposta del grup.</p></div>
   </section>
   <ng-template #loadingTpl><p class="loading">Carregant enquestes...</p></ng-template>
 </main>
@@ -26,22 +25,22 @@
 <div class="backdrop" *ngIf="detail() as d" (click)="closeDetail()">
   <article class="dialog detail-dialog" (click)="$event.stopPropagation()">
     <header class="dialog-header"><div><span class="status" [class.open]="d.resumen.estado === Estado.Publicada">{{ statusLabel(d.resumen.estado) }}</span><h2>{{ d.resumen.titulo }}</h2><p>{{ d.resumen.descripcion }}</p></div><button class="icon" (click)="closeDetail()" aria-label="Tancar">×</button></header>
-    <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.fechaCierre">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
+    <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.esVotacion">⏱ {{ countdown(d.resumen) }}</span><span *ngIf="d.resumen.fechaCierre && !d.resumen.esVotacion">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
 
     <section *ngIf="d.resumen.esDestinatario && d.resumen.estado === Estado.Publicada && (!d.resumen.haRespondido || d.permiteEditarRespuesta)" class="questions">
       <div class="question" *ngFor="let q of d.preguntas; let i = index" [hidden]="!isQuestionVisible(q)">
-        <h3>{{ i + 1 }}. {{ q.texto }} <small *ngIf="!q.obligatoria">Opcional</small></h3><p *ngIf="q.ayuda">{{ q.ayuda }}</p>
-        <div class="choice" *ngFor="let option of q.opciones">
+        <h3 *ngIf="!d.resumen.esVotacion">{{ i + 1 }}. {{ q.texto }} <small *ngIf="!q.obligatoria">Opcional</small></h3><p *ngIf="q.ayuda">{{ q.ayuda }}</p>
+        <label class="choice" [class.poll-choice]="d.resumen.esVotacion" *ngFor="let option of q.opciones">
           <input *ngIf="q.tipo === PreguntaTipo.OpcionUnica" type="radio" [attr.aria-label]="option.texto" [name]="'q'+q.encuestaPreguntaId" [checked]="answers[q.encuestaPreguntaId].opcionIds.includes(option.encuestaOpcionId)" (change)="setSingle(q.encuestaPreguntaId, option.encuestaOpcionId)">
           <input *ngIf="q.tipo === PreguntaTipo.OpcionMultiple" type="checkbox" [attr.aria-label]="option.texto" [checked]="answers[q.encuestaPreguntaId].opcionIds.includes(option.encuestaOpcionId)" (change)="setMultiple(q.encuestaPreguntaId, option.encuestaOpcionId, $any($event.target).checked)"><span>{{ option.texto }}</span>
-        </div>
+        </label>
         <input class="text-input" *ngIf="q.tipo === PreguntaTipo.TextoCorto" [(ngModel)]="answers[q.encuestaPreguntaId].texto" maxlength="4000">
         <textarea *ngIf="q.tipo === PreguntaTipo.TextoLargo" [(ngModel)]="answers[q.encuestaPreguntaId].texto" rows="4" maxlength="4000"></textarea>
         <div class="scale" *ngIf="q.tipo === PreguntaTipo.Escala"><label *ngFor="let n of [].constructor((q.maximo || 5) - (q.minimo || 1) + 1); let x = index"><input type="radio" [name]="'q'+q.encuestaPreguntaId" [checked]="answers[q.encuestaPreguntaId].numero === x + (q.minimo || 1)" (change)="answers[q.encuestaPreguntaId].numero = x + (q.minimo || 1)"><span>{{ x + (q.minimo || 1) }}</span></label></div>
       </div>
-      <button class="primary" [disabled]="busy()" (click)="submit()">{{ d.resumen.haRespondido ? 'Actualitzar resposta' : 'Enviar resposta' }}</button>
+      <button class="primary" [disabled]="busy()" (click)="submit()">{{ d.resumen.esVotacion ? (d.resumen.haRespondido ? 'Actualitzar vot' : 'Votar') : (d.resumen.haRespondido ? 'Actualitzar resposta' : 'Enviar resposta') }}</button>
     </section>
-    <p class="locked" *ngIf="d.resumen.estado === Estado.Cerrada">Aquesta enquesta està tancada.</p>
+    <p class="locked" *ngIf="d.resumen.estado === Estado.Cerrada">Aquesta {{ d.resumen.esVotacion ? 'votació' : 'enquesta' }} està tancada.</p>
     <p class="locked" *ngIf="d.resumen.haRespondido && !d.permiteEditarRespuesta">La teva resposta ja està registrada i no es pot editar.</p>
 
     <section class="results" *ngIf="d.resultados; else hiddenResults"><h2>Resultats</h2>
@@ -54,8 +53,24 @@
 
     <section class="admin-panel" *ngIf="d.resumen.puedeGestionar"><h3>Gestió</h3><p *ngIf="d.pendientes?.length"><b>Pendents:</b> {{ d.pendientes?.join(', ') }}</p><div class="actions">
       <button *ngIf="d.resumen.estado === Estado.Borrador" (click)="editDraft()">Editar</button><button class="primary" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('publish')">Publicar i notificar</button>
-      <button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Tancar</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('delete')">Eliminar</button>
+      <button *ngIf="d.resumen.estado === Estado.Publicada && !d.resumen.esVotacion" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Tancar</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador || (d.resumen.esVotacion && d.resumen.respuestas === 0)" (click)="manage('delete')">Eliminar</button>
     </div></section>
+  </article>
+</div>
+
+<div class="backdrop" *ngIf="pollEditorOpen()" (click)="pollEditorOpen.set(false)">
+  <article class="dialog poll-editor" (click)="$event.stopPropagation()">
+    <header class="dialog-header"><div><p class="eyebrow">Votació ràpida</p><h2>Nova pregunta</h2><p>Planteja una pregunta al grup i publica-la al moment.</p></div><button class="icon" (click)="pollEditorOpen.set(false)" aria-label="Tancar">×</button></header>
+    <label class="poll-field"><span>Pregunta</span><input [(ngModel)]="pollDraft.pregunta" maxlength="200" placeholder="Què vols preguntar?"></label>
+    <div class="poll-options"><label *ngFor="let answer of pollDraft.respostes; let i = index; trackBy: trackByIndex"><span>Resposta {{ i + 1 }}</span><input [(ngModel)]="pollDraft.respostes[i]" (ngModelChange)="pollAnswerChanged(i)" maxlength="300" [placeholder]="i === 0 ? 'Escriu per afegir-ne una altra' : 'Resposta opcional'"><button class="icon small" *ngIf="pollDraft.respostes.length > 1" (click)="removePollAnswer(i)" aria-label="Eliminar resposta">×</button></label></div>
+    <section class="poll-settings">
+      <label class="duration"><span>Durada: <b>{{ durations[pollDraft.durada][0] }}</b></span><input type="range" min="0" [max]="durations.length - 1" step="1" [(ngModel)]="pollDraft.durada"><small>De 30 segons a 10 dies</small></label>
+      <label class="toggle"><input type="checkbox" [(ngModel)]="pollDraft.multiple"><span><b>Resposta múltiple</b><small>Permet marcar més d'una opció.</small></span></label>
+      <label class="toggle"><input type="checkbox" [(ngModel)]="pollDraft.editable"><span><b>Vot modificable</b><small>Es podrà canviar mentre sigui oberta.</small></span></label>
+      <label class="toggle"><input type="checkbox" [(ngModel)]="pollDraft.anonima"><span><b>Votació anònima</b><small>No es mostraran els noms als resultats.</small></span></label>
+    </section>
+    <p class="poll-note">Els resultats apareixeran quan acabi. Publicar-la avisarà qui tingui actives les notificacions d'enquestes i votacions.</p>
+    <div class="editor-actions"><span></span><button (click)="pollEditorOpen.set(false)">Cancel·lar</button><button class="primary" [disabled]="busy()" (click)="publishPoll()">Publicar i notificar</button></div>
   </article>
 </div>
 

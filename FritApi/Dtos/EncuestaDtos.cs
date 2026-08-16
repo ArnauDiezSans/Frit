@@ -7,7 +7,7 @@ public record EncuestaPreguntaDto(int EncuestaPreguntaId, EncuestaPreguntaTipo T
     bool Obligatoria, int Orden, int? Minimo, int? Maximo, int? CondicionPreguntaOrden,
     int? CondicionOpcionOrden, List<EncuestaOpcionDto> Opciones);
 public record EncuestaResumenDto(int EncuestaId, string Titulo, string? Descripcion, EncuestaEstado Estado,
-    bool EsAnonima, DateTime? FechaCierre, DateTime CreatedAt, string CreadorNombre, bool HaRespondido,
+    bool EsVotacion, bool EsAnonima, DateTime? FechaCierre, DateTime CreatedAt, string CreadorNombre, bool HaRespondido,
     bool EsDestinatario, int Respuestas, int Destinatarios, bool PuedeGestionar);
 public record EncuestaRespuestaValorDto(int EncuestaPreguntaId, string? Texto, int? Numero, List<int> OpcionIds);
 public record EncuestaResultadoOpcionDto(int EncuestaOpcionId, string Texto, int Votos, decimal Porcentaje,
@@ -21,6 +21,7 @@ public record EncuestaDetalleDto(EncuestaResumenDto Resumen, bool PermiteEditarR
 
 public class EncuestaWriteDto
 {
+    public bool EsVotacion { get; set; }
     public string Titulo { get; set; } = string.Empty;
     public string? Descripcion { get; set; }
     public bool EsAnonima { get; set; }

@@ -15,6 +15,7 @@ public class Encuesta : ITenantEntity
     [Required, MaxLength(200)] public string Titulo { get; set; } = string.Empty;
     [MaxLength(1200)] public string? Descripcion { get; set; }
     public EncuestaEstado Estado { get; set; }
+    public bool EsVotacion { get; set; }
     public bool EsAnonima { get; set; }
     public bool PermiteEditarRespuesta { get; set; } = true;
     public EncuestaVisibilidadResultados VisibilidadResultados { get; set; }

@@ -33,10 +33,12 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         var activeUsers = await context.Usuarios.AsNoTracking().CountAsync(u => !u.EsUsuarioExterno);
         var mine = encuesta.Respuestas.FirstOrDefault(r => r.UsuarioId == userId);
         var effectiveClosed = IsClosed(encuesta);
-        var canSeeResults = canManage ||
-            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.Siempre ||
-            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.DespuesDeResponder && mine is not null ||
-            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.AlCerrar && effectiveClosed;
+        var canSeeResults = encuesta.EsVotacion
+            ? effectiveClosed
+            : canManage ||
+              encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.Siempre ||
+              encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.DespuesDeResponder && mine is not null ||
+              encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.AlCerrar && effectiveClosed;
         var pending = canManage ? await GetPendingNamesAsync(encuesta) : null;
         return new EncuestaDetalleDto(
             ToSummary(encuesta, userId, isAdmin, activeUsers, DateTime.UtcNow),
@@ -91,14 +93,20 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         encuesta.PublicadaAt = DateTime.UtcNow;
         encuesta.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
-        await pushNotifications.SendSurveyAsync(actorId, encuesta.Titulo, $"/app/enquestes?enquestaId={id}",
-            encuesta.Destinatarios.Select(d => d.UsuarioId).ToList());
+        var url = encuesta.EsVotacion
+            ? $"/app/enquestes?vista=votacions&enquestaId={id}"
+            : $"/app/enquestes?vista=enquestes&enquestaId={id}";
+        if (encuesta.EsVotacion)
+            await pushNotifications.SendPollAsync(actorId, encuesta.Titulo, url);
+        else
+            await pushNotifications.SendSurveyAsync(actorId, encuesta.Titulo, url,
+                encuesta.Destinatarios.Select(d => d.UsuarioId).ToList());
         return (true, null);
     }
 
     public async Task<(bool Success, string? Error)> CloseAsync(int id, int actorId, bool isAdmin)
     {
-        var encuesta = await context.Encuestas.FirstOrDefaultAsync(e => e.EncuestaId == id);
+        var encuesta = await context.Encuestas.Include(e => e.Respuestas).FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
         if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
         encuesta.Estado = EncuestaEstado.Cerrada;
@@ -109,10 +117,11 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
 
     public async Task<(bool Success, string? Error)> DeleteAsync(int id, int actorId, bool isAdmin)
     {
-        var encuesta = await context.Encuestas.FirstOrDefaultAsync(e => e.EncuestaId == id);
+        var encuesta = await context.Encuestas.Include(e => e.Respuestas).FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
         if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
-        if (encuesta.Estado != EncuestaEstado.Borrador) return (false, "Només es poden eliminar els esborranys.");
+        if (encuesta.Estado != EncuestaEstado.Borrador && (!encuesta.EsVotacion || encuesta.Respuestas.Count > 0))
+            return (false, "Només es poden eliminar els esborranys o les votacions sense vots.");
         context.Encuestas.Remove(encuesta);
         await context.SaveChangesAsync();
         return (true, null);
@@ -181,6 +190,18 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         if (dto.DestinatarioIds.Count != dto.DestinatarioIds.Distinct().Count()) return "Hi ha destinataris repetits.";
         if (dto.DestinatarioIds.Count > 0 && await context.Usuarios.CountAsync(u => dto.DestinatarioIds.Contains(u.UsuarioId) && !u.EsUsuarioExterno) != dto.DestinatarioIds.Count)
             return "Hi ha destinataris no vàlids.";
+        if (dto.EsVotacion)
+        {
+            if (dto.Preguntas.Count != 1) return "Una votació ha de tenir una sola pregunta.";
+            var pollQuestion = dto.Preguntas[0];
+            if (pollQuestion.Tipo is not (EncuestaPreguntaTipo.OpcionUnica or EncuestaPreguntaTipo.OpcionMultiple))
+                return "Una votació ha de ser d'opció única o múltiple.";
+            if (pollQuestion.Opciones.Count is < 2 or > 6) return "Una votació necessita entre 2 i 6 respostes.";
+            if (dto.FechaCierre is null) return "Selecciona la durada de la votació.";
+            if (dto.VisibilidadResultados != EncuestaVisibilidadResultados.AlCerrar)
+                return "Els resultats d'una votació només es mostren quan es tanca.";
+            if (dto.DestinatarioIds.Count > 0) return "Les votacions estan obertes a tot el grup.";
+        }
         foreach (var (q, questionIndex) in dto.Preguntas.Select((value, index) => (value, index)))
         {
             if (string.IsNullOrWhiteSpace(q.Texto) || q.Texto.Trim().Length > 500) return "Totes les preguntes necessiten un text vàlid.";
@@ -232,7 +253,7 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
 
     private static void Apply(Encuesta encuesta, EncuestaWriteDto dto)
     {
-        encuesta.Titulo = dto.Titulo.Trim(); encuesta.Descripcion = dto.Descripcion?.Trim(); encuesta.EsAnonima = dto.EsAnonima;
+        encuesta.Titulo = dto.Titulo.Trim(); encuesta.Descripcion = dto.Descripcion?.Trim(); encuesta.EsVotacion = dto.EsVotacion; encuesta.EsAnonima = dto.EsAnonima;
         encuesta.PermiteEditarRespuesta = dto.PermiteEditarRespuesta; encuesta.VisibilidadResultados = dto.VisibilidadResultados;
         encuesta.FechaCierre = dto.FechaCierre?.ToUniversalTime(); encuesta.UpdatedAt = DateTime.UtcNow;
         foreach (var (q, index) in dto.Preguntas.Select((value, index) => (value, index)))
@@ -261,7 +282,7 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
     }
     private static EncuestaResumenDto ToSummary(Encuesta e, int userId, bool isAdmin, int allUsers, DateTime now) =>
         new(e.EncuestaId, e.Titulo, e.Descripcion, e.Estado == EncuestaEstado.Publicada && e.FechaCierre <= now ? EncuestaEstado.Cerrada : e.Estado,
-            e.EsAnonima, e.FechaCierre, e.CreatedAt, e.UsuarioCreador.Nombre, e.Respuestas.Any(r => r.UsuarioId == userId),
+            e.EsVotacion, e.EsAnonima, e.FechaCierre, e.CreatedAt, e.UsuarioCreador.Nombre, e.Respuestas.Any(r => r.UsuarioId == userId),
             e.Destinatarios.Count == 0 || e.Destinatarios.Any(d => d.UsuarioId == userId),
             e.Respuestas.Count, e.Destinatarios.Count == 0 ? allUsers : e.Destinatarios.Count,
             isAdmin || e.UsuarioCreadorId == userId);
