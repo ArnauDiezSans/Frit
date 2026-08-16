@@ -1,5 +1,6 @@
 :host {
-  flex: 1 1 720px;
+  flex: 0 1 auto;
+  width: max-content;
   max-width: 760px;
   min-width: 0;
   margin-left: auto;
@@ -11,16 +12,21 @@
 }
 
 .app-menu {
-  display: grid;
+  display: inline-grid;
   gap: 12px;
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
 }
 
 .menu-row {
   display: flex;
-  justify-content: space-between;
   gap: 12px;
   width: 100%;
+}
+
+.menu-row-primary .menu-rankings,
+.menu-row-secondary .menu-usuario {
+  flex: 1 1 auto;
 }
 
 .menu-partidas {
