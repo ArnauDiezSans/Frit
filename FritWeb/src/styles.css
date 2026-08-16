@@ -69,6 +69,49 @@ button {
   touch-action: manipulation;
 }
 
+.filter-chip-group {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.filter-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid #d0d5dd;
+  border-radius: 999px;
+  background: #fff;
+  color: #344054;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.filter-check input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.filter-check-active {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  color: #0f766e;
+}
+
+.filter-check-only {
+  background: #0f766e;
+  color: #fff;
+}
+
+.filter-check:focus-within {
+  outline: 3px solid rgba(15, 118, 110, 0.3);
+  outline-offset: 2px;
+}
+
 .icon-action-button {
   width: 36px !important;
   min-width: 36px !important;
@@ -347,6 +390,10 @@ body.brand-ajjrr .eyebrow::after {
 .notification-range select { min-height: 36px; padding: 6px 10px; border: 1px solid #d0d5dd; border-radius: 9px; background: #fff; color: #101828; font: inherit; }
 
 @media (max-width: 820px) {
+  .filter-chip-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .notification-control { grid-column: 1 / -1; padding-top: 4px; }
   .notification-control .notification-toggle { width: 100%; min-height: 38px; padding: 0 10px; border: 1px solid #d0d5dd; border-radius: 10px; background: #f8fafc; }
   .notification-device { flex-direction: column; align-items: stretch; }

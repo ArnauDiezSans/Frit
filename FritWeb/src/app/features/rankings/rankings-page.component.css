@@ -238,7 +238,7 @@ h1 {
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   align-items: end;
   gap: 8px;
 }
@@ -259,34 +259,8 @@ h1 {
   color: #344054;
 }
 
-.filter-chip-group {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.filter-check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 7px 12px;
-  border: 1px solid #d0d5dd;
-  border-radius: 999px;
-  font-weight: 600;
-}
-
-.filter-check input {
-  width: 16px;
-  height: 16px;
-  accent-color: #0f766e;
-}
-
-.filter-check-active {
-  border-color: #0f766e;
-  background: #ecfdf5;
-  color: #0f766e;
+.filters-grid > .filter-chip-group {
+  grid-column: span 4;
 }
 
 .filter-input {
@@ -427,9 +401,13 @@ h1 {
 
 .charts-filters-grid {
   display: grid;
-  grid-template-columns: 2fr repeat(4, minmax(0, 1fr));
+  grid-template-columns: 2fr repeat(6, minmax(0, 1fr));
   align-items: end;
   gap: 8px;
+}
+
+.charts-filters-grid > .filter-chip-group {
+  grid-column: span 4;
 }
 
 .chart-users-heading {
@@ -907,8 +885,9 @@ h1 {
     grid-column: 1 / -1;
   }
 
-  .filter-chip-group {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .filters-grid > .filter-chip-group,
+  .charts-filters-grid > .filter-chip-group {
+    grid-column: 1 / -1;
   }
 
   .filter-field {
