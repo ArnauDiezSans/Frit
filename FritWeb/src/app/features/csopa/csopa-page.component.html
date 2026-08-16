@@ -23,7 +23,7 @@
   <section class="entry-cards" *ngIf="!loading() && !error() && canPublish()">
     <section class="content-card entry-card">
       <form [formGroup]="entryForm" (ngSubmit)="publicarEntrada()" class="entry-form">
-        <label class="form-field entry-type-field">
+        <div class="form-field entry-type-field">
           <span>Tipus</span>
           <app-autocomplete-select
             [items]="filteredEntryTypes()"
@@ -36,7 +36,7 @@
             (searchTextChange)="updateEntryTypeSearch($event)"
             (selectedChange)="selectEntryType($event)"
             (cleared)="clearEntryType()" />
-        </label>
+        </div>
 
         <label class="form-field" *ngIf="selectedEntryType()?.requiresTitle">
           <span>{{ selectedEntryType()?.id === 'altres' ? 'Títol' : 'Pel·lícula' }}</span>

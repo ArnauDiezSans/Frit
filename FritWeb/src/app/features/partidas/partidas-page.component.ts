@@ -177,7 +177,7 @@ export class PartidasPageComponent implements OnInit {
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
 
   userName = computed(() => this.authService.currentUser?.nombre ?? 'Usuari');
-  canEditPartidas = computed(() => this.userName().trim().toLowerCase() === 'arnau');
+  canEditPartidas = this.authService.isAdmin;
   modalTitle = computed(() => this.editingPartidaId() ? 'Editar partida' : 'Nova partida');
   modalDescription = computed(() =>
     this.editingPartidaId()

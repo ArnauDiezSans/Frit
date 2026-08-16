@@ -32,7 +32,11 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
 
         var activeUsers = await context.Usuarios.AsNoTracking().CountAsync(u => !u.EsUsuarioExterno);
         var mine = encuesta.Respuestas.FirstOrDefault(r => r.UsuarioId == userId);
-        var canSeeResults = canManage || mine is not null;
+        var effectiveClosed = IsClosed(encuesta);
+        var canSeeResults = canManage ||
+            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.Siempre ||
+            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.DespuesDeResponder && mine is not null ||
+            encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.AlCerrar && effectiveClosed;
         var pending = canManage ? await GetPendingNamesAsync(encuesta) : null;
         return new EncuestaDetalleDto(
             ToSummary(encuesta, userId, isAdmin, activeUsers, DateTime.UtcNow),

@@ -1251,6 +1251,61 @@ public class ServiceTests
         Assert.Equal(["Membre"], result.Resultados[0].Opciones[0].Votantes);
     }
 
+    [Fact]
+    public async Task EncuestaService_RespectsEveryResultsVisibilityMode()
+    {
+        await using var context = CreateContext();
+        var creator = new Usuario { Nombre = "Creador", PasswordHash = "hash" };
+        var member = new Usuario { Nombre = "Membre", PasswordHash = "hash" };
+        context.Usuarios.AddRange(creator, member);
+        await context.SaveChangesAsync();
+        var push = new PushNotificationService(context, new ConfigurationBuilder().Build(), NullLogger<PushNotificationService>.Instance);
+        var service = new EncuestaService(context, push);
+
+        async Task<(int SurveyId, int QuestionId, int OptionId)> CreateSurvey(EncuestaVisibilidadResultados visibility)
+        {
+            var created = await service.CreateAsync(creator.UsuarioId, new EncuestaWriteDto
+            {
+                Titulo = $"Enquesta {visibility}",
+                VisibilidadResultados = visibility,
+                Preguntas =
+                [
+                    new EncuestaPreguntaWriteDto
+                    {
+                        Tipo = EncuestaPreguntaTipo.OpcionUnica,
+                        Texto = "Tria una opció",
+                        Opciones = ["A", "B"]
+                    }
+                ]
+            });
+            Assert.True(created.Success);
+            Assert.True((await service.PublishAsync(created.Id, creator.UsuarioId, false)).Success);
+            var creatorDetail = await service.GetAsync(created.Id, creator.UsuarioId, false);
+            var question = Assert.Single(creatorDetail!.Preguntas);
+            return (created.Id, question.EncuestaPreguntaId, question.Opciones[0].EncuestaOpcionId);
+        }
+
+        var always = await CreateSurvey(EncuestaVisibilidadResultados.Siempre);
+        Assert.NotNull((await service.GetAsync(always.SurveyId, member.UsuarioId, false))!.Resultados);
+
+        var afterAnswer = await CreateSurvey(EncuestaVisibilidadResultados.DespuesDeResponder);
+        Assert.Null((await service.GetAsync(afterAnswer.SurveyId, member.UsuarioId, false))!.Resultados);
+        Assert.True((await service.SubmitAsync(afterAnswer.SurveyId, member.UsuarioId,
+            new EncuestaSubmitDto([new EncuestaRespuestaValorDto(afterAnswer.QuestionId, null, null, [afterAnswer.OptionId])]))).Success);
+        Assert.NotNull((await service.GetAsync(afterAnswer.SurveyId, member.UsuarioId, false))!.Resultados);
+
+        var afterClose = await CreateSurvey(EncuestaVisibilidadResultados.AlCerrar);
+        Assert.Null((await service.GetAsync(afterClose.SurveyId, member.UsuarioId, false))!.Resultados);
+        Assert.True((await service.CloseAsync(afterClose.SurveyId, creator.UsuarioId, false)).Success);
+        Assert.NotNull((await service.GetAsync(afterClose.SurveyId, member.UsuarioId, false))!.Resultados);
+
+        var managersOnly = await CreateSurvey(EncuestaVisibilidadResultados.Administradores);
+        Assert.True((await service.SubmitAsync(managersOnly.SurveyId, member.UsuarioId,
+            new EncuestaSubmitDto([new EncuestaRespuestaValorDto(managersOnly.QuestionId, null, null, [managersOnly.OptionId])]))).Success);
+        Assert.Null((await service.GetAsync(managersOnly.SurveyId, member.UsuarioId, false))!.Resultados);
+        Assert.NotNull((await service.GetAsync(managersOnly.SurveyId, creator.UsuarioId, false))!.Resultados);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
