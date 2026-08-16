@@ -245,6 +245,7 @@ export class RankingsPageComponent {
   noLlistaGamesFilter = signal<GameTypeFilterState>('hidden');
   cooperativeGamesFilter = signal<GameTypeFilterState>('hidden');
   teamsGamesFilter = signal<GameTypeFilterState>('hidden');
+  includeSoloGames = signal(true);
 
   gameColumns = signal<GameColumns>({
     nombre: true,
@@ -826,6 +827,10 @@ export class RankingsPageComponent {
     this.cycleGameTypeFilter(this.teamsGamesFilter, [this.noLlistaGamesFilter, this.cooperativeGamesFilter]);
   }
 
+  toggleIncludeSoloGames(): void {
+    this.includeSoloGames.update(value => !value);
+  }
+
   isGameTypeIncluded(state: GameTypeFilterState): boolean {
     return state !== 'hidden';
   }
@@ -866,6 +871,7 @@ export class RankingsPageComponent {
     this.noLlistaGamesFilter.set('hidden');
     this.cooperativeGamesFilter.set('hidden');
     this.teamsGamesFilter.set('hidden');
+    this.includeSoloGames.set(true);
   }
 
   private cycleGameTypeFilter(
@@ -1129,11 +1135,17 @@ export class RankingsPageComponent {
   }
 
   private filterRankingPartidas(partidas: RankingPartida[]): RankingPartida[] {
-    return partidas.filter(partida => this.shouldShowGameType(partida.juegoTipo));
+    return partidas.filter(partida =>
+      this.shouldShowGameType(partida.juegoTipo) &&
+      (this.includeSoloGames() || partida.numeroJugadores !== 1)
+    );
   }
 
   private filterRankingJugadores(jugadores: RankingJugador[]): RankingJugador[] {
-    return jugadores.filter(jugador => this.shouldShowGameType(jugador.juegoTipo));
+    return jugadores.filter(jugador =>
+      this.shouldShowGameType(jugador.juegoTipo) &&
+      (this.includeSoloGames() || jugador.numeroJugadores !== 1)
+    );
   }
 
   private shouldShowGameType(value: string | null | undefined): boolean {

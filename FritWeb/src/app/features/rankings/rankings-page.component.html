@@ -221,7 +221,8 @@
               (input)="updateGameFilter('minPartidas', $any($event.target).value)" />
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
+          <div class="filter-chip-group" aria-label="Tipus de partida">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(noLlistaGamesFilter())" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(noLlistaGamesFilter())"
@@ -230,7 +231,7 @@
             <span>No llista</span>
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(cooperativeGamesFilter())" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(cooperativeGamesFilter())"
@@ -239,7 +240,7 @@
             <span>Cooperatiu</span>
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(teamsGamesFilter())" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(teamsGamesFilter())"
@@ -247,6 +248,12 @@
               (change)="toggleShowTeamsGames()" />
             <span>Equips</span>
           </label>
+
+          <label class="filter-check" [class.filter-check-active]="includeSoloGames()">
+            <input type="checkbox" [checked]="includeSoloGames()" (change)="toggleIncludeSoloGames()" />
+            <span>En solitari</span>
+          </label>
+          </div>
         </div>
 
       </div>
@@ -423,7 +430,8 @@
               (input)="updateUserFilter('minPartidas', $any($event.target).value)" />
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
+          <div class="filter-chip-group" aria-label="Tipus de partida">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(noLlistaGamesFilter())" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(noLlistaGamesFilter())"
@@ -432,7 +440,7 @@
             <span>No llista</span>
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(cooperativeGamesFilter())" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(cooperativeGamesFilter())"
@@ -441,7 +449,7 @@
             <span>Cooperatiu</span>
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(teamsGamesFilter())" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(teamsGamesFilter())"
@@ -449,6 +457,12 @@
               (change)="toggleShowTeamsGames()" />
             <span>Equips</span>
           </label>
+
+          <label class="filter-check" [class.filter-check-active]="includeSoloGames()">
+            <input type="checkbox" [checked]="includeSoloGames()" (change)="toggleIncludeSoloGames()" />
+            <span>En solitari</span>
+          </label>
+          </div>
         </div>
 
       </div>
@@ -563,7 +577,8 @@
               (input)="updateChartFilter('fechaHasta', $any($event.target).value)" />
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
+          <div class="filter-chip-group" aria-label="Tipus de partida">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(noLlistaGamesFilter())" [class.filter-check-only]="isGameTypeOnly(noLlistaGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(noLlistaGamesFilter())"
@@ -572,7 +587,7 @@
             <span>No llista</span>
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(cooperativeGamesFilter())" [class.filter-check-only]="isGameTypeOnly(cooperativeGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(cooperativeGamesFilter())"
@@ -581,7 +596,7 @@
             <span>Cooperatiu</span>
           </label>
 
-          <label class="filter-check" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
+          <label class="filter-check" [class.filter-check-active]="isGameTypeIncluded(teamsGamesFilter())" [class.filter-check-only]="isGameTypeOnly(teamsGamesFilter())">
             <input
               type="checkbox"
               [checked]="isGameTypeIncluded(teamsGamesFilter())"
@@ -589,6 +604,12 @@
               (change)="toggleShowTeamsGames()" />
             <span>Equips</span>
           </label>
+
+          <label class="filter-check" [class.filter-check-active]="includeSoloGames()">
+            <input type="checkbox" [checked]="includeSoloGames()" (change)="toggleIncludeSoloGames()" />
+            <span>En solitari</span>
+          </label>
+          </div>
         </div>
 
         <div class="chart-users-heading">
@@ -730,7 +751,7 @@
                   {{ playerCount }}
                 </option>
               </select>
-              <label class="filter-check">
+              <label class="filter-check" [class.filter-check-active]="showRepeatedMaxScores()">
                 <input
                   type="checkbox"
                   [checked]="showRepeatedMaxScores()"
@@ -765,7 +786,7 @@
         <article class="chart-card">
           <div class="chart-card-heading">
             <h3>Jocs diferents jugats</h3>
-            <label class="filter-check">
+            <label class="filter-check" [class.filter-check-active]="showOnlyDistinctGameWins()">
               <input
                 type="checkbox"
                 [checked]="showOnlyDistinctGameWins()"
