@@ -139,6 +139,8 @@ export class PartidasPageComponent implements OnInit {
   success = signal('');
   modalOpen = signal(false);
   editingPartidaId = signal<number | null>(null);
+  removingJugadorIndex = signal<number | null>(null);
+  removingEquipoIndex = signal<number | null>(null);
 
   partidas = signal<Partida[]>([]);
   juegos = signal<Juego[]>([]);
@@ -756,9 +758,14 @@ export class PartidasPageComponent implements OnInit {
   }
 
   removeEquipo(index: number): void {
-    this.equiposArray.removeAt(index);
-    this.syncNumeroJugadoresFromEquipos();
-    this.updateTeamSummary();
+    if (this.removingEquipoIndex() !== null || this.equiposArray.length <= 1) return;
+    this.removingEquipoIndex.set(index);
+    window.setTimeout(() => {
+      this.equiposArray.removeAt(index);
+      this.removingEquipoIndex.set(null);
+      this.syncNumeroJugadoresFromEquipos();
+      this.updateTeamSummary();
+    }, 420);
   }
 
   addJugador(): void {
@@ -780,9 +787,14 @@ export class PartidasPageComponent implements OnInit {
   }
 
   removeJugador(index: number): void {
-    this.jugadoresArray.removeAt(index);
-    this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
-    this.updateTeamSummary();
+    if (this.removingJugadorIndex() !== null || this.jugadoresArray.length <= 1) return;
+    this.removingJugadorIndex.set(index);
+    window.setTimeout(() => {
+      this.jugadoresArray.removeAt(index);
+      this.removingJugadorIndex.set(null);
+      this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
+      this.updateTeamSummary();
+    }, 420);
   }
 
 

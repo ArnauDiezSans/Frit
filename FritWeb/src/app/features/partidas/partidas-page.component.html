@@ -456,6 +456,7 @@
           <div class="players-list" formArrayName="jugadores" *ngIf="!form.controls.perEquips.value">
             <div
               class="player-card"
+              [class.removing-card]="removingJugadorIndex() === i"
               *ngFor="let jugador of jugadoresArray.controls; let i = index"
               [formGroupName]="i">
               <div class="player-grid">
@@ -503,7 +504,7 @@
               </div>
 
               <div class="player-actions" *ngIf="jugadoresArray.length > 1">
-                <button type="button" class="ghost-button remove-player-button" (click)="removeJugador(i)">
+                <button type="button" class="ghost-button remove-player-button" [disabled]="removingJugadorIndex() !== null" (click)="removeJugador(i)">
                   Treure jugador
                 </button>
               </div>
@@ -513,6 +514,7 @@
           <div class="teams-list" formArrayName="equipos" *ngIf="form.controls.perEquips.value">
             <div
               class="team-card"
+              [class.removing-card]="removingEquipoIndex() === equipoIndex"
               *ngFor="let equipo of equiposArray.controls; let equipoIndex = index"
               [formGroupName]="equipoIndex">
               <div class="team-card-header">
@@ -604,7 +606,7 @@
               </div>
 
               <div class="team-actions" *ngIf="equiposArray.length > 1">
-                <button type="button" class="ghost-button remove-player-button" (click)="removeEquipo(equipoIndex)">
+                <button type="button" class="ghost-button remove-player-button" [disabled]="removingEquipoIndex() !== null" (click)="removeEquipo(equipoIndex)">
                   Treure equip
                 </button>
               </div>

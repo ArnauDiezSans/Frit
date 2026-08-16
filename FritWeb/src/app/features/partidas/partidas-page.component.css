@@ -591,6 +591,36 @@ h1 {
   background: #ffffff;
 }
 
+.player-card.removing-card,
+.team-card.removing-card {
+  pointer-events: none;
+  overflow: hidden;
+  animation: removeCard 420ms ease-in forwards;
+}
+
+@keyframes removeCard {
+  0% {
+    border-color: #e4e7ec;
+    background: #ffffff;
+    opacity: 1;
+    transform: scale(1);
+  }
+  55% {
+    border-color: #ef4444;
+    background: #fee2e2;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    border-color: #dc2626;
+    background: #fecaca;
+    box-shadow: none;
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
 .team-card-header {
   display: flex;
   align-items: flex-end;
