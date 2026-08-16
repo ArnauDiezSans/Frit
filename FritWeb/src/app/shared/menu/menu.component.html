@@ -14,13 +14,13 @@
   [class.app-menu-open]="menuOpen"
   aria-label="Navegacio principal"
   (click)="closeMenu()">
+  <div class="menu-row menu-row-primary">
   <button
     type="button"
-    class="menu-button menu-enquestes"
-    [class.menu-button-active]="activePage === 'enquestes'"
-    routerLink="/app/enquestes">
-    Enquestes
-    <span class="menu-badge" *ngIf="pendingSurveys > 0">{{ pendingSurveys }}</span>
+    class="menu-button menu-partidas"
+    [class.menu-button-active]="activePage === 'partidas'"
+    routerLink="/app/partidas">
+    Partides
   </button>
 
   <button
@@ -46,6 +46,16 @@
   </button>
 
   <button
+    type="button"
+    class="menu-button menu-juegos"
+    [class.menu-button-active]="activePage === 'juegos'"
+    routerLink="/app/juegos">
+    Ludoteca
+  </button>
+  </div>
+
+  <div class="menu-row menu-row-secondary">
+  <button
     *ngIf="canUseAssistencia()"
     type="button"
     class="menu-button menu-assistencia"
@@ -56,18 +66,11 @@
 
   <button
     type="button"
-    class="menu-button menu-partidas"
-    [class.menu-button-active]="activePage === 'partidas'"
-    routerLink="/app/partidas">
-    Partides
-  </button>
-
-  <button
-    type="button"
-    class="menu-button menu-juegos"
-    [class.menu-button-active]="activePage === 'juegos'"
-    routerLink="/app/juegos">
-    Ludoteca
+    class="menu-button menu-enquestes"
+    [class.menu-button-active]="activePage === 'enquestes'"
+    routerLink="/app/enquestes">
+    Enquestes
+    <span class="menu-badge" *ngIf="pendingSurveys > 0">{{ pendingSurveys }}</span>
   </button>
 
   <button
@@ -100,5 +103,6 @@
     </button>
 
     <button type="button" class="menu-button logout-button" (click)="onLogout()">Sortir</button>
+  </div>
   </div>
 </nav>
