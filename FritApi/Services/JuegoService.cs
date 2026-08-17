@@ -139,7 +139,8 @@ public class JuegoService
                 EsPropiedadTenant = j.EsPropiedadTenant,
                 FechaAdquisicion = j.FechaAdquisicion,
                 Tipo = j.Tipo,
-                JuegoBaseId = j.JuegoBaseId
+                JuegoBaseId = j.JuegoBaseId,
+                TieneProgresoNiveles = j.TieneProgresoNiveles
             })
             .ToListAsync();
     }
@@ -161,7 +162,8 @@ public class JuegoService
                 EsPropiedadTenant = j.EsPropiedadTenant,
                 FechaAdquisicion = j.FechaAdquisicion,
                 Tipo = j.Tipo,
-                JuegoBaseId = j.JuegoBaseId
+                JuegoBaseId = j.JuegoBaseId,
+                TieneProgresoNiveles = j.TieneProgresoNiveles
             })
             .FirstOrDefaultAsync();
     }
@@ -202,7 +204,8 @@ public class JuegoService
             EsPropiedadTenant = isTenantOwned,
             FechaAdquisicion = dto.FechaAdquisicion,
             Tipo = dto.Tipo.Trim(),
-            JuegoBaseId = dto.JuegoBaseId
+            JuegoBaseId = dto.JuegoBaseId,
+            TieneProgresoNiveles = dto.TieneProgresoNiveles
         };
 
         _context.Juegos.Add(juego);
@@ -272,6 +275,7 @@ public class JuegoService
         juego.FechaAdquisicion = dto.FechaAdquisicion;
         juego.Tipo = dto.Tipo.Trim();
         juego.JuegoBaseId = dto.JuegoBaseId;
+        juego.TieneProgresoNiveles = dto.TieneProgresoNiveles;
 
         await _context.SaveChangesAsync();
 

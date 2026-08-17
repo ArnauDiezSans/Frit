@@ -34,6 +34,9 @@ public class AppDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Juego> Juegos => Set<Juego>();
+    public DbSet<JuegoProgresoJugador> JuegoProgresoJugadores => Set<JuegoProgresoJugador>();
+    public DbSet<JuegoProgresoNivel> JuegoProgresoNiveles => Set<JuegoProgresoNivel>();
+    public DbSet<JuegoProgresoMarca> JuegoProgresoMarcas => Set<JuegoProgresoMarca>();
     public DbSet<Partida> Partidas => Set<Partida>();
     public DbSet<PartidaJugador> PartidaJugadores => Set<PartidaJugador>();
     public DbSet<UsuarioJuegoOrden> UsuarioJuegoOrdenes => Set<UsuarioJuegoOrden>();
@@ -236,6 +239,32 @@ public class AppDbContext : DbContext
                 .WithMany(e => e.Expansiones)
                 .HasForeignKey(e => e.JuegoBaseId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<JuegoProgresoJugador>(entity =>
+        {
+            entity.HasKey(e => e.JuegoProgresoJugadorId);
+            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(200);
+            entity.HasOne(e => e.Juego).WithMany().HasForeignKey(e => e.JuegoId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.UsuarioId).OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(e => new { e.JuegoId, e.UsuarioId }).IsUnique();
+            entity.HasIndex(e => new { e.JuegoId, e.Orden });
+        });
+
+        modelBuilder.Entity<JuegoProgresoNivel>(entity =>
+        {
+            entity.HasKey(e => e.JuegoProgresoNivelId);
+            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(300);
+            entity.HasOne(e => e.Juego).WithMany().HasForeignKey(e => e.JuegoId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.JuegoId, e.Orden });
+        });
+
+        modelBuilder.Entity<JuegoProgresoMarca>(entity =>
+        {
+            entity.HasKey(e => e.JuegoProgresoMarcaId);
+            entity.HasOne(e => e.Jugador).WithMany(e => e.Marcas).HasForeignKey(e => e.JuegoProgresoJugadorId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Nivel).WithMany(e => e.Marcas).HasForeignKey(e => e.JuegoProgresoNivelId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.JuegoProgresoJugadorId, e.JuegoProgresoNivelId }).IsUnique();
         });
 
         modelBuilder.Entity<Partida>(entity =>

@@ -11,7 +11,13 @@ export interface Juego {
   fechaAdquisicion?: string | null;
   tipo: string;
   juegoBaseId?: number | null;
+  tieneProgresoNiveles: boolean;
 }
+
+export interface JuegoProgresoJugador { juegoProgresoJugadorId: number; usuarioId?: number | null; nombre: string; esVisita: boolean; orden: number; }
+export interface JuegoProgresoNivel { juegoProgresoNivelId: number; nombre: string; orden: number; }
+export interface JuegoProgresoMarca { juegoProgresoJugadorId: number; juegoProgresoNivelId: number; }
+export interface JuegoProgreso { juegoId: number; juegoNombre: string; jugadores: JuegoProgresoJugador[]; niveles: JuegoProgresoNivel[]; marcas: JuegoProgresoMarca[]; }
 
 export interface BggJuegoLookup {
   bggId: number;

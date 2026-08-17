@@ -1306,6 +1306,41 @@ public class ServiceTests
         Assert.NotNull((await service.GetAsync(managersOnly.SurveyId, creator.UsuarioId, false))!.Resultados);
     }
 
+    [Fact]
+    public async Task JuegoProgresoService_ManagesPlayersLevelsAndMarks()
+    {
+        await using var context = CreateContext();
+        var owner = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var member = new Usuario { Nombre = "Anna", PasswordHash = "hash" };
+        var game = new Juego { Nombre = "TIME Stories", NumeroJugadoresMin = 2, NumeroJugadoresMax = 4,
+            Propietario = owner, TieneProgresoNiveles = true };
+        context.AddRange(owner, member, game);
+        await context.SaveChangesAsync();
+        var service = new JuegoProgresoService(context);
+
+        var initial = await service.GetAsync(game.JuegoId);
+        Assert.Null(initial.Error);
+        Assert.Equal(2, initial.Value!.Jugadores.Count);
+        var visitor = await service.AddVisitorAsync(game.JuegoId, "Clara");
+        var first = await service.AddLevelAsync(game.JuegoId, "Asylum");
+        var second = await service.AddLevelAsync(game.JuegoId, "Marcy Case");
+        Assert.NotNull(visitor.Value);
+        Assert.NotNull(first.Value);
+        Assert.NotNull(second.Value);
+
+        var player = initial.Value.Jugadores[0];
+        Assert.Null(await service.SetMarkAsync(game.JuegoId,
+            new JuegoProgresoMarcaWriteDto(player.JuegoProgresoJugadorId, first.Value!.JuegoProgresoNivelId, true)));
+        Assert.Null(await service.ReorderLevelsAsync(game.JuegoId,
+            [second.Value!.JuegoProgresoNivelId, first.Value.JuegoProgresoNivelId]));
+
+        var result = (await service.GetAsync(game.JuegoId)).Value!;
+        Assert.Equal("Marcy Case", result.Niveles[0].Nombre);
+        Assert.Contains(result.Marcas, mark => mark.JuegoProgresoJugadorId == player.JuegoProgresoJugadorId &&
+                                              mark.JuegoProgresoNivelId == first.Value.JuegoProgresoNivelId);
+        Assert.Null(await service.DeleteVisitorAsync(game.JuegoId, visitor.Value!.JuegoProgresoJugadorId));
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

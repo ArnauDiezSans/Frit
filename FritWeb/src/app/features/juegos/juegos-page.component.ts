@@ -288,7 +288,8 @@ export class JuegosPageComponent implements OnInit {
       fechaAdquisicion: [''],
       tipo: [''],
       juegoBaseId: [null as number | null],
-      juegoBaseSearch: ['']
+      juegoBaseSearch: [''],
+      tieneProgresoNiveles: [false]
     },
     {
       validators: control => {
@@ -501,7 +502,8 @@ export class JuegosPageComponent implements OnInit {
       fechaAdquisicion: '',
       tipo: '',
       juegoBaseId: null,
-      juegoBaseSearch: ''
+      juegoBaseSearch: '',
+      tieneProgresoNiveles: false
     });
 
     this.formError.set('');
@@ -526,7 +528,8 @@ export class JuegosPageComponent implements OnInit {
       fechaAdquisicion: juego.fechaAdquisicion ?? '',
       tipo: juego.tipo ?? '',
       juegoBaseId: juego.juegoBaseId ?? null,
-      juegoBaseSearch: this.getNombreJuegoBase(juego.juegoBaseId)
+      juegoBaseSearch: this.getNombreJuegoBase(juego.juegoBaseId),
+      tieneProgresoNiveles: juego.tieneProgresoNiveles
     });
 
     this.formError.set('');
@@ -681,7 +684,8 @@ export class JuegosPageComponent implements OnInit {
         : Number(raw.propietarioId),
       fechaAdquisicion: raw.fechaAdquisicion || null,
       tipo: raw.tipo?.trim() ?? '',
-      juegoBaseId: raw.juegoBaseId
+      juegoBaseId: raw.juegoBaseId,
+      tieneProgresoNiveles: raw.tieneProgresoNiveles ?? false
     };
 
     this.saving.set(true);
@@ -728,6 +732,8 @@ export class JuegosPageComponent implements OnInit {
   trackByJuegoId(_: number, juego: Juego): number {
     return juego.juegoId;
   }
+
+  abrirProgreso(juego: Juego): void { this.router.navigate(['/app/juegos', juego.juegoId, 'progres']); }
 
   trackByUsuarioId(_: number, usuario: UsuarioOption): number {
     return usuario.usuarioId;

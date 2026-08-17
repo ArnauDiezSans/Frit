@@ -677,3 +677,5 @@ h1 {
     width: 100%;
   }
 }
+
+.progress-toggle .checkbox-line { display:flex;align-items:center;gap:9px;min-height:42px;font-weight:700;color:#344054 }.progress-toggle input[type="checkbox"]{width:19px;height:19px;accent-color:#0f766e}

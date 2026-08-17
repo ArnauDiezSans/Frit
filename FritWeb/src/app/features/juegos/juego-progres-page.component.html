@@ -1,0 +1,24 @@
+<main class="progress-page">
+  <header class="page-header">
+    <div><p class="eyebrow">Ludoteca · Progrés de nivells</p><h1>{{ progress()?.juegoNombre || 'Progrés' }}</h1><p>Marca els nivells i objectius que ha assolit cada jugador.</p></div>
+    <app-menu activePage="juegos" (logout)="logout()" />
+  </header>
+
+  <div class="top-actions"><button type="button" class="back-button" (click)="back()">← Tornar a la ludoteca</button></div>
+  <p class="notice error" *ngIf="error()">{{ error() }}</p>
+  <section class="progress-card" *ngIf="!loading() && progress() as data; else loadingTpl">
+    <div class="builders">
+      <form (ngSubmit)="addLevel()"><label><span>Nou nivell o objectiu</span><span class="input-action"><input name="levelName" [(ngModel)]="levelName" maxlength="300" placeholder="Ex. Escenari 1"><button type="submit" [disabled]="saving() || !levelName.trim()">+ Columna</button></span></label></form>
+      <form (ngSubmit)="addVisitor()"><label><span>Afegir una visita</span><span class="input-action"><input name="visitorName" [(ngModel)]="visitorName" maxlength="200" placeholder="Nom de la visita"><button type="submit" [disabled]="saving() || !visitorName.trim()">+ Fila</button></span></label></form>
+    </div>
+
+    <div class="empty-grid" *ngIf="data.niveles.length === 0"><h2>Encara no hi ha nivells</h2><p>Afegeix la primera columna per començar a registrar el progrés.</p></div>
+    <div class="grid-scroll" *ngIf="data.niveles.length > 0">
+      <table class="progress-grid">
+        <thead><tr><th class="player-heading">Jugador</th><th *ngFor="let level of data.niveles; let levelIndex = index; trackBy: trackLevel"><div class="level-heading"><span>{{ level.nombre }}</span><div><button type="button" (click)="moveLevel(levelIndex, -1)" [disabled]="levelIndex === 0" title="Moure a l'esquerra">←</button><button type="button" (click)="moveLevel(levelIndex, 1)" [disabled]="levelIndex === data.niveles.length - 1" title="Moure a la dreta">→</button><button type="button" (click)="renameLevel(level)" title="Reanomenar">✎</button><button type="button" class="danger" (click)="deleteLevel(level)" title="Eliminar">×</button></div></div></th></tr></thead>
+        <tbody><tr *ngFor="let player of data.jugadores; trackBy: trackPlayer"><th><span>{{ player.nombre }}</span><button *ngIf="player.esVisita" type="button" class="remove-visitor" (click)="deleteVisitor(player.juegoProgresoJugadorId, player.nombre)" title="Eliminar visita">×</button></th><td *ngFor="let level of data.niveles; trackBy: trackLevel"><input type="checkbox" [attr.aria-label]="player.nombre + ': ' + level.nombre" [checked]="isAchieved(player.juegoProgresoJugadorId, level.juegoProgresoNivelId)" (change)="toggleMark(player.juegoProgresoJugadorId, level.juegoProgresoNivelId, $any($event.target).checked)"></td></tr></tbody>
+      </table>
+    </div>
+  </section>
+  <ng-template #loadingTpl><section class="progress-card"><p>Carregant el progrés...</p></section></ng-template>
+</main>

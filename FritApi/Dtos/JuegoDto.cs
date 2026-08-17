@@ -33,6 +33,7 @@ public class JuegoDto
     public string Tipo { get; set; } = string.Empty;
 
     public int? JuegoBaseId { get; set; }
+    public bool TieneProgresoNiveles { get; set; }
 }
 
 public class BggJuegoLookupDto

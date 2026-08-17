@@ -34,6 +34,8 @@ public class Juego : ITenantEntity
     public int? JuegoBaseId { get; set; }
     public Juego? JuegoBase { get; set; }
 
+    public bool TieneProgresoNiveles { get; set; }
+
     public ICollection<Juego> Expansiones { get; set; } = new List<Juego>();
     public ICollection<Partida> Partidas { get; set; } = new List<Partida>();
 }

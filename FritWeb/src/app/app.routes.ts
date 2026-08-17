@@ -10,6 +10,7 @@ export const routes: Routes = [
   { path: 'app/rankings', loadComponent: () => import('./features/rankings/rankings-page.component').then(m => m.RankingsPageComponent), canActivate: [authGuard] },
   { path: 'app/hall-of-fame', loadComponent: () => import('./features/hall-of-fame/hall-of-fame-page.component').then(m => m.HallOfFamePageComponent), canActivate: [hallOfFameGuard] },
   { path: 'app/juegos', loadComponent: () => import('./features/juegos/juegos-page.component').then(m => m.JuegosPageComponent), canActivate: [authGuard] },
+  { path: 'app/juegos/:id/progres', loadComponent: () => import('./features/juegos/juego-progres-page.component').then(m => m.JuegoProgresPageComponent), canActivate: [authGuard] },
   { path: 'app/la-llista', redirectTo: 'app/remar', pathMatch: 'full' },
   { path: 'app/pendent-compra', loadComponent: () => import('./features/pendent-compra/pendent-compra-page.component').then(m => m.PendentCompraPageComponent), canActivate: [authGuard] },
   { path: 'app/a-que-juguem', redirectTo: 'app/remar', pathMatch: 'full' },

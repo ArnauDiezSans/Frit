@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { API_BASE_URL } from '../../core/api/api.config';
 import { DataStoreService } from '../../core/data/data-store.service';
-import { BggJuegoLookup, Juego } from './juegos.models';
+import { BggJuegoLookup, Juego, JuegoProgreso, JuegoProgresoJugador, JuegoProgresoNivel } from './juegos.models';
 
 @Injectable({ providedIn: 'root' })
 export class JuegosService {
@@ -68,4 +68,13 @@ export class JuegosService {
       withCredentials: true
     });
   }
+
+  getProgress(id: number): Observable<JuegoProgreso> { return this.http.get<JuegoProgreso>(`${this.baseUrl}/${id}/progreso`, { withCredentials: true }); }
+  addProgressVisitor(id: number, nombre: string): Observable<JuegoProgresoJugador> { return this.http.post<JuegoProgresoJugador>(`${this.baseUrl}/${id}/progreso/visitantes`, { nombre }, { withCredentials: true }); }
+  deleteProgressVisitor(id: number, jugadorId: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}/progreso/jugadores/${jugadorId}`, { withCredentials: true }); }
+  addProgressLevel(id: number, nombre: string): Observable<JuegoProgresoNivel> { return this.http.post<JuegoProgresoNivel>(`${this.baseUrl}/${id}/progreso/niveles`, { nombre }, { withCredentials: true }); }
+  renameProgressLevel(id: number, nivelId: number, nombre: string): Observable<JuegoProgresoNivel> { return this.http.put<JuegoProgresoNivel>(`${this.baseUrl}/${id}/progreso/niveles/${nivelId}`, { nombre }, { withCredentials: true }); }
+  deleteProgressLevel(id: number, nivelId: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}/progreso/niveles/${nivelId}`, { withCredentials: true }); }
+  reorderProgressLevels(id: number, nivelIds: number[]): Observable<void> { return this.http.put<void>(`${this.baseUrl}/${id}/progreso/niveles/orden`, { nivelIds }, { withCredentials: true }); }
+  setProgressMark(id: number, juegoProgresoJugadorId: number, juegoProgresoNivelId: number, assolit: boolean): Observable<void> { return this.http.put<void>(`${this.baseUrl}/${id}/progreso/marcas`, { juegoProgresoJugadorId, juegoProgresoNivelId, assolit }, { withCredentials: true }); }
 }
