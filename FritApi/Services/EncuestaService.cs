@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FritApi.Services;
 
-public sealed class EncuestaService(AppDbContext context, PushNotificationService pushNotifications)
+public sealed class EncuestaService(
+    AppDbContext context,
+    PushNotificationService pushNotifications,
+    TelegramNotificationService? telegramNotifications = null)
 {
     public async Task<List<EncuestaResumenDto>> GetAllAsync(int userId, bool isAdmin)
     {
@@ -101,6 +104,8 @@ public sealed class EncuestaService(AppDbContext context, PushNotificationServic
         else
             await pushNotifications.SendSurveyAsync(actorId, encuesta.Titulo, url,
                 encuesta.Destinatarios.Select(d => d.UsuarioId).ToList());
+        if (telegramNotifications is not null)
+            await telegramNotifications.SendPublishedSurveyAsync(encuesta.EsVotacion, encuesta.Titulo, url);
         return (true, null);
     }
 
