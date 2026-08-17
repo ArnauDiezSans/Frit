@@ -14,10 +14,10 @@
 
   <section class="arena" *ngIf="!loading() && !error()">
     <div class="floating-pool" aria-label="Jugadors disponibles">
-      <button class="player-chip floating" *ngFor="let user of availableUsers(); let i = index; trackBy: trackUser" [style.--user-color]="userColor(user)" [style.--delay]="-(i % 7) * .37 + 's'" [ngStyle]="playerPosition(i, availableUsers().length)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
+      <button class="player-chip floating" *ngFor="let user of availableUsers(); let i = index; trackBy: trackUser" [style.--user-color]="userColor(user)" [ngStyle]="playerPosition(i, availableUsers().length)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
     </div>
 
-    <div #ring class="ring" [class.has-result]="groups().length" (dblclick)="draw()" (pointerdown)="onRingPointerDown($event)" (pointermove)="onRingPointerMove($event)" (pointerup)="onRingPointerUp($event)">
+    <div #ring class="ring" [class.has-result]="groups().length" [class.ring-crowded]="selected().length >= 7" [class.ring-very-crowded]="selected().length >= 10" (dblclick)="draw()" (pointerdown)="onRingPointerDown($event)" (pointermove)="onRingPointerMove($event)" (pointerup)="onRingPointerUp($event)">
       <div class="ring-content">
         <ng-container *ngIf="!groups().length">
           <p class="ring-empty" *ngIf="!selected().length">Arrossega-hi els jugadors</p>
@@ -32,7 +32,7 @@
           <section class="result-group" *ngFor="let group of groups(); let groupIndex = index" [style.--team-color]="teamColors[groupIndex]">
             <h2 *ngIf="mode !== 0">Equip {{ groupIndex + 1 }}</h2>
             <ol>
-              <li *ngFor="let user of group; trackBy: trackUser"><span class="position" *ngIf="mode === 0">{{ group.indexOf(user) + 1 }}</span><span class="result-color" [style.background]="userColor(user)"></span><strong>{{ user.nombre }}</strong></li>
+              <li *ngFor="let user of group; trackBy: trackUser"><span class="position" *ngIf="mode === 0">{{ group.indexOf(user) + 1 }}</span><strong>{{ user.nombre }}</strong></li>
             </ol>
           </section>
         </div>
