@@ -38,6 +38,7 @@
           <input *ngIf="q.tipo === PreguntaTipo.OpcionMultiple" type="checkbox" [attr.aria-label]="option.texto" [checked]="answers[q.encuestaPreguntaId].opcionIds.includes(option.encuestaOpcionId)" (change)="setMultiple(q.encuestaPreguntaId, option.encuestaOpcionId, $any($event.target).checked)"><span>{{ option.texto }}</span>
         </label>
         <div class="user-options" *ngIf="q.permiteAgregarOpciones">
+          <strong class="user-options-title">No hi és la teva resposta?</strong>
           <div class="pending-option" *ngFor="let option of answers[q.encuestaPreguntaId].nuevasOpciones; let optionIndex = index"><span>{{ option }}</span><button type="button" class="icon small" (click)="removeUserOption(q.encuestaPreguntaId, optionIndex)" aria-label="Eliminar opció nova">×</button></div>
           <div class="add-user-option"><input [(ngModel)]="newOptionTexts[q.encuestaPreguntaId]" maxlength="300" placeholder="Afegeix una altra opció" (keydown.enter)="$event.preventDefault(); addUserOption(q)"><button type="button" (click)="addUserOption(q)">+ Afegir</button></div>
         </div>
