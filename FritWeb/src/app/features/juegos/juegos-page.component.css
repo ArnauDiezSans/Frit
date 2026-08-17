@@ -301,7 +301,7 @@ h1 {
 }
 
 .col-type {
-  width: 340px;
+  width: 304px;
 }
 
 .col-price {
@@ -317,7 +317,7 @@ h1 {
 }
 
 .col-actions {
-  width: 48px;
+  width: 84px;
 }
 
 .games-table th,
@@ -654,19 +654,67 @@ h1 {
 }
 
 @media (max-width: 520px) {
+  .dashboard-page {
+    padding: 10px;
+  }
+
+  .dashboard-header {
+    margin-bottom: 10px;
+  }
+
   h1 {
     font-size: 1.7rem;
   }
 
-  .games-table td {
-    grid-template-columns: 1fr;
-    gap: 4px;
+  .content-card {
+    padding: 14px 12px;
   }
 
-  .games-table td::before,
+  .section-heading {
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-heading p {
+    font-size: 0.88rem;
+  }
+
+  .games-table tbody {
+    gap: 8px;
+  }
+
+  .games-table tr {
+    padding: 9px 11px;
+    border-radius: 10px;
+  }
+
+  .games-table td {
+    grid-template-columns: minmax(82px, 36%) minmax(0, 1fr);
+    gap: 7px;
+    padding: 4px 0;
+  }
+
+  .games-table td::before {
+    font-size: 0.78rem;
+  }
+
   .cell-value,
   .cell-title {
-    text-align: left;
+    font-size: 0.9rem;
+    text-align: right;
+  }
+
+  .games-table td.row-number-cell {
+    display: none;
+  }
+
+  .actions-cell {
+    padding-top: 7px !important;
+  }
+
+  .row-actions {
+    justify-content: flex-end;
+    gap: 6px;
   }
 
   .modal-actions {
