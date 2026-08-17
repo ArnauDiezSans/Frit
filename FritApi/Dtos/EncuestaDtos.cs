@@ -5,11 +5,17 @@ namespace FritApi.Dtos;
 public record EncuestaOpcionDto(int EncuestaOpcionId, string Texto, int Orden);
 public record EncuestaPreguntaDto(int EncuestaPreguntaId, EncuestaPreguntaTipo Tipo, string Texto, string? Ayuda,
     bool Obligatoria, int Orden, int? Minimo, int? Maximo, int? CondicionPreguntaOrden,
-    int? CondicionOpcionOrden, List<EncuestaOpcionDto> Opciones);
+    int? CondicionOpcionOrden, List<EncuestaOpcionDto> Opciones)
+{
+    public bool PermiteAgregarOpciones { get; init; }
+}
 public record EncuestaResumenDto(int EncuestaId, string Titulo, string? Descripcion, EncuestaEstado Estado,
     bool EsVotacion, bool EsAnonima, DateTime? FechaCierre, DateTime CreatedAt, string CreadorNombre, bool HaRespondido,
     bool EsDestinatario, int Respuestas, int Destinatarios, bool PuedeGestionar);
-public record EncuestaRespuestaValorDto(int EncuestaPreguntaId, string? Texto, int? Numero, List<int> OpcionIds);
+public record EncuestaRespuestaValorDto(int EncuestaPreguntaId, string? Texto, int? Numero, List<int> OpcionIds)
+{
+    public List<string> NuevasOpciones { get; init; } = [];
+}
 public record EncuestaResultadoOpcionDto(int EncuestaOpcionId, string Texto, int Votos, decimal Porcentaje,
     List<string>? Votantes);
 public record EncuestaResultadoPreguntaDto(int EncuestaPreguntaId, string Texto, EncuestaPreguntaTipo Tipo,
@@ -42,6 +48,7 @@ public class EncuestaPreguntaWriteDto
     public int? Maximo { get; set; }
     public int? CondicionPreguntaOrden { get; set; }
     public int? CondicionOpcionOrden { get; set; }
+    public bool PermiteAgregarOpciones { get; set; }
     public List<string> Opciones { get; set; } = [];
 }
 

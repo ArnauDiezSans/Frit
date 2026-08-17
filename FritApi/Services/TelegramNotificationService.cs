@@ -16,7 +16,7 @@ public sealed class TelegramNotificationService(
     private string? ChatId => FirstConfigured("TELEGRAM_CHAT_ID", "Telegram:ChatId");
     private string? TenantCode => FirstConfigured("TELEGRAM_TENANT_CODE", "Telegram:TenantCode");
 
-    public async Task SendPublishedSurveyAsync(bool isPoll, string title, string relativeUrl, CancellationToken cancellationToken = default)
+    public async Task SendPublishedSurveyAsync(string title, string relativeUrl, CancellationToken cancellationToken = default)
     {
         var botToken = BotToken;
         var chatId = ChatId;
@@ -30,18 +30,17 @@ public sealed class TelegramNotificationService(
         try
         {
             var publicUrl = BuildPublicUrl(relativeUrl);
-            var kind = isPoll ? "votació" : "enquesta";
             var payload = new
             {
                 chat_id = chatId,
-                text = $"📊 <b>Nova {kind}</b>\n{WebUtility.HtmlEncode(title)}",
+                text = $"📊 <b>Nova enquesta</b>\n{WebUtility.HtmlEncode(title)}",
                 parse_mode = "HTML",
                 disable_web_page_preview = true,
                 reply_markup = new
                 {
                     inline_keyboard = new[]
                     {
-                        new[] { new { text = isPoll ? "Votar a Frit" : "Respondre a Frit", url = publicUrl } }
+                        new[] { new { text = "Respondre a Frit", url = publicUrl } }
                     }
                 }
             };

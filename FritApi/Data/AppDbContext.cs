@@ -171,6 +171,7 @@ public class AppDbContext : DbContext
             entity.HasKey(e => e.EncuestaOpcionId);
             entity.Property(e => e.Texto).IsRequired().HasMaxLength(300);
             entity.HasOne(e => e.Pregunta).WithMany(e => e.Opciones).HasForeignKey(e => e.EncuestaPreguntaId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.UsuarioCreador).WithMany().HasForeignKey(e => e.UsuarioCreadorId).OnDelete(DeleteBehavior.SetNull);
             entity.HasIndex(e => new { e.EncuestaPreguntaId, e.Orden });
         });
 

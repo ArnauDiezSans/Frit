@@ -104,8 +104,8 @@ public sealed class EncuestaService(
         else
             await pushNotifications.SendSurveyAsync(actorId, encuesta.Titulo, url,
                 encuesta.Destinatarios.Select(d => d.UsuarioId).ToList());
-        if (telegramNotifications is not null)
-            await telegramNotifications.SendPublishedSurveyAsync(encuesta.EsVotacion, encuesta.Titulo, url);
+        if (!encuesta.EsVotacion && telegramNotifications is not null)
+            await telegramNotifications.SendPublishedSurveyAsync(encuesta.Titulo, url);
         return (true, null);
     }
 
@@ -153,11 +153,19 @@ public sealed class EncuestaService(
         }
         foreach (var answer in dto.Respuestas)
         {
-            if (string.IsNullOrWhiteSpace(answer.Texto) && answer.Numero is null && answer.OpcionIds.Count == 0) continue;
+            if (string.IsNullOrWhiteSpace(answer.Texto) && answer.Numero is null && answer.OpcionIds.Count == 0 && answer.NuevasOpciones.Count == 0) continue;
+            var question = encuesta.Preguntas.Single(q => q.EncuestaPreguntaId == answer.EncuestaPreguntaId);
             var value = new EncuestaRespuestaValor { EncuestaPreguntaId = answer.EncuestaPreguntaId,
                 Texto = answer.Texto?.Trim(), Numero = answer.Numero };
             foreach (var optionId in answer.OpcionIds.Distinct())
                 value.Opciones.Add(new EncuestaRespuestaOpcion { EncuestaOpcionId = optionId });
+            var nextOrder = question.Opciones.Count == 0 ? 0 : question.Opciones.Max(o => o.Orden) + 1;
+            foreach (var optionText in answer.NuevasOpciones.Select(text => text.Trim()).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                var option = new EncuestaOpcion { Texto = optionText, Orden = nextOrder++, UsuarioCreadorId = userId };
+                question.Opciones.Add(option);
+                value.Opciones.Add(new EncuestaRespuestaOpcion { Opcion = option });
+            }
             response.Valores.Add(value);
         }
         if (existing is null) context.EncuestaRespuestas.Add(response);
@@ -206,12 +214,15 @@ public sealed class EncuestaService(
             if (dto.VisibilidadResultados != EncuestaVisibilidadResultados.AlCerrar)
                 return "Els resultats d'una votació només es mostren quan es tanca.";
             if (dto.DestinatarioIds.Count > 0) return "Les votacions estan obertes a tot el grup.";
+            if (pollQuestion.PermiteAgregarOpciones) return "Les votacions no permeten afegir respostes noves.";
         }
         foreach (var (q, questionIndex) in dto.Preguntas.Select((value, index) => (value, index)))
         {
             if (string.IsNullOrWhiteSpace(q.Texto) || q.Texto.Trim().Length > 500) return "Totes les preguntes necessiten un text vàlid.";
             if (q.Tipo is EncuestaPreguntaTipo.OpcionUnica or EncuestaPreguntaTipo.OpcionMultiple &&
                 (q.Opciones.Count is < 2 or > 20 || q.Opciones.Any(o => string.IsNullOrWhiteSpace(o)))) return "Les preguntes d’opcions necessiten entre 2 i 20 opcions.";
+            if (q.PermiteAgregarOpciones && q.Tipo is not (EncuestaPreguntaTipo.OpcionUnica or EncuestaPreguntaTipo.OpcionMultiple))
+                return "Només les preguntes d’opcions poden permetre respostes noves.";
             if (q.Tipo == EncuestaPreguntaTipo.Escala && (q.Minimo is null || q.Maximo is null || q.Minimo >= q.Maximo || q.Maximo - q.Minimo > 20))
                 return "Les escales necessiten un mínim i un màxim vàlids.";
             if (q.CondicionPreguntaOrden is not null)
@@ -236,7 +247,8 @@ public sealed class EncuestaService(
         {
             var a = dto.Respuestas.FirstOrDefault(r => r.EncuestaPreguntaId == q.EncuestaPreguntaId);
             var visible = IsQuestionVisible(encuesta, q, dto.Respuestas);
-            var hasValue = a is not null && (!string.IsNullOrWhiteSpace(a.Texto) || a.Numero is not null || a.OpcionIds.Count > 0);
+            var newOptions = a?.NuevasOpciones.Select(text => text.Trim()).Where(text => text.Length > 0).ToList() ?? [];
+            var hasValue = a is not null && (!string.IsNullOrWhiteSpace(a.Texto) || a.Numero is not null || a.OpcionIds.Count > 0 || newOptions.Count > 0);
             if (!visible)
             {
                 if (hasValue) return $"La pregunta «{q.Texto}» no correspon al recorregut seleccionat.";
@@ -245,9 +257,14 @@ public sealed class EncuestaService(
             if (q.Obligatoria && !hasValue) return $"La pregunta «{q.Texto}» és obligatòria.";
             if (!hasValue) continue;
             if (a!.Texto?.Length > 4000) return "Una resposta de text és massa llarga.";
+            if (a.NuevasOpciones.Count > 5 || a.NuevasOpciones.Any(text => string.IsNullOrWhiteSpace(text) || text.Trim().Length > 300)) return "Pots afegir fins a 5 opcions noves de 300 caràcters.";
+            if (newOptions.Count != newOptions.Distinct(StringComparer.OrdinalIgnoreCase).Count()) return "No pots afegir opcions repetides.";
+            if (newOptions.Count > 0 && !q.PermiteAgregarOpciones) return $"No es poden afegir opcions noves a «{q.Texto}».";
+            if (newOptions.Any(text => q.Opciones.Any(option => string.Equals(option.Texto.Trim(), text, StringComparison.OrdinalIgnoreCase)))) return "Aquesta opció ja existeix.";
             if (q.Tipo is EncuestaPreguntaTipo.TextoCorto or EncuestaPreguntaTipo.TextoLargo && (a.Numero is not null || a.OpcionIds.Count > 0)) return "El format d’una resposta de text no és vàlid.";
-            if (q.Tipo == EncuestaPreguntaTipo.OpcionUnica && a.OpcionIds.Count != 1) return $"Selecciona una opció a «{q.Texto}».";
-            if (q.Tipo == EncuestaPreguntaTipo.OpcionMultiple && a.OpcionIds.Count < 1) return $"Selecciona almenys una opció a «{q.Texto}».";
+            if (q.Tipo is not (EncuestaPreguntaTipo.OpcionUnica or EncuestaPreguntaTipo.OpcionMultiple) && newOptions.Count > 0) return "El format de la resposta no és vàlid.";
+            if (q.Tipo == EncuestaPreguntaTipo.OpcionUnica && a.OpcionIds.Count + newOptions.Count != 1) return $"Selecciona una opció a «{q.Texto}».";
+            if (q.Tipo == EncuestaPreguntaTipo.OpcionMultiple && a.OpcionIds.Count + newOptions.Count < 1) return $"Selecciona almenys una opció a «{q.Texto}».";
             if (q.Tipo is EncuestaPreguntaTipo.OpcionUnica or EncuestaPreguntaTipo.OpcionMultiple && (!string.IsNullOrWhiteSpace(a.Texto) || a.Numero is not null)) return "El format d’una selecció no és vàlid.";
             if (a.OpcionIds.Any(id => q.Opciones.All(o => o.EncuestaOpcionId != id))) return "S’ha seleccionat una opció no vàlida.";
             if (q.Tipo == EncuestaPreguntaTipo.Escala && (a.Numero < q.Minimo || a.Numero > q.Maximo)) return $"El valor de «{q.Texto}» està fora de rang.";
@@ -265,7 +282,8 @@ public sealed class EncuestaService(
         {
             var question = new EncuestaPregunta { Tipo = q.Tipo, Texto = q.Texto.Trim(), Ayuda = q.Ayuda?.Trim(),
                 Obligatoria = q.Obligatoria, Orden = index, Minimo = q.Minimo, Maximo = q.Maximo,
-                CondicionPreguntaOrden = q.CondicionPreguntaOrden, CondicionOpcionOrden = q.CondicionOpcionOrden };
+                CondicionPreguntaOrden = q.CondicionPreguntaOrden, CondicionOpcionOrden = q.CondicionOpcionOrden,
+                PermiteAgregarOpciones = q.PermiteAgregarOpciones };
             foreach (var (option, optionIndex) in q.Opciones.Select((value, optionIndex) => (value, optionIndex)))
                 question.Opciones.Add(new EncuestaOpcion { Texto = option.Trim(), Orden = optionIndex });
             encuesta.Preguntas.Add(question);
@@ -273,9 +291,10 @@ public sealed class EncuestaService(
         foreach (var id in dto.DestinatarioIds.Distinct()) encuesta.Destinatarios.Add(new EncuestaDestinatario { UsuarioId = id });
     }
 
-    private static EncuestaPreguntaDto ToQuestion(EncuestaPregunta q) => new(q.EncuestaPreguntaId, q.Tipo, q.Texto, q.Ayuda,
+    private static EncuestaPreguntaDto ToQuestion(EncuestaPregunta q) => new EncuestaPreguntaDto(q.EncuestaPreguntaId, q.Tipo, q.Texto, q.Ayuda,
         q.Obligatoria, q.Orden, q.Minimo, q.Maximo, q.CondicionPreguntaOrden, q.CondicionOpcionOrden,
-        q.Opciones.OrderBy(o => o.Orden).Select(o => new EncuestaOpcionDto(o.EncuestaOpcionId, o.Texto, o.Orden)).ToList());
+        q.Opciones.OrderBy(o => o.Orden).Select(o => new EncuestaOpcionDto(o.EncuestaOpcionId, o.Texto, o.Orden)).ToList())
+        { PermiteAgregarOpciones = q.PermiteAgregarOpciones };
 
     private static bool IsQuestionVisible(Encuesta encuesta, EncuestaPregunta question, IReadOnlyCollection<EncuestaRespuestaValorDto> answers)
     {

@@ -43,6 +43,7 @@ public class EncuestaPregunta : ITenantEntity
     public int? Maximo { get; set; }
     public int? CondicionPreguntaOrden { get; set; }
     public int? CondicionOpcionOrden { get; set; }
+    public bool PermiteAgregarOpciones { get; set; }
     public ICollection<EncuestaOpcion> Opciones { get; set; } = [];
 }
 
@@ -52,6 +53,8 @@ public class EncuestaOpcion : ITenantEntity
     public int TenantId { get; set; }
     public int EncuestaPreguntaId { get; set; }
     public EncuestaPregunta Pregunta { get; set; } = null!;
+    public int? UsuarioCreadorId { get; set; }
+    public Usuario? UsuarioCreador { get; set; }
     [Required, MaxLength(300)] public string Texto { get; set; } = string.Empty;
     public int Orden { get; set; }
 }
