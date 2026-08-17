@@ -18,10 +18,9 @@
     </div>
 
     <div #ring class="ring" [class.has-result]="groups().length" (dblclick)="draw()" (pointerdown)="onRingPointerDown($event)" (pointermove)="onRingPointerMove($event)" (pointerup)="onRingPointerUp($event)">
-      <div class="ring-ropes" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="ring-content">
         <ng-container *ngIf="!groups().length">
-          <p class="ring-empty" *ngIf="!selected().length"><strong>El ring és buit</strong><span>Arrossega-hi els jugadors</span></p>
+          <p class="ring-empty" *ngIf="!selected().length">Arrossega-hi els jugadors</p>
           <div class="selected-players" *ngIf="selected().length">
             <button class="player-chip" *ngFor="let user of selected(); trackBy: trackUser" [style.--user-color]="userColor(user)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
           </div>
