@@ -293,7 +293,8 @@
               </span>
             </td>
             <td *ngIf="visibleColumns().resultadoJugadores" class="partida-results" data-label="Jugadors i punts">
-              <span class="cell-value">{{ partida.resultadoJugadores }}</span>
+              <span class="cell-value grouped-results" *ngIf="partida.mostrarResultadoAgrupado; else plainResults"><ng-container *ngFor="let group of partida.gruposResultado; let first = first"><span *ngIf="!first"> · </span><strong>{{ group.posicion }} [</strong><span>{{ group.jugadores }}</span><strong>]</strong></ng-container></span>
+              <ng-template #plainResults><span class="cell-value">{{ partida.resultadoJugadores }}</span></ng-template>
             </td>
             <td
               *ngIf="visibleColumns().observaciones"
@@ -328,7 +329,8 @@
                 </div>
                 <div class="partida-detail-item partida-detail-wide">
                   <span class="partida-detail-label">Jugadors i punts</span>
-                  <span class="partida-detail-value">{{ partida.resultadoJugadores }}</span>
+                  <span class="partida-detail-value grouped-results" *ngIf="partida.mostrarResultadoAgrupado; else plainDetailResults"><ng-container *ngFor="let group of partida.gruposResultado; let first = first"><span *ngIf="!first"> · </span><strong>{{ group.posicion }} [</strong><span>{{ group.jugadores }}</span><strong>]</strong></ng-container></span>
+                  <ng-template #plainDetailResults><span class="partida-detail-value">{{ partida.resultadoJugadores }}</span></ng-template>
                 </div>
                 <div class="partida-detail-item partida-detail-wide">
                   <span class="partida-detail-label">Observacions</span>

@@ -26,5 +26,7 @@ export interface PartidaGridRow {
   duracionMinutos: number | null;
   numeroJugadores: number;
   resultadoJugadores: string;
+  gruposResultado: { posicion: number; jugadores: string }[];
+  mostrarResultadoAgrupado: boolean;
   observaciones: string;
 }

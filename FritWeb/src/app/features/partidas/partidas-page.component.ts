@@ -17,6 +17,7 @@ import {
 import { Router } from '@angular/router';
 import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { isCooperativeType, isTeamsType } from '../../core/games/game-type';
 import { UiStateService } from '../../core/data/ui-state.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
@@ -213,14 +214,18 @@ export class PartidasPageComponent implements OnInit {
       const jugadoresPartida = [...(jugadoresByPartidaId.get(partida.partidaId) ?? [])]
         .sort((a, b) => a.posicion - b.posicion);
 
+      const groups = new Map<number, string[]>();
+      for (const player of jugadoresPartida) {
+        const players = groups.get(player.posicion) ?? [];
+        players.push(`${player.nombreMostrado}: ${player.puntos !== null && player.puntos !== undefined ? this.formatPuntos(player.puntos) : '-'}`);
+        groups.set(player.posicion, players);
+      }
+      const gruposResultado = [...groups].map(([posicion, players]) => ({ posicion, jugadores: players.join(' · ') }));
+      const mostrarResultadoAgrupado = isCooperativeType(juego?.tipo) || isTeamsType(juego?.tipo);
       const resultadoJugadores = jugadoresPartida.length
-        ? jugadoresPartida
-            .map(jugador =>
-              jugador.puntos !== null && jugador.puntos !== undefined
-                ? `${jugador.nombreMostrado}: ${this.formatPuntos(jugador.puntos)}`
-                : `${jugador.nombreMostrado}: -`
-            )
-            .join(' · ')
+        ? mostrarResultadoAgrupado
+          ? gruposResultado.map(group => `${group.posicion} [${group.jugadores}]`).join(' · ')
+          : jugadoresPartida.map(player => `${player.nombreMostrado}: ${player.puntos !== null && player.puntos !== undefined ? this.formatPuntos(player.puntos) : '-'}`).join(' · ')
         : '-';
 
       return {
@@ -231,6 +236,8 @@ export class PartidasPageComponent implements OnInit {
         duracionMinutos: partida.duracionMinutos ?? null,
         numeroJugadores: partida.numeroJugadores,
         resultadoJugadores,
+        gruposResultado,
+        mostrarResultadoAgrupado,
         observaciones: partida.observaciones?.trim() ?? ''
       };
     });
