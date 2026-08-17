@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewChecked, Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,7 +14,7 @@ import { JuegosService } from './juegos.service';
   templateUrl: './juego-progres-page.component.html',
   styleUrl: './juego-progres-page.component.css'
 })
-export class JuegoProgresPageComponent implements AfterViewChecked {
+export class JuegoProgresPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(JuegosService);
@@ -28,10 +28,13 @@ export class JuegoProgresPageComponent implements AfterViewChecked {
   visitorName = '';
   levelName = '';
   private marks = new Set<string>();
-  @ViewChild('gridScroll') private gridScroll?: ElementRef<HTMLElement>;
+  private gridScroll?: ElementRef<HTMLElement>;
+  @ViewChild('gridScroll') set gridScrollView(value: ElementRef<HTMLElement> | undefined) {
+    this.gridScroll = value;
+    if (value) queueMicrotask(() => this.updateHeaderLayout());
+  }
 
   constructor() { this.load(); }
-  ngAfterViewChecked(): void { queueMicrotask(() => this.updateHeaderLayout()); }
   @HostListener('window:resize') onResize(): void { this.updateHeaderLayout(); }
 
   load(): void {
@@ -61,7 +64,7 @@ export class JuegoProgresPageComponent implements AfterViewChecked {
 
   addLevel(): void {
     const name = this.levelName.trim(); if (!name || this.saving()) return; this.saving.set(true);
-    this.service.addProgressLevel(this.gameId, name).subscribe({ next: level => { this.progress.update(value => value ? { ...value, niveles: [...value.niveles, level] } : value); this.levelName = ''; this.saving.set(false); }, error: error => this.fail(error, "No s'ha pogut afegir el nivell.") });
+    this.service.addProgressLevel(this.gameId, name).subscribe({ next: level => { this.progress.update(value => value ? { ...value, niveles: [...value.niveles, level] } : value); this.levelName = ''; this.saving.set(false); queueMicrotask(() => this.updateHeaderLayout()); }, error: error => this.fail(error, "No s'ha pogut afegir el nivell.") });
   }
 
   renameLevel(level: JuegoProgresoNivel): void {
@@ -71,7 +74,7 @@ export class JuegoProgresPageComponent implements AfterViewChecked {
 
   deleteLevel(level: JuegoProgresoNivel): void {
     if (!confirm(`Eliminar «${level.nombre}» i totes les seves marques?`)) return;
-    this.service.deleteProgressLevel(this.gameId, level.juegoProgresoNivelId).subscribe({ next: () => this.progress.update(value => value ? { ...value, niveles: value.niveles.filter(item => item.juegoProgresoNivelId !== level.juegoProgresoNivelId) } : value), error: error => this.fail(error, "No s'ha pogut eliminar el nivell.") });
+    this.service.deleteProgressLevel(this.gameId, level.juegoProgresoNivelId).subscribe({ next: () => { this.progress.update(value => value ? { ...value, niveles: value.niveles.filter(item => item.juegoProgresoNivelId !== level.juegoProgresoNivelId) } : value); queueMicrotask(() => this.updateHeaderLayout()); }, error: error => this.fail(error, "No s'ha pogut eliminar el nivell.") });
   }
 
   moveLevel(index: number, direction: -1 | 1): void {
