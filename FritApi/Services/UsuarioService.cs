@@ -26,6 +26,7 @@ public class UsuarioService
                 Nombre = u.Nombre,
                 Grupo = u.Tenant.Nom,
                 Observaciones = u.Observaciones,
+                Color = u.Color,
                 CreatedAt = u.CreatedAt
             })
             .ToListAsync();
@@ -41,6 +42,7 @@ public class UsuarioService
                 Nombre = u.Nombre,
                 Grupo = u.Tenant.Nom,
                 Observaciones = u.Observaciones,
+                Color = u.Color,
                 CreatedAt = u.CreatedAt
             })
             .FirstOrDefaultAsync();
@@ -65,6 +67,7 @@ public class UsuarioService
             Nombre = usuario.Nombre,
             Grupo = usuario.Grupo,
             Observaciones = usuario.Observaciones,
+            Color = usuario.Color,
             CreatedAt = usuario.CreatedAt
         };
     }
@@ -91,6 +94,7 @@ public class UsuarioService
             Nombre = usuario.Nombre,
             Grupo = usuario.Grupo,
             Observaciones = usuario.Observaciones,
+            Color = usuario.Color,
             CreatedAt = usuario.CreatedAt
         };
     }
@@ -106,6 +110,7 @@ public class UsuarioService
 
         usuario.Nombre = dto.Nombre.Trim();
         usuario.Observaciones = string.IsNullOrWhiteSpace(dto.Observaciones) ? null : dto.Observaciones.Trim();
+        usuario.Color = string.IsNullOrWhiteSpace(dto.Color) ? null : dto.Color.ToUpperInvariant();
 
         await _context.SaveChangesAsync();
 
@@ -115,6 +120,7 @@ public class UsuarioService
             Nombre = usuario.Nombre,
             Grupo = await GetTenantNameAsync(usuario.TenantId) ?? usuario.Grupo,
             Observaciones = usuario.Observaciones,
+            Color = usuario.Color,
             CreatedAt = usuario.CreatedAt
         };
     }

@@ -75,8 +75,11 @@ export class UsuarioPageComponent {
 
   profileForm = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(200)]],
-    observaciones: ['', Validators.maxLength(800)]
+    observaciones: ['', Validators.maxLength(800)],
+    color: ['#0F766E', Validators.pattern(/^#[0-9A-Fa-f]{6}$/)]
   });
+
+  readonly profileColors = ['#0F766E', '#2563EB', '#7C3AED', '#DB2777', '#DC2626', '#EA580C', '#CA8A04', '#16A34A'];
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -213,7 +216,8 @@ export class UsuarioPageComponent {
 
     this.profileForm.reset({
       nombre: user.nombre,
-      observaciones: user.observaciones ?? ''
+      observaciones: user.observaciones ?? '',
+      color: user.color ?? this.defaultUserColor(user.usuarioId)
     });
     this.formError.set('');
     this.success.set('');
@@ -246,7 +250,8 @@ export class UsuarioPageComponent {
 
     this.usuarioService.updateProfile(currentUser.usuarioId, {
       nombre: raw.nombre?.trim() ?? '',
-      observaciones: raw.observaciones?.trim() || null
+      observaciones: raw.observaciones?.trim() || null,
+      color: raw.color ?? null
     }).subscribe({
       next: usuario => {
         this.usuario.set(usuario);
@@ -262,6 +267,10 @@ export class UsuarioPageComponent {
         this.formError.set(err?.error?.message ?? "No s'ha pogut guardar el perfil.");
       }
     });
+  }
+
+  defaultUserColor(usuarioId: number): string {
+    return this.profileColors[Math.abs(usuarioId) % this.profileColors.length];
   }
 
   guardarPassword(): void {

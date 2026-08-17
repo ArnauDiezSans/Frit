@@ -31,4 +31,7 @@ public class UsuarioProfileUpdateDto
 
     [MaxLength(800)]
     public string? Observaciones { get; set; }
+
+    [RegularExpression("^#[0-9A-Fa-f]{6}$")]
+    public string? Color { get; set; }
 }

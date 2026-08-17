@@ -18,6 +18,9 @@ public class Usuario : ITenantEntity
     [MaxLength(800)]
     public string? Observaciones { get; set; }
 
+    [MaxLength(7)]
+    public string? Color { get; set; }
+
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 

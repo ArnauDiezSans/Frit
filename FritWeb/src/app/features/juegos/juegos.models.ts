@@ -27,4 +27,5 @@ export interface BggJuegoLookup {
 export interface UsuarioOption {
   usuarioId: number;
   nombre: string;
+  color?: string | null;
 }

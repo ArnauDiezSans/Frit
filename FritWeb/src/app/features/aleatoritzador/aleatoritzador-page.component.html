@@ -1,0 +1,45 @@
+<main class="randomizer-page">
+  <header class="page-header">
+    <div><p class="eyebrow">Eines de grup</p><h1>Aleatoritzador</h1><p>Arrossega els jugadors al ring i fes doble clic o doble tap per sortejar.</p></div>
+    <app-menu activePage="aleatoritzador" (logout)="logout()" />
+  </header>
+
+  <section class="toolbar">
+    <label><span>Format del sorteig</span><select [ngModel]="mode" (ngModelChange)="changeMode($event)"><option [value]="0">Ordre individual</option><option [value]="2">2 equips</option><option [value]="3">3 equips</option><option [value]="4">4 equips</option></select></label>
+    <span class="selection-count">{{ selected().length }} seleccionats</span>
+  </section>
+
+  <p class="state-message" *ngIf="loading()">Carregant jugadors...</p>
+  <p class="state-message error" *ngIf="error()">{{ error() }}</p>
+
+  <section class="arena" *ngIf="!loading() && !error()">
+    <div class="floating-pool" aria-label="Jugadors disponibles">
+      <button class="player-chip floating" *ngFor="let user of availableUsers(); let i = index; trackBy: trackUser" [style.--user-color]="userColor(user)" [style.--delay]="-(i % 7) * .37 + 's'" [ngStyle]="playerPosition(i, availableUsers().length)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
+    </div>
+
+    <div #ring class="ring" [class.has-result]="groups().length" (dblclick)="draw()" (pointerdown)="onRingPointerDown($event)" (pointermove)="onRingPointerMove($event)" (pointerup)="onRingPointerUp($event)">
+      <div class="ring-ropes" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="ring-content">
+        <ng-container *ngIf="!groups().length">
+          <p class="ring-empty" *ngIf="!selected().length"><strong>El ring és buit</strong><span>Arrossega-hi els jugadors</span></p>
+          <div class="selected-players" *ngIf="selected().length">
+            <button class="player-chip" *ngFor="let user of selected(); trackBy: trackUser" [style.--user-color]="userColor(user)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
+          </div>
+          <p class="draw-hint" *ngIf="selected().length === 1">Afegeix almenys un jugador més</p>
+          <p class="draw-hint ready" *ngIf="selected().length > 1">Doble clic o doble tap per sortejar</p>
+        </ng-container>
+
+        <div class="draw-results" *ngIf="groups().length" [class.team-results]="mode !== 0">
+          <section class="result-group" *ngFor="let group of groups(); let groupIndex = index" [style.--team-color]="teamColors[groupIndex]">
+            <h2 *ngIf="mode !== 0">Equip {{ groupIndex + 1 }}</h2>
+            <ol>
+              <li *ngFor="let user of group; trackBy: trackUser"><span class="position" *ngIf="mode === 0">{{ group.indexOf(user) + 1 }}</span><span class="result-color" [style.background]="userColor(user)"></span><strong>{{ user.nombre }}</strong></li>
+            </ol>
+          </section>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="drag-ghost player-chip" *ngIf="dragging() as user" [style.--user-color]="userColor(user)" [style.left.px]="dragPosition().x" [style.top.px]="dragPosition().y">{{ user.nombre }}</div>
+</main>

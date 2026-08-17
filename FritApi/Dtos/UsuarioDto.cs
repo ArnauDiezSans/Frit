@@ -6,5 +6,6 @@ public class UsuarioDto
     public string Nombre { get; set; } = string.Empty;
     public string? Grupo { get; set; }
     public string? Observaciones { get; set; }
+    public string? Color { get; set; }
     public DateTime CreatedAt { get; set; }
 }

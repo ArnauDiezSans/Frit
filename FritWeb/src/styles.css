@@ -4,6 +4,19 @@
   box-sizing: border-box;
 }
 
+/* Selector de color del perfil d'usuari. */
+.profile-color-field { margin: 0; padding: 0; border: 0; }
+.profile-color-field legend { margin-bottom: 10px; color: #344054; font-weight: 700; }
+.profile-color-field small { display: block; margin-top: 9px; color: #667085; }
+.profile-color-options { display: flex; gap: 10px; flex-wrap: wrap; }
+.profile-color-options label { position: relative; display: grid; width: 38px; height: 38px; place-items: center; border: 2px solid transparent; border-radius: 50%; cursor: pointer; }
+.profile-color-options label.selected { border-color: #172033; }
+.profile-color-options input[type="radio"] { position: absolute; opacity: 0; }
+.profile-color-options label > span { width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px #0002; }
+.profile-color-options .custom-profile-color { overflow: hidden; border: 2px dashed #98a2b3; }
+.custom-profile-color input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.custom-profile-color span { pointer-events: none; }
+
 html, body {
   height: 100%;
 }

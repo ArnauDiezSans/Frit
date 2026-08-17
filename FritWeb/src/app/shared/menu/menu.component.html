@@ -52,6 +52,16 @@
     routerLink="/app/juegos">
     Ludoteca
   </button>
+
+  <button
+    type="button"
+    class="menu-button menu-randomizer"
+    [class.menu-button-active]="activePage === 'aleatoritzador'"
+    routerLink="/app/aleatoritzador"
+    aria-label="Aleatoritzador"
+    title="Aleatoritzador">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h3c4 0 5 12 9 12h6"></path><path d="m18 15 3 3-3 3"></path><path d="M3 18h3c1.7 0 2.8-2.2 3.8-4.7"></path><path d="M14.2 8.7C15.2 7.1 16.2 6 18 6h3"></path><path d="m18 3 3 3-3 3"></path></svg>
+  </button>
   </div>
 
   <div class="menu-row menu-row-secondary">

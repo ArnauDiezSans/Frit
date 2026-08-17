@@ -5,7 +5,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { DataStoreService } from '../../core/data/data-store.service';
 import { EncuestaEstado, EnquestesService } from '../../features/enquestes/enquestes.service';
 
-export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'remar' | 'assistencia' | 'enquestes' | 'usuario' | 'auditoria';
+export type MenuPage = 'rankings' | 'hallOfFame' | 'partidas' | 'juegos' | 'laLlista' | 'pendentCompra' | 'aQueJuguem' | 'remar' | 'assistencia' | 'enquestes' | 'aleatoritzador' | 'usuario' | 'auditoria';
 
 @Component({
   selector: 'app-menu',

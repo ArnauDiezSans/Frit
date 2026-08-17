@@ -99,6 +99,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Observaciones)
                 .HasMaxLength(800);
 
+            entity.Property(e => e.Color)
+                .HasMaxLength(7);
+
             entity.Property(e => e.PasswordHash)
                 .IsRequired();
 

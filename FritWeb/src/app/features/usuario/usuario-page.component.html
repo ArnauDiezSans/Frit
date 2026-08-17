@@ -438,6 +438,21 @@
             <span>Observacions</span>
             <textarea rows="3" formControlName="observaciones"></textarea>
           </label>
+
+          <fieldset class="profile-color-field form-field-full">
+            <legend>Color del teu jugador</legend>
+            <div class="profile-color-options">
+              <label *ngFor="let color of profileColors" [class.selected]="profileForm.controls.color.value === color">
+                <input type="radio" formControlName="color" [value]="color" />
+                <span [style.background]="color"></span>
+              </label>
+              <label class="custom-profile-color" title="Color personalitzat">
+                <input type="color" formControlName="color" />
+                <span [style.background]="profileForm.controls.color.value"></span>
+              </label>
+            </div>
+            <small>S’utilitzarà per identificar-te a l’aleatoritzador.</small>
+          </fieldset>
         </div>
 
         <p class="field-error" *ngIf="formError()">{{ formError() }}</p>

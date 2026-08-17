@@ -10,6 +10,7 @@ export interface UsuarioDetalle {
   nombre: string;
   grupo?: string | null;
   observaciones?: string | null;
+  color?: string | null;
   createdAt: string;
 }
 
@@ -22,6 +23,7 @@ export interface UsuarioProfileUpdate {
   nombre: string;
   grupo?: string | null;
   observaciones?: string | null;
+  color?: string | null;
 }
 
 export interface UsuarioJuegoOrden {
