@@ -50,7 +50,7 @@
 }
 
 .menu-randomizer { order: 6; width: 44px; padding: 0; }
-.menu-randomizer svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.menu-randomizer svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
 
 .menu-assistencia {
   order: 6;
@@ -247,6 +247,7 @@
   }
 
   .menu-randomizer { display: inline-flex; order: 1; grid-column: 9 / 11; width: 100%; min-width: 38px; height: 38px; min-height: 38px; padding: 0; }
+  .menu-randomizer svg { width: 18px; height: 18px; stroke-width: 2; }
 
   .menu-assistencia {
     order: 6;
