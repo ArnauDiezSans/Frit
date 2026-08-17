@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, HostListener, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,7 +14,7 @@ import { JuegosService } from './juegos.service';
   templateUrl: './juego-progres-page.component.html',
   styleUrl: './juego-progres-page.component.css'
 })
-export class JuegoProgresPageComponent {
+export class JuegoProgresPageComponent implements AfterViewChecked {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly service = inject(JuegosService);
@@ -23,12 +23,16 @@ export class JuegoProgresPageComponent {
   progress = signal<JuegoProgreso | null>(null);
   loading = signal(true);
   saving = signal(false);
+  compactHeaders = signal(false);
   error = signal('');
   visitorName = '';
   levelName = '';
   private marks = new Set<string>();
+  @ViewChild('gridScroll') private gridScroll?: ElementRef<HTMLElement>;
 
   constructor() { this.load(); }
+  ngAfterViewChecked(): void { queueMicrotask(() => this.updateHeaderLayout()); }
+  @HostListener('window:resize') onResize(): void { this.updateHeaderLayout(); }
 
   load(): void {
     this.loading.set(true); this.error.set('');
@@ -81,5 +85,6 @@ export class JuegoProgresPageComponent {
   trackPlayer(_: number, player: JuegoProgreso['jugadores'][number]): number { return player.juegoProgresoJugadorId; }
   trackLevel(_: number, level: JuegoProgresoNivel): number { return level.juegoProgresoNivelId; }
   private key(playerId: number, levelId: number): string { return `${playerId}:${levelId}`; }
+  private updateHeaderLayout(): void { const width = this.gridScroll?.nativeElement.clientWidth ?? 0; const levels = this.progress()?.niveles.length ?? 0; const shouldCompact = width > 0 && 132 + levels * 112 > width; if (this.compactHeaders() !== shouldCompact) this.compactHeaders.set(shouldCompact); }
   private fail(error: any, fallback: string): void { this.error.set(error?.error?.message ?? fallback); this.saving.set(false); }
 }
