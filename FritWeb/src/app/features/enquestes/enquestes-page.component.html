@@ -15,7 +15,7 @@
         <span class="status" [class.open]="survey.estado === Estado.Publicada">{{ statusLabel(survey.estado) }}</span>
         <span class="created-at">{{ survey.createdAt | date:'dd/MM/yy' }}</span>
       </span>
-      <span class="survey-title">{{ survey.titulo }}</span><span class="survey-description" *ngIf="!survey.esVotacion">{{ survey.descripcion || 'Sense descripció' }}</span><span class="poll-countdown" *ngIf="survey.esVotacion && survey.estado === Estado.Publicada">⏱ {{ countdown(survey) }}</span>
+      <span class="survey-title">{{ survey.titulo }}</span><span class="survey-description" *ngIf="!survey.esVotacion">{{ survey.descripcion || 'Sense descripció' }}</span><span class="survey-countdown" *ngIf="!survey.esVotacion && survey.estado === Estado.Publicada && survey.fechaCierre">{{ closingCountdown(survey) }}</span><span class="poll-countdown" *ngIf="survey.esVotacion && survey.estado === Estado.Publicada">⏱ {{ countdown(survey) }}</span>
       <span class="survey-meta"><b>{{ survey.respuestas }}/{{ survey.destinatarios }}</b> respostes · {{ survey.esAnonima ? 'Anònima' : 'Identificada' }}</span>
       <span class="pending" *ngIf="survey.estado === Estado.Publicada && survey.esDestinatario && !survey.haRespondido">Pendent de respondre</span>
       <span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span>
