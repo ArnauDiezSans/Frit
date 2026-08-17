@@ -17,12 +17,12 @@
       <button class="player-chip floating" *ngFor="let user of availableUsers(); let i = index; trackBy: trackUser" [style.--user-color]="userColor(user)" [ngStyle]="playerPosition(i, availableUsers().length)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
     </div>
 
-    <div #ring class="ring" [class.has-result]="groups().length" [class.ring-crowded]="selected().length >= 7" [class.ring-very-crowded]="selected().length >= 10" (dblclick)="draw()" (pointerdown)="onRingPointerDown($event)" (pointermove)="onRingPointerMove($event)" (pointerup)="onRingPointerUp($event)">
+    <div #ring class="ring" [class.has-result]="groups().length" [class.ring-crowded]="selected().length >= 5" [class.ring-very-crowded]="selected().length >= 8" (dblclick)="draw()" (pointerdown)="onRingPointerDown($event)" (pointermove)="onRingPointerMove($event)" (pointerup)="onRingPointerUp($event)">
       <div class="ring-content">
         <ng-container *ngIf="!groups().length">
           <p class="ring-empty" *ngIf="!selected().length">Arrossega-hi els jugadors</p>
           <div class="selected-players" *ngIf="selected().length">
-            <button class="player-chip" *ngFor="let user of selected(); trackBy: trackUser" [style.--user-color]="userColor(user)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
+            <button class="player-chip floating" *ngFor="let user of selected(); trackBy: trackUser" [style.--user-color]="userColor(user)" (pointerdown)="startDrag($event, user)" (pointermove)="moveDrag($event)" (pointerup)="endDrag($event)" (pointercancel)="cancelDrag()">{{ user.nombre }}</button>
           </div>
           <p class="draw-hint" *ngIf="selected().length === 1">Afegeix almenys un jugador més</p>
           <p class="draw-hint ready" *ngIf="selected().length > 1">Doble clic o doble tap per sortejar</p>
