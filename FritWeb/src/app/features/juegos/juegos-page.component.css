@@ -539,6 +539,7 @@ h1 {
   .games-table tbody {
     display: block;
     width: 100%;
+    min-width: 0;
   }
 
   .games-table thead {
