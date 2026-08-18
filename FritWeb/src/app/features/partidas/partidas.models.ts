@@ -30,3 +30,8 @@ export interface PartidaGridRow {
   mostrarResultadoAgrupado: boolean;
   observaciones: string;
 }
+
+export interface PartidaProgresoJugadorWrite {
+  partidaJugadorId: number;
+  nivelIds: number[];
+}

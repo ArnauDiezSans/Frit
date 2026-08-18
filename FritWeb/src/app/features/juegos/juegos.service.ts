@@ -70,6 +70,7 @@ export class JuegosService {
   }
 
   getProgress(id: number): Observable<JuegoProgreso> { return this.http.get<JuegoProgreso>(`${this.baseUrl}/${id}/progreso`, { withCredentials: true }); }
+  getProgressLevels(id: number): Observable<JuegoProgresoNivel[]> { return this.http.get<JuegoProgresoNivel[]>(`${this.baseUrl}/${id}/progreso/niveles`, { withCredentials: true }); }
   addProgressVisitor(id: number, nombre: string): Observable<JuegoProgresoJugador> { return this.http.post<JuegoProgresoJugador>(`${this.baseUrl}/${id}/progreso/visitantes`, { nombre }, { withCredentials: true }); }
   deleteProgressVisitor(id: number, jugadorId: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}/progreso/jugadores/${jugadorId}`, { withCredentials: true }); }
   addProgressLevel(id: number, nombre: string): Observable<JuegoProgresoNivel> { return this.http.post<JuegoProgresoNivel>(`${this.baseUrl}/${id}/progreso/niveles`, { nombre }, { withCredentials: true }); }

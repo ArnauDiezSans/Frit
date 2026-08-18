@@ -16,6 +16,13 @@ public sealed class JuegoProgresoController(JuegoProgresoService service) : Cont
         return result.Value is null ? BadRequest(new { message = result.Error }) : Ok(result.Value);
     }
 
+    [HttpGet("niveles")]
+    public async Task<IActionResult> GetLevels(int juegoId)
+    {
+        var result = await service.GetLevelsAsync(juegoId);
+        return result.Value is null ? BadRequest(new { message = result.Error }) : Ok(result.Value);
+    }
+
     [HttpPost("visitantes")]
     public async Task<IActionResult> AddVisitor(int juegoId, JuegoProgresoNombreDto dto)
     {

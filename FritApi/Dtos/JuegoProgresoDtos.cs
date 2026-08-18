@@ -8,3 +8,5 @@ public record JuegoProgresoDto(int JuegoId, string JuegoNombre, List<JuegoProgre
 public record JuegoProgresoNombreDto(string Nombre);
 public record JuegoProgresoMarcaWriteDto(int JuegoProgresoJugadorId, int JuegoProgresoNivelId, bool Assolit);
 public record JuegoProgresoOrdenDto(List<int> NivelIds);
+public record PartidaProgresoJugadorWriteDto(int PartidaJugadorId, List<int> NivelIds);
+public record PartidaProgresoWriteDto(List<PartidaProgresoJugadorWriteDto> Jugadores);

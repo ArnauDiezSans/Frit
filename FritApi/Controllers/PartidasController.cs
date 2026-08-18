@@ -13,11 +13,21 @@ public class PartidasController : ControllerBase
 {
     private readonly PartidaService _partidaService;
     private readonly PushNotificationService _pushNotificationService;
+    private readonly JuegoProgresoService _juegoProgresoService;
 
-    public PartidasController(PartidaService partidaService, PushNotificationService pushNotificationService)
+    public PartidasController(PartidaService partidaService, PushNotificationService pushNotificationService, JuegoProgresoService juegoProgresoService)
     {
         _partidaService = partidaService;
         _pushNotificationService = pushNotificationService;
+        _juegoProgresoService = juegoProgresoService;
+    }
+
+    [HttpPost("{id:int}/progreso")]
+    public async Task<IActionResult> ApplyProgress(int id, [FromBody] PartidaProgresoWriteDto dto)
+    {
+        var error = await _juegoProgresoService.ApplyPartidaProgressAsync(id, dto);
+        if (error == "Partida no trobada.") return NotFound();
+        return error is null ? NoContent() : BadRequest(new { message = error });
     }
 
     [HttpGet]

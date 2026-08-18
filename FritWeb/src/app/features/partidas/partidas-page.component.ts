@@ -9,6 +9,7 @@ import {
   signal
 } from '@angular/core';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   ReactiveFormsModule,
@@ -20,7 +21,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
-import { Juego, UsuarioOption } from '../juegos/juegos.models';
+import { Juego, JuegoProgresoNivel, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
 import { UsuariosService } from '../juegos/usuarios.service';
 import {
@@ -40,6 +41,7 @@ type FormJugador = {
   equipoColor: string;
   posicion: number;
   puntos: number | null;
+  nivelIds: number[];
 };
 
 type FormEquipo = {
@@ -150,6 +152,9 @@ export class PartidasPageComponent implements OnInit {
   usuarios = signal<UsuarioOption[]>([]);
   filteredUsuarios = signal<UsuarioOption[]>([]);
   showUsuarioOptions = signal<string | null>(null);
+  progressLevels = signal<JuegoProgresoNivel[]>([]);
+  progressLevelsLoading = signal(false);
+  progressLevelsError = signal('');
 
   partidaJugadores = signal<PartidaJugador[]>([]);
   highlightedPartidaId = signal<number | null>(null);
@@ -174,6 +179,7 @@ export class PartidasPageComponent implements OnInit {
   showColumnsPanel = signal(false);
   isMobileFilters = signal(false);
   private readonly mobileFiltersQuery = window.matchMedia('(max-width: 820px)');
+  private progressLevelsRequestId = 0;
   teamColors = TEAM_COLORS;
   displayJuego = (juego: Juego) => juego.nombre;
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
@@ -428,6 +434,7 @@ export class PartidasPageComponent implements OnInit {
     duracionMinutos: [null as number | null],
     numeroJugadores: [2, [Validators.required, Validators.min(1)]],
     perEquips: [false],
+    nivelIdsTodos: [[] as number[]],
     observaciones: [''],
     jugadores: this.fb.array([]),
     equipos: this.fb.array([])
@@ -513,11 +520,13 @@ export class PartidasPageComponent implements OnInit {
       duracionMinutos: null,
       numeroJugadores: 2,
       perEquips: false,
+      nivelIdsTodos: [],
       observaciones: ''
     });
 
     this.jugadoresArray.clear();
     this.equiposArray.clear();
+    this.clearProgressLevels();
     this.filteredJuegos.set(this.juegos());
     this.filteredUsuarios.set(this.usuarios());
     this.syncJugadoresWithNumero(2);
@@ -552,11 +561,13 @@ export class PartidasPageComponent implements OnInit {
       duracionMinutos: partida.duracionMinutos ?? null,
       numeroJugadores: partida.numeroJugadores,
       perEquips: false,
+      nivelIdsTodos: [],
       observaciones: partida.observaciones ?? ''
     });
 
     this.jugadoresArray.clear();
     this.equiposArray.clear();
+    this.clearProgressLevels();
 
     if (jugadores.length > 0) {
       jugadores.forEach((jugador, index) => {
@@ -620,11 +631,42 @@ export class PartidasPageComponent implements OnInit {
       juegoSearch: juego.nombre
     });
     this.showJuegoOptions.set(false);
+    this.loadProgressLevels(juego);
   }
 
   limpiarJuegoSeleccionado(): void {
     this.form.patchValue({ juegoId: null, juegoSearch: '' });
     this.showJuegoOptions.set(false);
+    this.clearProgressLevels();
+  }
+
+  isProgressLevelSelected(control: AbstractControl, levelId: number): boolean {
+    return ((control.value as number[] | null) ?? []).includes(levelId);
+  }
+
+  toggleProgressLevel(control: AbstractControl, levelId: number, checked: boolean): void {
+    const current = ((control.value as number[] | null) ?? []).filter(id => id !== levelId);
+    control.setValue(checked ? [...current, levelId] : current);
+  }
+
+  selectedProgressLevelSummary(control: AbstractControl): string {
+    const selectedIds = (control.value as number[] | null) ?? [];
+    if (selectedIds.length === 0) return 'Cap nivell seleccionat';
+    if (selectedIds.length === 1) {
+      return this.progressLevels().find(level => level.juegoProgresoNivelId === selectedIds[0])?.nombre ?? '1 nivell';
+    }
+    return `${selectedIds.length} nivells seleccionats`;
+  }
+
+  selectedPlayerProgressLevelSummary(control: AbstractControl): string {
+    const effectiveIds = [...new Set([
+      ...(this.form.controls.nivelIdsTodos.value ?? []),
+      ...((control.value as number[] | null) ?? [])
+    ])];
+    if (effectiveIds.length === 0) return 'Cap nivell seleccionat';
+    if (effectiveIds.length === 1)
+      return this.progressLevels().find(level => level.juegoProgresoNivelId === effectiveIds[0])?.nombre ?? '1 nivell';
+    return `${effectiveIds.length} nivells seleccionats`;
   }
 
   onUsuarioInput(index: number, value: string): void {
@@ -815,6 +857,7 @@ export class PartidasPageComponent implements OnInit {
       numeroJugadores: number | null;
       perEquips: boolean | null;
       observaciones: string | null;
+      nivelIdsTodos: number[] | null;
       jugadores: FormJugador[];
       equipos: FormEquipo[];
     };
@@ -851,6 +894,7 @@ export class PartidasPageComponent implements OnInit {
     const rawJugadores = raw.perEquips
       ? (raw.equipos ?? []).flatMap(equipo => equipo.jugadores ?? [])
       : (raw.jugadores ?? []);
+    const globalLevelIds = raw.nivelIdsTodos ?? [];
 
     const jugadores: PartidaJugador[] = rawJugadores.map(
       (jugador: FormJugador, index: number) => ({
@@ -904,9 +948,12 @@ export class PartidasPageComponent implements OnInit {
       : this.partidasService.create(partidaPayload).pipe(
           switchMap(partidaCreada =>
             this.createPartidaJugadores(partidaCreada.partidaId, jugadores).pipe(
-              switchMap(jugadoresCreados => this.partidasService.notifyCreated(partidaCreada.partidaId).pipe(
-                map(() => ({ partida: partidaCreada, jugadores: jugadoresCreados }))
-              ))
+              switchMap(jugadoresCreados =>
+                this.applyCreatedPartidaProgress(partidaCreada.partidaId, jugadoresCreados, rawJugadores, globalLevelIds).pipe(
+                  switchMap(() => this.partidasService.notifyCreated(partidaCreada.partidaId)),
+                  map(() => ({ partida: partidaCreada, jugadores: jugadoresCreados }))
+                )
+              )
             )
           )
         );
@@ -1184,7 +1231,7 @@ export class PartidasPageComponent implements OnInit {
     }
   }
 
-  private createJugadorGroup(posicion: number, jugador?: PartidaJugador) {
+  private createJugadorGroup(posicion: number, jugador?: PartidaJugador, nivelIds: number[] = []) {
     return this.fb.group({
       partidaJugadorId: [jugador?.partidaJugadorId ?? 0],
       usuarioId: [jugador?.usuarioId ?? null as number | null],
@@ -1192,11 +1239,12 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: [jugador?.nombreMostrado ?? ''],
       equipoColor: [this.getDefaultTeamColor(posicion - 1)],
       posicion: [jugador?.posicion ?? posicion, [Validators.required, Validators.min(1)]],
-      puntos: [jugador?.puntos ?? null as number | null]
+      puntos: [jugador?.puntos ?? null as number | null],
+      nivelIds: [[...nivelIds]]
     });
   }
 
-  private createEquipoGroup(posicion: number, numeroJugadores: number, jugadores: PartidaJugador[] = []) {
+  private createEquipoGroup(posicion: number, numeroJugadores: number, jugadores: PartidaJugador[] = [], nivelIds: number[][] = []) {
     const color = this.getDefaultTeamColor(posicion - 1);
     const equipo = this.fb.group({
       nombre: [`Equip ${posicion}`],
@@ -1211,13 +1259,13 @@ export class PartidasPageComponent implements OnInit {
     const target = Math.max(numeroJugadores, jugadores.length, 1);
 
     for (let index = 0; index < target; index += 1) {
-      jugadoresArray.push(this.createEquipoJugadorGroup(posicion, color, jugadores[index]));
+      jugadoresArray.push(this.createEquipoJugadorGroup(posicion, color, jugadores[index], nivelIds[index] ?? []));
     }
 
     return equipo;
   }
 
-  private createEquipoJugadorGroup(posicion: number, color: string, jugador?: PartidaJugador) {
+  private createEquipoJugadorGroup(posicion: number, color: string, jugador?: PartidaJugador, nivelIds: number[] = []) {
     return this.fb.group({
       partidaJugadorId: [jugador?.partidaJugadorId ?? 0],
       usuarioId: [jugador?.usuarioId ?? null as number | null],
@@ -1225,7 +1273,8 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: [jugador?.nombreMostrado ?? ''],
       equipoColor: [color],
       posicion: [jugador?.posicion ?? posicion, [Validators.required, Validators.min(1)]],
-      puntos: [jugador?.puntos ?? null as number | null]
+      puntos: [jugador?.puntos ?? null as number | null],
+      nivelIds: [[...nivelIds]]
     });
   }
 
@@ -1238,8 +1287,8 @@ export class PartidasPageComponent implements OnInit {
     const source = current.length > 0
       ? current
       : [
-          { partidaJugadorId: 0, usuarioId: null, usuarioSearch: '', nombreMostrado: '', equipoColor: this.getDefaultTeamColor(0), posicion: 1, puntos: null },
-          { partidaJugadorId: 0, usuarioId: null, usuarioSearch: '', nombreMostrado: '', equipoColor: this.getDefaultTeamColor(1), posicion: 2, puntos: null }
+          { partidaJugadorId: 0, usuarioId: null, usuarioSearch: '', nombreMostrado: '', equipoColor: this.getDefaultTeamColor(0), posicion: 1, puntos: null, nivelIds: [] },
+          { partidaJugadorId: 0, usuarioId: null, usuarioSearch: '', nombreMostrado: '', equipoColor: this.getDefaultTeamColor(1), posicion: 2, puntos: null, nivelIds: [] }
         ];
 
     source.forEach((jugador, index) => {
@@ -1250,7 +1299,7 @@ export class PartidasPageComponent implements OnInit {
         nombreMostrado: jugador.usuarioSearch,
         posicion: Number(jugador.posicion) || index + 1,
         puntos: jugador.puntos
-      }]));
+      }], [jugador.nivelIds ?? []]));
     });
 
     this.syncNumeroJugadoresFromEquipos();
@@ -1303,7 +1352,7 @@ export class PartidasPageComponent implements OnInit {
         nombreMostrado: jugador.usuarioSearch,
         posicion: Number(jugador.posicion) || index + 1,
         puntos: jugador.puntos
-      }));
+      }, jugador.nivelIds ?? []));
     });
 
     this.form.controls.numeroJugadores.setValue(Math.max(this.jugadoresArray.length, 1));
@@ -1315,6 +1364,52 @@ export class PartidasPageComponent implements OnInit {
 
   getEquipoJugadorOptionKey(equipoIndex: number, jugadorIndex: number): string {
     return `equipo:${equipoIndex}:${jugadorIndex}`;
+  }
+
+  private loadProgressLevels(juego: Juego): void {
+    this.clearProgressLevels();
+    if (this.editingPartidaId() || !juego.tieneProgresoNiveles) return;
+
+    const requestId = ++this.progressLevelsRequestId;
+    this.progressLevelsLoading.set(true);
+    this.juegosService.getProgressLevels(juego.juegoId).subscribe({
+      next: levels => {
+        if (requestId !== this.progressLevelsRequestId) return;
+        this.progressLevels.set(levels);
+        this.progressLevelsLoading.set(false);
+      },
+      error: error => {
+        if (requestId !== this.progressLevelsRequestId) return;
+        this.progressLevelsLoading.set(false);
+        this.progressLevelsError.set(error?.error?.message ?? 'No s’han pogut carregar els nivells del joc.');
+      }
+    });
+  }
+
+  private clearProgressLevels(): void {
+    this.progressLevelsRequestId += 1;
+    this.progressLevels.set([]);
+    this.progressLevelsLoading.set(false);
+    this.progressLevelsError.set('');
+    this.form.controls.nivelIdsTodos.setValue([]);
+    this.jugadoresArray.controls.forEach(control => control.get('nivelIds')?.setValue([]));
+    this.equiposArray.controls.forEach((_, equipoIndex) =>
+      this.equipoJugadoresArray(equipoIndex).controls.forEach(control => control.get('nivelIds')?.setValue([]))
+    );
+  }
+
+  private applyCreatedPartidaProgress(
+    partidaId: number,
+    createdPlayers: PartidaJugador[],
+    formPlayers: FormJugador[],
+    globalLevelIds: number[]
+  ): Observable<void> {
+    const jugadores = createdPlayers.map((player, index) => ({
+      partidaJugadorId: player.partidaJugadorId,
+      nivelIds: [...new Set([...globalLevelIds, ...(formPlayers[index]?.nivelIds ?? [])])]
+    })).filter(player => player.nivelIds.length > 0);
+
+    return jugadores.length > 0 ? this.partidasService.applyProgress(partidaId, jugadores) : of(undefined);
   }
 
   private createPartidaJugadores(partidaId: number, jugadores: PartidaJugador[]): Observable<PartidaJugador[]> {

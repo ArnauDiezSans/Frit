@@ -1354,6 +1354,71 @@ public class ServiceTests
         Assert.Null(await service.DeleteVisitorAsync(game.JuegoId, visitor.Value!.JuegoProgresoJugadorId));
     }
 
+    [Fact]
+    public async Task JuegoProgresoService_AppliesPartidaLevelsAndCreatesVisitor()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        var game = new Juego
+        {
+            Nombre = "Gloomhaven",
+            NumeroJugadoresMin = 1,
+            NumeroJugadoresMax = 4,
+            TieneProgresoNiveles = true,
+            Propietario = user
+        };
+        context.AddRange(user, game);
+        await context.SaveChangesAsync();
+        var levelOne = new JuegoProgresoNivel { JuegoId = game.JuegoId, Nombre = "Escenari 1", Orden = 0 };
+        var levelTwo = new JuegoProgresoNivel { JuegoId = game.JuegoId, Nombre = "Escenari 2", Orden = 1 };
+        var partida = new Partida
+        {
+            JuegoId = game.JuegoId,
+            UsuarioCreadorId = user.UsuarioId,
+            Fecha = new DateOnly(2026, 8, 18),
+            NumeroJugadores = 2
+        };
+        context.AddRange(levelOne, levelTwo, partida);
+        await context.SaveChangesAsync();
+        var registeredPlayer = new PartidaJugador
+        {
+            PartidaId = partida.PartidaId,
+            UsuarioId = user.UsuarioId,
+            NombreMostrado = "Arnau",
+            Posicion = 1
+        };
+        var visitor = new PartidaJugador
+        {
+            PartidaId = partida.PartidaId,
+            NombreMostrado = "Visita",
+            Posicion = 2
+        };
+        context.AddRange(registeredPlayer, visitor);
+        await context.SaveChangesAsync();
+
+        var service = new JuegoProgresoService(context);
+        var error = await service.ApplyPartidaProgressAsync(partida.PartidaId, new PartidaProgresoWriteDto([
+            new(registeredPlayer.PartidaJugadorId, [levelOne.JuegoProgresoNivelId, levelTwo.JuegoProgresoNivelId]),
+            new(visitor.PartidaJugadorId, [levelTwo.JuegoProgresoNivelId])
+        ]));
+        var repeatedError = await service.ApplyPartidaProgressAsync(partida.PartidaId, new PartidaProgresoWriteDto([
+            new(registeredPlayer.PartidaJugadorId, [levelOne.JuegoProgresoNivelId, levelTwo.JuegoProgresoNivelId]),
+            new(visitor.PartidaJugadorId, [levelTwo.JuegoProgresoNivelId])
+        ]));
+
+        Assert.Null(error);
+        Assert.Null(repeatedError);
+        var progressPlayers = await context.JuegoProgresoJugadores.ToListAsync();
+        Assert.Equal(2, progressPlayers.Count);
+        var registeredProgressPlayer = progressPlayers.Single(row => row.UsuarioId == user.UsuarioId);
+        var visitorProgressPlayer = progressPlayers.Single(row => row.EsVisita);
+        Assert.Equal("Visita", visitorProgressPlayer.Nombre);
+        var marks = await context.JuegoProgresoMarcas.ToListAsync();
+        Assert.Equal(3, marks.Count);
+        Assert.Equal(2, marks.Count(mark => mark.JuegoProgresoJugadorId == registeredProgressPlayer.JuegoProgresoJugadorId));
+        Assert.Single(marks, mark => mark.JuegoProgresoJugadorId == visitorProgressPlayer.JuegoProgresoJugadorId);
+    }
+
     private static AppDbContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()

@@ -7,6 +7,20 @@ namespace FritApi.Services;
 
 public sealed class JuegoProgresoService(AppDbContext context)
 {
+    public async Task<(List<JuegoProgresoNivelDto>? Value, string? Error)> GetLevelsAsync(int juegoId)
+    {
+        var error = await ValidateGameAsync(juegoId);
+        if (error is not null) return (null, error);
+
+        var levels = await context.JuegoProgresoNiveles.AsNoTracking()
+            .Where(level => level.JuegoId == juegoId)
+            .OrderBy(level => level.Orden)
+            .ThenBy(level => level.JuegoProgresoNivelId)
+            .Select(level => new JuegoProgresoNivelDto(level.JuegoProgresoNivelId, level.Nombre, level.Orden))
+            .ToListAsync();
+        return (levels, null);
+    }
+
     public async Task<(JuegoProgresoDto? Value, string? Error)> GetAsync(int juegoId)
     {
         var juego = await context.Juegos.FirstOrDefaultAsync(j => j.JuegoId == juegoId);
@@ -103,6 +117,87 @@ public sealed class JuegoProgresoService(AppDbContext context)
         var mark = await context.JuegoProgresoMarcas.FirstOrDefaultAsync(item => item.JuegoProgresoJugadorId == dto.JuegoProgresoJugadorId && item.JuegoProgresoNivelId == dto.JuegoProgresoNivelId);
         if (dto.Assolit && mark is null) context.JuegoProgresoMarcas.Add(new JuegoProgresoMarca { JuegoProgresoJugadorId = dto.JuegoProgresoJugadorId, JuegoProgresoNivelId = dto.JuegoProgresoNivelId });
         else if (!dto.Assolit && mark is not null) context.JuegoProgresoMarcas.Remove(mark);
+        await context.SaveChangesAsync();
+        return null;
+    }
+
+    public async Task<string?> ApplyPartidaProgressAsync(int partidaId, PartidaProgresoWriteDto dto)
+    {
+        var partida = await context.Partidas.AsNoTracking()
+            .Where(item => item.PartidaId == partidaId)
+            .Select(item => new { item.JuegoId, item.Juego.TieneProgresoNiveles })
+            .FirstOrDefaultAsync();
+        if (partida is null) return "Partida no trobada.";
+        if (!partida.TieneProgresoNiveles) return "Aquest joc no té activat el progrés de nivells.";
+
+        var selections = (dto.Jugadores ?? [])
+            .GroupBy(item => item.PartidaJugadorId)
+            .ToDictionary(group => group.Key, group => group.SelectMany(item => item.NivelIds ?? []).Distinct().ToList());
+        if (selections.Count == 0 || selections.Values.All(ids => ids.Count == 0)) return null;
+
+        var partidaPlayers = await context.PartidaJugadores.AsNoTracking()
+            .Where(player => player.PartidaId == partidaId && selections.Keys.Contains(player.PartidaJugadorId))
+            .Select(player => new { player.PartidaJugadorId, player.UsuarioId, player.NombreMostrado })
+            .ToListAsync();
+        if (partidaPlayers.Count != selections.Count) return "Hi ha jugadors seleccionats que no pertanyen a la partida.";
+
+        var levelIds = selections.Values.SelectMany(ids => ids).Distinct().ToList();
+        var validLevelIds = await context.JuegoProgresoNiveles.AsNoTracking()
+            .Where(level => level.JuegoId == partida.JuegoId && levelIds.Contains(level.JuegoProgresoNivelId))
+            .Select(level => level.JuegoProgresoNivelId)
+            .ToListAsync();
+        if (validLevelIds.Count != levelIds.Count) return "Hi ha nivells seleccionats que no pertanyen al joc de la partida.";
+
+        var progressPlayers = await context.JuegoProgresoJugadores
+            .Where(row => row.JuegoId == partida.JuegoId)
+            .ToListAsync();
+        var nextOrder = progressPlayers.Select(row => (int?)row.Orden).Max() ?? -1;
+        var pendingMarks = new List<(JuegoProgresoJugador Player, int LevelId)>();
+
+        foreach (var partidaPlayer in partidaPlayers)
+        {
+            var progressPlayer = partidaPlayer.UsuarioId.HasValue
+                ? progressPlayers.FirstOrDefault(row => row.UsuarioId == partidaPlayer.UsuarioId)
+                : progressPlayers.FirstOrDefault(row => row.EsVisita &&
+                    string.Equals(row.Nombre.Trim(), partidaPlayer.NombreMostrado.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (progressPlayer is null)
+            {
+                progressPlayer = new JuegoProgresoJugador
+                {
+                    JuegoId = partida.JuegoId,
+                    UsuarioId = partidaPlayer.UsuarioId,
+                    Nombre = partidaPlayer.NombreMostrado.Trim(),
+                    EsVisita = !partidaPlayer.UsuarioId.HasValue,
+                    Orden = ++nextOrder
+                };
+                context.JuegoProgresoJugadores.Add(progressPlayer);
+                progressPlayers.Add(progressPlayer);
+            }
+
+            foreach (var levelId in selections[partidaPlayer.PartidaJugadorId])
+                pendingMarks.Add((progressPlayer, levelId));
+        }
+
+        await context.SaveChangesAsync();
+
+        var progressPlayerIds = pendingMarks.Select(item => item.Player.JuegoProgresoJugadorId).Distinct().ToList();
+        var existingMarks = await context.JuegoProgresoMarcas.AsNoTracking()
+            .Where(mark => progressPlayerIds.Contains(mark.JuegoProgresoJugadorId) && levelIds.Contains(mark.JuegoProgresoNivelId))
+            .Select(mark => new { mark.JuegoProgresoJugadorId, mark.JuegoProgresoNivelId })
+            .ToListAsync();
+        var existingKeys = existingMarks.Select(mark => (mark.JuegoProgresoJugadorId, mark.JuegoProgresoNivelId)).ToHashSet();
+
+        foreach (var (player, levelId) in pendingMarks.DistinctBy(item => (item.Player.JuegoProgresoJugadorId, item.LevelId)))
+        {
+            if (!existingKeys.Contains((player.JuegoProgresoJugadorId, levelId)))
+                context.JuegoProgresoMarcas.Add(new JuegoProgresoMarca
+                {
+                    JuegoProgresoJugadorId = player.JuegoProgresoJugadorId,
+                    JuegoProgresoNivelId = levelId
+                });
+        }
+
         await context.SaveChangesAsync();
         return null;
     }

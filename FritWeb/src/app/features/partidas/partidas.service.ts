@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { API_BASE_URL } from '../../core/api/api.config';
 import { DataStoreService } from '../../core/data/data-store.service';
-import { Partida } from './partidas.models';
+import { Partida, PartidaProgresoJugadorWrite } from './partidas.models';
 
 @Injectable({ providedIn: 'root' })
 export class PartidasService {
@@ -34,6 +34,10 @@ export class PartidasService {
 
   notifyCreated(id: number): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${id}/notificacion`, {}, { withCredentials: true });
+  }
+
+  applyProgress(id: number, jugadores: PartidaProgresoJugadorWrite[]): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${id}/progreso`, { jugadores }, { withCredentials: true });
   }
 
   update(id: number, data: Partida): Observable<Partida> {
