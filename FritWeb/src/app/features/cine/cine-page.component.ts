@@ -105,7 +105,8 @@ export class CinePageComponent {
     titulo: ['', [Validators.required, Validators.maxLength(300)]],
     fecha: [this.getTodayInputValue(), Validators.required],
     estirarLaSetmana: [false],
-    creepyjous: [false]
+    creepyjous: [false],
+    cicleFantastic: [false]
   });
 
   ratingForm = this.fb.group({
@@ -160,7 +161,7 @@ export class CinePageComponent {
     const fecha = this.movieForm.controls.fecha.value ?? this.getTodayInputValue();
     const grupoPelicula = this.getMovieGroup();
 
-    if (!this.confirmMovieGroupDate(grupoPelicula)) {
+    if (!this.confirmMovieGroupDate(grupoPelicula, fecha)) {
       return;
     }
 
@@ -176,7 +177,8 @@ export class CinePageComponent {
           titulo: '',
           fecha: this.getTodayInputValue(),
           estirarLaSetmana: false,
-          creepyjous: false
+          creepyjous: false,
+          cicleFantastic: false
         });
         this.savingMovie.set(false);
       },
@@ -187,10 +189,11 @@ export class CinePageComponent {
     });
   }
 
-  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous', checked: boolean): void {
+  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous' | 'cicleFantastic', checked: boolean): void {
     this.movieForm.patchValue({
       estirarLaSetmana: group === 'estirarLaSetmana' ? checked : false,
-      creepyjous: group === 'creepyjous' ? checked : false
+      creepyjous: group === 'creepyjous' ? checked : false,
+      cicleFantastic: group === 'cicleFantastic' ? checked : false
     });
   }
 
@@ -489,6 +492,24 @@ export class CinePageComponent {
     return Number.isFinite(parsed) && parsed >= 0 && parsed <= 10 ? parsed : null;
   }
 
+  getMovieIcon(grupo: number | null): string {
+    switch (grupo) {
+      case 1: return 'fa-solid fa-film';
+      case 2: return 'fa-solid fa-ghost';
+      case 3: return 'fa-solid fa-hat-wizard';
+      default: return 'fa-solid fa-clapperboard';
+    }
+  }
+
+  getMovieLabel(grupo: number | null): string {
+    switch (grupo) {
+      case 1: return 'Pel·lícula de diumenge — «Estirar la setmana»';
+      case 2: return 'Pel·lícula de Creepyjous';
+      case 3: return 'Cicle de cine fantàstic';
+      default: return 'Pel·lícula';
+    }
+  }
+
   private getMovieGroup(): number | null {
     if (this.movieForm.controls.estirarLaSetmana.value) {
       return 1;
@@ -496,6 +517,10 @@ export class CinePageComponent {
 
     if (this.movieForm.controls.creepyjous.value) {
       return 2;
+    }
+
+    if (this.movieForm.controls.cicleFantastic.value) {
+      return 3;
     }
 
     return null;
@@ -510,8 +535,17 @@ export class CinePageComponent {
     return `${year}-${month}-${day}`;
   }
 
-  private confirmMovieGroupDate(grupoPelicula: number | null): boolean {
-    const day = new Date().getDay();
+  isFantasticCycleAvailable(): boolean {
+    return this.isFantasticCycleDate(this.getTodayInputValue());
+  }
+
+  private confirmMovieGroupDate(grupoPelicula: number | null, fecha: string): boolean {
+    const day = new Date(`${fecha}T12:00:00`).getDay();
+
+    if (grupoPelicula === 3 && !this.isFantasticCycleDate(fecha)) {
+      this.movieFormError.set('El Cicle de cine fantàstic només es pot registrar del 15 de juny al 15 de setembre.');
+      return false;
+    }
 
     if (grupoPelicula === 1 && day !== 0) {
       return window.confirm("Estàs publicant un 'Estirar la setmana' en una data que no és diumenge. Vols continuar?");
@@ -522,6 +556,11 @@ export class CinePageComponent {
     }
 
     return true;
+  }
+
+  private isFantasticCycleDate(fecha: string): boolean {
+    const year = fecha.slice(0, 4);
+    return fecha >= `${year}-06-15` && fecha <= `${year}-09-15`;
   }
 
   private notaValidator(control: AbstractControl): ValidationErrors | null {

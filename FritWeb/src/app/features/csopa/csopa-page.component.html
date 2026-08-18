@@ -30,7 +30,9 @@
             [searchText]="entryTypeSearch()"
             [selected]="!!selectedEntryType()"
             [displayWith]="displayEntryType"
+            [secondaryWith]="entryTypeSecondary"
             [trackBy]="trackByEntryType"
+            [itemDisabled]="isEntryTypeDisabled"
             placeholder="Selecciona un tipus..."
             emptyText="No hi ha tipus coincidents."
             (searchTextChange)="updateEntryTypeSearch($event)"
@@ -120,6 +122,7 @@
             <option value="cine">Pel·lícules</option>
             <option value="cine-diumenge">Pel·lícules de diumenge</option>
             <option value="cine-por">Pel·lícules de Creepyjous</option>
+            <option value="cine-fantastic">Cicle de cine fantàstic</option>
             <option value="sopar">Sopars</option>
             <option value="sopar-dimarts">Sopars de dimarts</option>
             <option value="gymfrit">Gymfrits</option>
@@ -167,12 +170,11 @@
           <ng-container *ngFor="let row of filteredRows(); let i = index; trackBy: trackByRowKey">
             <tr [class.row-highlight]="highlightedKey() === row.key">
               <td class="activity-type-cell" aria-label="Tipus">
-                <img
+                <i
                   *ngIf="row.tipusIcon"
-                  class="activity-type-icon"
-                  [src]="row.tipusIcon"
-                  [alt]="row.tipusLabel"
-                  [title]="row.tipusLabel" />
+                  [class]="'activity-type-icon ' + row.tipusIcon"
+                  [attr.aria-label]="row.tipusLabel"
+                  [title]="row.tipusLabel"></i>
               </td>
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td class="date-cell" data-label="Data">{{ formatDate(row.createdAt) }}</td>

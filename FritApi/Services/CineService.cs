@@ -7,6 +7,7 @@ namespace FritApi.Services;
 
 public class CineService
 {
+    private const int GrupoCicleFantastic = 3;
     private static readonly TimeSpan VotingWindow = TimeSpan.FromDays(7);
     private readonly AppDbContext _context;
 
@@ -51,13 +52,25 @@ public class CineService
             return (false, "El títol és obligatori.", null);
         }
 
+        if (dto.GrupoPelicula is < 1 or > GrupoCicleFantastic)
+        {
+            return (false, "El grup de pel·lícula no és vàlid.", null);
+        }
+
+        var fecha = dto.Fecha ?? DateOnly.FromDateTime(DateTime.UtcNow);
+
+        if (dto.GrupoPelicula == GrupoCicleFantastic && !IsFantasticFilmSeason(fecha))
+        {
+            return (false, "El Cicle de cine fantàstic només es pot registrar del 15 de juny al 15 de setembre.", null);
+        }
+
         var pelicula = new CinePelicula
         {
             Titulo = titulo,
             UsuarioCreadorId = usuarioId,
             GrupoPelicula = dto.GrupoPelicula,
             CreatedAt = dto.Fecha.HasValue
-                ? dto.Fecha.Value.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc)
+                ? fecha.ToDateTime(new TimeOnly(12, 0), DateTimeKind.Utc)
                 : DateTime.UtcNow
         };
 
@@ -67,6 +80,13 @@ public class CineService
         pelicula.UsuarioCreador = usuario;
 
         return (true, null, ToDto(pelicula, usuarioId, DateTime.UtcNow));
+    }
+
+    private static bool IsFantasticFilmSeason(DateOnly fecha)
+    {
+        var inici = new DateOnly(fecha.Year, 6, 15);
+        var final = new DateOnly(fecha.Year, 9, 15);
+        return fecha >= inici && fecha <= final;
     }
 
     public async Task<(bool Success, string? Error, CinePeliculaDto? Pelicula)> ValorarAsync(

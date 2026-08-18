@@ -34,7 +34,7 @@ public class CinePeliculaCreateDto
     [MaxLength(300)]
     public string Titulo { get; set; } = string.Empty;
 
-    [Range(1, 2)]
+    [Range(1, 3)]
     public int? GrupoPelicula { get; set; }
 
     public DateOnly? Fecha { get; set; }

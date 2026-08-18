@@ -15,6 +15,7 @@ export class AutocompleteSelectComponent<T> {
   @Input() emptyText = 'No hi ha coincidencies.';
   @Input() selected = false;
   @Input() disabled = false;
+  @Input() itemDisabled: (item: T) => boolean = () => false;
   @Input() displayWith: (item: T) => string = item => String(item ?? '');
   @Input() secondaryWith: ((item: T) => string) | null = null;
   @Input() trackBy: (index: number, item: T) => unknown = index => index;
@@ -54,7 +55,7 @@ export class AutocompleteSelectComponent<T> {
   }
 
   select(item: T): void {
-    if (this.disabled) {
+    if (this.disabled || this.itemDisabled(item)) {
       return;
     }
 

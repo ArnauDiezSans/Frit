@@ -21,7 +21,7 @@ import {
 
 type AssistenciaSortColumn = 'createdAt' | 'titol' | 'assistencies' | 'mediaNota' | 'userNota';
 type SortDirection = 'asc' | 'desc';
-type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'sopar' | 'sopar-dimarts' | 'gymfrit' | 'altres';
+type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'cine-fantastic' | 'sopar' | 'sopar-dimarts' | 'gymfrit' | 'altres';
 
 interface EntryTypeOption {
   id: AssistenciaTipus;
@@ -30,6 +30,7 @@ interface EntryTypeOption {
   movieGroup?: number | null;
   activityType?: number;
   requiresTitle: boolean;
+  seasonal?: boolean;
 }
 
 interface AssistenciaFilters {
@@ -92,13 +93,18 @@ export class CsopaPageComponent {
     { id: 'cine', label: 'Pel·lícula', source: 'cine', movieGroup: null, requiresTitle: true },
     { id: 'cine-diumenge', label: 'Pel·lícula de diumenge', source: 'cine', movieGroup: 1, requiresTitle: true },
     { id: 'cine-por', label: 'Pel·lícula de Creepyjous', source: 'cine', movieGroup: 2, requiresTitle: true },
+    { id: 'cine-fantastic', label: 'Cicle de cine fantàstic', source: 'cine', movieGroup: 3, requiresTitle: true, seasonal: true },
     { id: 'sopar', label: 'Sopar', source: 'csopa', activityType: CSOPA_TIPUS_SOPAR, requiresTitle: false },
     { id: 'sopar-dimarts', label: 'Sopar de dimarts', source: 'csopa', activityType: CSOPA_TIPUS_SOPAR_DIMARTS, requiresTitle: false },
     { id: 'gymfrit', label: 'Gymfrit', source: 'csopa', activityType: CSOPA_TIPUS_GYMFRIT, requiresTitle: false },
     { id: 'altres', label: 'Altres', source: 'csopa', activityType: CSOPA_TIPUS_ALTRES, requiresTitle: true }
   ];
   displayEntryType = (option: EntryTypeOption) => option.label;
+  entryTypeSecondary = (option: EntryTypeOption) => option.seasonal && !this.isFantasticCycleAvailable()
+    ? 'Disponible del 15 de juny al 15 de setembre'
+    : '';
   trackByEntryType = (_: number, option: EntryTypeOption) => option.id;
+  isEntryTypeDisabled = (option: EntryTypeOption) => option.seasonal === true && !this.isFantasticCycleAvailable();
 
   loading = signal(true);
   savingEntry = signal(false);
@@ -624,9 +630,10 @@ export class CsopaPageComponent {
   }
 
   getTipusIcon(tipus: number): string {
-    if (tipus === CSOPA_TIPUS_GYMFRIT) return 'assets/gymfrit.png';
-    if (tipus === CSOPA_TIPUS_SOPAR || tipus === CSOPA_TIPUS_SOPAR_DIMARTS) return 'assets/sopar.png';
-    return '';
+    if (tipus === CSOPA_TIPUS_GYMFRIT) return 'fa-solid fa-dumbbell';
+    if (tipus === CSOPA_TIPUS_SOPAR_DIMARTS) return 'fa-solid fa-carrot';
+    if (tipus === CSOPA_TIPUS_SOPAR) return 'fa-solid fa-pizza-slice';
+    return 'fa-solid fa-star';
   }
 
   getEditAssistencies(row: AssistenciaRow): { id: number; nombre: string }[] {
@@ -646,15 +653,16 @@ export class CsopaPageComponent {
   }
 
   private mapPeliculaToRow(pelicula: CinePelicula): AssistenciaRow {
+    const presentation = this.getMoviePresentation(pelicula.grupoPelicula ?? null);
     return {
       key: this.getPeliculaKey(pelicula.cinePeliculaId),
       source: 'cine',
       id: pelicula.cinePeliculaId,
       createdAt: pelicula.createdAt,
       titol: pelicula.titulo,
-      tipus: pelicula.grupoPelicula === 2 ? 'cine-por' : pelicula.grupoPelicula === 1 ? 'cine-diumenge' : 'cine',
-      tipusLabel: pelicula.grupoPelicula === 2 ? 'Pel·lícula de Creepyjous' : pelicula.grupoPelicula === 1 ? 'Pel·lícula de diumenge' : 'Pel·lícula',
-      tipusIcon: pelicula.grupoPelicula === 2 ? 'assets/terror.png' : pelicula.grupoPelicula === 1 ? 'assets/diumenge.png' : '',
+      tipus: presentation.tipus,
+      tipusLabel: presentation.label,
+      tipusIcon: presentation.icon,
       usuarioCreadorId: pelicula.usuarioCreadorId,
       usuarioCreadorNombre: pelicula.usuarioCreadorNombre,
       assistenciesCount: pelicula.valoraciones.length,
@@ -822,6 +830,11 @@ export class CsopaPageComponent {
   private confirmMovieGroupDate(grupoPelicula: number | null, fecha: string): boolean {
     const day = new Date(`${fecha}T12:00:00`).getDay();
 
+    if (grupoPelicula === 3 && !this.isFantasticCycleDate(fecha)) {
+      this.entryFormError.set('El Cicle de cine fantàstic només es pot registrar del 15 de juny al 15 de setembre.');
+      return false;
+    }
+
     if (grupoPelicula === 1 && day !== 0) {
       return window.confirm("Estàs publicant un 'Estirar la setmana' en una data que no és diumenge. Vols continuar?");
     }
@@ -831,6 +844,24 @@ export class CsopaPageComponent {
     }
 
     return true;
+  }
+
+  isFantasticCycleAvailable(): boolean {
+    return this.isFantasticCycleDate(this.getTodayInputValue());
+  }
+
+  private isFantasticCycleDate(fecha: string): boolean {
+    const year = fecha.slice(0, 4);
+    return fecha >= `${year}-06-15` && fecha <= `${year}-09-15`;
+  }
+
+  private getMoviePresentation(grupo: number | null): { tipus: AssistenciaTipus; label: string; icon: string } {
+    switch (grupo) {
+      case 1: return { tipus: 'cine-diumenge', label: 'Pel·lícula de diumenge — «Estirar la setmana»', icon: 'fa-solid fa-film' };
+      case 2: return { tipus: 'cine-por', label: 'Pel·lícula de Creepyjous', icon: 'fa-solid fa-ghost' };
+      case 3: return { tipus: 'cine-fantastic', label: 'Cicle de cine fantàstic', icon: 'fa-solid fa-hat-wizard' };
+      default: return { tipus: 'cine', label: 'Pel·lícula', icon: 'fa-solid fa-clapperboard' };
+    }
   }
 
   private confirmActivityDate(tipus: number, fecha: string): boolean {

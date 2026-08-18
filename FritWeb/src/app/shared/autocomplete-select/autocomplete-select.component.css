@@ -68,6 +68,11 @@
   background: #f8fafc;
 }
 
+.autocomplete-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .autocomplete-option:last-child {
   border-bottom: 0;
 }

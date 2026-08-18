@@ -43,6 +43,15 @@
             (change)="updateMovieGroup('estirarLaSetmana', $any($event.target).checked)" />
           <span>Estirar la setmana</span>
         </label>
+
+        <label class="checkbox-field" [title]="isFantasticCycleAvailable() ? '' : 'Disponible del 15 de juny al 15 de setembre'">
+          <input
+            type="checkbox"
+            formControlName="cicleFantastic"
+            [disabled]="!isFantasticCycleAvailable()"
+            (change)="updateMovieGroup('cicleFantastic', $any($event.target).checked)" />
+          <span>Cicle de cine fantàstic</span>
+        </label>
       </div>
 
       <button type="submit" class="primary-button" [disabled]="savingMovie()">
@@ -115,6 +124,7 @@
             <option value="">Totes</option>
             <option value="2">Por</option>
             <option value="1">Diumenges</option>
+            <option value="3">Cicle fantàstic</option>
           </select>
         </label>
 
@@ -153,18 +163,10 @@
           <ng-container *ngFor="let pelicula of filteredPeliculas(); let i = index; trackBy: trackByPeliculaId">
             <tr [class.row-highlight]="highlightedPeliculaId() === pelicula.cinePeliculaId">
               <td class="movie-group-cell" aria-label="Grup">
-                <img
-                  *ngIf="pelicula.grupoPelicula === 1"
-                  class="movie-group-icon"
-                  src="assets/diumenge.png"
-                  alt="Estirar la setmana"
-                  title="Estirar la setmana" />
-                <img
-                  *ngIf="pelicula.grupoPelicula === 2"
-                  class="movie-group-icon"
-                  src="assets/terror.png"
-                  alt="Creepyjous"
-                  title="Creepyjous" />
+                <i
+                  [class]="'movie-group-icon ' + getMovieIcon(pelicula.grupoPelicula)"
+                  [attr.aria-label]="getMovieLabel(pelicula.grupoPelicula)"
+                  [title]="getMovieLabel(pelicula.grupoPelicula)"></i>
               </td>
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td data-label="Data">{{ formatDate(pelicula.createdAt) }}</td>

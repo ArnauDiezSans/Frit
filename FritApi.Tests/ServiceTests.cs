@@ -1354,6 +1354,30 @@ public class ServiceTests
         Assert.Null(await service.DeleteVisitorAsync(game.JuegoId, visitor.Value!.JuegoProgresoJugadorId));
     }
 
+    [Theory]
+    [InlineData("2026-06-15", true)]
+    [InlineData("2026-09-15", true)]
+    [InlineData("2026-06-14", false)]
+    [InlineData("2026-09-16", false)]
+    public async Task CineService_RestrictsFantasticCycleToAnnualSeason(string date, bool expectedSuccess)
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(user);
+        await context.SaveChangesAsync();
+        var service = new CineService(context);
+
+        var result = await service.CreateAsync(user.UsuarioId, new CinePeliculaCreateDto
+        {
+            Titulo = "Fantàstic",
+            GrupoPelicula = 3,
+            Fecha = DateOnly.Parse(date)
+        });
+
+        Assert.Equal(expectedSuccess, result.Success);
+        Assert.Equal(expectedSuccess ? 1 : 0, await context.CinePeliculas.CountAsync());
+    }
+
     [Fact]
     public async Task JuegoProgresoService_AppliesPartidaLevelsAndCreatesVisitor()
     {
