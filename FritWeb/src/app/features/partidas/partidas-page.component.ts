@@ -82,6 +82,7 @@ interface PartidasFilters {
   fechaDesde: string;
   fechaHasta: string;
   juegoNombre: string;
+  tipoPartida: string;
   duracionMinutosMin: string;
   duracionMinutosMax: string;
   numeroJugadoresMin: string;
@@ -105,6 +106,7 @@ const EMPTY_FILTERS: PartidasFilters = {
   fechaDesde: '',
   fechaHasta: '',
   juegoNombre: '',
+  tipoPartida: '',
   duracionMinutosMin: '',
   duracionMinutosMax: '',
   numeroJugadoresMin: '',
@@ -200,6 +202,13 @@ export class PartidasPageComponent implements OnInit {
     return this.editingPartidaId() ? 'Actualitzar partida' : 'Desar partida';
   });
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
+  juegosFiltro = computed(() => {
+    const search = this.filters().juegoNombre.trim().toLocaleLowerCase('ca');
+    if (!search || this.juegos().some(juego => juego.nombre.toLocaleLowerCase('ca') === search)) {
+      return this.juegos();
+    }
+    return this.juegos().filter(juego => juego.nombre.toLocaleLowerCase('ca').includes(search));
+  });
 
   partidasGrid = computed<PartidaGridRow[]>(() => {
     const partidas = this.partidas();
@@ -230,7 +239,7 @@ export class PartidasPageComponent implements OnInit {
       const resultadoJugadores = jugadoresPartida.length
         ? mostrarResultadoAgrupado
           ? gruposResultado.map(group => `${group.posicion} [${group.jugadores}]`).join(' · ')
-          : jugadoresPartida.map(player => `${player.nombreMostrado}: ${player.puntos !== null && player.puntos !== undefined ? this.formatPuntos(player.puntos) : '-'}`).join(' · ')
+          : gruposResultado.map(group => `${group.posicion} ${group.jugadores}`).join(' · ')
         : '-';
 
       return {
@@ -243,6 +252,9 @@ export class PartidasPageComponent implements OnInit {
         resultadoJugadores,
         gruposResultado,
         mostrarResultadoAgrupado,
+        juegoEsCooperativo: juego?.esCooperativo ?? false,
+        juegoEsPorEquipos: juego?.esPorEquipos ?? false,
+        juegoEsNoLista: juego?.esNoLista ?? false,
         observaciones: partida.observaciones?.trim() ?? ''
       };
     });
@@ -284,6 +296,7 @@ export class PartidasPageComponent implements OnInit {
     const fechaDesde = this.parseDateOnly(filters.fechaDesde);
     const fechaHasta = this.parseDateOnly(filters.fechaHasta);
     const juegoNombre = filters.juegoNombre.trim().toLowerCase();
+    const tipoPartida = filters.tipoPartida;
     const duracionMin = this.parseNumberFilter(filters.duracionMinutosMin);
     const duracionMax = this.parseNumberFilter(filters.duracionMinutosMax);
     const jugadoresMin = this.parseNumberFilter(filters.numeroJugadoresMin);
@@ -316,6 +329,15 @@ export class PartidasPageComponent implements OnInit {
       if (
         juegoNombre &&
         !row.juegoNombre.toLowerCase().includes(juegoNombre)
+      ) {
+        return false;
+      }
+
+      if (
+        (tipoPartida === 'cooperatiu' && !row.juegoEsCooperativo) ||
+        (tipoPartida === 'equips' && !row.juegoEsPorEquipos) ||
+        (tipoPartida === 'no-llista' && !row.juegoEsNoLista) ||
+        (tipoPartida === 'solitari' && row.numeroJugadores !== 1)
       ) {
         return false;
       }
@@ -1364,6 +1386,18 @@ export class PartidasPageComponent implements OnInit {
 
   getEquipoJugadorOptionKey(equipoIndex: number, jugadorIndex: number): string {
     return `equipo:${equipoIndex}:${jugadorIndex}`;
+  }
+
+  updateJuegoFilterSearch(value: string): void {
+    this.updateFilter('juegoNombre', value);
+  }
+
+  selectJuegoFilter(juego: Juego): void {
+    this.updateFilter('juegoNombre', juego.nombre);
+  }
+
+  clearJuegoFilter(): void {
+    this.updateFilter('juegoNombre', '');
   }
 
   private loadProgressLevels(juego: Juego): void {

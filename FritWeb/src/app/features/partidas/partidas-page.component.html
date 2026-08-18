@@ -122,14 +122,33 @@
           </div>
         </label>
 
-        <label class="filter-field">
+        <div class="filter-field">
           <span>Nom joc</span>
-          <input
-            type="text"
+          <app-autocomplete-select
+            [items]="juegosFiltro()"
+            [searchText]="filters().juegoNombre"
+            [selected]="!!filters().juegoNombre"
+            [displayWith]="displayJuego"
+            [trackBy]="trackByJuegoId"
+            placeholder="Selecciona un joc..."
+            emptyText="No hi ha jocs coincidents."
+            (searchTextChange)="updateJuegoFilterSearch($event)"
+            (selectedChange)="selectJuegoFilter($event)"
+            (cleared)="clearJuegoFilter()" />
+        </div>
+
+        <label class="filter-field">
+          <span>Tipus de partida</span>
+          <select
             class="filter-input"
-            placeholder="Filtra per joc..."
-            [value]="filters().juegoNombre"
-            (input)="updateFilter('juegoNombre', $any($event.target).value)" />
+            [value]="filters().tipoPartida"
+            (change)="updateFilter('tipoPartida', $any($event.target).value)">
+            <option value="">Tots</option>
+            <option value="cooperatiu">Cooperatiu</option>
+            <option value="equips">Equips</option>
+            <option value="no-llista">No llista</option>
+            <option value="solitari">En solitari</option>
+          </select>
         </label>
 
         <label class="filter-field">
@@ -294,7 +313,7 @@
             </td>
             <td *ngIf="visibleColumns().resultadoJugadores" class="partida-results" data-label="Jugadors i punts">
               <span class="cell-value grouped-results" *ngIf="partida.mostrarResultadoAgrupado; else plainResults"><ng-container *ngFor="let group of partida.gruposResultado; let first = first"><span *ngIf="!first"> · </span><strong>{{ group.posicion }} [</strong><span>{{ group.jugadores }}</span><strong>]</strong></ng-container></span>
-              <ng-template #plainResults><span class="cell-value">{{ partida.resultadoJugadores }}</span></ng-template>
+              <ng-template #plainResults><span class="cell-value grouped-results"><ng-container *ngFor="let group of partida.gruposResultado; let first = first"><span *ngIf="!first"> · </span><strong>{{ group.posicion }} </strong><span>{{ group.jugadores }}</span></ng-container><span *ngIf="partida.gruposResultado.length === 0">-</span></span></ng-template>
             </td>
             <td
               *ngIf="visibleColumns().observaciones"
@@ -330,7 +349,7 @@
                 <div class="partida-detail-item partida-detail-wide">
                   <span class="partida-detail-label">Jugadors i punts</span>
                   <span class="partida-detail-value grouped-results" *ngIf="partida.mostrarResultadoAgrupado; else plainDetailResults"><ng-container *ngFor="let group of partida.gruposResultado; let first = first"><span *ngIf="!first"> · </span><strong>{{ group.posicion }} [</strong><span>{{ group.jugadores }}</span><strong>]</strong></ng-container></span>
-                  <ng-template #plainDetailResults><span class="partida-detail-value">{{ partida.resultadoJugadores }}</span></ng-template>
+                  <ng-template #plainDetailResults><span class="partida-detail-value grouped-results"><ng-container *ngFor="let group of partida.gruposResultado; let first = first"><span *ngIf="!first"> · </span><strong>{{ group.posicion }} </strong><span>{{ group.jugadores }}</span></ng-container><span *ngIf="partida.gruposResultado.length === 0">-</span></span></ng-template>
                 </div>
                 <div class="partida-detail-item partida-detail-wide">
                   <span class="partida-detail-label">Observacions</span>
