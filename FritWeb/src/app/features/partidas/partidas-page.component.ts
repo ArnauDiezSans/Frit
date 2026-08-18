@@ -1400,6 +1400,10 @@ export class PartidasPageComponent implements OnInit {
     this.updateFilter('juegoNombre', '');
   }
 
+  toggleTipoPartidaFilter(tipo: string): void {
+    this.updateFilter('tipoPartida', this.filters().tipoPartida === tipo ? '' : tipo);
+  }
+
   private loadProgressLevels(juego: Juego): void {
     this.clearProgressLevels();
     if (this.editingPartidaId() || !juego.tieneProgresoNiveles) return;
