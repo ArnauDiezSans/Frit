@@ -106,7 +106,8 @@ export class CinePageComponent {
     fecha: [this.getTodayInputValue(), Validators.required],
     estirarLaSetmana: [false],
     creepyjous: [false],
-    cicleFantastic: [false]
+    cicleFantastic: [false],
+    cinema: [false]
   });
 
   ratingForm = this.fb.group({
@@ -178,7 +179,8 @@ export class CinePageComponent {
           fecha: this.getTodayInputValue(),
           estirarLaSetmana: false,
           creepyjous: false,
-          cicleFantastic: false
+          cicleFantastic: false,
+          cinema: false
         });
         this.savingMovie.set(false);
       },
@@ -189,11 +191,12 @@ export class CinePageComponent {
     });
   }
 
-  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous' | 'cicleFantastic', checked: boolean): void {
+  updateMovieGroup(group: 'estirarLaSetmana' | 'creepyjous' | 'cicleFantastic' | 'cinema', checked: boolean): void {
     this.movieForm.patchValue({
       estirarLaSetmana: group === 'estirarLaSetmana' ? checked : false,
       creepyjous: group === 'creepyjous' ? checked : false,
-      cicleFantastic: group === 'cicleFantastic' ? checked : false
+      cicleFantastic: group === 'cicleFantastic' ? checked : false,
+      cinema: group === 'cinema' ? checked : false
     });
   }
 
@@ -494,9 +497,10 @@ export class CinePageComponent {
 
   getMovieIcon(grupo: number | null): string {
     switch (grupo) {
-      case 1: return 'fa-solid fa-film';
+      case 1: return 'fa-solid fa-tv';
       case 2: return 'fa-solid fa-ghost';
       case 3: return 'fa-solid fa-hat-wizard';
+      case 4: return 'fa-solid fa-film';
       default: return 'fa-solid fa-clapperboard';
     }
   }
@@ -506,6 +510,7 @@ export class CinePageComponent {
       case 1: return 'Pel·lícula de diumenge — «Estirar la setmana»';
       case 2: return 'Pel·lícula de Creepyjous';
       case 3: return 'Cicle de cine fantàstic';
+      case 4: return 'Cinema';
       default: return 'Pel·lícula';
     }
   }
@@ -521,6 +526,10 @@ export class CinePageComponent {
 
     if (this.movieForm.controls.cicleFantastic.value) {
       return 3;
+    }
+
+    if (this.movieForm.controls.cinema.value) {
+      return 4;
     }
 
     return null;

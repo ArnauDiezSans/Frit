@@ -1379,6 +1379,26 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task CineService_AllowsCinemaCategory()
+    {
+        await using var context = CreateContext();
+        var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
+        context.Usuarios.Add(user);
+        await context.SaveChangesAsync();
+        var service = new CineService(context);
+
+        var result = await service.CreateAsync(user.UsuarioId, new CinePeliculaCreateDto
+        {
+            Titulo = "Cinema",
+            GrupoPelicula = 4,
+            Fecha = new DateOnly(2026, 1, 1)
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal(4, result.Pelicula!.GrupoPelicula);
+    }
+
+    [Fact]
     public async Task JuegoProgresoService_AppliesPartidaLevelsAndCreatesVisitor()
     {
         await using var context = CreateContext();

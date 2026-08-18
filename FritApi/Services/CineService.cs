@@ -8,6 +8,7 @@ namespace FritApi.Services;
 public class CineService
 {
     private const int GrupoCicleFantastic = 3;
+    private const int GrupoCinema = 4;
     private static readonly TimeSpan VotingWindow = TimeSpan.FromDays(7);
     private readonly AppDbContext _context;
 
@@ -52,7 +53,7 @@ public class CineService
             return (false, "El títol és obligatori.", null);
         }
 
-        if (dto.GrupoPelicula is < 1 or > GrupoCicleFantastic)
+        if (dto.GrupoPelicula is < 1 or > GrupoCinema)
         {
             return (false, "El grup de pel·lícula no és vàlid.", null);
         }

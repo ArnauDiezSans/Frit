@@ -52,6 +52,14 @@
             (change)="updateMovieGroup('cicleFantastic', $any($event.target).checked)" />
           <span>Cicle de cine fantàstic</span>
         </label>
+
+        <label class="checkbox-field">
+          <input
+            type="checkbox"
+            formControlName="cinema"
+            (change)="updateMovieGroup('cinema', $any($event.target).checked)" />
+          <span>Cinema</span>
+        </label>
       </div>
 
       <button type="submit" class="primary-button" [disabled]="savingMovie()">
@@ -125,6 +133,7 @@
             <option value="2">Por</option>
             <option value="1">Diumenges</option>
             <option value="3">Cicle fantàstic</option>
+            <option value="4">Cinema</option>
           </select>
         </label>
 

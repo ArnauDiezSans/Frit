@@ -21,7 +21,7 @@ import {
 
 type AssistenciaSortColumn = 'createdAt' | 'titol' | 'assistencies' | 'mediaNota' | 'userNota';
 type SortDirection = 'asc' | 'desc';
-type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'cine-fantastic' | 'sopar' | 'sopar-dimarts' | 'gymfrit' | 'altres';
+type AssistenciaTipus = 'cine' | 'cine-por' | 'cine-diumenge' | 'cine-fantastic' | 'cine-cinema' | 'sopar' | 'sopar-dimarts' | 'gymfrit' | 'altres';
 
 interface EntryTypeOption {
   id: AssistenciaTipus;
@@ -94,6 +94,7 @@ export class CsopaPageComponent {
     { id: 'cine-diumenge', label: 'Pel·lícula de diumenge', source: 'cine', movieGroup: 1, requiresTitle: true },
     { id: 'cine-por', label: 'Pel·lícula de Creepyjous', source: 'cine', movieGroup: 2, requiresTitle: true },
     { id: 'cine-fantastic', label: 'Cicle de cine fantàstic', source: 'cine', movieGroup: 3, requiresTitle: true, seasonal: true },
+    { id: 'cine-cinema', label: 'Cinema', source: 'cine', movieGroup: 4, requiresTitle: true },
     { id: 'sopar', label: 'Sopar', source: 'csopa', activityType: CSOPA_TIPUS_SOPAR, requiresTitle: false },
     { id: 'sopar-dimarts', label: 'Sopar de dimarts', source: 'csopa', activityType: CSOPA_TIPUS_SOPAR_DIMARTS, requiresTitle: false },
     { id: 'gymfrit', label: 'Gymfrit', source: 'csopa', activityType: CSOPA_TIPUS_GYMFRIT, requiresTitle: false },
@@ -857,9 +858,10 @@ export class CsopaPageComponent {
 
   private getMoviePresentation(grupo: number | null): { tipus: AssistenciaTipus; label: string; icon: string } {
     switch (grupo) {
-      case 1: return { tipus: 'cine-diumenge', label: 'Pel·lícula de diumenge — «Estirar la setmana»', icon: 'fa-solid fa-film' };
+      case 1: return { tipus: 'cine-diumenge', label: 'Pel·lícula de diumenge — «Estirar la setmana»', icon: 'fa-solid fa-tv' };
       case 2: return { tipus: 'cine-por', label: 'Pel·lícula de Creepyjous', icon: 'fa-solid fa-ghost' };
       case 3: return { tipus: 'cine-fantastic', label: 'Cicle de cine fantàstic', icon: 'fa-solid fa-hat-wizard' };
+      case 4: return { tipus: 'cine-cinema', label: 'Cinema', icon: 'fa-solid fa-film' };
       default: return { tipus: 'cine', label: 'Pel·lícula', icon: 'fa-solid fa-clapperboard' };
     }
   }
