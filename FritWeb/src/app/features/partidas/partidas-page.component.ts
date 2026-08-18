@@ -17,7 +17,6 @@ import {
 import { Router } from '@angular/router';
 import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-import { isCooperativeType, isTeamsType } from '../../core/games/game-type';
 import { UiStateService } from '../../core/data/ui-state.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
 import { MenuComponent } from '../../shared/menu/menu.component';
@@ -221,7 +220,7 @@ export class PartidasPageComponent implements OnInit {
         groups.set(player.posicion, players);
       }
       const gruposResultado = [...groups].map(([posicion, players]) => ({ posicion, jugadores: players.join(' · ') }));
-      const mostrarResultadoAgrupado = isCooperativeType(juego?.tipo) || isTeamsType(juego?.tipo);
+      const mostrarResultadoAgrupado = !!juego && (juego.esCooperativo || juego.esPorEquipos);
       const resultadoJugadores = jugadoresPartida.length
         ? mostrarResultadoAgrupado
           ? gruposResultado.map(group => `${group.posicion} [${group.jugadores}]`).join(' · ')

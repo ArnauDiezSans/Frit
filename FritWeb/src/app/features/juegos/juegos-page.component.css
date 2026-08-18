@@ -727,4 +727,8 @@ h1 {
   }
 }
 
-.progress-toggle .checkbox-line { display:flex;align-items:center;gap:9px;min-height:42px;font-weight:700;color:#344054 }.progress-toggle input[type="checkbox"]{width:19px;height:19px;accent-color:#0f766e}
+.checkbox-field .checkbox-line,
+.game-mode-field .checkbox-line { display:flex;align-items:center;gap:9px;min-height:42px;font-weight:700;color:#344054 }
+.checkbox-field input[type="checkbox"],
+.game-mode-field input[type="checkbox"] { width:19px;height:19px;accent-color:#0f766e }
+.game-mode-options { display:flex;flex-wrap:wrap;gap:4px 18px;min-height:42px }

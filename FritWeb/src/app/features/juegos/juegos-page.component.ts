@@ -287,6 +287,9 @@ export class JuegosPageComponent implements OnInit {
       propietarioSearch: [''],
       fechaAdquisicion: [''],
       tipo: [''],
+      esCooperativo: [false],
+      esPorEquipos: [false],
+      esNoLista: [false],
       juegoBaseId: [null as number | null],
       juegoBaseSearch: [''],
       tieneProgresoNiveles: [false]
@@ -501,6 +504,9 @@ export class JuegosPageComponent implements OnInit {
       propietarioSearch: '',
       fechaAdquisicion: '',
       tipo: '',
+      esCooperativo: false,
+      esPorEquipos: false,
+      esNoLista: false,
       juegoBaseId: null,
       juegoBaseSearch: '',
       tieneProgresoNiveles: false
@@ -527,6 +533,9 @@ export class JuegosPageComponent implements OnInit {
       propietarioSearch: this.getNombrePropietario(juego.propietarioId),
       fechaAdquisicion: juego.fechaAdquisicion ?? '',
       tipo: juego.tipo ?? '',
+      esCooperativo: juego.esCooperativo,
+      esPorEquipos: juego.esPorEquipos,
+      esNoLista: juego.esNoLista,
       juegoBaseId: juego.juegoBaseId ?? null,
       juegoBaseSearch: this.getNombreJuegoBase(juego.juegoBaseId),
       tieneProgresoNiveles: juego.tieneProgresoNiveles
@@ -684,6 +693,9 @@ export class JuegosPageComponent implements OnInit {
         : Number(raw.propietarioId),
       fechaAdquisicion: raw.fechaAdquisicion || null,
       tipo: raw.tipo?.trim() ?? '',
+      esCooperativo: raw.esCooperativo ?? false,
+      esPorEquipos: raw.esPorEquipos ?? false,
+      esNoLista: raw.esNoLista ?? false,
       juegoBaseId: raw.juegoBaseId,
       tieneProgresoNiveles: raw.tieneProgresoNiveles ?? false
     };

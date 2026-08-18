@@ -28,6 +28,9 @@ export interface RankingJuego {
   juegoId: number;
   nombre: string;
   tipo: string;
+  esCooperativo: boolean;
+  esPorEquipos: boolean;
+  esNoLista: boolean;
   numeroJugadoresMin: number;
   numeroJugadoresMax: number;
   numeroPartidas: number;
@@ -71,6 +74,9 @@ export interface RankingPartida {
   juegoId: number;
   juegoNombre: string;
   juegoTipo: string;
+  juegoEsCooperativo: boolean;
+  juegoEsPorEquipos: boolean;
+  juegoEsNoLista: boolean;
   fecha: string;
   numeroJugadores: number;
   duracionMinutos?: number | null;
@@ -81,6 +87,9 @@ export interface RankingJugador {
   juegoId: number;
   juegoNombre: string;
   juegoTipo: string;
+  juegoEsCooperativo: boolean;
+  juegoEsPorEquipos: boolean;
+  juegoEsNoLista: boolean;
   fecha: string;
   duracionMinutos?: number | null;
   numeroJugadores: number;

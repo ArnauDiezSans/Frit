@@ -27,6 +27,9 @@ public class RankingJuegoDto
     public int JuegoId { get; set; }
     public string Nombre { get; set; } = string.Empty;
     public string Tipo { get; set; } = string.Empty;
+    public bool EsCooperativo { get; set; }
+    public bool EsPorEquipos { get; set; }
+    public bool EsNoLista { get; set; }
     public int NumeroJugadoresMin { get; set; }
     public int NumeroJugadoresMax { get; set; }
     public int NumeroPartidas { get; set; }
@@ -74,6 +77,9 @@ public class RankingPartidaDto
     public int JuegoId { get; set; }
     public string JuegoNombre { get; set; } = string.Empty;
     public string JuegoTipo { get; set; } = string.Empty;
+    public bool JuegoEsCooperativo { get; set; }
+    public bool JuegoEsPorEquipos { get; set; }
+    public bool JuegoEsNoLista { get; set; }
     public DateOnly Fecha { get; set; }
     public int NumeroJugadores { get; set; }
     public int? DuracionMinutos { get; set; }
@@ -85,6 +91,9 @@ public class RankingJugadorDto
     public int JuegoId { get; set; }
     public string JuegoNombre { get; set; } = string.Empty;
     public string JuegoTipo { get; set; } = string.Empty;
+    public bool JuegoEsCooperativo { get; set; }
+    public bool JuegoEsPorEquipos { get; set; }
+    public bool JuegoEsNoLista { get; set; }
     public DateOnly Fecha { get; set; }
     public int? DuracionMinutos { get; set; }
     public int NumeroJugadores { get; set; }

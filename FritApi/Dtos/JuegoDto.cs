@@ -32,6 +32,10 @@ public class JuegoDto
     [MaxLength(200)]
     public string Tipo { get; set; } = string.Empty;
 
+    public bool EsCooperativo { get; set; }
+    public bool EsPorEquipos { get; set; }
+    public bool EsNoLista { get; set; }
+
     public int? JuegoBaseId { get; set; }
     public bool TieneProgresoNiveles { get; set; }
 }

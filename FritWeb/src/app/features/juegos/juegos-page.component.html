@@ -92,7 +92,7 @@
                 type="checkbox"
                 [checked]="visibleColumns().tipo"
                 (change)="toggleColumn('tipo')" />
-              <span>Tipus</span>
+              <span>Categories</span>
             </label>
 
             <label class="column-option">
@@ -166,11 +166,11 @@
         </label>
 
         <label class="filter-field">
-          <span>Tipus</span>
+          <span>Categories</span>
           <input
             type="text"
             class="filter-input"
-            placeholder="Filtra per tipus..."
+            placeholder="Filtra per categories..."
             [value]="filters().tipo"
             (input)="updateFilter('tipo', $any($event.target).value)" />
         </label>
@@ -263,7 +263,7 @@
               *ngIf="visibleColumns().tipo"
               class="sortable"
               (click)="ordenarPor('tipo')">
-              <span>Tipus{{ getSortIndicator('tipo') }}</span>
+              <span>Categories{{ getSortIndicator('tipo') }}</span>
             </th>
 
             <th
@@ -387,7 +387,7 @@
               <span class="cell-value">{{ getPropietarioJuego(juego) }}</span>
             </td>
 
-            <td *ngIf="visibleColumns().tipo" data-label="Tipus">
+            <td *ngIf="visibleColumns().tipo" data-label="Categories">
               <span class="cell-value type-value">{{ juego.tipo || '-' }}</span>
             </td>
 
@@ -517,15 +517,24 @@
           </label>
 
           <label class="form-field">
-            <span>Tipus</span>
+            <span>Categories</span>
             <input type="text" formControlName="tipo" />
           </label>
+
+          <div class="form-field game-mode-field">
+            <span>Modalitat</span>
+            <div class="game-mode-options">
+              <label class="checkbox-line"><input type="checkbox" formControlName="esCooperativo" /> Cooperatiu</label>
+              <label class="checkbox-line"><input type="checkbox" formControlName="esPorEquipos" /> Per equips</label>
+              <label class="checkbox-line"><input type="checkbox" formControlName="esNoLista" /> No llista</label>
+            </div>
+          </div>
 
           <label class="form-field">
             <span>PVP</span>
             <input type="number" step="0.01" formControlName="pvp" />
           </label>
-          <label class="form-field progress-toggle"><span>Progrés</span><span class="checkbox-line"><input type="checkbox" formControlName="tieneProgresoNiveles" /> Progrés de nivells</span></label>
+          <label class="form-field checkbox-field"><span>Progrés</span><span class="checkbox-line"><input type="checkbox" formControlName="tieneProgresoNiveles" /> Progrés de nivells</span></label>
         </div>
 
         <p class="field-error" *ngIf="form.hasError('minGreaterThanMax')">

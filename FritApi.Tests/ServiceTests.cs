@@ -109,7 +109,7 @@ public class ServiceTests
             new Juego
             {
                 Nombre = "Promo",
-                Tipo = "No llista",
+                EsNoLista = true,
                 NumeroJugadoresMin = 2,
                 NumeroJugadoresMax = 4,
                 Propietario = user
@@ -135,6 +135,9 @@ public class ServiceTests
             Nombre = "Catan",
             NumeroJugadoresMin = 2,
             NumeroJugadoresMax = 4,
+            EsCooperativo = true,
+            EsPorEquipos = true,
+            EsNoLista = true,
             Propietario = arnau
         };
         context.AddRange(arnau, anna, game);
@@ -178,6 +181,9 @@ public class ServiceTests
         Assert.Equal(1, arnauRanking.Victorias);
         Assert.Equal(0, annaRanking.Victorias);
         Assert.Equal(42, rankings.Jugadores.Single(row => row.UsuarioNombre == "Arnau").Puntos);
+        Assert.True(Assert.Single(rankings.Juegos).EsCooperativo);
+        Assert.True(Assert.Single(rankings.Partidas).JuegoEsPorEquipos);
+        Assert.True(rankings.Jugadores.All(row => row.JuegoEsNoLista));
     }
 
     [Fact]
@@ -1014,13 +1020,20 @@ public class ServiceTests
             NumeroJugadoresMin = 2,
             NumeroJugadoresMax = 4,
             PropietarioId = user.UsuarioId,
-            Tipo = "Economic"
+            Tipo = "Economic",
+            EsCooperativo = true,
+            EsPorEquipos = true,
+            EsNoLista = true
         });
 
         Assert.True(result.Success);
         var call = Assert.Single(medalImageService.Calls);
         Assert.Equal(result.Juego!.JuegoId, call.JuegoId);
         Assert.Equal(13, call.BggId);
+        var createdGame = await context.Juegos.SingleAsync(juego => juego.JuegoId == result.Juego.JuegoId);
+        Assert.True(createdGame.EsCooperativo);
+        Assert.True(createdGame.EsPorEquipos);
+        Assert.True(createdGame.EsNoLista);
     }
 
     [Fact]

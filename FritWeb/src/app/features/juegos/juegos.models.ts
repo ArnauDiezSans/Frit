@@ -10,6 +10,9 @@ export interface Juego {
   esPropiedadTenant?: boolean;
   fechaAdquisicion?: string | null;
   tipo: string;
+  esCooperativo: boolean;
+  esPorEquipos: boolean;
+  esNoLista: boolean;
   juegoBaseId?: number | null;
   tieneProgresoNiveles: boolean;
 }

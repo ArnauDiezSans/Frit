@@ -21,7 +21,7 @@ public class LaLlistaService
         var yellowEnd = endOfWeek.AddDays(28);
 
         var rows = await _context.Juegos
-            .Where(juego => !juego.Tipo.ToLower().Contains("no llista"))
+            .Where(juego => !juego.EsNoLista)
             .Select(juego => new
             {
                 juego.JuegoId,

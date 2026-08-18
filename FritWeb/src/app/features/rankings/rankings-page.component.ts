@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { isCooperativeType, isNoLlistaType, isTeamsType } from '../../core/games/game-type';
 import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { HallOfFamePageComponent } from '../hall-of-fame/hall-of-fame-page.component';
@@ -1131,27 +1130,35 @@ export class RankingsPageComponent {
   }
 
   private filterRankingJuegos(juegos: RankingJuego[]): RankingJuego[] {
-    return juegos.filter(juego => this.shouldShowGameType(juego.tipo));
+    return juegos.filter(juego => this.shouldShowGameType(juego));
   }
 
   private filterRankingPartidas(partidas: RankingPartida[]): RankingPartida[] {
     return partidas.filter(partida =>
-      this.shouldShowGameType(partida.juegoTipo) &&
+      this.shouldShowGameType({
+        esNoLista: partida.juegoEsNoLista,
+        esCooperativo: partida.juegoEsCooperativo,
+        esPorEquipos: partida.juegoEsPorEquipos
+      }) &&
       (this.includeSoloGames() || partida.numeroJugadores !== 1)
     );
   }
 
   private filterRankingJugadores(jugadores: RankingJugador[]): RankingJugador[] {
     return jugadores.filter(jugador =>
-      this.shouldShowGameType(jugador.juegoTipo) &&
+      this.shouldShowGameType({
+        esNoLista: jugador.juegoEsNoLista,
+        esCooperativo: jugador.juegoEsCooperativo,
+        esPorEquipos: jugador.juegoEsPorEquipos
+      }) &&
       (this.includeSoloGames() || jugador.numeroJugadores !== 1)
     );
   }
 
-  private shouldShowGameType(value: string | null | undefined): boolean {
-    const isNoLlista = isNoLlistaType(value);
-    const isCooperative = isCooperativeType(value);
-    const isTeams = isTeamsType(value);
+  private shouldShowGameType(game: { esNoLista: boolean; esCooperativo: boolean; esPorEquipos: boolean }): boolean {
+    const isNoLlista = game.esNoLista;
+    const isCooperative = game.esCooperativo;
+    const isTeams = game.esPorEquipos;
     const onlyFilter = this.getOnlyGameTypeFilter();
 
     if (onlyFilter) {

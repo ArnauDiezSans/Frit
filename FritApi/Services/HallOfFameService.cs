@@ -294,21 +294,21 @@ public class HallOfFameService
         var juegosById = juegos.ToDictionary(juego => juego.JuegoId);
         var cooperativeGames = juegos
             .Where(juego =>
-                ContainsGameType(juego.Tipo, "cooperatiu") &&
-                !ContainsGameType(juego.Tipo, "no llista"))
+                juego.EsCooperativo &&
+                !juego.EsNoLista)
             .OrderBy(juego => juego.Nombre)
             .ToList();
         var teamGames = juegos
             .Where(juego =>
-                ContainsGameType(juego.Tipo, "equips") &&
-                !ContainsGameType(juego.Tipo, "no llista"))
+                juego.EsPorEquipos &&
+                !juego.EsNoLista)
             .OrderBy(juego => juego.Nombre)
             .ToList();
         var twoPlayerGames = juegos
             .Where(juego =>
                 juego.NumeroJugadoresMin == 2 &&
                 juego.NumeroJugadoresMax == 2 &&
-                !ContainsGameType(juego.Tipo, "no llista"))
+                !juego.EsNoLista)
             .OrderBy(juego => juego.Nombre)
             .ToList();
         var cineTotals = BuildCineTotalRatingsLookup(cinePeliculas);
@@ -498,14 +498,14 @@ public class HallOfFameService
             }
 
             var wonNonListGames = juegos.Count(juego =>
-                !ContainsGameType(juego.Tipo, "no llista") &&
-                !ContainsGameType(juego.Tipo, "cooperatiu") &&
-                !ContainsGameType(juego.Tipo, "equips") &&
+                !juego.EsNoLista &&
+                !juego.EsCooperativo &&
+                !juego.EsPorEquipos &&
                 wins.GetValueOrDefault((usuario.UsuarioId, juego.JuegoId)) > 0);
             var playedNonListGames = juegos.Count(juego =>
-                !ContainsGameType(juego.Tipo, "no llista") &&
-                !ContainsGameType(juego.Tipo, "cooperatiu") &&
-                !ContainsGameType(juego.Tipo, "equips") &&
+                !juego.EsNoLista &&
+                !juego.EsCooperativo &&
+                !juego.EsPorEquipos &&
                 playedGames.TryGetValue(usuario.UsuarioId, out var userPlayedGames) &&
                 userPlayedGames.Contains(juego.JuegoId));
 
@@ -1085,7 +1085,6 @@ public class HallOfFameService
     {
         return (value ?? string.Empty)
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(type => !string.Equals(type, "No llista", StringComparison.OrdinalIgnoreCase))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -1316,11 +1315,6 @@ public class HallOfFameService
     private static string GetGameIconPath(int juegoId)
     {
         return $"/assets/medallas/jocs/{juegoId}.png";
-    }
-
-    private static bool ContainsGameType(string? value, string type)
-    {
-        return (value ?? string.Empty).Contains(type, StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed record MedalRank(string Name, int Threshold, string Color, bool Filled);

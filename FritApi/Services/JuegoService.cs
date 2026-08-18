@@ -139,6 +139,9 @@ public class JuegoService
                 EsPropiedadTenant = j.EsPropiedadTenant,
                 FechaAdquisicion = j.FechaAdquisicion,
                 Tipo = j.Tipo,
+                EsCooperativo = j.EsCooperativo,
+                EsPorEquipos = j.EsPorEquipos,
+                EsNoLista = j.EsNoLista,
                 JuegoBaseId = j.JuegoBaseId,
                 TieneProgresoNiveles = j.TieneProgresoNiveles
             })
@@ -162,6 +165,9 @@ public class JuegoService
                 EsPropiedadTenant = j.EsPropiedadTenant,
                 FechaAdquisicion = j.FechaAdquisicion,
                 Tipo = j.Tipo,
+                EsCooperativo = j.EsCooperativo,
+                EsPorEquipos = j.EsPorEquipos,
+                EsNoLista = j.EsNoLista,
                 JuegoBaseId = j.JuegoBaseId,
                 TieneProgresoNiveles = j.TieneProgresoNiveles
             })
@@ -204,6 +210,9 @@ public class JuegoService
             EsPropiedadTenant = isTenantOwned,
             FechaAdquisicion = dto.FechaAdquisicion,
             Tipo = dto.Tipo.Trim(),
+            EsCooperativo = dto.EsCooperativo,
+            EsPorEquipos = dto.EsPorEquipos,
+            EsNoLista = dto.EsNoLista,
             JuegoBaseId = dto.JuegoBaseId,
             TieneProgresoNiveles = dto.TieneProgresoNiveles
         };
@@ -274,6 +283,9 @@ public class JuegoService
         juego.EsPropiedadTenant = isTenantOwned;
         juego.FechaAdquisicion = dto.FechaAdquisicion;
         juego.Tipo = dto.Tipo.Trim();
+        juego.EsCooperativo = dto.EsCooperativo;
+        juego.EsPorEquipos = dto.EsPorEquipos;
+        juego.EsNoLista = dto.EsNoLista;
         juego.JuegoBaseId = dto.JuegoBaseId;
         juego.TieneProgresoNiveles = dto.TieneProgresoNiveles;
 
