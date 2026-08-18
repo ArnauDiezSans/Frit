@@ -329,7 +329,7 @@ h1 {
 .games-table col:nth-child(3) { width: 190px; }
 .games-table col:nth-child(4) { width: 92px; }
 .games-table col:nth-child(5) { width: 96px; }
-.games-table col:nth-child(6) { width: 290px; }
+.games-table col:nth-child(6) { width: 340px; }
 .games-table col:nth-child(7) { width: auto; }
 
 .games-table th,
@@ -699,6 +699,48 @@ h1 {
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   align-items: flex-end;
+}
+
+.result-groups {
+  display: grid;
+  gap: 6px;
+}
+
+.result-group {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  align-items: start;
+  gap: 7px;
+  min-width: 0;
+}
+
+.result-group-team {
+  grid-template-columns: 25px auto minmax(0, 1fr) auto;
+  gap: 4px;
+}
+
+.result-position {
+  display: inline-grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 999px;
+  background: #e8f3f1;
+  color: #176b64;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.result-players {
+  min-width: 0;
+  padding-top: 2px;
+  line-height: 1.5;
+}
+
+.result-bracket {
+  padding-top: 2px;
+  color: #98a2b3;
+  font-weight: 700;
 }
 
 .progress-level-field {

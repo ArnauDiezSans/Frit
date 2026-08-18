@@ -231,7 +231,9 @@ export class PartidasPageComponent implements OnInit {
       const groups = new Map<number, string[]>();
       for (const player of jugadoresPartida) {
         const players = groups.get(player.posicion) ?? [];
-        players.push(`${player.nombreMostrado}: ${player.puntos !== null && player.puntos !== undefined ? this.formatPuntos(player.puntos) : '-'}`);
+        players.push(player.puntos !== null && player.puntos !== undefined
+          ? `${player.nombreMostrado}: ${this.formatPuntos(player.puntos)}`
+          : player.nombreMostrado);
         groups.set(player.posicion, players);
       }
       const gruposResultado = [...groups].map(([posicion, players]) => ({ posicion, jugadores: players.join(' · ') }));
