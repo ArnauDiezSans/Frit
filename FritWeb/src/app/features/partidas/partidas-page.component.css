@@ -714,11 +714,6 @@ h1 {
   min-width: 0;
 }
 
-.result-group-team {
-  grid-template-columns: 25px auto minmax(0, 1fr) auto;
-  gap: 4px;
-}
-
 .result-position {
   display: inline-grid;
   width: 25px;
@@ -735,12 +730,6 @@ h1 {
   min-width: 0;
   padding-top: 2px;
   line-height: 1.5;
-}
-
-.result-bracket {
-  padding-top: 2px;
-  color: #98a2b3;
-  font-weight: 700;
 }
 
 .progress-level-field {

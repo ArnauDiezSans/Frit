@@ -332,11 +332,9 @@
             </td>
             <td *ngIf="visibleColumns().resultadoJugadores" class="partida-results" data-label="Jugadors i punts">
               <div class="cell-value result-groups">
-                <div class="result-group" [class.result-group-team]="partida.mostrarResultadoAgrupado" *ngFor="let group of partida.gruposResultado">
+                <div class="result-group" *ngFor="let group of partida.gruposResultado">
                   <strong class="result-position">{{ group.posicion }}</strong>
-                  <span class="result-bracket" *ngIf="partida.mostrarResultadoAgrupado">[</span>
                   <span class="result-players">{{ group.jugadores }}</span>
-                  <span class="result-bracket" *ngIf="partida.mostrarResultadoAgrupado">]</span>
                 </div>
                 <span *ngIf="partida.gruposResultado.length === 0">-</span>
               </div>
@@ -375,11 +373,9 @@
                 <div class="partida-detail-item partida-detail-wide">
                   <span class="partida-detail-label">Jugadors i punts</span>
                   <div class="partida-detail-value result-groups">
-                    <div class="result-group" [class.result-group-team]="partida.mostrarResultadoAgrupado" *ngFor="let group of partida.gruposResultado">
+                    <div class="result-group" *ngFor="let group of partida.gruposResultado">
                       <strong class="result-position">{{ group.posicion }}</strong>
-                      <span class="result-bracket" *ngIf="partida.mostrarResultadoAgrupado">[</span>
                       <span class="result-players">{{ group.jugadores }}</span>
-                      <span class="result-bracket" *ngIf="partida.mostrarResultadoAgrupado">]</span>
                     </div>
                     <span *ngIf="partida.gruposResultado.length === 0">-</span>
                   </div>

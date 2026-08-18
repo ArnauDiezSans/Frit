@@ -27,7 +27,6 @@ export interface PartidaGridRow {
   numeroJugadores: number;
   resultadoJugadores: string;
   gruposResultado: { posicion: number; jugadores: string }[];
-  mostrarResultadoAgrupado: boolean;
   juegoEsCooperativo: boolean;
   juegoEsPorEquipos: boolean;
   juegoEsNoLista: boolean;

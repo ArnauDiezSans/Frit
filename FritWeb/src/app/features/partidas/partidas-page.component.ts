@@ -237,11 +237,8 @@ export class PartidasPageComponent implements OnInit {
         groups.set(player.posicion, players);
       }
       const gruposResultado = [...groups].map(([posicion, players]) => ({ posicion, jugadores: players.join(' · ') }));
-      const mostrarResultadoAgrupado = !!juego && (juego.esCooperativo || juego.esPorEquipos);
       const resultadoJugadores = jugadoresPartida.length
-        ? mostrarResultadoAgrupado
-          ? gruposResultado.map(group => `${group.posicion} [${group.jugadores}]`).join(' · ')
-          : gruposResultado.map(group => `${group.posicion} ${group.jugadores}`).join(' · ')
+        ? gruposResultado.map(group => `${group.posicion} ${group.jugadores}`).join(' · ')
         : '-';
 
       return {
@@ -253,7 +250,6 @@ export class PartidasPageComponent implements OnInit {
         numeroJugadores: partida.numeroJugadores,
         resultadoJugadores,
         gruposResultado,
-        mostrarResultadoAgrupado,
         juegoEsCooperativo: juego?.esCooperativo ?? false,
         juegoEsPorEquipos: juego?.esPorEquipos ?? false,
         juegoEsNoLista: juego?.esNoLista ?? false,
