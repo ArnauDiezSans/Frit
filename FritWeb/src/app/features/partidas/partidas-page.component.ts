@@ -550,7 +550,6 @@ export class PartidasPageComponent implements OnInit {
     this.filteredJuegos.set(this.juegos());
     this.filteredUsuarios.set(this.usuarios());
     this.syncJugadoresWithNumero(2);
-    this.updateTeamSummary();
     this.formError.set('');
     this.success.set('');
     this.modalOpen.set(true);
@@ -624,7 +623,6 @@ export class PartidasPageComponent implements OnInit {
     }
 
     this.syncJugadoresWithNumero(value);
-    this.updateTeamSummary();
   }
 
   onJuegoInput(value: string): void {
@@ -698,7 +696,6 @@ export class PartidasPageComponent implements OnInit {
     });
     this.showUsuarioOptions.set(this.getJugadorOptionKey(index));
     this.filteredUsuarios.set(this.getUsuariosDisponibles(index, value));
-    this.updateTeamSummary();
   }
 
   onUsuarioFocus(index: number): void {
@@ -715,7 +712,6 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: usuario.nombre
     });
     this.showUsuarioOptions.set(null);
-    this.updateTeamSummary();
   }
 
   limpiarUsuario(index: number): void {
@@ -726,24 +722,20 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: ''
     });
     this.showUsuarioOptions.set(null);
-    this.updateTeamSummary();
   }
 
   onPerEquipsChange(): void {
     if (!this.form.controls.perEquips.value) {
       this.buildJugadoresFromEquipos();
       this.equiposArray.clear();
-      this.form.controls.observaciones.setValue('');
       return;
     }
 
     this.buildEquiposFromJugadores();
-    this.updateTeamSummary();
   }
 
   onEquipoColorChange(index: number, color: string): void {
     this.jugadoresArray.at(index).get('equipoColor')?.setValue(color);
-    this.updateTeamSummary();
   }
 
   onEquipoCardColorChange(equipoIndex: number, color: string): void {
@@ -752,7 +744,6 @@ export class PartidasPageComponent implements OnInit {
     this.equipoJugadoresArray(equipoIndex).controls.forEach(jugador => {
       jugador.get('equipoColor')?.setValue(color);
     });
-    this.updateTeamSummary();
   }
 
   onEquipoNumeroJugadoresChange(equipoIndex: number, event: Event): void {
@@ -763,7 +754,6 @@ export class PartidasPageComponent implements OnInit {
 
     this.syncEquipoJugadoresWithNumero(equipoIndex, value);
     this.syncNumeroJugadoresFromEquipos();
-    this.updateTeamSummary();
   }
 
   onEquipoDefaultsChange(equipoIndex: number): void {
@@ -787,7 +777,6 @@ export class PartidasPageComponent implements OnInit {
     });
     this.showUsuarioOptions.set(this.getEquipoJugadorOptionKey(equipoIndex, jugadorIndex));
     this.filteredUsuarios.set(this.getEquipoUsuariosDisponibles(equipoIndex, jugadorIndex, value));
-    this.updateTeamSummary();
   }
 
   onEquipoUsuarioFocus(equipoIndex: number, jugadorIndex: number): void {
@@ -804,7 +793,6 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: usuario.nombre
     });
     this.showUsuarioOptions.set(null);
-    this.updateTeamSummary();
   }
 
   limpiarEquipoUsuario(equipoIndex: number, jugadorIndex: number): void {
@@ -815,14 +803,12 @@ export class PartidasPageComponent implements OnInit {
       nombreMostrado: ''
     });
     this.showUsuarioOptions.set(null);
-    this.updateTeamSummary();
   }
 
   addEquipo(): void {
     const posicion = this.equiposArray.length + 1;
     this.equiposArray.push(this.createEquipoGroup(posicion, 1));
     this.syncNumeroJugadoresFromEquipos();
-    this.updateTeamSummary();
   }
 
   removeEquipo(index: number): void {
@@ -832,7 +818,6 @@ export class PartidasPageComponent implements OnInit {
       this.equiposArray.removeAt(index);
       this.removingEquipoIndex.set(null);
       this.syncNumeroJugadoresFromEquipos();
-      this.updateTeamSummary();
     }, 420);
   }
 
@@ -851,7 +836,6 @@ export class PartidasPageComponent implements OnInit {
     );
 
     this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
-    this.updateTeamSummary();
   }
 
   removeJugador(index: number): void {
@@ -861,7 +845,6 @@ export class PartidasPageComponent implements OnInit {
       this.jugadoresArray.removeAt(index);
       this.removingJugadorIndex.set(null);
       this.form.controls.numeroJugadores.setValue(this.jugadoresArray.length);
-      this.updateTeamSummary();
     }, 420);
   }
 
@@ -1161,54 +1144,8 @@ export class PartidasPageComponent implements OnInit {
     return Number.isInteger(value) ? String(value) : value.toFixed(2);
   }
 
-  private updateTeamSummary(): void {
-    if (!this.form.controls.perEquips.value) {
-      return;
-    }
-
-    const groups = new Map<string, string[]>();
-
-    if (this.form.controls.perEquips.value && this.equiposArray.length > 0) {
-      this.equiposArray.controls.forEach((equipo, equipoIndex) => {
-        const color = equipo.get('color')?.value || this.getDefaultTeamColor(equipoIndex);
-        const equipoName = (equipo.get('nombre')?.value ?? '').trim() || `Equip ${this.getTeamColorName(color)}`;
-        const names = this.equipoJugadoresArray(equipoIndex).controls
-          .map(control => (control.get('usuarioSearch')?.value ?? '').trim())
-          .filter(Boolean);
-
-        if (names.length > 0) {
-          groups.set(equipoName, names);
-        }
-      });
-    } else {
-      this.jugadoresArray.controls.forEach((control, index) => {
-        const color = control.get('equipoColor')?.value || this.getDefaultTeamColor(index);
-        const name = (control.get('usuarioSearch')?.value ?? '').trim();
-
-        if (!name) {
-          return;
-        }
-
-        const groupName = `Equip ${this.getTeamColorName(color)}`;
-        const current = groups.get(groupName) ?? [];
-        current.push(name);
-        groups.set(groupName, current);
-      });
-    }
-
-    const summary = Array.from(groups.entries())
-      .map(([name, names]) => `${name}: ${names.join(', ')}.`)
-      .join(' ');
-
-    this.form.controls.observaciones.setValue(summary);
-  }
-
   private getDefaultTeamColor(index: number): string {
     return TEAM_COLORS[index % TEAM_COLORS.length].value;
-  }
-
-  private getTeamColorName(value: string): string {
-    return TEAM_COLORS.find(color => color.value === value)?.name ?? 'sense color';
   }
 
   private parseDateOnly(value: string): number | null {
