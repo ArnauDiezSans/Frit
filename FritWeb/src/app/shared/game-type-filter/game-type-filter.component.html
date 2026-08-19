@@ -1,0 +1,12 @@
+<label
+  *ngFor="let option of options"
+  class="filter-check"
+  [class.filter-check-active]="states[option.key] !== 'hidden'"
+  [class.filter-check-only]="states[option.key] === 'only'">
+  <input
+    type="checkbox"
+    [checked]="states[option.key] !== 'hidden'"
+    [indeterminate]="states[option.key] === 'only'"
+    (change)="toggle(option.key)" />
+  <span>{{ option.label }}<ng-container *ngIf="states[option.key] === 'only'"> !</ng-container></span>
+</label>

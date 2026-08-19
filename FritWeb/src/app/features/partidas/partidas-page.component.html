@@ -223,36 +223,11 @@
             (input)="updateFilter('observaciones', $any($event.target).value)" />
         </label>
 
-        <div class="filter-chip-group partida-type-chips" aria-label="Tipus de partida">
-          <label class="filter-check" [class.filter-check-active]="filters().tipoPartida === 'no-llista'">
-            <input
-              type="checkbox"
-              [checked]="filters().tipoPartida === 'no-llista'"
-              (change)="toggleTipoPartidaFilter('no-llista')" />
-            <span>No llista</span>
-          </label>
-          <label class="filter-check" [class.filter-check-active]="filters().tipoPartida === 'cooperatiu'">
-            <input
-              type="checkbox"
-              [checked]="filters().tipoPartida === 'cooperatiu'"
-              (change)="toggleTipoPartidaFilter('cooperatiu')" />
-            <span>Cooperatiu</span>
-          </label>
-          <label class="filter-check" [class.filter-check-active]="filters().tipoPartida === 'equips'">
-            <input
-              type="checkbox"
-              [checked]="filters().tipoPartida === 'equips'"
-              (change)="toggleTipoPartidaFilter('equips')" />
-            <span>Equips</span>
-          </label>
-          <label class="filter-check" [class.filter-check-active]="filters().tipoPartida === 'solitari'">
-            <input
-              type="checkbox"
-              [checked]="filters().tipoPartida === 'solitari'"
-              (change)="toggleTipoPartidaFilter('solitari')" />
-            <span>En solitari</span>
-          </label>
-        </div>
+        <app-game-type-filter
+          class="filter-chip-group partida-type-chips"
+          aria-label="Tipus de partida"
+          [states]="gameTypeFilters()"
+          (statesChange)="updateGameTypeFilters($event)" />
       </div>
     </div>
 

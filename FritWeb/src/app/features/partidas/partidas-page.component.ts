@@ -20,6 +20,12 @@ import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
+import { GameTypeFilterComponent } from '../../shared/game-type-filter/game-type-filter.component';
+import {
+  GameTypeFilterStates,
+  emptyGameTypeFilters,
+  matchesGameTypeFilters
+} from '../../shared/game-type-filter/game-type-filter.models';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, JuegoProgresoNivel, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
@@ -82,7 +88,6 @@ interface PartidasFilters {
   fechaDesde: string;
   fechaHasta: string;
   juegoNombre: string;
-  tipoPartida: string;
   duracionMinutosMin: string;
   duracionMinutosMax: string;
   numeroJugadoresMin: string;
@@ -106,7 +111,6 @@ const EMPTY_FILTERS: PartidasFilters = {
   fechaDesde: '',
   fechaHasta: '',
   juegoNombre: '',
-  tipoPartida: '',
   duracionMinutosMin: '',
   duracionMinutosMax: '',
   numeroJugadoresMin: '',
@@ -122,7 +126,7 @@ const PARTIDAS_PAGE_SIZE = 50;
 @Component({
   selector: 'app-partidas-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent, GameTypeFilterComponent],
   templateUrl: './partidas-page.component.html',
   styleUrl: './partidas-page.component.css'
 })
@@ -209,6 +213,10 @@ export class PartidasPageComponent implements OnInit {
     }
     return this.juegos().filter(juego => juego.nombre.toLocaleLowerCase('ca').includes(search));
   });
+  gameTypeFilters = signal<GameTypeFilterStates>({
+    ...emptyGameTypeFilters(),
+    ...this.uiState.get('ui:partidas:gameTypeFilters', {} as Partial<GameTypeFilterStates>)
+  });
 
   partidasGrid = computed<PartidaGridRow[]>(() => {
     const partidas = this.partidas();
@@ -294,7 +302,6 @@ export class PartidasPageComponent implements OnInit {
     const fechaDesde = this.parseDateOnly(filters.fechaDesde);
     const fechaHasta = this.parseDateOnly(filters.fechaHasta);
     const juegoNombre = filters.juegoNombre.trim().toLowerCase();
-    const tipoPartida = filters.tipoPartida;
     const duracionMin = this.parseNumberFilter(filters.duracionMinutosMin);
     const duracionMax = this.parseNumberFilter(filters.duracionMinutosMax);
     const jugadoresMin = this.parseNumberFilter(filters.numeroJugadoresMin);
@@ -331,12 +338,12 @@ export class PartidasPageComponent implements OnInit {
         return false;
       }
 
-      if (
-        (tipoPartida === 'cooperatiu' && !row.juegoEsCooperativo) ||
-        (tipoPartida === 'equips' && !row.juegoEsPorEquipos) ||
-        (tipoPartida === 'no-llista' && !row.juegoEsNoLista) ||
-        (tipoPartida === 'solitari' && row.numeroJugadores !== 1)
-      ) {
+      if (!matchesGameTypeFilters({
+        noLlista: row.juegoEsNoLista,
+        cooperative: row.juegoEsCooperativo,
+        teams: row.juegoEsPorEquipos,
+        solo: row.numeroJugadores === 1
+      }, this.gameTypeFilters())) {
         return false;
       }
 
@@ -469,6 +476,7 @@ export class PartidasPageComponent implements OnInit {
     });
 
     effect(() => this.uiState.set('ui:partidas:filters', this.filters()));
+    effect(() => this.uiState.set('ui:partidas:gameTypeFilters', this.gameTypeFilters()));
     effect(() => this.uiState.set('ui:partidas:sortColumn', this.sortColumn()));
     effect(() => this.uiState.set('ui:partidas:sortDirection', this.sortDirection()));
     effect(() => this.uiState.set('ui:partidas:columns', this.visibleColumns()));
@@ -1000,6 +1008,12 @@ export class PartidasPageComponent implements OnInit {
 
   clearAllFilters(): void {
     this.filters.set({ ...EMPTY_FILTERS });
+    this.gameTypeFilters.set(emptyGameTypeFilters());
+    this.currentPage.set(1);
+  }
+
+  updateGameTypeFilters(filters: GameTypeFilterStates): void {
+    this.gameTypeFilters.set(filters);
     this.currentPage.set(1);
   }
 
@@ -1333,10 +1347,6 @@ export class PartidasPageComponent implements OnInit {
 
   clearJuegoFilter(): void {
     this.updateFilter('juegoNombre', '');
-  }
-
-  toggleTipoPartidaFilter(tipo: string): void {
-    this.updateFilter('tipoPartida', this.filters().tipoPartida === tipo ? '' : tipo);
   }
 
   private loadProgressLevels(juego: Juego): void {
