@@ -13,6 +13,12 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
 import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/autocomplete-select.component';
+import { GameTypeFilterComponent } from '../../shared/game-type-filter/game-type-filter.component';
+import {
+  GameTypeFilterStates,
+  defaultGameTypeFilters,
+  matchesGameTypeFilters
+} from '../../shared/game-type-filter/game-type-filter.models';
 import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, UsuarioOption } from './juegos.models';
 import { JuegosService } from './juegos.service';
@@ -105,7 +111,7 @@ function normalizeVisibleColumns(value: Partial<VisibleColumns>): VisibleColumns
 @Component({
   selector: 'app-juegos-page',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent],
+  imports: [CommonModule, ReactiveFormsModule, MenuComponent, AutocompleteSelectComponent, GameTypeFilterComponent],
   templateUrl: './juegos-page.component.html',
   styleUrl: './juegos-page.component.css'
 })
@@ -143,6 +149,10 @@ export class JuegosPageComponent implements OnInit {
     ...EMPTY_FILTERS,
     ...this.uiState.get('ui:juegos:filters', {})
   });
+  gameTypeFilters = signal<GameTypeFilterStates>({
+    ...defaultGameTypeFilters(),
+    ...this.uiState.get('ui:juegos:gameTypeFilters', {} as Partial<GameTypeFilterStates>)
+  });
 
   visibleColumns = signal<VisibleColumns>(normalizeVisibleColumns(
     this.uiState.get('ui:juegos:columns', {})
@@ -168,6 +178,15 @@ export class JuegosPageComponent implements OnInit {
     const sortDirection = this.sortDirection();
 
     const filtered = juegos.filter(juego => {
+      if (!matchesGameTypeFilters({
+        noLlista: juego.esNoLista,
+        cooperative: juego.esCooperativo,
+        teams: juego.esPorEquipos,
+        solo: juego.numeroJugadoresMin === 1
+      }, this.gameTypeFilters())) {
+        return false;
+      }
+
       if (
         filters.nombre.trim() &&
         !juego.nombre.toLowerCase().includes(filters.nombre.trim().toLowerCase())
@@ -317,6 +336,7 @@ export class JuegosPageComponent implements OnInit {
     });
 
     effect(() => this.uiState.set('ui:juegos:filters', this.filters()));
+    effect(() => this.uiState.set('ui:juegos:gameTypeFilters', this.gameTypeFilters()));
     effect(() => this.uiState.set('ui:juegos:sortColumn', this.sortColumn()));
     effect(() => this.uiState.set('ui:juegos:sortDirection', this.sortDirection()));
     effect(() => this.uiState.set('ui:juegos:columns', this.visibleColumns()));
@@ -377,6 +397,11 @@ export class JuegosPageComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filters.set({ ...EMPTY_FILTERS });
+    this.gameTypeFilters.set(defaultGameTypeFilters());
+  }
+
+  updateGameTypeFilters(filters: GameTypeFilterStates): void {
+    this.gameTypeFilters.set(filters);
   }
 
   resetFilters(): void {

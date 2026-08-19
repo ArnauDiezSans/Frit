@@ -123,6 +123,12 @@
       </div>
     </div>
 
+    <app-game-type-filter
+      *ngIf="showFilters()"
+      class="filter-chip-group game-type-filters"
+      [states]="gameTypeFilters()"
+      (statesChange)="updateGameTypeFilters($event)" />
+
     <div class="filters-panel mobile-filters-panel" *ngIf="showFilters() && isMobileFilters()">
       <div class="filters-grid">
         <label class="filter-field">

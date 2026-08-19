@@ -23,6 +23,7 @@ import { AutocompleteSelectComponent } from '../../shared/autocomplete-select/au
 import { GameTypeFilterComponent } from '../../shared/game-type-filter/game-type-filter.component';
 import {
   GameTypeFilterStates,
+  defaultGameTypeFilters,
   emptyGameTypeFilters,
   matchesGameTypeFilters
 } from '../../shared/game-type-filter/game-type-filter.models';
@@ -214,7 +215,7 @@ export class PartidasPageComponent implements OnInit {
     return this.juegos().filter(juego => juego.nombre.toLocaleLowerCase('ca').includes(search));
   });
   gameTypeFilters = signal<GameTypeFilterStates>({
-    ...emptyGameTypeFilters(),
+    ...defaultGameTypeFilters(),
     ...this.uiState.get('ui:partidas:gameTypeFilters', {} as Partial<GameTypeFilterStates>)
   });
 

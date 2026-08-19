@@ -284,6 +284,10 @@ h1 {
   table-layout: fixed;
 }
 
+.game-type-filters {
+  margin-bottom: 16px;
+}
+
 .col-row-number {
   width: 34px;
 }

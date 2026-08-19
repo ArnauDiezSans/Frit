@@ -19,6 +19,15 @@ export function emptyGameTypeFilters(): GameTypeFilterStates {
   };
 }
 
+export function defaultGameTypeFilters(): GameTypeFilterStates {
+  return {
+    noLlista: 'hidden',
+    cooperative: 'include',
+    teams: 'include',
+    solo: 'include'
+  };
+}
+
 export function matchesGameTypeFilters(
   classification: GameTypeClassification,
   filters: GameTypeFilterStates
