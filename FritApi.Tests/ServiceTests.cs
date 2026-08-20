@@ -1162,7 +1162,7 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task AQueJuguemService_RegistersRefusedRowingWithMinusOnePoint()
+    public async Task AQueJuguemService_RegistersRefusedRowingWithoutTimeLimits()
     {
         await using var context = CreateContext();
         var user = new Usuario { Nombre = "Arnau", PasswordHash = "hash" };
@@ -1180,8 +1180,8 @@ public class ServiceTests
         var service = new AQueJuguemService(context, new UsuarioJuegoOrdenService(context));
         var result = await service.RegisterRemadaAsync(user.UsuarioId, new RemadaCreateDto
         {
-            TempsMinimMinuts = 60,
-            TempsDisponibleMinuts = 90,
+            TempsMinimMinuts = null,
+            TempsDisponibleMinuts = null,
             NombreJocs = 1,
             PuntsPerJugador = -1,
             UsuarioIds = [user.UsuarioId],
@@ -1192,7 +1192,8 @@ public class ServiceTests
         var remada = await context.Remades.Include(item => item.Jugadors).SingleAsync();
         Assert.Equal(-1, remada.PuntsPerJugador);
         Assert.Equal(-1, Assert.Single(remada.Jugadors).Punts);
-        Assert.Equal(60, remada.TempsMinimMinuts);
+        Assert.Null(remada.TempsMinimMinuts);
+        Assert.Null(remada.TempsDisponibleMinuts);
     }
 
     [Fact]

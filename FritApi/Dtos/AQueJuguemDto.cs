@@ -23,10 +23,10 @@ public class AQueJuguemRecommendationDto
 public class RemadaCreateDto
 {
     [Range(1, int.MaxValue)]
-    public int TempsMinimMinuts { get; set; }
+    public int? TempsMinimMinuts { get; set; }
 
     [Range(1, int.MaxValue)]
-    public int TempsDisponibleMinuts { get; set; }
+    public int? TempsDisponibleMinuts { get; set; }
 
     [Range(1, 10)]
     public int NombreJocs { get; set; }
@@ -45,8 +45,8 @@ public class RemadaDto
 {
     public int RemadaId { get; set; }
     public DateTime CreatedAt { get; set; }
-    public int TempsDisponibleMinuts { get; set; }
-    public int TempsMinimMinuts { get; set; }
+    public int? TempsDisponibleMinuts { get; set; }
+    public int? TempsMinimMinuts { get; set; }
     public int NombreJocs { get; set; }
     public int PuntsPerJugador { get; set; }
     public List<RemadaParticipantDto> Jugadors { get; set; } = [];
@@ -72,10 +72,10 @@ public class RemadaUpdateDto
     public DateTime CreatedAt { get; set; }
 
     [Range(1, int.MaxValue)]
-    public int TempsMinimMinuts { get; set; }
+    public int? TempsMinimMinuts { get; set; }
 
     [Range(1, int.MaxValue)]
-    public int TempsDisponibleMinuts { get; set; }
+    public int? TempsDisponibleMinuts { get; set; }
 
     [Range(1, 10)]
     public int NombreJocs { get; set; }

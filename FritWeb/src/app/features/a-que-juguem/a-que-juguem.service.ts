@@ -24,8 +24,8 @@ export interface AQueJuguemPuntuacionUsuario {
 }
 
 export interface RemadaCreate {
-  tempsMinimMinuts: number;
-  tempsDisponibleMinuts: number;
+  tempsMinimMinuts: number | null;
+  tempsDisponibleMinuts: number | null;
   nombreJocs: 1 | 5 | 10;
   puntsPerJugador: -1 | 1 | 2 | 3;
   usuarioIds: number[];
@@ -35,8 +35,8 @@ export interface RemadaCreate {
 export interface Remada {
   remadaId: number;
   createdAt: string;
-  tempsDisponibleMinuts: number;
-  tempsMinimMinuts: number;
+  tempsDisponibleMinuts: number | null;
+  tempsMinimMinuts: number | null;
   nombreJocs: 1 | 5 | 10;
   puntsPerJugador: -1 | 1 | 2 | 3;
   jugadors: RemadaParticipant[];

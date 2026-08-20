@@ -6,8 +6,8 @@ public class Remada : ITenantEntity
     public int TenantId { get; set; }
     public int UsuarioCreadorId { get; set; }
     public Usuario UsuarioCreador { get; set; } = null!;
-    public int TempsDisponibleMinuts { get; set; }
-    public int TempsMinimMinuts { get; set; }
+    public int? TempsDisponibleMinuts { get; set; }
+    public int? TempsMinimMinuts { get; set; }
     public int NombreJocs { get; set; }
     public int PuntsPerJugador { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

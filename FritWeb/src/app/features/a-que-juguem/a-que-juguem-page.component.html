@@ -178,7 +178,7 @@
 
       <div class="rowing-form-grid">
         <label class="form-field">
-          <span>Temps mínim (minuts)</span>
+          <span>Temps mínim (minuts, opcional)</span>
           <input
             type="number"
             min="1"
@@ -190,7 +190,7 @@
         </label>
 
         <label class="form-field">
-          <span>Temps màxim (minuts)</span>
+          <span>Temps màxim (minuts, opcional)</span>
           <input
             type="number"
             min="1"
@@ -229,7 +229,7 @@
       <div class="modal-header">
         <div>
           <h2>Jocs per remar</h2>
-          <p>{{ getSelectedPlayerNames().join(', ') }} · de {{ rowingMinimumTime() }} a {{ rowingTime() }} minuts</p>
+          <p>{{ getSelectedPlayerNames().join(', ') }} · {{ formatRowingTimeRange() }}</p>
         </div>
       </div>
 
@@ -241,8 +241,8 @@
             <span>Puntuació dels usuaris: {{ juego.puntuacion }}</span>
           </div>
           <div class="rowing-time-detail">
-            <strong>{{ juego.tempsMigMinuts }} min</strong>
-            <span>Màxim {{ juego.tempsMaximMinuts }} min</span>
+            <strong>{{ juego.tempsMigMinuts == null ? 'Temps desconegut' : juego.tempsMigMinuts + ' min' }}</strong>
+            <span *ngIf="juego.tempsMaximMinuts !== null">Màxim {{ juego.tempsMaximMinuts }} min</span>
           </div>
         </li>
       </ol>
@@ -335,11 +335,11 @@
                 <input type="datetime-local" [value]="editRemadaDate()" (input)="editRemadaDate.set($any($event.target).value)" />
               </label>
               <label class="form-field">
-                <span>Temps mínim</span>
+                <span>Temps mínim (opcional)</span>
                 <input type="number" min="1" [value]="editRemadaMinimumTime()" (input)="editRemadaMinimumTime.set($any($event.target).value)" />
               </label>
               <label class="form-field">
-                <span>Temps màxim</span>
+                <span>Temps màxim (opcional)</span>
                 <input type="number" min="1" [value]="editRemadaTime()" (input)="editRemadaTime.set($any($event.target).value)" />
               </label>
               <label class="form-field">

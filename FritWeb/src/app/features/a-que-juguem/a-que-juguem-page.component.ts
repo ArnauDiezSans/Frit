@@ -17,7 +17,7 @@ import { AQueJuguemRecommendation, AQueJuguemService, Remada } from './a-que-jug
 
 interface RowingRecommendation extends AQueJuguemRecommendation {
   llistaPosition: number;
-  tempsMaximMinuts: number;
+  tempsMaximMinuts: number | null;
 }
 
 @Component({
@@ -217,8 +217,8 @@ export class AQueJuguemPageComponent {
 
     this.editingRemadaId.set(remada.remadaId);
     this.editRemadaDate.set(this.toDatetimeLocal(remada.createdAt));
-    this.editRemadaMinimumTime.set(String(remada.tempsMinimMinuts));
-    this.editRemadaTime.set(String(remada.tempsDisponibleMinuts));
+    this.editRemadaMinimumTime.set(remada.tempsMinimMinuts?.toString() ?? '');
+    this.editRemadaTime.set(remada.tempsDisponibleMinuts?.toString() ?? '');
     this.editRemadaStrength.set(remada.nombreJocs);
     this.editRemadaPoints.set(remada.puntsPerJugador);
     this.editRemadaUsuarioIds.set(remada.jugadors.map(jugador => jugador.usuarioId));
@@ -267,14 +267,13 @@ export class AQueJuguemPageComponent {
   }
 
   canSaveEditedRemada(): boolean {
-    const minimumTime = Number(this.editRemadaMinimumTime());
-    const time = Number(this.editRemadaTime());
+    const minimumTime = this.parseOptionalMinutes(this.editRemadaMinimumTime());
+    const time = this.parseOptionalMinutes(this.editRemadaTime());
     return Boolean(this.editingRemadaId()) &&
       Boolean(this.editRemadaDate()) &&
-      Number.isFinite(time) &&
-      Number.isFinite(minimumTime) &&
-      minimumTime > 0 &&
-      time - minimumTime >= 30 &&
+      minimumTime !== undefined &&
+      time !== undefined &&
+      (minimumTime === null || time === null || time - minimumTime >= 30) &&
       this.editRemadaUsuarioIds().length > 0 &&
       this.editRemadaJuegoIds().length === this.editRemadaStrength() &&
       !this.remadesSaving();
@@ -292,8 +291,8 @@ export class AQueJuguemPageComponent {
 
     this.aQueJuguemService.updateRemada(id, {
       createdAt: new Date(this.editRemadaDate()).toISOString(),
-      tempsMinimMinuts: Number(this.editRemadaMinimumTime()),
-      tempsDisponibleMinuts: Number(this.editRemadaTime()),
+      tempsMinimMinuts: this.parseOptionalMinutes(this.editRemadaMinimumTime()) ?? null,
+      tempsDisponibleMinuts: this.parseOptionalMinutes(this.editRemadaTime()) ?? null,
       nombreJocs: strength,
       puntsPerJugador: this.editRemadaPoints(),
       usuarioIds: this.editRemadaUsuarioIds(),
@@ -405,23 +404,31 @@ export class AQueJuguemPageComponent {
   }
 
   canAcceptRowing(): boolean {
-    const minimumTime = Number(this.rowingMinimumTime());
-    const time = Number(this.rowingTime());
-    return Number.isFinite(minimumTime) && minimumTime > 0 &&
-      Number.isFinite(time) && time - minimumTime >= 30 &&
+    const minimumTime = this.parseOptionalMinutes(this.rowingMinimumTime());
+    const time = this.parseOptionalMinutes(this.rowingTime());
+    return minimumTime !== undefined && time !== undefined &&
+      (minimumTime === null || time === null || time - minimumTime >= 30) &&
       !this.rowingLoading() && !this.calculating();
   }
 
   getRowingTimeValidationError(): string {
-    if (!this.rowingMinimumTime() || !this.rowingTime()) return '';
-    const minimumTime = Number(this.rowingMinimumTime());
-    const maximumTime = Number(this.rowingTime());
-    if (!Number.isFinite(minimumTime) || minimumTime <= 0 || !Number.isFinite(maximumTime)) {
-      return 'Indica temps mínim i màxim vàlids.';
+    const minimumTime = this.parseOptionalMinutes(this.rowingMinimumTime());
+    const maximumTime = this.parseOptionalMinutes(this.rowingTime());
+    if (minimumTime === undefined || maximumTime === undefined) {
+      return 'Els temps informats han de ser nombres més grans que zero.';
     }
-    return maximumTime - minimumTime < 30
+    return minimumTime !== null && maximumTime !== null && maximumTime - minimumTime < 30
       ? 'El temps mínim ha de ser almenys 30 minuts inferior al màxim.'
       : '';
+  }
+
+  formatRowingTimeRange(): string {
+    const minimumTime = this.parseOptionalMinutes(this.rowingMinimumTime());
+    const maximumTime = this.parseOptionalMinutes(this.rowingTime());
+    if (minimumTime && maximumTime) return `de ${minimumTime} a ${maximumTime} minuts`;
+    if (minimumTime) return `a partir de ${minimumTime} minuts`;
+    if (maximumTime) return `fins a ${maximumTime} minuts`;
+    return 'sense filtre de temps';
   }
 
   getRowingPoints(): 1 | 2 | 3 {
@@ -433,8 +440,8 @@ export class AQueJuguemPageComponent {
       return;
     }
 
-    const availableMinutes = Number(this.rowingTime());
-    const minimumMinutes = Number(this.rowingMinimumTime());
+    const availableMinutes = this.parseOptionalMinutes(this.rowingTime()) ?? null;
+    const minimumMinutes = this.parseOptionalMinutes(this.rowingMinimumTime()) ?? null;
     const resultCount = this.rowingStrength();
     this.rowingLoading.set(true);
     this.rowingError.set('');
@@ -449,16 +456,20 @@ export class AQueJuguemPageComponent {
           .map((item, index) => {
             const recommendation = recommendationsById.get(item.juegoId);
 
-            if (recommendation?.tempsMigMinuts == null) {
+            if (!recommendation) {
               return null;
             }
 
-            if (recommendation.tempsMigMinuts < minimumMinutes) {
+            if (minimumMinutes !== null &&
+                (recommendation.tempsMigMinuts == null || recommendation.tempsMigMinuts < minimumMinutes)) {
               return null;
             }
 
-            const tempsMaximMinuts = Math.ceil(recommendation.tempsMigMinuts * 1.25);
-            if (tempsMaximMinuts > availableMinutes) {
+            const tempsMaximMinuts = recommendation.tempsMigMinuts == null
+              ? null
+              : Math.ceil(recommendation.tempsMigMinuts * 1.25);
+            if (availableMinutes !== null &&
+                (tempsMaximMinuts === null || tempsMaximMinuts > availableMinutes)) {
               return null;
             }
 
@@ -500,8 +511,8 @@ export class AQueJuguemPageComponent {
     this.rowingLoading.set(true);
     this.rowingError.set('');
     this.aQueJuguemService.registerRemada({
-      tempsDisponibleMinuts: Number(this.rowingTime()),
-      tempsMinimMinuts: Number(this.rowingMinimumTime()),
+      tempsDisponibleMinuts: this.parseOptionalMinutes(this.rowingTime()) ?? null,
+      tempsMinimMinuts: this.parseOptionalMinutes(this.rowingMinimumTime()) ?? null,
       nombreJocs: this.rowingStrength(),
       puntsPerJugador: accepted ? this.getRowingPoints() : -1,
       usuarioIds: this.getSelectedUsuarioIds(),
@@ -760,6 +771,12 @@ export class AQueJuguemPageComponent {
     return this.jugadoresArray.controls
       .map(control => Number(control.get('usuarioId')?.value))
       .filter(id => Number.isFinite(id) && id > 0);
+  }
+
+  private parseOptionalMinutes(value: string): number | null | undefined {
+    if (!value.trim()) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
   }
 
   private findExactUsuarioMatch(index: number, value: string): UsuarioOption | null {

@@ -88,7 +88,8 @@ public class AQueJuguemService
         int usuarioCreadorId,
         RemadaCreateDto dto)
     {
-        if (dto.TempsDisponibleMinuts - dto.TempsMinimMinuts < 30)
+        if (dto.TempsDisponibleMinuts.HasValue && dto.TempsMinimMinuts.HasValue &&
+            dto.TempsDisponibleMinuts.Value - dto.TempsMinimMinuts.Value < 30)
         {
             return (false, "El temps mínim ha de ser almenys 30 minuts inferior al màxim.");
         }
@@ -210,7 +211,8 @@ public class AQueJuguemService
         int remadaId,
         RemadaUpdateDto dto)
     {
-        if (dto.TempsDisponibleMinuts - dto.TempsMinimMinuts < 30)
+        if (dto.TempsDisponibleMinuts.HasValue && dto.TempsMinimMinuts.HasValue &&
+            dto.TempsDisponibleMinuts.Value - dto.TempsMinimMinuts.Value < 30)
         {
             return (false, "El temps mínim ha de ser almenys 30 minuts inferior al màxim.");
         }
