@@ -402,7 +402,7 @@
         <div class="form-grid">
           <div class="form-field">
             <span>Joc *</span>
-            <div class="remada-game-options" *ngIf="sourceRemada() && remadaCandidateGames().length > 1">
+            <div class="remada-game-options" *ngIf="sourceRemada() && remadaCandidateGames().length > 1 && !form.controls.juegoId.value">
               <span>Quin joc de la Remada s'ha jugat?</span>
               <button
                 *ngFor="let juego of remadaCandidateGames(); trackBy: trackByJuegoId"
