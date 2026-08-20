@@ -234,7 +234,15 @@
       </div>
 
       <ol class="rowing-results-list" *ngIf="rowingResults().length > 0; else noRowingResults">
-        <li *ngFor="let juego of rowingResults(); trackBy: trackByJuegoId">
+        <li
+          *ngFor="let juego of rowingResults(); trackBy: trackByJuegoId"
+          role="checkbox"
+          tabindex="0"
+          [class.rowing-result-selected]="selectedRowingGameId() === juego.juegoId"
+          [attr.aria-checked]="selectedRowingGameId() === juego.juegoId"
+          (click)="selectRowingGame(juego.juegoId)"
+          (keydown.enter)="selectRowingGame(juego.juegoId)"
+          (keydown.space)="$event.preventDefault(); selectRowingGame(juego.juegoId)">
           <div>
             <strong>{{ juego.nombre }}</strong>
             <span>Posició {{ juego.llistaPosition }} de La llista</span>
@@ -262,7 +270,7 @@
             Refusar remada
           </button>
           <button type="button" class="primary-button" [disabled]="rowingLoading()" (click)="resolveRowing(true)">
-            {{ rowingLoading() ? 'Desant...' : 'Acceptar remada' }}
+            {{ rowingLoading() ? 'Desant...' : (selectedRowingGameId() === null ? 'Acceptar remada' : 'Acceptar remada i crear partida') }}
           </button>
         </ng-container>
         <ng-template #closeEmptyRowingResults>
@@ -311,13 +319,6 @@
             <span data-label="Jocs" [title]="formatRemadaGames(remada)">{{ formatRemadaGames(remada) }}</span>
             <span data-label="Punts">{{ remada.puntsPerJugador }}</span>
             <span *ngIf="canManageRemades()" class="remada-actions" data-label="Accions">
-              <button
-                type="button"
-                class="primary-button"
-                [disabled]="remadesSaving()"
-                (click)="createPartidaFromRemada(remada)">
-                Crear partida
-              </button>
               <button
                 type="button"
                 class="danger-button compact-danger-button"

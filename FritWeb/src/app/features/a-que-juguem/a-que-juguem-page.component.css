@@ -110,7 +110,7 @@ h1 {
 }
 
 .remades-admin-modal {
-  width: min(1050px, 100%);
+  width: min(1280px, calc(100vw - 32px));
 }
 
 .remades-admin-grid {
@@ -569,6 +569,23 @@ h1 {
   border: 1px solid #e4e7ec;
   border-radius: 12px;
   background: #fbfcfd;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rowing-results-list li:hover {
+  border-color: #99d5cc;
+}
+
+.rowing-results-list li:focus-visible {
+  outline: 3px solid rgba(15, 118, 110, 0.22);
+  outline-offset: 2px;
+}
+
+.rowing-results-list li.rowing-result-selected {
+  border-color: #0f766e;
+  background: #ecfdf5;
+  box-shadow: 0 0 0 1px #0f766e;
 }
 
 .rowing-results-list li::before {

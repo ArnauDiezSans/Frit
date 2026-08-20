@@ -53,6 +53,11 @@ public class RemadaDto
     public List<RemadaGameDto> Jocs { get; set; } = [];
 }
 
+public class RemadaCreateResultDto
+{
+    public int RemadaId { get; set; }
+}
+
 public class RemadaParticipantDto
 {
     public int UsuarioId { get; set; }

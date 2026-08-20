@@ -52,7 +52,7 @@ public class AQueJuguemController : ControllerBase
 
         await _pushNotificationService.SendRemadaAsync(userId, dto.UsuarioIds, dto.PuntsPerJugador, HttpContext.RequestAborted);
 
-        return NoContent();
+        return Ok(new RemadaCreateResultDto { RemadaId = result.RemadaId!.Value });
     }
 
     [HttpGet("remades")]

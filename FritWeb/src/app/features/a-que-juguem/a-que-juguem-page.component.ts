@@ -75,6 +75,7 @@ export class AQueJuguemPageComponent {
   rowingTime = signal('');
   rowingStrength = signal<1 | 5 | 10>(1);
   rowingResults = signal<RowingRecommendation[]>([]);
+  selectedRowingGameId = signal<number | null>(null);
   remadesAdminOpen = signal(false);
   remadesLoading = signal(false);
   remadesSaving = signal(false);
@@ -335,13 +336,6 @@ export class AQueJuguemPageComponent {
     });
   }
 
-  createPartidaFromRemada(remada: Remada): void {
-    this.remadesAdminOpen.set(false);
-    this.router.navigate(['/app/partidas'], {
-      queryParams: { remadaId: remada.remadaId }
-    });
-  }
-
   formatRemadaDate(value: string): string {
     return new Date(value).toLocaleString('ca-ES');
   }
@@ -370,6 +364,7 @@ export class AQueJuguemPageComponent {
     this.rowingMinimumTime.set('');
     this.rowingTime.set('');
     this.rowingStrength.set(1);
+    this.selectedRowingGameId.set(null);
     this.rowingError.set('');
     this.rowingConfigOpen.set(true);
   }
@@ -385,6 +380,15 @@ export class AQueJuguemPageComponent {
     if (!this.rowingLoading() && this.rowingResults().length === 0) {
       this.rowingResultsOpen.set(false);
       this.rowingError.set('');
+      this.selectedRowingGameId.set(null);
+    }
+  }
+
+  selectRowingGame(juegoId: number): void {
+    if (!this.rowingLoading()) {
+      this.selectedRowingGameId.set(
+        this.selectedRowingGameId() === juegoId ? null : juegoId
+      );
     }
   }
 
@@ -443,6 +447,7 @@ export class AQueJuguemPageComponent {
     const availableMinutes = this.parseOptionalMinutes(this.rowingTime()) ?? null;
     const minimumMinutes = this.parseOptionalMinutes(this.rowingMinimumTime()) ?? null;
     const resultCount = this.rowingStrength();
+    this.selectedRowingGameId.set(null);
     this.rowingLoading.set(true);
     this.rowingError.set('');
 
@@ -510,6 +515,7 @@ export class AQueJuguemPageComponent {
 
     this.rowingLoading.set(true);
     this.rowingError.set('');
+    const selectedGameId = accepted ? this.selectedRowingGameId() : null;
     this.aQueJuguemService.registerRemada({
       tempsDisponibleMinuts: this.parseOptionalMinutes(this.rowingTime()) ?? null,
       tempsMinimMinuts: this.parseOptionalMinutes(this.rowingMinimumTime()) ?? null,
@@ -518,9 +524,15 @@ export class AQueJuguemPageComponent {
       usuarioIds: this.getSelectedUsuarioIds(),
       juegoIds: results.map(result => result.juegoId)
     }).subscribe({
-      next: () => {
+      next: result => {
         this.rowingLoading.set(false);
         this.rowingResultsOpen.set(false);
+        this.selectedRowingGameId.set(null);
+        if (selectedGameId !== null) {
+          this.router.navigate(['/app/partidas'], {
+            queryParams: { remadaId: result.remadaId, juegoId: selectedGameId }
+          });
+        }
       },
       error: error => {
         this.rowingLoading.set(false);

@@ -32,6 +32,10 @@ export interface RemadaCreate {
   juegoIds: number[];
 }
 
+export interface RemadaCreateResult {
+  remadaId: number;
+}
+
 export interface Remada {
   remadaId: number;
   createdAt: string;
@@ -81,8 +85,8 @@ export class AQueJuguemService {
     );
   }
 
-  registerRemada(data: RemadaCreate): Observable<void> {
-    return this.http.post<void>(`${this.baseUrl}/remades`, data, {
+  registerRemada(data: RemadaCreate): Observable<RemadaCreateResult> {
+    return this.http.post<RemadaCreateResult>(`${this.baseUrl}/remades`, data, {
       withCredentials: true
     }).pipe(
       tap(() => {

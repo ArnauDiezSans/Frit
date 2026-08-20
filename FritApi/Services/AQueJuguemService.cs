@@ -84,14 +84,14 @@ public class AQueJuguemService
         return (true, null, result);
     }
 
-    public async Task<(bool Success, string? Error)> RegisterRemadaAsync(
+    public async Task<(bool Success, string? Error, int? RemadaId)> RegisterRemadaAsync(
         int usuarioCreadorId,
         RemadaCreateDto dto)
     {
         if (dto.TempsDisponibleMinuts.HasValue && dto.TempsMinimMinuts.HasValue &&
             dto.TempsDisponibleMinuts.Value - dto.TempsMinimMinuts.Value < 30)
         {
-            return (false, "El temps mínim ha de ser almenys 30 minuts inferior al màxim.");
+            return (false, "El temps mínim ha de ser almenys 30 minuts inferior al màxim.", null);
         }
 
         var expectedPoints = dto.NombreJocs switch
@@ -105,7 +105,7 @@ public class AQueJuguemService
         if (expectedPoints == 0 ||
             (dto.PuntsPerJugador != expectedPoints && dto.PuntsPerJugador != -1))
         {
-            return (false, "La intensitat de la remada no és vàlida.");
+            return (false, "La intensitat de la remada no és vàlida.", null);
         }
 
         var usuarioIds = dto.UsuarioIds.Distinct().ToList();
@@ -113,12 +113,12 @@ public class AQueJuguemService
 
         if (usuarioIds.Count == 0 || usuarioIds.Count != dto.UsuarioIds.Count)
         {
-            return (false, "Els jugadors de la remada no són vàlids.");
+            return (false, "Els jugadors de la remada no són vàlids.", null);
         }
 
         if (juegoIds.Count != dto.NombreJocs || juegoIds.Count != dto.JuegoIds.Count)
         {
-            return (false, "Els jocs de la remada no coincideixen amb la intensitat.");
+            return (false, "Els jocs de la remada no coincideixen amb la intensitat.", null);
         }
 
         var usuarios = await _context.Usuarios
@@ -129,7 +129,7 @@ public class AQueJuguemService
 
         if (usuarios.Count != usuarioIds.Count)
         {
-            return (false, "Algun jugador no existeix o no pot participar.");
+            return (false, "Algun jugador no existeix o no pot participar.", null);
         }
 
         var juegos = await _context.Juegos
@@ -138,7 +138,7 @@ public class AQueJuguemService
 
         if (juegos.Count != juegoIds.Count)
         {
-            return (false, "Algun joc de la remada no existeix.");
+            return (false, "Algun joc de la remada no existeix.", null);
         }
 
         var usuariosById = usuarios.ToDictionary(usuario => usuario.UsuarioId);
@@ -167,7 +167,7 @@ public class AQueJuguemService
         _context.Remades.Add(remada);
         await _context.SaveChangesAsync();
 
-        return (true, null);
+        return (true, null, remada.RemadaId);
     }
 
     public async Task<List<RemadaDto>> GetRemadesAsync()

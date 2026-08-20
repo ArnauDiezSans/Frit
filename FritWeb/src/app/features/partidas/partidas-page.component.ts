@@ -529,6 +529,7 @@ export class PartidasPageComponent implements OnInit {
     this.error.set('');
 
     const remadaId = Number(this.route.snapshot.queryParamMap.get('remadaId'));
+    const remadaJuegoId = Number(this.route.snapshot.queryParamMap.get('juegoId'));
     const sourceRemadaRequest = Number.isInteger(remadaId) && remadaId > 0
       ? this.aQueJuguemService.getRemades().pipe(
           map(remades => remades.find(remada => remada.remadaId === remadaId) ?? null)
@@ -552,14 +553,14 @@ export class PartidasPageComponent implements OnInit {
         this.currentPage.set(1);
         this.loading.set(false);
         if (result.sourceRemada) {
-          this.abrirModalDesdeRemada(result.sourceRemada);
+          this.abrirModalDesdeRemada(result.sourceRemada, remadaJuegoId);
         } else if (Number.isInteger(remadaId) && remadaId > 0) {
           this.error.set("No s'ha trobat la Remada seleccionada.");
         }
         if (Number.isInteger(remadaId) && remadaId > 0) {
           this.router.navigate([], {
             relativeTo: this.route,
-            queryParams: { remadaId: null },
+            queryParams: { remadaId: null, juegoId: null },
             queryParamsHandling: 'merge',
             replaceUrl: true
           });
@@ -597,10 +598,16 @@ export class PartidasPageComponent implements OnInit {
     this.modalOpen.set(true);
   }
 
-  private abrirModalDesdeRemada(remada: Remada): void {
+  private abrirModalDesdeRemada(remada: Remada, requestedJuegoId: number | null = null): void {
     const prefill = buildRemadaPartidaPrefill(remada);
-    const selectedJuego = prefill.juegoIds.length === 1
-      ? this.juegos().find(juego => juego.juegoId === prefill.juegoIds[0]) ?? null
+    const validRequestedJuegoId = requestedJuegoId !== null &&
+      Number.isInteger(requestedJuegoId) &&
+      prefill.juegoIds.includes(requestedJuegoId)
+      ? requestedJuegoId
+      : null;
+    const selectedJuegoId = validRequestedJuegoId ?? (prefill.juegoIds.length === 1 ? prefill.juegoIds[0] : null);
+    const selectedJuego = selectedJuegoId !== null
+      ? this.juegos().find(juego => juego.juegoId === selectedJuegoId) ?? null
       : null;
 
     this.editingPartidaId.set(null);
