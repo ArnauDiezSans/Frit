@@ -15,7 +15,7 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, forkJoin, map, of, switchMap } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { UiStateService } from '../../core/data/ui-state.service';
@@ -31,6 +31,7 @@ import { MenuComponent } from '../../shared/menu/menu.component';
 import { Juego, JuegoProgresoNivel, UsuarioOption } from '../juegos/juegos.models';
 import { JuegosService } from '../juegos/juegos.service';
 import { UsuariosService } from '../juegos/usuarios.service';
+import { AQueJuguemService, Remada } from '../a-que-juguem/a-que-juguem.service';
 import {
   Partida,
   PartidaGridRow,
@@ -39,6 +40,7 @@ import {
 import { PartidasService } from './partidas.service';
 import { PartidaJugadoresService } from './partida-jugadores.service';
 import { getPartidaValidationErrors } from './partida-validation';
+import { buildRemadaPartidaPrefill } from './remada-partida-prefill';
 
 type FormJugador = {
   partidaJugadorId: number;
@@ -138,7 +140,9 @@ export class PartidasPageComponent implements OnInit {
   private juegosService = inject(JuegosService);
   private usuariosService = inject(UsuariosService);
   private partidaJugadoresService = inject(PartidaJugadoresService);
+  private aQueJuguemService = inject(AQueJuguemService);
   private uiState = inject(UiStateService);
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   loading = signal(true);
@@ -166,6 +170,7 @@ export class PartidasPageComponent implements OnInit {
   partidaJugadores = signal<PartidaJugador[]>([]);
   highlightedPartidaId = signal<number | null>(null);
   expandedPartidaId = signal<number | null>(null);
+  sourceRemada = signal<Remada | null>(null);
   currentPage = signal(1);
 
   filters = signal<PartidasFilters>({
@@ -197,8 +202,14 @@ export class PartidasPageComponent implements OnInit {
   modalDescription = computed(() =>
     this.editingPartidaId()
       ? 'Actualitza el joc, la data i els jugadors de la partida.'
+      : this.sourceRemada()
+        ? 'Completa els resultats de la Remada. La partida no es crearà fins que la desis.'
       : 'Selecciona el joc, la data i afegeix els jugadors de la partida.'
   );
+  remadaCandidateGames = computed(() => {
+    const candidateIds = new Set(this.sourceRemada()?.jocs.map(juego => juego.juegoId) ?? []);
+    return this.juegos().filter(juego => candidateIds.has(juego.juegoId));
+  });
   saveButtonText = computed(() => {
     if (this.saving()) {
       return this.editingPartidaId() ? 'Actualitzant...' : 'Desant...';
@@ -517,11 +528,19 @@ export class PartidasPageComponent implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
+    const remadaId = Number(this.route.snapshot.queryParamMap.get('remadaId'));
+    const sourceRemadaRequest = Number.isInteger(remadaId) && remadaId > 0
+      ? this.aQueJuguemService.getRemades().pipe(
+          map(remades => remades.find(remada => remada.remadaId === remadaId) ?? null)
+        )
+      : of(null);
+
     forkJoin({
       partidas: this.partidasService.getAll(),
       juegos: this.juegosService.getAll(),
       usuarios: this.usuariosService.getJugadores(),
-      partidaJugadores: this.partidaJugadoresService.getAll()
+      partidaJugadores: this.partidaJugadoresService.getAll(),
+      sourceRemada: sourceRemadaRequest
     }).subscribe({
       next: result => {
         this.partidas.set(result.partidas);
@@ -532,6 +551,19 @@ export class PartidasPageComponent implements OnInit {
         this.partidaJugadores.set(result.partidaJugadores);
         this.currentPage.set(1);
         this.loading.set(false);
+        if (result.sourceRemada) {
+          this.abrirModalDesdeRemada(result.sourceRemada);
+        } else if (Number.isInteger(remadaId) && remadaId > 0) {
+          this.error.set("No s'ha trobat la Remada seleccionada.");
+        }
+        if (Number.isInteger(remadaId) && remadaId > 0) {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { remadaId: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true
+          });
+        }
       },
       error: () => {
         this.error.set("No s'han pogut carregar les partides.");
@@ -541,6 +573,7 @@ export class PartidasPageComponent implements OnInit {
   }
 
   abrirModal(): void {
+    this.sourceRemada.set(null);
     this.editingPartidaId.set(null);
     this.form.reset({
       juegoId: null,
@@ -562,6 +595,53 @@ export class PartidasPageComponent implements OnInit {
     this.formError.set('');
     this.success.set('');
     this.modalOpen.set(true);
+  }
+
+  private abrirModalDesdeRemada(remada: Remada): void {
+    const prefill = buildRemadaPartidaPrefill(remada);
+    const selectedJuego = prefill.juegoIds.length === 1
+      ? this.juegos().find(juego => juego.juegoId === prefill.juegoIds[0]) ?? null
+      : null;
+
+    this.editingPartidaId.set(null);
+    this.sourceRemada.set(remada);
+    this.form.reset({
+      juegoId: selectedJuego?.juegoId ?? null,
+      juegoSearch: selectedJuego?.nombre ?? '',
+      fecha: prefill.fecha || this.getTodayDate(),
+      duracionMinutos: null,
+      numeroJugadores: Math.max(prefill.jugadores.length, 1),
+      perEquips: false,
+      nivelIdsTodos: [],
+      observaciones: `Partida creada des de la Remada #${remada.remadaId}`
+    });
+
+    this.jugadoresArray.clear();
+    this.equiposArray.clear();
+    this.clearProgressLevels();
+    prefill.jugadores.forEach((jugador, index) => {
+      this.jugadoresArray.push(this.createJugadorGroup(index + 1, {
+        partidaJugadorId: 0,
+        partidaId: 0,
+        usuarioId: jugador.usuarioId,
+        nombreMostrado: jugador.nombre,
+        posicion: index + 1,
+        puntos: null
+      }));
+    });
+    if (prefill.jugadores.length === 0) {
+      this.syncJugadoresWithNumero(1);
+    }
+
+    this.filteredJuegos.set(this.remadaCandidateGames());
+    this.filteredUsuarios.set(this.usuarios());
+    this.formError.set('');
+    this.success.set('');
+    this.modalOpen.set(true);
+
+    if (selectedJuego) {
+      this.loadProgressLevels(selectedJuego);
+    }
   }
 
   abrirEditarPartida(partidaId: number, event: Event): void {
@@ -616,6 +696,7 @@ export class PartidasPageComponent implements OnInit {
   cerrarModal(): void {
     this.modalOpen.set(false);
     this.editingPartidaId.set(null);
+    this.sourceRemada.set(null);
     this.formError.set('');
     this.success.set('');
   }

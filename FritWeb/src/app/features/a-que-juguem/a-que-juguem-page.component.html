@@ -313,6 +313,13 @@
             <span *ngIf="canManageRemades()" class="remada-actions" data-label="Accions">
               <button
                 type="button"
+                class="primary-button"
+                [disabled]="remadesSaving()"
+                (click)="createPartidaFromRemada(remada)">
+                Crear partida
+              </button>
+              <button
+                type="button"
                 class="danger-button compact-danger-button"
                 [disabled]="remadesSaving()"
                 (click)="deleteRemada(remada)">

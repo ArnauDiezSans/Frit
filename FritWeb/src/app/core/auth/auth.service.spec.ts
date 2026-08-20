@@ -19,6 +19,7 @@ describe('AuthService', () => {
 
     service.currentUser = {
       usuarioId: 1, nombre: 'Usuari', esAdmin: true,
+      potVeureAuditoria: false,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
     };
 
@@ -35,6 +36,7 @@ describe('AuthService', () => {
   it('enables all initial features for frit14', () => {
     service.currentUser = {
       usuarioId: 1, nombre: 'Usuari', esAdmin: false,
+      potVeureAuditoria: false,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
     };
 
@@ -45,6 +47,7 @@ describe('AuthService', () => {
   it('hides la llista and assistencia for ajjrr26', () => {
     service.currentUser = {
       usuarioId: 2, nombre: 'Kiderak', esAdmin: true,
+      potVeureAuditoria: true,
       tenantId: 3, tenantCodi: 'ajjrr26', tenantNom: 'AJJRR'
     };
 

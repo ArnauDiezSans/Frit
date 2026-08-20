@@ -336,6 +336,13 @@ export class AQueJuguemPageComponent {
     });
   }
 
+  createPartidaFromRemada(remada: Remada): void {
+    this.remadesAdminOpen.set(false);
+    this.router.navigate(['/app/partidas'], {
+      queryParams: { remadaId: remada.remadaId }
+    });
+  }
+
   formatRemadaDate(value: string): string {
     return new Date(value).toLocaleString('ca-ES');
   }

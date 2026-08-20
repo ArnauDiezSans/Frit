@@ -402,6 +402,17 @@
         <div class="form-grid">
           <div class="form-field">
             <span>Joc *</span>
+            <div class="remada-game-options" *ngIf="sourceRemada() && remadaCandidateGames().length > 1">
+              <span>Quin joc de la Remada s'ha jugat?</span>
+              <button
+                *ngFor="let juego of remadaCandidateGames(); trackBy: trackByJuegoId"
+                type="button"
+                class="ghost-button"
+                [class.remada-game-selected]="form.controls.juegoId.value === juego.juegoId"
+                (click)="seleccionarJuego(juego)">
+                {{ juego.nombre }}
+              </button>
+            </div>
             <app-autocomplete-select
               [items]="filteredJuegos()"
               [searchText]="form.controls.juegoSearch.value ?? ''"
