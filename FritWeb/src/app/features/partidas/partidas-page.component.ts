@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   HostListener,
+  OnDestroy,
   OnInit,
   computed,
   effect,
@@ -41,6 +42,7 @@ import { PartidasService } from './partidas.service';
 import { PartidaJugadoresService } from './partida-jugadores.service';
 import { getPartidaValidationErrors } from './partida-validation';
 import { buildRemadaPartidaPrefill } from './remada-partida-prefill';
+import { elapsedMinutes, elapsedSince, formatPartidaTimer } from './partida-timer';
 
 type FormJugador = {
   partidaJugadorId: number;
@@ -133,7 +135,7 @@ const PARTIDAS_PAGE_SIZE = 50;
   templateUrl: './partidas-page.component.html',
   styleUrl: './partidas-page.component.css'
 })
-export class PartidasPageComponent implements OnInit {
+export class PartidasPageComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private partidasService = inject(PartidasService);
@@ -171,6 +173,8 @@ export class PartidasPageComponent implements OnInit {
   highlightedPartidaId = signal<number | null>(null);
   expandedPartidaId = signal<number | null>(null);
   sourceRemada = signal<Remada | null>(null);
+  timerElapsedMilliseconds = signal(0);
+  timerRunning = signal(false);
   currentPage = signal(1);
 
   filters = signal<PartidasFilters>({
@@ -192,6 +196,9 @@ export class PartidasPageComponent implements OnInit {
   isMobileFilters = signal(false);
   private readonly mobileFiltersQuery = window.matchMedia('(max-width: 820px)');
   private progressLevelsRequestId = 0;
+  private timerBaseMilliseconds = 0;
+  private timerStartedAtMilliseconds = 0;
+  private timerInterval?: ReturnType<typeof setInterval>;
   teamColors = TEAM_COLORS;
   displayJuego = (juego: Juego) => juego.nombre;
   displayUsuario = (usuario: UsuarioOption) => usuario.nombre;
@@ -217,6 +224,7 @@ export class PartidasPageComponent implements OnInit {
 
     return this.editingPartidaId() ? 'Actualitzar partida' : 'Desar partida';
   });
+  timerText = computed(() => formatPartidaTimer(this.timerElapsedMilliseconds()));
   allColumnsSelected = computed(() => Object.values(this.visibleColumns()).every(Boolean));
   juegosFiltro = computed(() => {
     const search = this.filters().juegoNombre.trim().toLocaleLowerCase('ca');
@@ -574,6 +582,7 @@ export class PartidasPageComponent implements OnInit {
   }
 
   abrirModal(): void {
+    this.resetTimer();
     this.sourceRemada.set(null);
     this.editingPartidaId.set(null);
     this.form.reset({
@@ -600,6 +609,8 @@ export class PartidasPageComponent implements OnInit {
 
   private abrirModalDesdeRemada(remada: Remada, requestedJuegoId: number | null = null): void {
     const prefill = buildRemadaPartidaPrefill(remada);
+    const elapsedMilliseconds = elapsedSince(remada.createdAt);
+    this.resetTimer(elapsedMilliseconds);
     const validRequestedJuegoId = requestedJuegoId !== null &&
       Number.isInteger(requestedJuegoId) &&
       prefill.juegoIds.includes(requestedJuegoId)
@@ -616,7 +627,7 @@ export class PartidasPageComponent implements OnInit {
       juegoId: selectedJuego?.juegoId ?? null,
       juegoSearch: selectedJuego?.nombre ?? '',
       fecha: prefill.fecha || this.getTodayDate(),
-      duracionMinutos: null,
+      duracionMinutos: elapsedMinutes(elapsedMilliseconds),
       numeroJugadores: Math.max(prefill.jugadores.length, 1),
       perEquips: false,
       nivelIdsTodos: [],
@@ -701,11 +712,59 @@ export class PartidasPageComponent implements OnInit {
   }
 
   cerrarModal(): void {
+    this.resetTimer();
     this.modalOpen.set(false);
     this.editingPartidaId.set(null);
     this.sourceRemada.set(null);
     this.formError.set('');
     this.success.set('');
+  }
+
+  ngOnDestroy(): void {
+    this.clearTimerInterval();
+  }
+
+  toggleTimer(): void {
+    if (this.timerRunning()) {
+      this.updateTimerElapsed();
+      this.timerBaseMilliseconds = this.timerElapsedMilliseconds();
+      this.timerRunning.set(false);
+      this.clearTimerInterval();
+      return;
+    }
+
+    this.timerBaseMilliseconds = this.timerElapsedMilliseconds();
+    this.timerStartedAtMilliseconds = Date.now();
+    this.timerRunning.set(true);
+    this.clearTimerInterval();
+    this.timerInterval = setInterval(() => this.updateTimerElapsed(), 250);
+  }
+
+  copyTimerToDuration(): void {
+    if (this.timerRunning()) this.updateTimerElapsed();
+    this.form.controls.duracionMinutos.setValue(elapsedMinutes(this.timerElapsedMilliseconds()));
+  }
+
+  private resetTimer(elapsedMilliseconds = 0): void {
+    this.clearTimerInterval();
+    this.timerBaseMilliseconds = Math.max(0, elapsedMilliseconds);
+    this.timerStartedAtMilliseconds = 0;
+    this.timerElapsedMilliseconds.set(this.timerBaseMilliseconds);
+    this.timerRunning.set(false);
+  }
+
+  private updateTimerElapsed(): void {
+    if (!this.timerRunning()) return;
+    this.timerElapsedMilliseconds.set(
+      this.timerBaseMilliseconds + Date.now() - this.timerStartedAtMilliseconds
+    );
+  }
+
+  private clearTimerInterval(): void {
+    if (this.timerInterval !== undefined) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = undefined;
+    }
   }
 
   onNumeroJugadoresChange(event: Event): void {

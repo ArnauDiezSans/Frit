@@ -432,10 +432,32 @@
             <input type="date" formControlName="fecha" />
           </label>
 
-          <label class="form-field">
-            <span>Duració (minuts)</span>
-            <input type="number" formControlName="duracionMinutos" />
-          </label>
+          <div class="form-field duration-field">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <label for="partida-duration"><strong>Duració (minuts)</strong></label>
+              <div style="display:inline-flex;gap:5px" *ngIf="!editingPartidaId()">
+                <button
+                  type="button"
+                  class="ghost-button timer-button"
+                  style="height:30px;min-width:72px;padding:0 9px;font-variant-numeric:tabular-nums"
+                  [style.border-color]="timerRunning() ? '#0f766e' : null"
+                  [style.color]="timerRunning() ? '#0f766e' : null"
+                  [attr.aria-label]="timerRunning() ? 'Pausar temporitzador' : 'Iniciar temporitzador'"
+                  [attr.aria-pressed]="timerRunning()"
+                  (click)="toggleTimer()">
+                  {{ timerText() }}
+                </button>
+                <button
+                  type="button"
+                  class="ghost-button timer-copy-button"
+                  style="width:30px;height:30px;padding:0"
+                  aria-label="Copiar el temporitzador a la duració"
+                  title="Copiar a la duració"
+                  (click)="copyTimerToDuration()">↓</button>
+              </div>
+            </div>
+            <input id="partida-duration" type="number" formControlName="duracionMinutos" />
+          </div>
 
           <label class="form-field">
             <span>Nombre de jugadors *</span>
