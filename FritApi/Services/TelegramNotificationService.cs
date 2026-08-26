@@ -16,7 +16,7 @@ public sealed class TelegramNotificationService(
     private string? ChatId => FirstConfigured("TELEGRAM_CHAT_ID", "Telegram:ChatId");
     private string? TenantCode => FirstConfigured("TELEGRAM_TENANT_CODE", "Telegram:TenantCode");
 
-    public async Task SendPublishedSurveyAsync(string title, string relativeUrl, CancellationToken cancellationToken = default)
+    public async Task SendPublishedSurveyAsync(string title, DateTime? closingDate, string relativeUrl, CancellationToken cancellationToken = default)
     {
         var botToken = BotToken;
         var chatId = ChatId;
@@ -33,7 +33,7 @@ public sealed class TelegramNotificationService(
             var payload = new
             {
                 chat_id = chatId,
-                text = $"📊 <b>Nova enquesta</b>\n{WebUtility.HtmlEncode(title)}",
+                text = BuildSurveyMessage(title, closingDate),
                 parse_mode = "HTML",
                 disable_web_page_preview = true,
                 reply_markup = new
@@ -57,6 +57,16 @@ public sealed class TelegramNotificationService(
         {
             logger.LogError(exception, "No s'ha pogut enviar la notificació de Telegram del tenant {TenantId}.", context.CurrentTenantId);
         }
+    }
+
+    internal static string BuildSurveyMessage(string title, DateTime? closingDate)
+    {
+        var message = $"📊 <b>Nova enquesta</b>\n{WebUtility.HtmlEncode(title)}";
+        if (closingDate is null) return message;
+        var madridTime = TimeZoneInfo.ConvertTimeFromUtc(
+            closingDate.Value.Kind == DateTimeKind.Utc ? closingDate.Value : closingDate.Value.ToUniversalTime(),
+            TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid"));
+        return $"{message}\n📅 Tancament: {madridTime:dd/MM/yyyy 'a les' HH:mm}";
     }
 
     private string BuildPublicUrl(string relativeUrl)

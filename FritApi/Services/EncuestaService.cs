@@ -114,7 +114,7 @@ public sealed class EncuestaService(
             await pushNotifications.SendSurveyAsync(actorId, encuesta.Titulo, url,
                 encuesta.Destinatarios.Select(d => d.UsuarioId).ToList());
         if (!encuesta.EsVotacion && telegramNotifications is not null)
-            await telegramNotifications.SendPublishedSurveyAsync(encuesta.Titulo, url);
+            await telegramNotifications.SendPublishedSurveyAsync(encuesta.Titulo, encuesta.FechaCierre, url);
         return (true, null);
     }
 

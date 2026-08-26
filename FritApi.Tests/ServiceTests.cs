@@ -1362,6 +1362,46 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task EncuestaService_ShowsAllSurveysToAdminsAndCreatorsAndOnlyAssignedSurveysToOthers()
+    {
+        await using var context = CreateContext();
+        var creator = new Usuario { Nombre = "Creador", PasswordHash = "hash" };
+        var recipient = new Usuario { Nombre = "Destinatari", PasswordHash = "hash" };
+        var admin = new Usuario { Nombre = "Admin", PasswordHash = "hash", EsAdmin = true };
+        var outsider = new Usuario { Nombre = "No destinatari", PasswordHash = "hash" };
+        context.Usuarios.AddRange(creator, recipient, admin, outsider);
+        await context.SaveChangesAsync();
+        var push = new PushNotificationService(context, new ConfigurationBuilder().Build(), NullLogger<PushNotificationService>.Instance);
+        var service = new EncuestaService(context, push);
+        var created = await service.CreateAsync(creator.UsuarioId, new EncuestaWriteDto
+        {
+            Titulo = "Enquesta privada",
+            DestinatarioIds = [recipient.UsuarioId],
+            Preguntas = [new EncuestaPreguntaWriteDto { Tipo = EncuestaPreguntaTipo.TextoCorto, Texto = "Pregunta" }]
+        });
+        Assert.True((await service.PublishAsync(created.Id, creator.UsuarioId, false)).Success);
+
+        Assert.Contains(await service.GetAllAsync(recipient.UsuarioId, false), survey => survey.EncuestaId == created.Id);
+        Assert.Contains(await service.GetAllAsync(creator.UsuarioId, false), survey => survey.EncuestaId == created.Id);
+        Assert.Contains(await service.GetAllAsync(admin.UsuarioId, true), survey => survey.EncuestaId == created.Id);
+        Assert.DoesNotContain(await service.GetAllAsync(outsider.UsuarioId, false), survey => survey.EncuestaId == created.Id);
+        Assert.NotNull(await service.GetAsync(created.Id, creator.UsuarioId, false));
+        Assert.NotNull(await service.GetAsync(created.Id, admin.UsuarioId, true));
+        Assert.NotNull(await service.GetAsync(created.Id, recipient.UsuarioId, false));
+        Assert.Null(await service.GetAsync(created.Id, outsider.UsuarioId, false));
+    }
+
+    [Fact]
+    public void TelegramSurveyMessage_IncludesClosingDateInMadridTime()
+    {
+        var message = TelegramNotificationService.BuildSurveyMessage(
+            "Enquesta & prova", new DateTime(2026, 8, 26, 18, 30, 0, DateTimeKind.Utc));
+
+        Assert.Contains("Enquesta &amp; prova", message);
+        Assert.Contains("Tancament: 26/08/2026 a les 20:30", message);
+    }
+
+    [Fact]
     public async Task JuegoProgresoService_ManagesPlayersLevelsAndMarks()
     {
         await using var context = CreateContext();
