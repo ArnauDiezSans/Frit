@@ -1321,6 +1321,47 @@ public class ServiceTests
     }
 
     [Fact]
+    public async Task EncuestaService_AllowsOnlyArnauToEditPublishedSurveysAndPreservesAnswers()
+    {
+        await using var context = CreateContext();
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash", EsAdmin = true };
+        var otherAdmin = new Usuario { Nombre = "Altra admin", PasswordHash = "hash", EsAdmin = true };
+        var member = new Usuario { Nombre = "Membre", PasswordHash = "hash" };
+        context.Usuarios.AddRange(arnau, otherAdmin, member);
+        await context.SaveChangesAsync();
+        var push = new PushNotificationService(context, new ConfigurationBuilder().Build(), NullLogger<PushNotificationService>.Instance);
+        var service = new EncuestaService(context, push);
+        var original = new EncuestaWriteDto
+        {
+            Titulo = "Títol original",
+            VisibilidadResultados = EncuestaVisibilidadResultados.Siempre,
+            Preguntas = [new EncuestaPreguntaWriteDto { Tipo = EncuestaPreguntaTipo.OpcionUnica, Texto = "Pregunta", Opciones = ["A", "B"] }]
+        };
+        var created = await service.CreateAsync(arnau.UsuarioId, original);
+        Assert.True((await service.PublishAsync(created.Id, arnau.UsuarioId, true)).Success);
+        var published = await service.GetAsync(created.Id, arnau.UsuarioId, true);
+        Assert.True(published!.Resumen.PuedeEditarPublicada);
+        var questionId = published.Preguntas[0].EncuestaPreguntaId;
+        var optionId = published.Preguntas[0].Opciones[0].EncuestaOpcionId;
+        Assert.True((await service.SubmitAsync(created.Id, member.UsuarioId,
+            new EncuestaSubmitDto([new EncuestaRespuestaValorDto(questionId, null, null, [optionId])]))).Success);
+
+        var edited = new EncuestaWriteDto
+        {
+            Titulo = "Títol corregit",
+            VisibilidadResultados = EncuestaVisibilidadResultados.Siempre,
+            Preguntas = [new EncuestaPreguntaWriteDto { Tipo = EncuestaPreguntaTipo.OpcionUnica, Texto = "Pregunta corregida", Opciones = ["Opció A", "B"] }]
+        };
+        Assert.False((await service.UpdateAsync(created.Id, otherAdmin.UsuarioId, true, edited)).Success);
+        Assert.True((await service.UpdateAsync(created.Id, arnau.UsuarioId, true, edited)).Success);
+        var result = await service.GetAsync(created.Id, arnau.UsuarioId, true);
+        Assert.Equal("Títol corregit", result!.Resumen.Titulo);
+        Assert.Equal(questionId, result.Preguntas[0].EncuestaPreguntaId);
+        Assert.Equal(optionId, result.Preguntas[0].Opciones[0].EncuestaOpcionId);
+        Assert.Equal(1, result.Resultados![0].Opciones[0].Votos);
+    }
+
+    [Fact]
     public async Task JuegoProgresoService_ManagesPlayersLevelsAndMarks()
     {
         await using var context = CreateContext();

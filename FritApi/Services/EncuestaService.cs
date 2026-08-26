@@ -13,6 +13,7 @@ public sealed class EncuestaService(
     public async Task<List<EncuestaResumenDto>> GetAllAsync(int userId, bool isAdmin)
     {
         var now = DateTime.UtcNow;
+        var canEditPublished = await CanEditPublishedAsync(userId);
         var rows = await context.Encuestas.AsNoTracking()
             .Include(e => e.UsuarioCreador)
             .Include(e => e.Destinatarios)
@@ -23,7 +24,7 @@ public sealed class EncuestaService(
             .ThenByDescending(e => e.CreatedAt)
             .ToListAsync();
         var activeUsers = await context.Usuarios.AsNoTracking().CountAsync(u => !u.EsUsuarioExterno);
-        return rows.Select(e => ToSummary(e, userId, isAdmin, activeUsers, now)).ToList();
+        return rows.Select(e => ToSummary(e, userId, isAdmin, canEditPublished, activeUsers, now)).ToList();
     }
 
     public async Task<EncuestaDetalleDto?> GetAsync(int id, int userId, bool isAdmin)
@@ -34,6 +35,7 @@ public sealed class EncuestaService(
             (!canManage && encuesta.Destinatarios.Count > 0 && encuesta.Destinatarios.All(d => d.UsuarioId != userId))) return null;
 
         var activeUsers = await context.Usuarios.AsNoTracking().CountAsync(u => !u.EsUsuarioExterno);
+        var canEditPublished = await CanEditPublishedAsync(userId);
         var mine = encuesta.Respuestas.FirstOrDefault(r => r.UsuarioId == userId);
         var effectiveClosed = IsClosed(encuesta);
         var canSeeResults = encuesta.EsVotacion
@@ -44,7 +46,7 @@ public sealed class EncuestaService(
               encuesta.VisibilidadResultados == EncuestaVisibilidadResultados.AlCerrar && effectiveClosed;
         var pending = canManage ? await GetPendingNamesAsync(encuesta) : null;
         return new EncuestaDetalleDto(
-            ToSummary(encuesta, userId, isAdmin, activeUsers, DateTime.UtcNow),
+            ToSummary(encuesta, userId, isAdmin, canEditPublished, activeUsers, DateTime.UtcNow),
             encuesta.PermiteEditarRespuesta,
             encuesta.VisibilidadResultados,
             encuesta.Preguntas.OrderBy(q => q.Orden).Select(ToQuestion).ToList(),
@@ -72,14 +74,21 @@ public sealed class EncuestaService(
             .Include(e => e.Destinatarios).FirstOrDefaultAsync(e => e.EncuestaId == id);
         if (encuesta is null) return (false, "Enquesta no trobada.");
         if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
-        if (encuesta.Estado != EncuestaEstado.Borrador) return (false, "Només es poden editar els esborranys.");
+        var editingPublished = encuesta.Estado == EncuestaEstado.Publicada;
+        if (encuesta.Estado != EncuestaEstado.Borrador && (!editingPublished || !await CanEditPublishedAsync(actorId)))
+            return (false, "Només l'Arnau pot editar una enquesta publicada.");
         var error = await ValidateAsync(dto);
         if (error is not null) return (false, error);
-        context.EncuestaPreguntas.RemoveRange(encuesta.Preguntas);
         context.EncuestaDestinatarios.RemoveRange(encuesta.Destinatarios);
-        encuesta.Preguntas.Clear();
         encuesta.Destinatarios.Clear();
-        Apply(encuesta, dto);
+        if (editingPublished)
+            ApplyPublishedUpdate(encuesta, dto);
+        else
+        {
+            context.EncuestaPreguntas.RemoveRange(encuesta.Preguntas);
+            encuesta.Preguntas.Clear();
+            Apply(encuesta, dto);
+        }
         await context.SaveChangesAsync();
         return (true, null);
     }
@@ -291,6 +300,36 @@ public sealed class EncuestaService(
         foreach (var id in dto.DestinatarioIds.Distinct()) encuesta.Destinatarios.Add(new EncuestaDestinatario { UsuarioId = id });
     }
 
+    // Published surveys can already have answers. Matching questions and options by their
+    // stable order lets Arnau correct them without replacing their IDs and losing those answers.
+    private void ApplyPublishedUpdate(Encuesta encuesta, EncuestaWriteDto dto)
+    {
+        encuesta.Titulo = dto.Titulo.Trim(); encuesta.Descripcion = dto.Descripcion?.Trim(); encuesta.EsAnonima = dto.EsAnonima;
+        encuesta.PermiteEditarRespuesta = dto.PermiteEditarRespuesta; encuesta.VisibilidadResultados = dto.VisibilidadResultados;
+        encuesta.FechaCierre = dto.FechaCierre?.ToUniversalTime(); encuesta.UpdatedAt = DateTime.UtcNow;
+        var questions = encuesta.Preguntas.OrderBy(q => q.Orden).ToList();
+        for (var index = 0; index < dto.Preguntas.Count; index++)
+        {
+            var source = dto.Preguntas[index];
+            var question = index < questions.Count ? questions[index] : new EncuestaPregunta();
+            if (index >= questions.Count) encuesta.Preguntas.Add(question);
+            question.Tipo = source.Tipo; question.Texto = source.Texto.Trim(); question.Ayuda = source.Ayuda?.Trim();
+            question.Obligatoria = source.Obligatoria; question.Orden = index; question.Minimo = source.Minimo; question.Maximo = source.Maximo;
+            question.CondicionPreguntaOrden = source.CondicionPreguntaOrden; question.CondicionOpcionOrden = source.CondicionOpcionOrden;
+            question.PermiteAgregarOpciones = source.PermiteAgregarOpciones;
+            var options = question.Opciones.OrderBy(o => o.Orden).ToList();
+            for (var optionIndex = 0; optionIndex < source.Opciones.Count; optionIndex++)
+            {
+                var option = optionIndex < options.Count ? options[optionIndex] : new EncuestaOpcion();
+                if (optionIndex >= options.Count) question.Opciones.Add(option);
+                option.Texto = source.Opciones[optionIndex].Trim(); option.Orden = optionIndex;
+            }
+            if (options.Count > source.Opciones.Count) context.EncuestaOpciones.RemoveRange(options.Skip(source.Opciones.Count));
+        }
+        if (questions.Count > dto.Preguntas.Count) context.EncuestaPreguntas.RemoveRange(questions.Skip(dto.Preguntas.Count));
+        foreach (var id in dto.DestinatarioIds.Distinct()) encuesta.Destinatarios.Add(new EncuestaDestinatario { UsuarioId = id });
+    }
+
     private static EncuestaPreguntaDto ToQuestion(EncuestaPregunta q) => new EncuestaPreguntaDto(q.EncuestaPreguntaId, q.Tipo, q.Texto, q.Ayuda,
         q.Obligatoria, q.Orden, q.Minimo, q.Maximo, q.CondicionPreguntaOrden, q.CondicionOpcionOrden,
         q.Opciones.OrderBy(o => o.Orden).Select(o => new EncuestaOpcionDto(o.EncuestaOpcionId, o.Texto, o.Orden)).ToList())
@@ -304,12 +343,14 @@ public sealed class EncuestaService(
         var sourceAnswer = source is null ? null : answers.FirstOrDefault(a => a.EncuestaPreguntaId == source.EncuestaPreguntaId);
         return requiredOption is not null && sourceAnswer?.OpcionIds.Contains(requiredOption.EncuestaOpcionId) == true;
     }
-    private static EncuestaResumenDto ToSummary(Encuesta e, int userId, bool isAdmin, int allUsers, DateTime now) =>
+    private static EncuestaResumenDto ToSummary(Encuesta e, int userId, bool isAdmin, bool canEditPublished, int allUsers, DateTime now) =>
         new(e.EncuestaId, e.Titulo, e.Descripcion, e.Estado == EncuestaEstado.Publicada && e.FechaCierre <= now ? EncuestaEstado.Cerrada : e.Estado,
             e.EsVotacion, e.EsAnonima, e.FechaCierre, e.CreatedAt, e.UsuarioCreador.Nombre, e.Respuestas.Any(r => r.UsuarioId == userId),
             e.Destinatarios.Count == 0 || e.Destinatarios.Any(d => d.UsuarioId == userId),
             e.Respuestas.Count, e.Destinatarios.Count == 0 ? allUsers : e.Destinatarios.Count,
-            isAdmin || e.UsuarioCreadorId == userId);
+            isAdmin || e.UsuarioCreadorId == userId, canEditPublished && !e.EsVotacion);
+    private Task<bool> CanEditPublishedAsync(int userId) => context.Usuarios.AsNoTracking()
+        .AnyAsync(u => u.UsuarioId == userId && u.Nombre.ToLower() == "arnau");
     private static bool IsClosed(Encuesta e) => e.Estado == EncuestaEstado.Cerrada || e.FechaCierre is not null && e.FechaCierre <= DateTime.UtcNow;
 
     private async Task<List<string>> GetPendingNamesAsync(Encuesta e)

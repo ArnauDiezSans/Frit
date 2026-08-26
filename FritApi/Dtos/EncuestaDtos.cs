@@ -11,7 +11,7 @@ public record EncuestaPreguntaDto(int EncuestaPreguntaId, EncuestaPreguntaTipo T
 }
 public record EncuestaResumenDto(int EncuestaId, string Titulo, string? Descripcion, EncuestaEstado Estado,
     bool EsVotacion, bool EsAnonima, DateTime? FechaCierre, DateTime CreatedAt, string CreadorNombre, bool HaRespondido,
-    bool EsDestinatario, int Respuestas, int Destinatarios, bool PuedeGestionar);
+    bool EsDestinatario, int Respuestas, int Destinatarios, bool PuedeGestionar, bool PuedeEditarPublicada);
 public record EncuestaRespuestaValorDto(int EncuestaPreguntaId, string? Texto, int? Numero, List<int> OpcionIds)
 {
     public List<string> NuevasOpciones { get; init; } = [];

@@ -60,7 +60,7 @@
     <ng-template #hiddenResults><p class="locked" *ngIf="d.resumen.estado !== Estado.Borrador">Els resultats encara no són visibles.</p></ng-template>
 
     <section class="admin-panel" *ngIf="d.resumen.puedeGestionar"><h3>Gestió</h3><p *ngIf="d.pendientes?.length"><b>Pendents:</b> {{ d.pendientes?.join(', ') }}</p><div class="actions">
-      <button *ngIf="d.resumen.estado === Estado.Borrador" (click)="editDraft()">Editar</button><button class="primary" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('publish')">Publicar i notificar</button>
+      <button *ngIf="d.resumen.estado === Estado.Borrador || d.resumen.puedeEditarPublicada" (click)="editDraft()">Editar</button><button class="primary" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('publish')">Publicar i notificar</button>
       <button *ngIf="d.resumen.estado === Estado.Publicada && !d.resumen.esVotacion" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Tancar</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador || (d.resumen.esVotacion && d.resumen.respuestas === 0)" (click)="manage('delete')">Eliminar</button>
     </div></section>
   </article>
@@ -95,6 +95,6 @@
         <ng-container *ngIf="conditionSources(i).length"><label class="full"><span>Mostrar només si...</span><select [(ngModel)]="q.condicionPreguntaOrden" (ngModelChange)="conditionChanged(q)"><option [ngValue]="null">Sempre visible</option><option *ngFor="let source of conditionSources(i)" [ngValue]="source.index">{{ source.index + 1 }}. {{ source.question.texto || 'Pregunta sense títol' }}</option></select></label><label class="full" *ngIf="q.condicionPreguntaOrden !== null && q.condicionPreguntaOrden !== undefined"><span>...la resposta és</span><select [(ngModel)]="q.condicionOpcionOrden"><option *ngFor="let option of conditionOptions(q); let optionIndex = index" [ngValue]="optionIndex">{{ option || 'Opció ' + (optionIndex + 1) }}</option></select></label></ng-container>
       </div><div class="options" *ngIf="hasOptions(q)"><label *ngFor="let option of q.opciones; let oi = index; trackBy: trackByIndex"><span>Opció {{ oi + 1 }}</span><input [(ngModel)]="q.opciones[oi]" maxlength="300"><button class="icon small" (click)="removeOption(q, oi)" [disabled]="q.opciones.length === 2">×</button></label><button (click)="addOption(q)">+ Afegir opció</button><label class="check allow-user-options"><input type="checkbox" [(ngModel)]="q.permiteAgregarOpciones">Permetre que els usuaris afegeixin opcions</label></div>
     </section>
-    <div class="editor-actions"><button (click)="addQuestion()">+ Afegir pregunta</button><span></span><button (click)="editorOpen.set(false)">Cancel·lar</button><button class="primary" [disabled]="busy()" (click)="save()">Desar esborrany</button></div>
+    <div class="editor-actions"><button (click)="addQuestion()">+ Afegir pregunta</button><span></span><button (click)="editorOpen.set(false)">Cancel·lar</button><button class="primary" [disabled]="busy()" (click)="save()">Desar canvis</button></div>
   </article>
 </div>
