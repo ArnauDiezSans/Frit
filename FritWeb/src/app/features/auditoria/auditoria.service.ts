@@ -10,6 +10,7 @@ export interface AuditEntry {
   ip?: string | null;
   entidad: string;
   registroId: string;
+  registroNombre?: string | null;
   accion: string;
   valoresAnteriors?: string | null;
   valorsNous?: string | null;

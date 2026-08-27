@@ -69,6 +69,27 @@ export class AuditoriaPageComponent {
     try { return JSON.stringify(JSON.parse(value), null, 2); } catch { return value; }
   }
 
+  objectLabel(item: AuditEntry): string {
+    return item.registroNombre || item.registroId;
+  }
+
+  changeRows(item: AuditEntry): Array<{ field: string; before: unknown; after: unknown }> {
+    const before = this.parseObject(item.valoresAnteriors);
+    const after = this.parseObject(item.valorsNous);
+    const fields = [...new Set([...Object.keys(before), ...Object.keys(after)])]
+      .filter(field => !['TenantId', 'CreatedAt', 'UpdatedAt'].includes(field));
+    return fields
+      .filter(field => JSON.stringify(before[field]) !== JSON.stringify(after[field]))
+      .map(field => ({ field, before: before[field], after: after[field] }));
+  }
+
+  displayValue(value: unknown): string {
+    if (value === undefined || value === null || value === '') return '—';
+    if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
+  }
+
   logout(): void {
     this.authService.logout().subscribe({ next: () => this.router.navigateByUrl('/login') });
   }
@@ -95,5 +116,15 @@ export class AuditoriaPageComponent {
         this.loading.set(false);
       }
     });
+  }
+
+  private parseObject(value?: string | null): Record<string, unknown> {
+    if (!value) return {};
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : { Valor: parsed };
+    } catch {
+      return { Valor: value };
+    }
   }
 }

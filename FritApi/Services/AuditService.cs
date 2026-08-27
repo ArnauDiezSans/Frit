@@ -1,6 +1,7 @@
 using FritApi.Data;
 using FritApi.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace FritApi.Services;
 
@@ -82,6 +83,36 @@ public class AuditService(AppDbContext context, ICurrentTenant currentTenant)
             })
             .ToListAsync();
 
+        foreach (var item in items)
+        {
+            item.RegistroNombre = GetDisplayName(item.ValorsNous) ?? GetDisplayName(item.ValoresAnteriors);
+        }
+
         return new AuditPageDto { Items = items, Total = total, Page = page, PageSize = pageSize };
+    }
+
+    private static string? GetDisplayName(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return null;
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Object) return null;
+            string[] preferredFields = ["Nombre", "Nom", "Titulo", "Titol", "NombreMostrado", "Texto", "Descripcion"];
+            foreach (var field in preferredFields)
+            {
+                if (document.RootElement.TryGetProperty(field, out var value) &&
+                    value.ValueKind == JsonValueKind.String &&
+                    !string.IsNullOrWhiteSpace(value.GetString()))
+                {
+                    return value.GetString()!.Trim();
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // Older rows may contain plain text instead of JSON.
+        }
+        return null;
     }
 }

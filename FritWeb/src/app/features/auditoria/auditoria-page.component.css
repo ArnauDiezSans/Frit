@@ -1,30 +1,37 @@
 :host { display: block; min-height: 100vh; }
-.filters-card form { display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 14px; align-items: end; }
-label { display: grid; gap: 6px; color: #374151; font-weight: 700; font-size: .84rem; }
-input, select { width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 10px; padding: 10px 12px; background: #fff; color: #111827; }
-.filter-actions { display: flex; gap: 8px; align-items: center; }
-.table-wrapper { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
-th, td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
+.table-wrapper { overflow: auto; max-height: calc(100vh - 260px); border: 1px solid #e5e7eb; border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+th, td { padding: 11px 9px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
 th { color: #4b5563; white-space: nowrap; }
-code { font-size: .8rem; }
-.summary { margin-bottom: 14px; color: #6b7280; }
+.audit-grid > thead { position: sticky; top: 0; z-index: 2; background: #fff; }
+.audit-grid > tbody > tr:hover { background: #f8fafc; }
+.filter-row th { padding: 7px 5px; background: #f8fafc; }
+input, select { width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 7px; padding: 8px; background: #fff; color: #111827; font-size: .8rem; }
+.date-filters { display: grid; gap: 5px; min-width: 135px; }
+.grid-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; color: #6b7280; }
+.filter-button { width: 100%; }
+code { font-size: .78rem; }
+td small { display: block; margin-top: 4px; color: #6b7280; font-family: monospace; }
 .action-badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #e5e7eb; font-weight: 700; }
 .action-badge[data-action='Alta'] { background: #dcfce7; color: #166534; }
 .action-badge[data-action='Modificacio'] { background: #fef3c7; color: #92400e; }
 .action-badge[data-action='Eliminacio'] { background: #fee2e2; color: #991b1b; }
-details { min-width: 130px; }
+details { min-width: 115px; }
 details summary { cursor: pointer; color: #2563eb; font-weight: 700; }
-.change-grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 10px; margin-top: 10px; }
-pre { max-width: 430px; max-height: 320px; overflow: auto; padding: 10px; border-radius: 8px; background: #111827; color: #f9fafb; font-size: .75rem; white-space: pre-wrap; word-break: break-word; }
+.changes-wrapper { overflow-x: auto; }
+.changes-table { min-width: 560px; margin-top: 10px; background: #fff; box-shadow: 0 8px 24px rgba(15, 23, 42, .12); }
+.changes-table th, .changes-table td { white-space: normal; word-break: break-word; }
+.changes-table tbody th { width: 150px; background: #f8fafc; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 18px; }
 .empty-state { color: #6b7280; text-align: center; padding: 24px; }
 @media (max-width: 760px) {
-  .filters-card form { grid-template-columns: 1fr; }
-  .change-grid { grid-template-columns: 1fr; }
-  table, tbody, tr, td { display: block; }
-  thead { display: none; }
-  tr { padding: 10px 0; border-bottom: 1px solid #d1d5db; }
-  td { display: grid; grid-template-columns: 95px 1fr; border: 0; padding: 6px 0; }
-  td::before { content: attr(data-label); font-weight: 700; color: #6b7280; }
+  .table-wrapper { max-height: none; border: 0; }
+  .audit-grid, .audit-grid > tbody, .audit-grid > tbody > tr, .audit-grid > tbody > tr > td { display: block; }
+  .audit-grid > thead { display: block; position: static; }
+  .audit-grid > thead > tr:first-child { display: none; }
+  .filter-row { display: grid; gap: 6px; }
+  .filter-row th:empty { display: none; }
+  .audit-grid > tbody > tr { padding: 10px 0; border-bottom: 1px solid #d1d5db; }
+  .audit-grid > tbody > tr > td { display: grid; grid-template-columns: 95px minmax(0, 1fr); border: 0; padding: 6px 0; }
+  .audit-grid > tbody > tr > td::before { content: attr(data-label); font-weight: 700; color: #6b7280; }
 }

@@ -8,6 +8,7 @@ public class AuditEntryDto
     public string? Ip { get; set; }
     public string Entidad { get; set; } = string.Empty;
     public string RegistroId { get; set; } = string.Empty;
+    public string? RegistroNombre { get; set; }
     public string Accion { get; set; } = string.Empty;
     public string? ValoresAnteriors { get; set; }
     public string? ValorsNous { get; set; }
