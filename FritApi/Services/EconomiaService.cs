@@ -131,11 +131,13 @@ public partial class EconomiaService(AppDbContext db)
     private static EconomiaImputacio New(string cat, string? person, DateOnly? period, decimal amount, string desc, bool review, bool linked, int? id) => new() { EconomiaMovimentId = linked ? id : null, Categoria = cat, Persona = person, Periode = period, Import = amount, Descriptor = desc, RequereixRevisio = review };
     private static string CanonicalPerson(string p) => p.Equals("Joan", StringComparison.OrdinalIgnoreCase) ? "Joan" : p;
     private static IEnumerable<string> KnownPeople() => ["Albert", "Anna", "Arnau", "Estrella", "Gemma", "Gisela", "Jaume", "JoanD", "Ester", "Joan", "Laia", "Laura", "MariaJoan", "Maria", "Marta", "Miquel", "Nil", "Xumi", "Cor"];
-    private static int? FindMonth(string s) { for (var i = 0; i < Mesos.Length; i++) if (s.Contains(RemoveAccents(Mesos[i]).ToUpperInvariant())) return i + 1; return null; }
+    private static int? FindMonth(string s) { if (MojibakeMarchRegex().IsMatch(s)) return 3; for (var i = 0; i < Mesos.Length; i++) if (s.Contains(RemoveAccents(Mesos[i]).ToUpperInvariant())) return i + 1; return null; }
     private static int? ExtractYear(string value)
     {
         var fourDigits = FourDigitYearRegex().Match(value);
         if (fourDigits.Success) return int.Parse(fourDigits.Value);
+        var brokenMarch = MojibakeMarchRegex().Match(value);
+        if (brokenMarch.Success) return 2000 + int.Parse(brokenMarch.Groups[1].Value);
         var monthYear = MonthYearRegex().Match(value);
         return monthYear.Success ? 2000 + int.Parse(monthYear.Groups[1].Value) : null;
     }
@@ -143,13 +145,20 @@ public partial class EconomiaService(AppDbContext db)
     private async Task RepairHistoricalDataAsync()
     {
         var invalid = await db.EconomiaImputacions.Where(x => x.Periode != null && x.Periode.Value.Year >= 2050).ToListAsync();
-        if (invalid.Count == 0) return;
         foreach (var group in invalid.GroupBy(x => new { x.Descriptor, x.EconomiaMovimentId }))
         {
             db.EconomiaImputacions.RemoveRange(group);
             db.EconomiaImputacions.AddRange(Classify(new DateOnly(2022, 11, 10), group.Sum(x => x.Import), group.Key.Descriptor, group.Key.EconomiaMovimentId != null, group.Key.EconomiaMovimentId));
         }
-        await db.SaveChangesAsync();
+        var historicalQuotes = await db.EconomiaImputacions.Where(x => x.Categoria == "Quota" && x.Periode != null).ToListAsync();
+        var brokenMarch = historicalQuotes.Where(x => MojibakeMarchRegex().IsMatch(x.Descriptor) && x.Periode!.Value.Month != 3).ToList();
+        foreach (var group in brokenMarch.GroupBy(x => new { x.Descriptor, x.EconomiaMovimentId }))
+        {
+            db.EconomiaImputacions.RemoveRange(group);
+            var sourceDate = group.First().Periode!.Value.AddMonths(-1);
+            db.EconomiaImputacions.AddRange(Classify(sourceDate, group.Sum(x => x.Import), group.Key.Descriptor, group.Key.EconomiaMovimentId != null, group.Key.EconomiaMovimentId));
+        }
+        if (invalid.Count > 0 || brokenMarch.Count > 0) await db.SaveChangesAsync();
     }
     private static string RemoveAccents(string s) => new(s.Normalize(NormalizationForm.FormD).Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray());
     private static string Fingerprint(DateOnly d, DateOnly v, decimal amount, decimal balance, string original) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{d:yyyy-MM-dd}|{v:yyyy-MM-dd}|{amount:0.00}|{balance:0.00}|{Regex.Replace(original.Trim(), @"\s+", " ").ToUpperInvariant()}")));
@@ -180,5 +189,6 @@ public partial class EconomiaService(AppDbContext db)
 
     [GeneratedRegex(@"\b20\d{2}\b")] private static partial Regex FourDigitYearRegex();
     [GeneratedRegex(@"(?:GENER|FEBRER|MARC|ABRIL|MAIG|JUNY|JULIOL|AGOST|SETEMBRE|OCTUBRE|NOVEMBRE|DESEMBRE)\s*(\d{2})(?!\d)")] private static partial Regex MonthYearRegex();
+    [GeneratedRegex(@"(?i)^Quota\s+Mar.{1,10}?(\d{2})\s+")] private static partial Regex MojibakeMarchRegex();
     [GeneratedRegex(@"(?i)^Quota\s+\S+\s+(.+)$")] private static partial Regex QuotaPersonRegex();
 }
