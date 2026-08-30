@@ -19,6 +19,7 @@ public partial class EconomiaService(AppDbContext db)
         if (await db.EconomiaMoviments.AnyAsync())
         {
             await RepairHistoricalDataAsync();
+            await LinkHistoricalAllocationsAsync();
             return;
         }
         var bankPath = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-bank.csv");
@@ -35,6 +36,7 @@ public partial class EconomiaService(AppDbContext db)
         }
         await db.SaveChangesAsync();
         await RepairHistoricalDataAsync();
+        await LinkHistoricalAllocationsAsync();
 
         var sheetRows = ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',').Skip(1).Where(r => r.Count >= 3).ToList();
         DateOnly lastSheetDate = default;
@@ -57,8 +59,8 @@ public partial class EconomiaService(AppDbContext db)
         var latest = await db.EconomiaMoviments.AsNoTracking().OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).FirstOrDefaultAsync();
         var totals = allocations.GroupBy(x => x.Categoria).Select(g => new EconomiaTotalDto(g.Key, g.Key is "Lloguer" or "Llum" or "Internet" or "Aigua" or "Neteja" ? Math.Abs(g.Sum(x => x.Import)) : g.Sum(x => x.Import))).OrderBy(x => x.Categoria).ToList();
         totals.Insert(0, new EconomiaTotalDto("Saldo", latest?.Saldo ?? allocations.Sum(x => x.Import)));
-        var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import)).ToList();
-        var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Take(350).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio))).ToListAsync();
+        var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, x.EconomiaMovimentId)).ToList();
+        var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio))).ToListAsync();
         var anys = quotes.Select(x => x.Any).Distinct().OrderByDescending(x => x).ToList();
         return new EconomiaDashboardDto(totals, quotes, movements, anys);
     }
@@ -72,7 +74,7 @@ public partial class EconomiaService(AppDbContext db)
             var fingerprint = Fingerprint(row.Data, row.DataValor, row.Import, row.Saldo ?? 0, row.Original);
             var duplicate = await db.EconomiaMoviments.AnyAsync(x => x.Empremta == fingerprint);
             var allocations = Classify(row.Data, row.Import, row.Original, true);
-            result.Add(new(row.Data, row.DataValor, row.Original, row.Original, row.Import, row.Saldo, allocations.FirstOrDefault()?.Categoria ?? "Altres", allocations.Any(x => x.RequereixRevisio), allocations.Where(x => x.Periode != null && x.Persona != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import)).ToList(), duplicate));
+            result.Add(new(row.Data, row.DataValor, row.Original, row.Original, row.Import, row.Saldo, allocations.FirstOrDefault()?.Categoria ?? "Altres", allocations.Any(x => x.RequereixRevisio), allocations.Where(x => x.Periode != null && x.Persona != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, null)).ToList(), duplicate));
         }
         return result;
     }
@@ -159,6 +161,43 @@ public partial class EconomiaService(AppDbContext db)
             db.EconomiaImputacions.AddRange(Classify(sourceDate, group.Sum(x => x.Import), group.Key.Descriptor, group.Key.EconomiaMovimentId != null, group.Key.EconomiaMovimentId));
         }
         if (invalid.Count > 0 || brokenMarch.Count > 0) await db.SaveChangesAsync();
+    }
+
+    private async Task LinkHistoricalAllocationsAsync()
+    {
+        var unlinked = await db.EconomiaImputacions.Where(x => x.Categoria == "Quota" && x.EconomiaMovimentId == null).ToListAsync();
+        if (unlinked.Count == 0) return;
+        var sheetPath = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-sheet.csv");
+        if (!File.Exists(sheetPath)) return;
+        var sheetRows = ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',').Skip(1)
+            .Where(r => r.Count >= 3 && TryDate(r[0], out _) && TryMoney(r[1], out _))
+            .Select(r => new { Data = DateOnly.ParseExact(r[0].Trim(), ["dd/MM/yy", "dd/MM/yyyy"], Ca), Descriptor = r[2].Trim() })
+            .GroupBy(x => x.Descriptor).ToDictionary(x => x.Key, x => x.First().Data);
+        var movements = await db.EconomiaMoviments.Where(x => x.Import > 0).ToListAsync();
+        foreach (var group in unlinked.GroupBy(x => x.Descriptor))
+        {
+            if (!sheetRows.TryGetValue(group.Key, out var sourceDate)) continue;
+            var people = group.Where(x => x.Persona != null).Select(x => x.Persona!).Distinct().ToList();
+            var candidate = movements.Where(x => Math.Abs(x.Data.DayNumber - sourceDate.DayNumber) <= 7)
+                .OrderBy(x => PersonScore(x.DescriptorOriginal, people))
+                .ThenBy(x => Math.Abs(x.Data.DayNumber - sourceDate.DayNumber))
+                .ThenBy(x => Math.Abs(x.Import - group.Sum(a => a.Import)))
+                .FirstOrDefault();
+            if (candidate is null || PersonScore(candidate.DescriptorOriginal, people) >= 100) continue;
+            foreach (var allocation in group) allocation.EconomiaMovimentId = candidate.EconomiaMovimentId;
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private static int PersonScore(string descriptor, IReadOnlyCollection<string> people)
+    {
+        var value = RemoveAccents(descriptor).ToUpperInvariant();
+        foreach (var person in people)
+        {
+            var aliases = person switch { "Xumi" => new[] { "JAUME GRAU ORTIZ", "XUMI" }, "Jaume" => new[] { "JAUME GRAU SORIGUERA", "SURI" }, "JoanD" or "Ester" => new[] { "JOAN DURAN", "ESTER" }, "Joan" => new[] { "JOAN ORTIZ" }, _ => new[] { RemoveAccents(person).ToUpperInvariant() } };
+            if (aliases.Any(value.Contains)) return 0;
+        }
+        return 100;
     }
     private static string RemoveAccents(string s) => new(s.Normalize(NormalizationForm.FormD).Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray());
     private static string Fingerprint(DateOnly d, DateOnly v, decimal amount, decimal balance, string original) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{d:yyyy-MM-dd}|{v:yyyy-MM-dd}|{amount:0.00}|{balance:0.00}|{Regex.Replace(original.Trim(), @"\s+", " ").ToUpperInvariant()}")));

@@ -1,7 +1,7 @@
 namespace FritApi.Dtos;
 
 public record EconomiaTotalDto(string Categoria, decimal Import);
-public record EconomiaQuotaDto(string Persona, int Any, int Mes, decimal Import);
+public record EconomiaQuotaDto(string Persona, int Any, int Mes, decimal Import, int? MovimentId = null);
 public record EconomiaMovimentDto(int Id, DateOnly Data, DateOnly DataValor, string DescriptorOriginal, string Descriptor, decimal Import, decimal? Saldo, string Categoria, bool RequereixRevisio);
 public record EconomiaDashboardDto(IReadOnlyList<EconomiaTotalDto> Totals, IReadOnlyList<EconomiaQuotaDto> Quotes, IReadOnlyList<EconomiaMovimentDto> Moviments, IReadOnlyList<int> Anys);
 public record EconomiaPreviewRequest(string Text);
