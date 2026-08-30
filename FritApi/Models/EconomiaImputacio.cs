@@ -12,5 +12,6 @@ public class EconomiaImputacio : ITenantEntity
     public decimal Import { get; set; }
     public string Descriptor { get; set; } = string.Empty;
     public bool RequereixRevisio { get; set; }
+    public string Origen { get; set; } = "Parser";
     public DateTime CreatedAt { get; set; }
 }

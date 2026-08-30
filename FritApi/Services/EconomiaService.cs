@@ -19,6 +19,7 @@ public partial class EconomiaService(AppDbContext db)
         if (await db.EconomiaMoviments.AnyAsync())
         {
             await RepairHistoricalDataAsync();
+            await EnsureHistoricalGridAsync();
             await LinkHistoricalAllocationsAsync();
             return;
         }
@@ -36,6 +37,7 @@ public partial class EconomiaService(AppDbContext db)
         }
         await db.SaveChangesAsync();
         await RepairHistoricalDataAsync();
+        await EnsureHistoricalGridAsync();
         await LinkHistoricalAllocationsAsync();
 
         var sheetRows = ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',').Skip(1).Where(r => r.Count >= 3).ToList();
@@ -130,7 +132,7 @@ public partial class EconomiaService(AppDbContext db)
         return people.Select(p => New("Quota", CanonicalPerson(p), new DateOnly(year, month, 1), split, clean, false, linked, movementId)).ToList();
     }
 
-    private static EconomiaImputacio New(string cat, string? person, DateOnly? period, decimal amount, string desc, bool review, bool linked, int? id) => new() { EconomiaMovimentId = linked ? id : null, Categoria = cat, Persona = person, Periode = period, Import = amount, Descriptor = desc, RequereixRevisio = review };
+    private static EconomiaImputacio New(string cat, string? person, DateOnly? period, decimal amount, string desc, bool review, bool linked, int? id) => new() { EconomiaMovimentId = linked ? id : null, Categoria = cat, Persona = person, Periode = period, Import = amount, Descriptor = desc, RequereixRevisio = review, Origen = "Parser" };
     private static string CanonicalPerson(string p) => p.Equals("Joan", StringComparison.OrdinalIgnoreCase) ? "Joan" : p;
     private static IEnumerable<string> KnownPeople() => ["Albert", "Anna", "Arnau", "Estrella", "Gemma", "Gisela", "Jaume", "JoanD", "Ester", "Joan", "Laia", "Laura", "MariaJoan", "Maria", "Marta", "Miquel", "Nil", "Xumi", "Cor"];
     private static int? FindMonth(string s) { if (MojibakeMarchRegex().IsMatch(s)) return 3; for (var i = 0; i < Mesos.Length; i++) if (s.Contains(RemoveAccents(Mesos[i]).ToUpperInvariant())) return i + 1; return null; }
@@ -169,14 +171,20 @@ public partial class EconomiaService(AppDbContext db)
         if (unlinked.Count == 0) return;
         var sheetPath = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-sheet.csv");
         if (!File.Exists(sheetPath)) return;
-        var sheetRows = ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',').Skip(1)
-            .Where(r => r.Count >= 3 && TryDate(r[0], out _) && TryMoney(r[1], out _))
-            .Select(r => new { Data = DateOnly.ParseExact(r[0].Trim(), ["dd/MM/yy", "dd/MM/yyyy"], Ca), Descriptor = r[2].Trim() })
-            .GroupBy(x => x.Descriptor).ToDictionary(x => x.Key, x => x.First().Data);
-        var movements = await db.EconomiaMoviments.Where(x => x.Import > 0).ToListAsync();
-        foreach (var group in unlinked.GroupBy(x => x.Descriptor))
+        var sourceRows = new List<(string Persona, DateOnly Periode, DateOnly Data)>();
+        foreach (var row in ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',').Skip(1).Where(r => r.Count >= 3))
         {
-            if (!sheetRows.TryGetValue(group.Key, out var sourceDate)) continue;
+            if (!TryDate(row[0], out var data) || !TryMoney(row[1], out var amount)) continue;
+            sourceRows.AddRange(Classify(data, amount, row[2].Trim(), false)
+                .Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null)
+                .Select(x => (x.Persona!, x.Periode!.Value, data)));
+        }
+        var movements = await db.EconomiaMoviments.Where(x => x.Import > 0).ToListAsync();
+        foreach (var group in unlinked.GroupBy(x => new { x.Persona, x.Periode }))
+        {
+            var source = sourceRows.FirstOrDefault(x => x.Persona == group.Key.Persona && x.Periode == group.Key.Periode);
+            if (source == default) continue;
+            var sourceDate = source.Data;
             var people = group.Where(x => x.Persona != null).Select(x => x.Persona!).Distinct().ToList();
             var candidate = movements.Where(x => Math.Abs(x.Data.DayNumber - sourceDate.DayNumber) <= 7)
                 .OrderBy(x => PersonScore(x.DescriptorOriginal, people))
@@ -187,6 +195,43 @@ public partial class EconomiaService(AppDbContext db)
             foreach (var allocation in group) allocation.EconomiaMovimentId = candidate.EconomiaMovimentId;
         }
         await db.SaveChangesAsync();
+    }
+
+    private async Task EnsureHistoricalGridAsync()
+    {
+        if (await db.EconomiaImputacions.AnyAsync(x => x.Origen == "GraellaSheet")) return;
+        var sheetPath = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-sheet.csv");
+        if (!File.Exists(sheetPath)) return;
+        var rows = ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',');
+        var exact = new List<EconomiaImputacio>();
+        for (var rowIndex = 0; rowIndex < rows.Count; rowIndex++)
+        {
+            var header = rows[rowIndex];
+            if (header.Count < 17 || !string.Equals(header[4].Trim(), "Quota", StringComparison.OrdinalIgnoreCase)) continue;
+            var periods = header.Skip(5).Take(12).Select(ParseGridPeriod).ToList();
+            for (var personIndex = rowIndex + 1; personIndex < rows.Count; personIndex++)
+            {
+                var personRow = rows[personIndex];
+                var person = personRow.Count > 4 ? personRow[4].Trim() : string.Empty;
+                if (string.IsNullOrWhiteSpace(person) || string.Equals(person, "Quota", StringComparison.OrdinalIgnoreCase)) break;
+                for (var column = 0; column < 12; column++)
+                {
+                    if (periods[column] is not { } period || personRow.Count <= column + 5 || !TryMoney(personRow[column + 5], out var amount)) continue;
+                    exact.Add(new EconomiaImputacio { Categoria = "Quota", Persona = person, Periode = period, Import = amount, Descriptor = $"Quota {Mesos[period.Month - 1]}{period.Year % 100:00} {person}", Origen = "GraellaSheet" });
+                }
+            }
+        }
+        if (exact.Count == 0) return;
+        db.EconomiaImputacions.RemoveRange(await db.EconomiaImputacions.Where(x => x.Categoria == "Quota").ToListAsync());
+        db.EconomiaImputacions.AddRange(exact);
+        await db.SaveChangesAsync();
+    }
+
+    private static DateOnly? ParseGridPeriod(string value)
+    {
+        var normalized = RemoveAccents(value).ToUpperInvariant();
+        var month = normalized.StartsWith("MAR", StringComparison.Ordinal) ? 3 : FindMonth(normalized); var year = Regex.Match(normalized, @"(\d{2})$");
+        return month != null && year.Success ? new DateOnly(2000 + int.Parse(year.Groups[1].Value), month.Value, 1) : null;
     }
 
     private static int PersonScore(string descriptor, IReadOnlyCollection<string> people)

@@ -88,6 +88,7 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Persona).HasMaxLength(200);
             entity.Property(e => e.Descriptor).IsRequired().HasMaxLength(1000);
             entity.Property(e => e.Import).HasPrecision(12, 2);
+            entity.Property(e => e.Origen).IsRequired().HasMaxLength(30).HasDefaultValue("Parser");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
             entity.HasOne(e => e.Moviment).WithMany(e => e.Imputacions).HasForeignKey(e => e.EconomiaMovimentId).OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => new { e.TenantId, e.Periode, e.Persona });
