@@ -17,6 +17,7 @@ export class EconomiaPageComponent {
   assignmentTarget = signal<{ person: string; year: number; month: number } | null>(null);
   assignmentAmount: number | null = null;
   assignmentError = signal('');
+  private scrollAfterLoadId: number | null = null;
   readonly mesos = ['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Des'];
   people = computed(() => [...new Set((this.data()?.quotes ?? []).map(x => x.persona))].sort((a, b) => a.localeCompare(b)));
   filteredMovements = computed(() => {
@@ -25,7 +26,7 @@ export class EconomiaPageComponent {
     return rows.filter(row => this.normalize(`${this.displayDate(row.data)} ${row.descriptorOriginal} ${row.descriptor} ${row.import} ${this.format(row.import)}`).includes(query));
   });
   constructor() { this.load(); }
-  load(): void { this.loading.set(true); this.service.get().subscribe({ next: d => { this.data.set(d); this.loading.set(false); }, error: () => { this.error.set("No s'han pogut carregar les dades econòmiques."); this.loading.set(false); } }); }
+  load(): void { this.loading.set(true); this.service.get().subscribe({ next: d => { this.data.set(d); this.loading.set(false); if (this.scrollAfterLoadId) { const id = this.scrollAfterLoadId; this.scrollAfterLoadId = null; setTimeout(() => document.getElementById(`economia-moviment-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })); } }, error: () => { this.error.set("No s'han pogut carregar les dades econòmiques."); this.loading.set(false); } }); }
   total(category: string): number { return this.data()?.totals.find(x => x.categoria === category)?.import ?? 0; }
   quota(person: string, year: number, month: number): number | null { const rows = this.data()?.quotes.filter(x => x.persona === person && x.any === year && x.mes === month) ?? []; return rows.length ? rows.reduce((sum, x) => sum + x.import, 0) : null; }
   peopleForYear(year: number): string[] { return this.assigningMovementId() ? this.people() : [...new Set((this.data()?.quotes ?? []).filter(x => x.any === year).map(x => x.persona))].sort((a, b) => a.localeCompare(b)); }
@@ -45,7 +46,7 @@ export class EconomiaPageComponent {
     const movement = this.selectedMovement(); const target = this.assignmentTarget(); const amount = Number(this.assignmentAmount);
     if (!movement || !target || !Number.isFinite(amount) || amount <= 0) { this.assignmentError.set('Indica un import vàlid.'); return; }
     const completesMovement = amount >= this.remainingToAssign();
-    this.service.assignQuota(movement.id, target.person, target.year, target.month, amount).subscribe({ next: () => { this.assignmentTarget.set(null); this.assignmentAmount = null; if (completesMovement) this.assigningMovementId.set(null); this.load(); }, error: err => this.assignmentError.set(err?.error?.message ?? "No s'ha pogut assignar la quota.") });
+    this.service.assignQuota(movement.id, target.person, target.year, target.month, amount).subscribe({ next: () => { this.assignmentTarget.set(null); this.assignmentAmount = null; if (completesMovement) { this.assigningMovementId.set(null); this.active.set('extracte'); this.highlightedMovementId.set(movement.id); this.scrollAfterLoadId = movement.id; } this.load(); }, error: err => this.assignmentError.set(err?.error?.message ?? "No s'ha pogut assignar la quota.") });
   }
   undoAssignments(row: EconomiaMoviment): void { if (!confirm('Vols eliminar les imputacions manuals d’aquest moviment?')) return; this.service.undoManualAssignments(row.id).subscribe({ next: () => this.load(), error: () => this.message.set("No s'han pogut desfer les assignacions.") }); }
   hasImportableRows(): boolean { return this.preview().some(row => !row.duplicat); }
