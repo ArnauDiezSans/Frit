@@ -16,7 +16,11 @@ public partial class EconomiaService(AppDbContext db)
 
     public async Task EnsureSeededAsync()
     {
-        if (await db.EconomiaMoviments.AnyAsync()) return;
+        if (await db.EconomiaMoviments.AnyAsync())
+        {
+            await RepairHistoricalDataAsync();
+            return;
+        }
         var bankPath = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-bank.csv");
         var sheetPath = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-sheet.csv");
         if (!File.Exists(bankPath) || !File.Exists(sheetPath)) return;
@@ -30,6 +34,7 @@ public partial class EconomiaService(AppDbContext db)
             db.EconomiaMoviments.Add(new EconomiaMoviment { Data = data, DataValor = valor, DescriptorOriginal = original, Descriptor = original, Import = import, Saldo = saldo, Empremta = Fingerprint(data, valor, import, saldo, original) });
         }
         await db.SaveChangesAsync();
+        await RepairHistoricalDataAsync();
 
         var sheetRows = ParseDelimited(await File.ReadAllTextAsync(sheetPath), ',').Skip(1).Where(r => r.Count >= 3).ToList();
         DateOnly lastSheetDate = default;
@@ -102,8 +107,14 @@ public partial class EconomiaService(AppDbContext db)
         var category = normalized.Contains("LLOGUER") || normalized.Contains("FINQUES ARAGONES") ? "Lloguer" : normalized.Contains("LLUM") || normalized.Contains("ENDESA") || normalized.Contains("OCTOPUS") ? "Llum" : normalized.Contains("INTERNET") || normalized.Contains("FINETWORK") ? "Internet" : normalized.Contains("AIGUA") || normalized.Contains("AIGUES") ? "Aigua" : normalized.Contains("NETEJA") ? "Neteja" : normalized.Contains("BAR") ? "Bar" : normalized.Contains("QUOTA") || import == 40 || import == 80 || import == 120 || import == 140 || import == 160 || import == 200 || import == 240 ? "Quota" : "Altres";
         if (category != "Quota") return [New(category, null, null, import, clean, category == "Altres", linked, movementId)];
 
+        if (normalized.Contains("QUOTA JAUME 60 TOT 2022"))
+        {
+            var result = new List<EconomiaImputacio> { New("Quota", "Jaume", new DateOnly(2022, 2, 1), 20, clean, false, linked, movementId) };
+            result.AddRange(Enumerable.Range(3, 10).Select(month => New("Quota", "Jaume", new DateOnly(2022, month, 1), 60, clean, false, linked, movementId)));
+            return result;
+        }
         var month = FindMonth(normalized) ?? (data.Month == 12 ? 1 : data.Month + 1); var year = data.Year + (month == 1 && data.Month == 12 ? 1 : 0);
-        var yearMatch = YearRegex().Match(normalized); if (yearMatch.Success) year = 2000 + int.Parse(yearMatch.Groups[1].Value);
+        year = ExtractYear(normalized) ?? year;
         var people = KnownPeople().Where(p => normalized.Contains(RemoveAccents(p).ToUpperInvariant())).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         if (normalized.Contains("JOAN I ESTER") || normalized.Contains("ESTER I JOAN") || (normalized.Contains("JOAN") && normalized.Contains("ESTER"))) people = ["JoanD", "Ester"];
         if (people.Count == 0) { var match = QuotaPersonRegex().Match(clean); if (match.Success) people.Add(match.Groups[1].Value.Trim()); }
@@ -121,6 +132,25 @@ public partial class EconomiaService(AppDbContext db)
     private static string CanonicalPerson(string p) => p.Equals("Joan", StringComparison.OrdinalIgnoreCase) ? "Joan" : p;
     private static IEnumerable<string> KnownPeople() => ["Albert", "Anna", "Arnau", "Estrella", "Gemma", "Gisela", "Jaume", "JoanD", "Ester", "Joan", "Laia", "Laura", "MariaJoan", "Maria", "Marta", "Miquel", "Nil", "Xumi", "Cor"];
     private static int? FindMonth(string s) { for (var i = 0; i < Mesos.Length; i++) if (s.Contains(RemoveAccents(Mesos[i]).ToUpperInvariant())) return i + 1; return null; }
+    private static int? ExtractYear(string value)
+    {
+        var fourDigits = FourDigitYearRegex().Match(value);
+        if (fourDigits.Success) return int.Parse(fourDigits.Value);
+        var monthYear = MonthYearRegex().Match(value);
+        return monthYear.Success ? 2000 + int.Parse(monthYear.Groups[1].Value) : null;
+    }
+
+    private async Task RepairHistoricalDataAsync()
+    {
+        var invalid = await db.EconomiaImputacions.Where(x => x.Periode != null && x.Periode.Value.Year >= 2050).ToListAsync();
+        if (invalid.Count == 0) return;
+        foreach (var group in invalid.GroupBy(x => new { x.Descriptor, x.EconomiaMovimentId }))
+        {
+            db.EconomiaImputacions.RemoveRange(group);
+            db.EconomiaImputacions.AddRange(Classify(new DateOnly(2022, 11, 10), group.Sum(x => x.Import), group.Key.Descriptor, group.Key.EconomiaMovimentId != null, group.Key.EconomiaMovimentId));
+        }
+        await db.SaveChangesAsync();
+    }
     private static string RemoveAccents(string s) => new(s.Normalize(NormalizationForm.FormD).Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray());
     private static string Fingerprint(DateOnly d, DateOnly v, decimal amount, decimal balance, string original) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{d:yyyy-MM-dd}|{v:yyyy-MM-dd}|{amount:0.00}|{balance:0.00}|{Regex.Replace(original.Trim(), @"\s+", " ").ToUpperInvariant()}")));
     private static bool TryDate(string value, out DateOnly date) => DateOnly.TryParseExact(value.Trim(), ["dd/MM/yy", "dd/MM/yyyy"], Ca, DateTimeStyles.None, out date);
@@ -148,6 +178,7 @@ public partial class EconomiaService(AppDbContext db)
         if (field.Length > 0 || row.Count > 0) { row.Add(field.ToString()); rows.Add(row); } return rows;
     }
 
-    [GeneratedRegex(@"(?:19|20)?(\d{2})(?!\d)")] private static partial Regex YearRegex();
+    [GeneratedRegex(@"\b20\d{2}\b")] private static partial Regex FourDigitYearRegex();
+    [GeneratedRegex(@"(?:GENER|FEBRER|MARC|ABRIL|MAIG|JUNY|JULIOL|AGOST|SETEMBRE|OCTUBRE|NOVEMBRE|DESEMBRE)\s*(\d{2})(?!\d)")] private static partial Regex MonthYearRegex();
     [GeneratedRegex(@"(?i)^Quota\s+\S+\s+(.+)$")] private static partial Regex QuotaPersonRegex();
 }
