@@ -17,6 +17,7 @@ export class EconomiaPageComponent {
   assignmentTarget = signal<{ person: string; year: number; month: number } | null>(null);
   assignmentAmount: number | null = null;
   assignmentError = signal('');
+  autoAssigning = signal(false);
   private scrollAfterLoadId: number | null = null;
   readonly mesos = ['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Des'];
   people = computed(() => [...new Set((this.data()?.quotes ?? []).map(x => x.persona))].sort((a, b) => a.localeCompare(b)));
@@ -49,6 +50,7 @@ export class EconomiaPageComponent {
     this.service.assignQuota(movement.id, target.person, target.year, target.month, amount).subscribe({ next: () => { this.assignmentTarget.set(null); this.assignmentAmount = null; if (completesMovement) { this.assigningMovementId.set(null); this.active.set('extracte'); this.highlightedMovementId.set(movement.id); this.scrollAfterLoadId = movement.id; } this.load(); }, error: err => this.assignmentError.set(err?.error?.message ?? "No s'ha pogut assignar la quota.") });
   }
   undoAssignments(row: EconomiaMoviment): void { if (!confirm('Vols eliminar les imputacions manuals d’aquest moviment?')) return; this.service.undoManualAssignments(row.id).subscribe({ next: () => this.load(), error: () => this.message.set("No s'han pogut desfer les assignacions.") }); }
+  autoAssign(): void { this.autoAssigning.set(true); this.message.set(''); this.service.autoAssign().subscribe({ next: result => { this.autoAssigning.set(false); this.message.set(`${result.assignats} moviments assignats automàticament · ${result.pendents} continuen pendents`); this.load(); }, error: () => { this.autoAssigning.set(false); this.message.set("No s'ha pogut completar l'assignació automàtica."); } }); }
   hasImportableRows(): boolean { return this.preview().some(row => !row.duplicat); }
   doPreview(): void { if (!this.extractText.trim()) return; this.previewing.set(true); this.message.set(''); this.service.preview(this.extractText).subscribe({ next: rows => { this.preview.set(rows); this.previewing.set(false); }, error: () => { this.message.set("No s'ha pogut interpretar l'extracte."); this.previewing.set(false); } }); }
   doImport(): void { const rows = this.preview().filter(x => !x.duplicat); if (!rows.length) return; this.importing.set(true); this.service.import(rows).subscribe({ next: r => { this.message.set(`${r.importats} moviments importats · ${r.duplicats} duplicats · ${r.pendentsRevisio} pendents de revisar`); this.preview.set([]); this.extractText = ''; this.importing.set(false); this.load(); }, error: () => { this.message.set("No s'han pogut importar els moviments."); this.importing.set(false); } }); }

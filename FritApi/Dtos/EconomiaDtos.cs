@@ -10,3 +10,4 @@ public record EconomiaImportRequest(IReadOnlyList<EconomiaPreviewRowDto> Movimen
 public record EconomiaImportResultDto(int Importats, int Duplicats, int PendentsRevisio);
 public record EconomiaDescriptorRequest(string Descriptor);
 public record EconomiaAssignacioRequest(string Persona, int Any, int Mes, decimal Import);
+public record EconomiaAutoAssignacioResultDto(int Assignats, int Pendents);

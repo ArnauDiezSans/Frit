@@ -125,6 +125,32 @@ public partial class EconomiaService(AppDbContext db)
         db.EconomiaImputacions.RemoveRange(rows); await db.SaveChangesAsync(); return true;
     }
 
+    public async Task<EconomiaAutoAssignacioResultDto> AutoAssignAsync()
+    {
+        await EnsureSeededAsync();
+        var movements = await db.EconomiaMoviments.Include(x => x.Imputacions).Where(x => !x.Imputacions.Any()).ToListAsync();
+        var cutoff = await GetHistoricalCutoffAsync(); var assigned = 0;
+        foreach (var movement in movements)
+        {
+            var allocations = Classify(movement.Data, movement.Import, movement.Descriptor, true, movement.EconomiaMovimentId);
+            if (allocations.Count == 0 || allocations.Any(x => x.RequereixRevisio || x.Categoria == "Altres")) continue;
+            if (allocations.Any(x => x.Categoria == "Quota") && movement.Data <= cutoff) continue;
+            foreach (var allocation in allocations) allocation.Origen = "Automatic";
+            db.EconomiaImputacions.AddRange(allocations); assigned++;
+        }
+        await db.SaveChangesAsync();
+        return new EconomiaAutoAssignacioResultDto(assigned, movements.Count - assigned);
+    }
+
+    private async Task<DateOnly> GetHistoricalCutoffAsync()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Data", "Seed", "economia-sheet.csv");
+        if (!File.Exists(path)) return DateOnly.MinValue;
+        var dates = new List<DateOnly>();
+        foreach (var row in ParseDelimited(await File.ReadAllTextAsync(path), ',').Skip(1)) if (row.Count > 0 && TryDate(row[0], out var date)) dates.Add(date);
+        return dates.Count == 0 ? DateOnly.MinValue : dates.Max();
+    }
+
     private static List<EconomiaImputacio> Classify(DateOnly data, decimal import, string descriptor, bool linked, int? movementId = null)
     {
         var clean = descriptor.Trim(); var normalized = RemoveAccents(clean).ToUpperInvariant();

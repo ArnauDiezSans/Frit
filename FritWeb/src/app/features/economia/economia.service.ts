@@ -9,6 +9,7 @@ export interface EconomiaMoviment { id: number; data: string; dataValor: string;
 export interface EconomiaDashboard { totals: EconomiaTotal[]; quotes: EconomiaQuota[]; moviments: EconomiaMoviment[]; anys: number[]; }
 export interface EconomiaPreviewRow { data: string; dataValor: string; descriptorOriginal: string; descriptor: string; import: number; saldo: number | null; categoria: string; requereixRevisio: boolean; quotes: EconomiaQuota[]; duplicat: boolean; }
 export interface EconomiaImportResult { importats: number; duplicats: number; pendentsRevisio: number; }
+export interface EconomiaAutoAssignResult { assignats: number; pendents: number; }
 
 @Injectable({ providedIn: 'root' })
 export class EconomiaService {
@@ -20,4 +21,5 @@ export class EconomiaService {
   updateDescriptor(id: number, descriptor: string): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/moviments/${id}/descriptor`, { descriptor }, { withCredentials: true }); }
   assignQuota(id: number, persona: string, any: number, mes: number, importValue: number): Observable<void> { return this.http.post<void>(`${this.baseUrl}/moviments/${id}/assignar-quota`, { persona, any, mes, import: importValue }, { withCredentials: true }); }
   undoManualAssignments(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/moviments/${id}/assignacions-manuals`, { withCredentials: true }); }
+  autoAssign(): Observable<EconomiaAutoAssignResult> { return this.http.post<EconomiaAutoAssignResult>(`${this.baseUrl}/assignar-automaticament`, {}, { withCredentials: true }); }
 }

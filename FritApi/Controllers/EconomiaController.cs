@@ -15,4 +15,5 @@ public class EconomiaController(EconomiaService service) : ControllerBase
     [HttpPatch("moviments/{id:int}/descriptor")] public async Task<IActionResult> Descriptor(int id, EconomiaDescriptorRequest request) { if (!Authorized()) return Forbid(); if (string.IsNullOrWhiteSpace(request.Descriptor)) return BadRequest(); return await service.UpdateDescriptorAsync(id, request.Descriptor) ? NoContent() : NotFound(); }
     [HttpPost("moviments/{id:int}/assignar-quota")] public async Task<IActionResult> AssignarQuota(int id, EconomiaAssignacioRequest request) { if (!Authorized()) return Forbid(); var error = await service.AssignQuotaAsync(id, request); return error is null ? NoContent() : BadRequest(new { message = error }); }
     [HttpDelete("moviments/{id:int}/assignacions-manuals")] public async Task<IActionResult> DesferAssignacions(int id) { if (!Authorized()) return Forbid(); return await service.UndoManualAssignmentsAsync(id) ? NoContent() : NotFound(); }
+    [HttpPost("assignar-automaticament")] public async Task<ActionResult<EconomiaAutoAssignacioResultDto>> AssignarAutomaticament() => Authorized() ? Ok(await service.AutoAssignAsync()) : Forbid();
 }
