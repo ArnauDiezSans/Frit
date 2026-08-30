@@ -18,7 +18,9 @@ export class EconomiaPageComponent {
   assignmentAmount: number | null = null;
   assignmentError = signal('');
   autoAssigning = signal(false);
+  highlightedQuotaCells = signal<readonly string[]>([]);
   private scrollAfterLoadId: number | null = null;
+  private quotaHighlightTimer: ReturnType<typeof setTimeout> | null = null;
   readonly mesos = ['Gen', 'Feb', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Des'];
   people = computed(() => [...new Set((this.data()?.quotes ?? []).map(x => x.persona))].sort((a, b) => a.localeCompare(b)));
   filteredMovements = computed(() => {
@@ -32,6 +34,18 @@ export class EconomiaPageComponent {
   quota(person: string, year: number, month: number): number | null { const rows = this.data()?.quotes.filter(x => x.persona === person && x.any === year && x.mes === month) ?? []; return rows.length ? rows.reduce((sum, x) => sum + x.import, 0) : null; }
   peopleForYear(year: number): string[] { return this.assigningMovementId() ? this.people() : [...new Set((this.data()?.quotes ?? []).filter(x => x.any === year || x.dataMoviment?.startsWith(`${year}-`)).map(x => x.persona))].sort((a, b) => a.localeCompare(b)); }
   quotaMovementId(person: string, year: number, month: number): number | null { return this.data()?.quotes.find(x => x.persona === person && x.any === year && x.mes === month && x.movimentId)?.movimentId ?? null; }
+  quotaCellKey(person: string, year: number, month: number): string { return `${person}-${year}-${month}`; }
+  isQuotaHighlighted(person: string, year: number, month: number): boolean { return this.highlightedQuotaCells().includes(this.quotaCellKey(person, year, month)); }
+  hasQuotaAllocations(row: EconomiaMoviment): boolean { return this.data()?.quotes.some(x => x.movimentId === row.id) ?? false; }
+  openMovementAllocations(row: EconomiaMoviment): void {
+    const quotes = this.data()?.quotes.filter(x => x.movimentId === row.id) ?? [];
+    if (!quotes.length) return;
+    const keys = quotes.map(x => this.quotaCellKey(x.persona, x.any, x.mes));
+    this.active.set('economia'); this.highlightedQuotaCells.set(keys);
+    if (this.quotaHighlightTimer) clearTimeout(this.quotaHighlightTimer);
+    setTimeout(() => document.getElementById(`economia-quota-${keys[0]}`)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' }));
+    this.quotaHighlightTimer = setTimeout(() => { this.highlightedQuotaCells.set([]); this.quotaHighlightTimer = null; }, 2600);
+  }
   openQuotaMovement(person: string, year: number, month: number): void {
     if (this.assigningMovementId()) { this.openAssignment(person, year, month); return; }
     const id = this.quotaMovementId(person, year, month); if (!id) return;
