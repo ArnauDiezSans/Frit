@@ -62,7 +62,7 @@ public partial class EconomiaService(AppDbContext db)
         var totals = allocations.GroupBy(x => x.Categoria).Select(g => new EconomiaTotalDto(g.Key, g.Key is "Lloguer" or "Llum" or "Internet" or "Aigua" or "Neteja" ? Math.Abs(g.Sum(x => x.Import)) : g.Sum(x => x.Import))).OrderBy(x => x.Categoria).ToList();
         totals.Insert(0, new EconomiaTotalDto("Saldo", latest?.Saldo ?? allocations.Sum(x => x.Import)));
         var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, x.EconomiaMovimentId)).ToList();
-        var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio))).ToListAsync();
+        var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio), x.Imputacions.Sum(i => i.Import), x.Imputacions.Any(i => i.Origen == "Manual"))).ToListAsync();
         var anys = quotes.Select(x => x.Any).Distinct().OrderByDescending(x => x).ToList();
         return new EconomiaDashboardDto(totals, quotes, movements, anys);
     }
@@ -103,6 +103,26 @@ public partial class EconomiaService(AppDbContext db)
         db.EconomiaImputacions.RemoveRange(movement.Imputacions);
         db.EconomiaImputacions.AddRange(Classify(movement.Data, movement.Import, movement.Descriptor, true, movement.EconomiaMovimentId));
         await db.SaveChangesAsync(); return true;
+    }
+
+    public async Task<string?> AssignQuotaAsync(int id, EconomiaAssignacioRequest request)
+    {
+        if (request.Any is < 2020 or > 2100 || request.Mes is < 1 or > 12 || request.Import <= 0 || string.IsNullOrWhiteSpace(request.Persona)) return "Assignació no vàlida.";
+        var movement = await db.EconomiaMoviments.Include(x => x.Imputacions).FirstOrDefaultAsync(x => x.EconomiaMovimentId == id);
+        if (movement is null) return "Moviment no trobat.";
+        if (movement.Import <= 0) return "Només es poden assignar quotes a moviments d'ingrés.";
+        var remaining = movement.Import - movement.Imputacions.Where(x => x.Categoria == "Quota").Sum(x => x.Import);
+        if (request.Import > remaining) return $"L'import supera el pendent de {remaining:0.00} €.";
+        var period = new DateOnly(request.Any, request.Mes, 1); var person = request.Persona.Trim();
+        db.EconomiaImputacions.Add(new EconomiaImputacio { EconomiaMovimentId = id, Categoria = "Quota", Persona = person, Periode = period, Import = request.Import, Descriptor = $"Quota {Mesos[request.Mes - 1]}{request.Any % 100:00} {person}", Origen = "Manual" });
+        await db.SaveChangesAsync(); return null;
+    }
+
+    public async Task<bool> UndoManualAssignmentsAsync(int id)
+    {
+        var rows = await db.EconomiaImputacions.Where(x => x.EconomiaMovimentId == id && x.Origen == "Manual").ToListAsync();
+        if (rows.Count == 0) return false;
+        db.EconomiaImputacions.RemoveRange(rows); await db.SaveChangesAsync(); return true;
     }
 
     private static List<EconomiaImputacio> Classify(DateOnly data, decimal import, string descriptor, bool linked, int? movementId = null)
