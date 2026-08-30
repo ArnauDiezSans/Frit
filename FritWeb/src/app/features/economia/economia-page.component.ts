@@ -30,7 +30,7 @@ export class EconomiaPageComponent {
   load(): void { this.loading.set(true); this.service.get().subscribe({ next: d => { this.data.set(d); this.loading.set(false); if (this.scrollAfterLoadId) { const id = this.scrollAfterLoadId; this.scrollAfterLoadId = null; setTimeout(() => document.getElementById(`economia-moviment-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })); } }, error: () => { this.error.set("No s'han pogut carregar les dades econòmiques."); this.loading.set(false); } }); }
   total(category: string): number { return this.data()?.totals.find(x => x.categoria === category)?.import ?? 0; }
   quota(person: string, year: number, month: number): number | null { const rows = this.data()?.quotes.filter(x => x.persona === person && x.any === year && x.mes === month) ?? []; return rows.length ? rows.reduce((sum, x) => sum + x.import, 0) : null; }
-  peopleForYear(year: number): string[] { return this.assigningMovementId() ? this.people() : [...new Set((this.data()?.quotes ?? []).filter(x => x.any === year).map(x => x.persona))].sort((a, b) => a.localeCompare(b)); }
+  peopleForYear(year: number): string[] { return this.assigningMovementId() ? this.people() : [...new Set((this.data()?.quotes ?? []).filter(x => x.any === year || x.dataMoviment?.startsWith(`${year}-`)).map(x => x.persona))].sort((a, b) => a.localeCompare(b)); }
   quotaMovementId(person: string, year: number, month: number): number | null { return this.data()?.quotes.find(x => x.persona === person && x.any === year && x.mes === month && x.movimentId)?.movimentId ?? null; }
   openQuotaMovement(person: string, year: number, month: number): void {
     if (this.assigningMovementId()) { this.openAssignment(person, year, month); return; }

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api.config';
 
 export interface EconomiaTotal { categoria: string; import: number; }
-export interface EconomiaQuota { persona: string; any: number; mes: number; import: number; movimentId: number | null; }
+export interface EconomiaQuota { persona: string; any: number; mes: number; import: number; movimentId: number | null; dataMoviment: string | null; }
 export interface EconomiaMoviment { id: number; data: string; dataValor: string; descriptorOriginal: string; descriptor: string; import: number; saldo: number | null; categoria: string; requereixRevisio: boolean; importImputat: number; teAssignacionsManuals: boolean; }
 export interface EconomiaDashboard { totals: EconomiaTotal[]; quotes: EconomiaQuota[]; moviments: EconomiaMoviment[]; anys: number[]; }
 export interface EconomiaPreviewRow { data: string; dataValor: string; descriptorOriginal: string; descriptor: string; import: number; saldo: number | null; categoria: string; requereixRevisio: boolean; quotes: EconomiaQuota[]; duplicat: boolean; }
