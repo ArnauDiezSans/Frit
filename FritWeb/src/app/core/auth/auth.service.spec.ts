@@ -20,6 +20,7 @@ describe('AuthService', () => {
     service.currentUser = {
       usuarioId: 1, nombre: 'Usuari', esAdmin: true,
       potVeureAuditoria: false,
+      potVeureEconomia: false,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
     };
 
@@ -37,6 +38,7 @@ describe('AuthService', () => {
     service.currentUser = {
       usuarioId: 1, nombre: 'Usuari', esAdmin: false,
       potVeureAuditoria: false,
+      potVeureEconomia: false,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
     };
 
@@ -48,10 +50,20 @@ describe('AuthService', () => {
     service.currentUser = {
       usuarioId: 2, nombre: 'Kiderak', esAdmin: true,
       potVeureAuditoria: true,
+      potVeureEconomia: false,
       tenantId: 3, tenantCodi: 'ajjrr26', tenantNom: 'AJJRR'
     };
 
     expect(service.canUseFeature('laLlista')).toBeFalse();
     expect(service.canUseFeature('assistencia')).toBeFalse();
+  });
+
+  it('exposes economy only from the server capability', () => {
+    service.currentUser = {
+      usuarioId: 16, nombre: 'Arnau', esAdmin: false,
+      potVeureAuditoria: false, potVeureEconomia: true,
+      tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
+    };
+    expect(service.canViewEconomy()).toBeTrue();
   });
 });

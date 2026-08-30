@@ -43,3 +43,11 @@ export const auditGuard: CanActivateFn = () => {
     ? true
     : router.createUrlTree([authService.isAuthenticated() ? '/app/partidas' : '/login']);
 };
+
+export const economyGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  return authService.canViewEconomy()
+    ? true
+    : router.createUrlTree([authService.isAuthenticated() ? '/app/usuario' : '/login']);
+};

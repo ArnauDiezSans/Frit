@@ -585,6 +585,10 @@ export class UsuarioPageComponent {
     return this.authService.canViewAudit();
   }
 
+  canViewEconomy(): boolean {
+    return this.authService.canViewEconomy();
+  }
+
   setActiveUserPanel(panel: 'medals' | 'favorites'): void {
     this.activeUserPanel.set(panel);
   }

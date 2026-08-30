@@ -93,6 +93,14 @@
       </button>
 
       <a
+        class="utility-link"
+        style="right: 48px; font-size: 15px; font-weight: 900; text-decoration: none"
+        *ngIf="canViewEconomy()"
+        routerLink="/app/economia"
+        aria-label="Obrir economia"
+        title="Economia">€</a>
+
+      <a
         class="utility-link audit-link"
         *ngIf="canViewAudit()"
         routerLink="/app/auditoria"

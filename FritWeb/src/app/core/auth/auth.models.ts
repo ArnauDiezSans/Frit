@@ -14,6 +14,7 @@ export interface AuthUser {
   nombre: string;
   esAdmin: boolean;
   potVeureAuditoria: boolean;
+  potVeureEconomia: boolean;
   tenantId: number;
   tenantCodi: string;
   tenantNom: string;

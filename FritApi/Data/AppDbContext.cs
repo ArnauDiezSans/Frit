@@ -61,10 +61,37 @@ public class AppDbContext : DbContext
     public DbSet<EncuestaRespuesta> EncuestaRespuestas => Set<EncuestaRespuesta>();
     public DbSet<EncuestaRespuestaValor> EncuestaRespuestaValores => Set<EncuestaRespuestaValor>();
     public DbSet<EncuestaRespuestaOpcion> EncuestaRespuestaOpciones => Set<EncuestaRespuestaOpcion>();
+    public DbSet<EconomiaMoviment> EconomiaMoviments => Set<EconomiaMoviment>();
+    public DbSet<EconomiaImputacio> EconomiaImputacions => Set<EconomiaImputacio>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<EconomiaMoviment>(entity =>
+        {
+            entity.HasKey(e => e.EconomiaMovimentId);
+            entity.Property(e => e.DescriptorOriginal).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Descriptor).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Empremta).IsRequired().HasMaxLength(64);
+            entity.Property(e => e.Import).HasPrecision(12, 2);
+            entity.Property(e => e.Saldo).HasPrecision(12, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+            entity.HasIndex(e => new { e.TenantId, e.Empremta }).IsUnique();
+            entity.HasIndex(e => new { e.TenantId, e.Data });
+        });
+
+        modelBuilder.Entity<EconomiaImputacio>(entity =>
+        {
+            entity.HasKey(e => e.EconomiaImputacioId);
+            entity.Property(e => e.Categoria).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Persona).HasMaxLength(200);
+            entity.Property(e => e.Descriptor).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Import).HasPrecision(12, 2);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("NOW()");
+            entity.HasOne(e => e.Moviment).WithMany(e => e.Imputacions).HasForeignKey(e => e.EconomiaMovimentId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.TenantId, e.Periode, e.Persona });
+        });
 
         modelBuilder.Entity<Tenant>(entity =>
         {

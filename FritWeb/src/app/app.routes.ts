@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { auditGuard, authGuard, hallOfFameGuard, tenantFeatureGuard } from './core/auth/auth.guard';
+import { auditGuard, authGuard, economyGuard, hallOfFameGuard, tenantFeatureGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   { path: 'ajjrr', data: { brand: 'ajjrr' }, loadComponent: () => import('./features/auth/login-page.component').then(m => m.LoginPageComponent) },
@@ -22,6 +22,7 @@ export const routes: Routes = [
   { path: 'app/enquestes', loadComponent: () => import('./features/enquestes/enquestes-page.component').then(m => m.EnquestesPageComponent), canActivate: [authGuard] },
   { path: 'app/aleatoritzador', loadComponent: () => import('./features/aleatoritzador/aleatoritzador-page.component').then(m => m.AleatoritzadorPageComponent), canActivate: [authGuard] },
   { path: 'app/auditoria', loadComponent: () => import('./features/auditoria/auditoria-page.component').then(m => m.AuditoriaPageComponent), canActivate: [auditGuard] },
+  { path: 'app/economia', loadComponent: () => import('./features/economia/economia-page.component').then(m => m.EconomiaPageComponent), canActivate: [economyGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' }
 ];

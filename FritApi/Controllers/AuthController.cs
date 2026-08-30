@@ -133,6 +133,7 @@ public class AuthController : ControllerBase
         Nombre = usuario.Nombre,
         EsAdmin = usuario.EsAdmin,
         PotVeureAuditoria = await _auditService.IsAuthorizedAsync(usuario.UsuarioId),
+        PotVeureEconomia = string.Equals(usuario.Nombre.Trim(), "Arnau", StringComparison.OrdinalIgnoreCase),
         TenantId = usuario.TenantId,
         TenantCodi = usuario.Tenant.Codi,
         TenantNom = usuario.Tenant.Nom

@@ -108,4 +108,8 @@ export class AuthService {
   canViewAudit(): boolean {
     return this.currentUser?.potVeureAuditoria === true;
   }
+
+  canViewEconomy(): boolean {
+    return this.currentUser?.potVeureEconomia === true;
+  }
 }

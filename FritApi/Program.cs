@@ -137,6 +137,7 @@ builder.Services.AddScoped<LaLlistaService>();
 builder.Services.AddScoped<RankingsService>();
 builder.Services.AddScoped<HallOfFameService>();
 builder.Services.AddScoped<AuditService>();
+builder.Services.AddScoped<EconomiaService>();
 builder.Services.AddScoped<PushNotificationService>();
 builder.Services.AddScoped<TelegramNotificationService>();
 builder.Services.AddScoped<EncuestaService>();
