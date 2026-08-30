@@ -6,6 +6,7 @@
 
   <ng-container *ngIf="!loading() && data() as dashboard">
     <ng-container *ngIf="active() === 'economia'">
+      <div class="economy-filter"><label>Persona<select [ngModel]="personFilter()" (ngModelChange)="personFilter.set($event)"><option value="">Totes les persones</option><option *ngFor="let person of people()" [value]="person">{{ person }}</option></select></label></div>
       <div class="totals-grid">
         <article class="total-card featured"><span>Saldo</span><strong>{{ format(total('Saldo')) }}</strong></article>
         <article class="total-card"><span>Quotes</span><strong>{{ format(total('Quota')) }}</strong></article>
