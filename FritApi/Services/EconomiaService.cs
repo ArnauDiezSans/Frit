@@ -63,7 +63,7 @@ public partial class EconomiaService(AppDbContext db)
         var totals = allocations.GroupBy(x => x.Categoria).Select(g => new EconomiaTotalDto(g.Key, g.Key is "Lloguer" or "Llum" or "Internet" or "Aigua" or "Neteja" ? Math.Abs(g.Sum(x => x.Import)) : g.Sum(x => x.Import))).OrderBy(x => x.Categoria).ToList();
         totals.Insert(0, new EconomiaTotalDto("Saldo", latest?.Saldo ?? allocations.Sum(x => x.Import)));
         var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, x.EconomiaMovimentId, x.EconomiaMovimentId is { } id && movementDates.TryGetValue(id, out var movementDate) ? movementDate : null)).ToList();
-        var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio), x.Imputacions.Sum(i => i.Import), x.Imputacions.Any(i => i.Origen == "Manual"))).ToListAsync();
+        var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio), x.Imputacions.Sum(i => i.Import), x.Imputacions.Any())).ToListAsync();
         var anys = quotes.Select(x => x.Any).Distinct().OrderByDescending(x => x).ToList();
         return new EconomiaDashboardDto(totals, quotes, movements, anys);
     }
@@ -119,9 +119,9 @@ public partial class EconomiaService(AppDbContext db)
         await db.SaveChangesAsync(); return null;
     }
 
-    public async Task<bool> UndoManualAssignmentsAsync(int id)
+    public async Task<bool> UndoAssignmentsAsync(int id)
     {
-        var rows = await db.EconomiaImputacions.Where(x => x.EconomiaMovimentId == id && x.Origen == "Manual").ToListAsync();
+        var rows = await db.EconomiaImputacions.Where(x => x.EconomiaMovimentId == id).ToListAsync();
         if (rows.Count == 0) return false;
         db.EconomiaImputacions.RemoveRange(rows); await db.SaveChangesAsync(); return true;
     }
