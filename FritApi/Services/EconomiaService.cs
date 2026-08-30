@@ -12,6 +12,7 @@ namespace FritApi.Services;
 public partial class EconomiaService(AppDbContext db)
 {
     private static readonly CultureInfo Ca = CultureInfo.GetCultureInfo("ca-ES");
+    private static readonly HashSet<string> ExpenseCategories = ["Lloguer", "Llum", "Internet", "Aigua", "Neteja", "Altres"];
     private static readonly string[] Mesos = ["Gener", "Febrer", "Març", "Abril", "Maig", "Juny", "Juliol", "Agost", "Setembre", "Octubre", "Novembre", "Desembre"];
 
     public async Task EnsureSeededAsync()
@@ -104,6 +105,19 @@ public partial class EconomiaService(AppDbContext db)
         db.EconomiaImputacions.RemoveRange(movement.Imputacions);
         db.EconomiaImputacions.AddRange(Classify(movement.Data, movement.Import, movement.Descriptor, true, movement.EconomiaMovimentId));
         await db.SaveChangesAsync(); return true;
+    }
+
+    public async Task<string?> UpdateCategoryAsync(int id, string category)
+    {
+        var normalizedCategory = ExpenseCategories.FirstOrDefault(x => x.Equals(category?.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (normalizedCategory is null) return "Categoria no vàlida.";
+        var movement = await db.EconomiaMoviments.Include(x => x.Imputacions).FirstOrDefaultAsync(x => x.EconomiaMovimentId == id);
+        if (movement is null) return "Moviment no trobat.";
+        if (movement.Import >= 0) return "Només es poden classificar manualment les despeses.";
+        db.EconomiaImputacions.RemoveRange(movement.Imputacions);
+        db.EconomiaImputacions.Add(new EconomiaImputacio { EconomiaMovimentId = id, Categoria = normalizedCategory, Import = movement.Import, Descriptor = movement.Descriptor, RequereixRevisio = false, Origen = "Manual" });
+        await db.SaveChangesAsync();
+        return null;
     }
 
     public async Task<string?> AssignQuotaAsync(int id, EconomiaAssignacioRequest request)

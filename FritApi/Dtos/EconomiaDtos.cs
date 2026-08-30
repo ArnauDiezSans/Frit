@@ -9,5 +9,6 @@ public record EconomiaPreviewRowDto(DateOnly Data, DateOnly DataValor, string De
 public record EconomiaImportRequest(IReadOnlyList<EconomiaPreviewRowDto> Moviments);
 public record EconomiaImportResultDto(int Importats, int Duplicats, int PendentsRevisio);
 public record EconomiaDescriptorRequest(string Descriptor);
+public record EconomiaCategoriaRequest(string Categoria);
 public record EconomiaAssignacioRequest(string Persona, int Any, int Mes, decimal Import);
 public record EconomiaAutoAssignacioResultDto(int Assignats, int Pendents);

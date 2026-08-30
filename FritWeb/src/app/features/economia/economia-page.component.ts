@@ -19,6 +19,8 @@ export class EconomiaPageComponent {
   assignmentAmount: number | null = null;
   assignmentError = signal('');
   autoAssigning = signal(false);
+  categorySavingId = signal<number | null>(null);
+  readonly expenseCategories = ['Lloguer', 'Llum', 'Internet', 'Aigua', 'Neteja', 'Altres'];
   highlightedQuotaCells = signal<readonly string[]>([]);
   private scrollAfterLoadId: number | null = null;
   private quotaHighlightTimer: ReturnType<typeof setTimeout> | null = null;
@@ -77,6 +79,11 @@ export class EconomiaPageComponent {
   startEdit(row: EconomiaMoviment): void { this.editingId.set(row.id); this.editDescriptor = row.descriptor; }
   cancelEdit(): void { this.editingId.set(null); this.editDescriptor = ''; }
   saveEdit(row: EconomiaMoviment): void { if (!this.editDescriptor.trim()) return; this.service.updateDescriptor(row.id, this.editDescriptor).subscribe({ next: () => { this.cancelEdit(); this.load(); }, error: () => this.message.set("No s'ha pogut desar el descriptor.") }); }
+  updateCategory(row: EconomiaMoviment, category: string): void {
+    if (!category || category === row.categoria) return;
+    this.categorySavingId.set(row.id); this.message.set('');
+    this.service.updateCategory(row.id, category).subscribe({ next: () => { this.categorySavingId.set(null); this.load(); }, error: err => { this.categorySavingId.set(null); this.message.set(err?.error?.message ?? "No s'ha pogut desar la categoria."); } });
+  }
   format(value: number): string { return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value); }
   displayDate(value: string): string { const [year, month, day] = value.split('-'); return `${day}/${month}/${year}`; }
   private normalize(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(',', '.').trim(); }

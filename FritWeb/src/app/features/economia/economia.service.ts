@@ -19,6 +19,7 @@ export class EconomiaService {
   preview(text: string): Observable<EconomiaPreviewRow[]> { return this.http.post<EconomiaPreviewRow[]>(`${this.baseUrl}/preview`, { text }, { withCredentials: true }); }
   import(moviments: EconomiaPreviewRow[]): Observable<EconomiaImportResult> { return this.http.post<EconomiaImportResult>(`${this.baseUrl}/import`, { moviments }, { withCredentials: true }); }
   updateDescriptor(id: number, descriptor: string): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/moviments/${id}/descriptor`, { descriptor }, { withCredentials: true }); }
+  updateCategory(id: number, categoria: string): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/moviments/${id}/categoria`, { categoria }, { withCredentials: true }); }
   assignQuota(id: number, persona: string, any: number, mes: number, importValue: number): Observable<void> { return this.http.post<void>(`${this.baseUrl}/moviments/${id}/assignar-quota`, { persona, any, mes, import: importValue }, { withCredentials: true }); }
   undoAssignments(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/moviments/${id}/assignacions`, { withCredentials: true }); }
   autoAssign(): Observable<EconomiaAutoAssignResult> { return this.http.post<EconomiaAutoAssignResult>(`${this.baseUrl}/assignar-automaticament`, {}, { withCredentials: true }); }
