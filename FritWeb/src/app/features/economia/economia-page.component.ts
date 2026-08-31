@@ -43,6 +43,7 @@ export class EconomiaPageComponent {
     return [...new Set([...(this.data()?.quotes ?? []).filter(x => x.any === year).map(x => x.persona), 'Jaume'])].sort((a, b) => a.localeCompare(b));
   }
   quotaMovementId(person: string, year: number, month: number): number | null { return this.data()?.quotes.find(x => x.persona === person && x.any === year && x.mes === month && x.movimentId)?.movimentId ?? null; }
+  quotaMovementDate(person: string, year: number, month: number): string | null { return this.data()?.quotes.find(x => x.persona === person && x.any === year && x.mes === month && x.movimentId)?.dataMoviment ?? null; }
   hasInheritedQuota(person: string, year: number, month: number): boolean { return this.data()?.quotes.some(x => x.persona === person && x.any === year && x.mes === month && x.heretada && !x.movimentId) ?? false; }
   deleteInheritedQuota(person: string, year: number, month: number): void {
     this.message.set('');
@@ -94,6 +95,7 @@ export class EconomiaPageComponent {
   categoriesFor(row: EconomiaMoviment): readonly string[] { return row.import > 0 ? this.incomeCategories : this.expenseCategories; }
   format(value: number): string { return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value); }
   displayDate(value: string): string { const [year, month, day] = value.split('-'); return `${day}/${month}/${year}`; }
+  displayShortDate(value: string): string { const [year, month, day] = value.split('-'); return `${day}/${month}/${year.slice(-2)}`; }
   private normalize(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(',', '.').trim(); }
   logout(): void { this.auth.logout().subscribe({ next: () => this.router.navigateByUrl('/login'), error: () => this.router.navigateByUrl('/login') }); }
 }
