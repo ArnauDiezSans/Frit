@@ -118,7 +118,6 @@ public partial class EconomiaService(AppDbContext db)
         if (normalizedCategory is null) return "Categoria no vàlida.";
         var movement = await db.EconomiaMoviments.Include(x => x.Imputacions).FirstOrDefaultAsync(x => x.EconomiaMovimentId == id);
         if (movement is null) return "Moviment no trobat.";
-        if (movement.Import >= 0 && normalizedCategory != "Altres") return "Els ingressos només es poden classificar com a quota o altres.";
         db.EconomiaImputacions.RemoveRange(movement.Imputacions);
         db.EconomiaImputacions.Add(new EconomiaImputacio { EconomiaMovimentId = id, Categoria = normalizedCategory, Import = movement.Import, Descriptor = movement.Descriptor, RequereixRevisio = false, Origen = "Manual" });
         await db.SaveChangesAsync();

@@ -21,7 +21,7 @@ export class EconomiaPageComponent {
   autoAssigning = signal(false);
   categorySavingId = signal<number | null>(null);
   readonly expenseCategories = ['Lloguer', 'Llum', 'Internet', 'Aigua', 'Neteja', 'Altres'];
-  readonly incomeCategories = ['Quota', 'Altres'];
+  readonly incomeCategories = ['Quota', ...this.expenseCategories];
   highlightedQuotaCells = signal<readonly string[]>([]);
   private scrollAfterLoadId: number | null = null;
   private quotaHighlightTimer: ReturnType<typeof setTimeout> | null = null;
