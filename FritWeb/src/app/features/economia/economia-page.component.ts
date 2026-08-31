@@ -45,7 +45,7 @@ export class EconomiaPageComponent {
   hasInheritedQuota(person: string, year: number, month: number): boolean { return this.data()?.quotes.some(x => x.persona === person && x.any === year && x.mes === month && x.heretada && !x.movimentId) ?? false; }
   deleteInheritedQuota(person: string, year: number, month: number): void {
     this.message.set('');
-    this.service.deleteInheritedQuota(person, year, month).subscribe({ next: () => this.load(), error: err => this.message.set(err?.error?.message ?? "No s'ha pogut esborrar l'import heretat.") });
+    this.service.deleteInheritedQuota(person, year, month).subscribe({ next: () => this.load(true), error: err => this.message.set(err?.error?.message ?? "No s'ha pogut esborrar l'import heretat.") });
   }
   quotaCellKey(person: string, year: number, month: number): string { return `${person}-${year}-${month}`; }
   isQuotaHighlighted(person: string, year: number, month: number): boolean { return this.highlightedQuotaCells().includes(this.quotaCellKey(person, year, month)); }
