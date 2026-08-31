@@ -63,11 +63,10 @@ public partial class EconomiaService(AppDbContext db)
         var latest = await db.EconomiaMoviments.AsNoTracking().OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).FirstOrDefaultAsync();
         var totals = allocations.GroupBy(x => x.Categoria).Select(g =>
         {
-            var isExpense = g.Key is "Lloguer" or "Llum" or "Internet" or "Aigua" or "Neteja";
-            var amount = isExpense ? g.Where(x => x.EconomiaMovimentId != null).Sum(x => x.Import) : g.Sum(x => x.Import);
-            return new EconomiaTotalDto(g.Key, isExpense ? Math.Abs(amount) : amount);
+            var amount = g.Where(x => x.EconomiaMovimentId != null).Sum(x => x.Import);
+            return new EconomiaTotalDto(g.Key, amount);
         }).OrderBy(x => x.Categoria).ToList();
-        totals.Insert(0, new EconomiaTotalDto("Saldo", latest?.Saldo ?? allocations.Sum(x => x.Import)));
+        totals.Insert(0, new EconomiaTotalDto("Saldo", latest?.Saldo ?? allocations.Where(x => x.EconomiaMovimentId != null).Sum(x => x.Import)));
         var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, x.EconomiaMovimentId, x.EconomiaMovimentId is { } id && movementDates.TryGetValue(id, out var movementDate) ? movementDate : null, x.Origen == "GraellaSheet" && x.EconomiaMovimentId == null)).ToList();
         var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio), x.Imputacions.Sum(i => i.Import), x.Imputacions.Any())).ToListAsync();
         var anys = quotes.Select(x => x.Any).Distinct().OrderByDescending(x => x).ToList();
