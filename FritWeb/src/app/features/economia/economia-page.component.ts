@@ -21,6 +21,7 @@ export class EconomiaPageComponent {
   autoAssigning = signal(false);
   categorySavingId = signal<number | null>(null);
   readonly expenseCategories = ['Lloguer', 'Llum', 'Internet', 'Aigua', 'Neteja', 'Altres'];
+  readonly incomeCategories = ['Quota', 'Altres'];
   highlightedQuotaCells = signal<readonly string[]>([]);
   private scrollAfterLoadId: number | null = null;
   private quotaHighlightTimer: ReturnType<typeof setTimeout> | null = null;
@@ -66,7 +67,7 @@ export class EconomiaPageComponent {
     setTimeout(() => document.getElementById(`economia-moviment-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
   }
   selectedMovement(): EconomiaMoviment | null { const id = this.assigningMovementId(); return this.data()?.moviments.find(x => x.id === id) ?? null; }
-  remainingToAssign(): number { const row = this.selectedMovement(); return row ? Math.max(0, row.import - row.importImputat) : 0; }
+  remainingToAssign(): number { const row = this.selectedMovement(); if (!row) return 0; const assigned = this.data()?.quotes.filter(x => x.movimentId === row.id).reduce((sum, x) => sum + x.import, 0) ?? 0; return Math.max(0, row.import - assigned); }
   startAssignment(row: EconomiaMoviment): void { this.assigningMovementId.set(row.id); this.active.set('economia'); this.assignmentError.set(''); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   cancelAssignment(): void { this.assigningMovementId.set(null); this.assignmentTarget.set(null); this.assignmentAmount = null; this.assignmentError.set(''); }
   openAssignment(person: string, year: number, month: number): void { if (!this.assigningMovementId()) return; this.assignmentTarget.set({ person, year, month }); this.assignmentAmount = this.remainingToAssign(); this.assignmentError.set(''); }
@@ -86,9 +87,11 @@ export class EconomiaPageComponent {
   saveEdit(row: EconomiaMoviment): void { if (!this.editDescriptor.trim()) return; this.service.updateDescriptor(row.id, this.editDescriptor).subscribe({ next: () => { this.cancelEdit(); this.load(); }, error: () => this.message.set("No s'ha pogut desar el descriptor.") }); }
   updateCategory(row: EconomiaMoviment, category: string): void {
     if (!category || category === row.categoria) return;
+    if (row.import > 0 && category === 'Quota') { this.startAssignment(row); return; }
     this.categorySavingId.set(row.id); this.message.set('');
     this.service.updateCategory(row.id, category).subscribe({ next: () => { this.categorySavingId.set(null); this.load(true); }, error: err => { this.categorySavingId.set(null); this.message.set(err?.error?.message ?? "No s'ha pogut desar la categoria."); } });
   }
+  categoriesFor(row: EconomiaMoviment): readonly string[] { return row.import > 0 ? this.incomeCategories : this.expenseCategories; }
   format(value: number): string { return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value); }
   displayDate(value: string): string { const [year, month, day] = value.split('-'); return `${day}/${month}/${year}`; }
   private normalize(value: string): string { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(',', '.').trim(); }

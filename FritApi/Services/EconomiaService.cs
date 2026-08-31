@@ -118,7 +118,7 @@ public partial class EconomiaService(AppDbContext db)
         if (normalizedCategory is null) return "Categoria no vàlida.";
         var movement = await db.EconomiaMoviments.Include(x => x.Imputacions).FirstOrDefaultAsync(x => x.EconomiaMovimentId == id);
         if (movement is null) return "Moviment no trobat.";
-        if (movement.Import >= 0) return "Només es poden classificar manualment les despeses.";
+        if (movement.Import >= 0 && normalizedCategory != "Altres") return "Els ingressos només es poden classificar com a quota o altres.";
         db.EconomiaImputacions.RemoveRange(movement.Imputacions);
         db.EconomiaImputacions.Add(new EconomiaImputacio { EconomiaMovimentId = id, Categoria = normalizedCategory, Import = movement.Import, Descriptor = movement.Descriptor, RequereixRevisio = false, Origen = "Manual" });
         await db.SaveChangesAsync();
@@ -133,6 +133,7 @@ public partial class EconomiaService(AppDbContext db)
         if (movement.Import <= 0) return "Només es poden assignar quotes a moviments d'ingrés.";
         var remaining = movement.Import - movement.Imputacions.Where(x => x.Categoria == "Quota").Sum(x => x.Import);
         if (request.Import > remaining) return $"L'import supera el pendent de {remaining:0.00} €.";
+        if (!movement.Imputacions.Any(x => x.Categoria == "Quota")) db.EconomiaImputacions.RemoveRange(movement.Imputacions.Where(x => x.Categoria != "Quota"));
         var period = new DateOnly(request.Any, request.Mes, 1); var person = request.Persona.Trim();
         db.EconomiaImputacions.Add(new EconomiaImputacio { EconomiaMovimentId = id, Categoria = "Quota", Persona = person, Periode = period, Import = request.Import, Descriptor = $"Quota {Mesos[request.Mes - 1]}{request.Any % 100:00} {person}", Origen = "Manual" });
         await db.SaveChangesAsync(); return null;
