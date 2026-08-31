@@ -58,7 +58,7 @@ public partial class EconomiaService(AppDbContext db)
     public async Task<EconomiaDashboardDto> GetAsync()
     {
         await EnsureSeededAsync();
-        var allocations = await db.EconomiaImputacions.AsNoTracking().ToListAsync();
+        var allocations = await db.EconomiaImputacions.AsNoTracking().Where(x => x.Categoria != "QuotaEsborrada").ToListAsync();
         var movementDates = await db.EconomiaMoviments.AsNoTracking().ToDictionaryAsync(x => x.EconomiaMovimentId, x => x.Data);
         var latest = await db.EconomiaMoviments.AsNoTracking().OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).FirstOrDefaultAsync();
         var totals = allocations.GroupBy(x => x.Categoria).Select(g =>
@@ -68,7 +68,7 @@ public partial class EconomiaService(AppDbContext db)
             return new EconomiaTotalDto(g.Key, isExpense ? Math.Abs(amount) : amount);
         }).OrderBy(x => x.Categoria).ToList();
         totals.Insert(0, new EconomiaTotalDto("Saldo", latest?.Saldo ?? allocations.Sum(x => x.Import)));
-        var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, x.EconomiaMovimentId, x.EconomiaMovimentId is { } id && movementDates.TryGetValue(id, out var movementDate) ? movementDate : null)).ToList();
+        var quotes = allocations.Where(x => x.Categoria == "Quota" && x.Persona != null && x.Periode != null).Select(x => new EconomiaQuotaDto(x.Persona!, x.Periode!.Value.Year, x.Periode.Value.Month, x.Import, x.EconomiaMovimentId, x.EconomiaMovimentId is { } id && movementDates.TryGetValue(id, out var movementDate) ? movementDate : null, x.Origen == "GraellaSheet" && x.EconomiaMovimentId == null)).ToList();
         var movements = await db.EconomiaMoviments.AsNoTracking().Include(x => x.Imputacions).OrderByDescending(x => x.Data).ThenByDescending(x => x.EconomiaMovimentId).Select(x => new EconomiaMovimentDto(x.EconomiaMovimentId, x.Data, x.DataValor, x.DescriptorOriginal, x.Descriptor, x.Import, x.Saldo, x.Imputacions.Select(i => i.Categoria).FirstOrDefault() ?? "Sense classificar", x.Imputacions.Any(i => i.RequereixRevisio), x.Imputacions.Sum(i => i.Import), x.Imputacions.Any())).ToListAsync();
         var anys = quotes.Select(x => x.Any).Distinct().OrderByDescending(x => x).ToList();
         return new EconomiaDashboardDto(totals, quotes, movements, anys);
@@ -143,6 +143,17 @@ public partial class EconomiaService(AppDbContext db)
         var rows = await db.EconomiaImputacions.Where(x => x.EconomiaMovimentId == id).ToListAsync();
         if (rows.Count == 0) return false;
         db.EconomiaImputacions.RemoveRange(rows); await db.SaveChangesAsync(); return true;
+    }
+
+    public async Task<string?> DeleteInheritedQuotaAsync(string persona, int any, int mes)
+    {
+        if (string.IsNullOrWhiteSpace(persona) || any is < 2020 or > 2100 || mes is < 1 or > 12) return "Quota no vàlida.";
+        var period = new DateOnly(any, mes, 1);
+        var rows = await db.EconomiaImputacions.Where(x => x.Categoria == "Quota" && x.Persona == persona.Trim() && x.Periode == period && x.EconomiaMovimentId == null && x.Origen == "GraellaSheet").ToListAsync();
+        if (rows.Count == 0) return "No s'ha trobat cap import heretat sense moviment vinculat.";
+        foreach (var row in rows) row.Categoria = "QuotaEsborrada";
+        await db.SaveChangesAsync();
+        return null;
     }
 
     public async Task<EconomiaAutoAssignacioResultDto> AutoAssignAsync()

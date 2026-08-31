@@ -32,7 +32,7 @@ export class EconomiaPageComponent {
     return rows.filter(row => this.normalize(`${this.displayDate(row.data)} ${row.descriptorOriginal} ${row.descriptor} ${row.import} ${this.format(row.import)} ${row.categoria}`).includes(query));
   });
   constructor() { this.load(); }
-  load(): void { this.loading.set(true); this.service.get().subscribe({ next: d => { this.data.set(d); this.loading.set(false); if (this.scrollAfterLoadId) { const id = this.scrollAfterLoadId; this.scrollAfterLoadId = null; setTimeout(() => document.getElementById(`economia-moviment-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })); } }, error: () => { this.error.set("No s'han pogut carregar les dades econòmiques."); this.loading.set(false); } }); }
+  load(silent = false): void { if (!silent) this.loading.set(true); this.service.get().subscribe({ next: d => { this.data.set(d); this.loading.set(false); if (this.scrollAfterLoadId) { const id = this.scrollAfterLoadId; this.scrollAfterLoadId = null; setTimeout(() => document.getElementById(`economia-moviment-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })); } }, error: () => { this.error.set("No s'han pogut carregar les dades econòmiques."); this.loading.set(false); } }); }
   total(category: string): number { return this.data()?.totals.find(x => x.categoria === category)?.import ?? 0; }
   quota(person: string, year: number, month: number): number | null { const rows = this.data()?.quotes.filter(x => x.persona === person && x.any === year && x.mes === month) ?? []; return rows.length ? rows.reduce((sum, x) => sum + x.import, 0) : null; }
   peopleForYear(year: number): string[] {
@@ -42,6 +42,11 @@ export class EconomiaPageComponent {
     return [...new Set([...(this.data()?.quotes ?? []).filter(x => x.any === year).map(x => x.persona), 'Jaume'])].sort((a, b) => a.localeCompare(b));
   }
   quotaMovementId(person: string, year: number, month: number): number | null { return this.data()?.quotes.find(x => x.persona === person && x.any === year && x.mes === month && x.movimentId)?.movimentId ?? null; }
+  hasInheritedQuota(person: string, year: number, month: number): boolean { return this.data()?.quotes.some(x => x.persona === person && x.any === year && x.mes === month && x.heretada && !x.movimentId) ?? false; }
+  deleteInheritedQuota(person: string, year: number, month: number): void {
+    this.message.set('');
+    this.service.deleteInheritedQuota(person, year, month).subscribe({ next: () => this.load(), error: err => this.message.set(err?.error?.message ?? "No s'ha pogut esborrar l'import heretat.") });
+  }
   quotaCellKey(person: string, year: number, month: number): string { return `${person}-${year}-${month}`; }
   isQuotaHighlighted(person: string, year: number, month: number): boolean { return this.highlightedQuotaCells().includes(this.quotaCellKey(person, year, month)); }
   hasQuotaAllocations(row: EconomiaMoviment): boolean { return this.data()?.quotes.some(x => x.movimentId === row.id) ?? false; }
@@ -82,7 +87,7 @@ export class EconomiaPageComponent {
   updateCategory(row: EconomiaMoviment, category: string): void {
     if (!category || category === row.categoria) return;
     this.categorySavingId.set(row.id); this.message.set('');
-    this.service.updateCategory(row.id, category).subscribe({ next: () => { this.categorySavingId.set(null); this.scrollAfterLoadId = row.id; this.load(); }, error: err => { this.categorySavingId.set(null); this.message.set(err?.error?.message ?? "No s'ha pogut desar la categoria."); } });
+    this.service.updateCategory(row.id, category).subscribe({ next: () => { this.categorySavingId.set(null); this.load(true); }, error: err => { this.categorySavingId.set(null); this.message.set(err?.error?.message ?? "No s'ha pogut desar la categoria."); } });
   }
   format(value: number): string { return new Intl.NumberFormat('ca-ES', { style: 'currency', currency: 'EUR' }).format(value); }
   displayDate(value: string): string { const [year, month, day] = value.split('-'); return `${day}/${month}/${year}`; }

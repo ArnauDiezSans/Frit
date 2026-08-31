@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api.config';
 
 export interface EconomiaTotal { categoria: string; import: number; }
-export interface EconomiaQuota { persona: string; any: number; mes: number; import: number; movimentId: number | null; dataMoviment: string | null; }
+export interface EconomiaQuota { persona: string; any: number; mes: number; import: number; movimentId: number | null; dataMoviment: string | null; heretada: boolean; }
 export interface EconomiaMoviment { id: number; data: string; dataValor: string; descriptorOriginal: string; descriptor: string; import: number; saldo: number | null; categoria: string; requereixRevisio: boolean; importImputat: number; teAssignacions: boolean; }
 export interface EconomiaDashboard { totals: EconomiaTotal[]; quotes: EconomiaQuota[]; moviments: EconomiaMoviment[]; anys: number[]; }
 export interface EconomiaPreviewRow { data: string; dataValor: string; descriptorOriginal: string; descriptor: string; import: number; saldo: number | null; categoria: string; requereixRevisio: boolean; quotes: EconomiaQuota[]; duplicat: boolean; }
@@ -22,5 +22,6 @@ export class EconomiaService {
   updateCategory(id: number, categoria: string): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/moviments/${id}/categoria`, { categoria }, { withCredentials: true }); }
   assignQuota(id: number, persona: string, any: number, mes: number, importValue: number): Observable<void> { return this.http.post<void>(`${this.baseUrl}/moviments/${id}/assignar-quota`, { persona, any, mes, import: importValue }, { withCredentials: true }); }
   undoAssignments(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/moviments/${id}/assignacions`, { withCredentials: true }); }
+  deleteInheritedQuota(persona: string, any: number, mes: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/quotes/heretades`, { params: { persona, any, mes }, withCredentials: true }); }
   autoAssign(): Observable<EconomiaAutoAssignResult> { return this.http.post<EconomiaAutoAssignResult>(`${this.baseUrl}/assignar-automaticament`, {}, { withCredentials: true }); }
 }
