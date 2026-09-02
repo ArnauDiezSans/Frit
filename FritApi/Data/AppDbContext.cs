@@ -369,6 +369,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Link)
                 .HasMaxLength(1000);
 
+            entity.Property(e => e.QuiHoVol)
+                .HasMaxLength(200);
+
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
 

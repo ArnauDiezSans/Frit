@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { isExternalUser } from '../../core/users/external-user';
 import { MenuComponent } from '../../shared/menu/menu.component';
+import { UsuariosService } from '../juegos/usuarios.service';
+import { UsuarioOption } from '../juegos/juegos.models';
 import { PendentCompraItem, PendentCompraService } from './pendent-compra.service';
 
 @Component({
@@ -18,6 +20,7 @@ export class PendentCompraPageComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private pendentCompraService = inject(PendentCompraService);
+  private usuariosService = inject(UsuariosService);
   private router = inject(Router);
 
   loading = signal(true);
@@ -30,6 +33,7 @@ export class PendentCompraPageComponent {
   editingItemId = signal<number | null>(null);
 
   items = signal<PendentCompraItem[]>([]);
+  users = signal<UsuarioOption[]>([]);
   highlightedItemId = signal<number | null>(null);
   selectedIds = signal<number[]>([]);
   selectedCount = computed(() => this.selectedIds().length);
@@ -43,11 +47,16 @@ export class PendentCompraPageComponent {
   form = this.fb.group({
     quantitat: [1, [Validators.required, Validators.min(1)]],
     descripcio: ['', [Validators.required, Validators.maxLength(500)]],
-    link: ['', Validators.maxLength(1000)]
+    link: ['', Validators.maxLength(1000)],
+    quiHoVol: ['', Validators.maxLength(200)]
   });
 
   ngOnInit(): void {
     this.cargarItems();
+    this.usuariosService.getJugadores().subscribe({
+      next: users => this.users.set(users),
+      error: () => this.users.set([])
+    });
   }
 
   cargarItems(): void {
@@ -75,7 +84,8 @@ export class PendentCompraPageComponent {
     this.form.reset({
       quantitat: 1,
       descripcio: '',
-      link: ''
+      link: '',
+      quiHoVol: ''
     });
     this.formError.set('');
     this.success.set('');
@@ -87,7 +97,8 @@ export class PendentCompraPageComponent {
     this.form.reset({
       quantitat: item.quantitat,
       descripcio: item.descripcio,
-      link: item.link ?? ''
+      link: item.link ?? '',
+      quiHoVol: item.quiHoVol ?? ''
     });
     this.formError.set('');
     this.success.set('');
@@ -116,7 +127,8 @@ export class PendentCompraPageComponent {
     const payload = {
       quantitat: Number(raw.quantitat ?? 1),
       descripcio: raw.descripcio?.trim() ?? '',
-      link: raw.link?.trim() || null
+      link: raw.link?.trim() || null,
+      quiHoVol: raw.quiHoVol?.trim() || null
     };
     const editingId = this.editingItemId();
     const request = editingId

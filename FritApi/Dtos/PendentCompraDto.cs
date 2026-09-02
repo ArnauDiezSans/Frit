@@ -10,6 +10,7 @@ public class PendentCompraDto
     public int Quantitat { get; set; }
     public string Descripcio { get; set; } = string.Empty;
     public string? Link { get; set; }
+    public string? QuiHoVol { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 
@@ -24,6 +25,9 @@ public class PendentCompraWriteDto
 
     [MaxLength(1000)]
     public string? Link { get; set; }
+
+    [MaxLength(200)]
+    public string? QuiHoVol { get; set; }
 }
 
 public class PendentCompraDeleteSelectedDto

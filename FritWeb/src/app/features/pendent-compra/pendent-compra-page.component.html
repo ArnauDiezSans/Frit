@@ -56,6 +56,7 @@
                 (change)="toggleAll($any($event.target).checked)" />
             </th>
             <th>Usuari</th>
+            <th>Qui ho vol</th>
             <th>Quantitat</th>
             <th>Descripció</th>
             <th>Link</th>
@@ -77,6 +78,7 @@
             <td data-label="Usuari">
               <span class="user-name">{{ item.usuarioNombre }}</span>
             </td>
+            <td data-label="Qui ho vol">{{ item.quiHoVol || '-' }}</td>
             <td data-label="Quantitat">{{ item.quantitat }}</td>
             <td data-label="Descripció">{{ item.descripcio }}</td>
             <td data-label="Link">
@@ -142,6 +144,20 @@
           <label class="form-field form-field-full">
             <span>Descripció</span>
             <input type="text" formControlName="descripcio" />
+          </label>
+
+          <label class="form-field form-field-full">
+            <span>Qui ho vol <small>(opcional)</small></span>
+            <input
+              type="text"
+              formControlName="quiHoVol"
+              list="purchase-requesters"
+              maxlength="200"
+              autocomplete="off"
+              placeholder="Selecciona un usuari o escriu un nom" />
+            <datalist id="purchase-requesters">
+              <option *ngFor="let user of users()" [value]="user.nombre"></option>
+            </datalist>
           </label>
 
           <label class="form-field form-field-full">

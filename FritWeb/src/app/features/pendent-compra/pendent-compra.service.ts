@@ -12,6 +12,7 @@ export interface PendentCompraItem {
   quantitat: number;
   descripcio: string;
   link?: string | null;
+  quiHoVol?: string | null;
   createdAt: string;
 }
 
@@ -19,6 +20,7 @@ export interface PendentCompraWrite {
   quantitat: number;
   descripcio: string;
   link?: string | null;
+  quiHoVol?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

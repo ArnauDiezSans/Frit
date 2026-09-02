@@ -19,5 +19,8 @@ public class PendentCompra : ITenantEntity
     [MaxLength(1000)]
     public string? Link { get; set; }
 
+    [MaxLength(200)]
+    public string? QuiHoVol { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

@@ -29,6 +29,7 @@ public class PendentCompraService
                 Quantitat = item.Quantitat,
                 Descripcio = item.Descripcio,
                 Link = item.Link,
+                QuiHoVol = item.QuiHoVol,
                 CreatedAt = item.CreatedAt
             })
             .ToListAsync();
@@ -56,7 +57,8 @@ public class PendentCompraService
             UsuarioId = usuarioId,
             Quantitat = dto.Quantitat,
             Descripcio = dto.Descripcio.Trim(),
-            Link = link
+            Link = link,
+            QuiHoVol = NormalizeQuiHoVol(dto.QuiHoVol)
         };
 
         _context.PendentsCompra.Add(item);
@@ -70,6 +72,7 @@ public class PendentCompraService
             Quantitat = item.Quantitat,
             Descripcio = item.Descripcio,
             Link = item.Link,
+            QuiHoVol = item.QuiHoVol,
             CreatedAt = item.CreatedAt
         });
     }
@@ -90,6 +93,7 @@ public class PendentCompraService
         item.Quantitat = dto.Quantitat;
         item.Descripcio = dto.Descripcio.Trim();
         item.Link = string.IsNullOrWhiteSpace(dto.Link) ? null : dto.Link.Trim();
+        item.QuiHoVol = NormalizeQuiHoVol(dto.QuiHoVol);
 
         await _context.SaveChangesAsync();
 
@@ -101,6 +105,7 @@ public class PendentCompraService
             Quantitat = item.Quantitat,
             Descripcio = item.Descripcio,
             Link = item.Link,
+            QuiHoVol = item.QuiHoVol,
             CreatedAt = item.CreatedAt
         });
     }
@@ -137,4 +142,7 @@ public class PendentCompraService
 
         return items.Count;
     }
+
+    private static string? NormalizeQuiHoVol(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
