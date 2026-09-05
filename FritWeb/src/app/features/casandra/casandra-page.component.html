@@ -23,7 +23,7 @@
 
   @if (alertLevel(); as alert) {
     <div class="transmission" role="dialog" aria-modal="true" aria-label="Transmisión de Salvatierra">
-      <div class="signal-lines"></div><div class="portrait"><img src="assets/casandra/salvatierra-placeholder.svg" alt="Retrato provisional de la comandante Salvatierra"><span>IMAGEN PROVISIONAL</span></div>
+      <div class="signal-lines"></div><div class="portrait"><img src="assets/casandra/salvatierra.png" alt="Comandante Salvatierra"><span>CMDTE. SALVATIERRA · DEFENSA ORBITAL</span></div>
       <div class="message"><small>TRANSMISIÓN PRIORITARIA · TIERRA</small><h2>CMDTE. SALVATIERRA</h2><p>«{{ messages[alert - 1] }}»</p><div><button (click)="dismissAlert()">CERRAR</button><button class="continue" (click)="continueAlert()">CONTINUAR ▶</button></div></div>
     </div>
   }
