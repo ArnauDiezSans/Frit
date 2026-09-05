@@ -1,0 +1,31 @@
+<main class="casandra-shell" [class.controls-hidden]="!controlsVisible()">
+  <div class="noise"></div><div class="vignette"></div>
+  <header class="main-header"><div class="brand-mark">Λ</div><div><p>PROTOCOLO CASANDRA</p><h1>ESTADO DE LA ARGOS</h1></div><div class="live"><i></i> ENLACE ACTIVO</div></header>
+  <div class="dashboard">
+    <app-casandra-approach [progress]="progress()" [level]="level()" [time]="time()" (progressChange)="setProgress($event)" />
+    <div class="side-panels">
+      <app-ship-integrity [damage]="state().integrity" (change)="adjustDamage($event)" />
+      <app-resonance-display [level]="state().resonance" (change)="adjustResonance($event)" />
+    </div>
+  </div>
+
+  <aside class="director" [attr.aria-hidden]="!controlsVisible()">
+    <div class="director-title"><span>CONSOLA DE DIRECCIÓN</span><button type="button" (click)="controlsVisible.set(false)" title="Ocultar controles">×</button></div>
+    <div class="control-section"><label>Duración total<input [(ngModel)]="totalInput" inputmode="numeric" aria-label="Duración total HH MM SS"></label><label>Tiempo restante<input [(ngModel)]="remainingInput" inputmode="numeric" aria-label="Tiempo restante HH MM SS"></label><button class="apply" type="button" (click)="applyTimes()">APLICAR TIEMPOS</button></div>
+    <input class="timeline" type="range" min="0" max="1" step="0.001" [ngModel]="progress()" (ngModelChange)="setProgress($event)" aria-label="Progreso temporal">
+    <div class="transport"><button type="button" (click)="toggleTimer()">{{ state().running ? 'Ⅱ PAUSA' : '▶ INICIAR' }}</button><button type="button" (click)="resetTimer()">↺ REINICIAR</button></div>
+    <div class="compact-controls"><span>ARGOS</span><button (click)="adjustDamage(-1)">−</button><b>{{state().integrity}}</b><button (click)="adjustDamage(1)">+</button><button (click)="repair()">REPARAR</button></div>
+    <div class="compact-controls"><span>PATRÓN</span><button (click)="adjustResonance(-1)">−</button><b>{{state().resonance}}</b><button (click)="adjustResonance(1)">+</button><button (click)="adjustResonance(-state().resonance)">RESET</button></div>
+    <div class="audio-controls"><button (click)="toggleMute()">{{state().muted?'SONIDO OFF':'SONIDO ON'}}</button><input type="range" min="0" max="1" step=".05" [ngModel]="state().volume" (ngModelChange)="setVolume($event)" aria-label="Volumen"></div>
+    <div class="utility"><button (click)="resetEvents()">REARMAR EVENTOS</button><button (click)="toggleFullscreen()">PANTALLA COMPLETA</button><button class="danger" (click)="resetSession()">REINICIAR SESIÓN</button></div>
+  </aside>
+  @if (!controlsVisible()) { <button class="show-controls" type="button" (click)="controlsVisible.set(true)" aria-label="Mostrar controles">H</button> }
+
+  @if (alertLevel(); as alert) {
+    <div class="transmission" role="dialog" aria-modal="true" aria-label="Transmisión de Salvatierra">
+      <div class="signal-lines"></div><div class="portrait"><img src="assets/casandra/salvatierra-placeholder.svg" alt="Retrato provisional de la comandante Salvatierra"><span>IMAGEN PROVISIONAL</span></div>
+      <div class="message"><small>TRANSMISIÓN PRIORITARIA · TIERRA</small><h2>CMDTE. SALVATIERRA</h2><p>«{{ messages[alert - 1] }}»</p><div><button (click)="dismissAlert()">CERRAR</button><button class="continue" (click)="continueAlert()">CONTINUAR ▶</button></div></div>
+    </div>
+  }
+  <footer><span>ARGOS // TELEMETRÍA INTERNA</span><span>H · CONSOLA &nbsp; ESPACIO · PAUSA</span><span>{{state().running?'CUENTA ACTIVA':'SISTEMA EN ESPERA'}}</span></footer>
+</main>

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { auditGuard, authGuard, economyGuard, hallOfFameGuard, tenantFeatureGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
+  { path: 'casandra', loadComponent: () => import('./features/casandra/casandra-page.component').then(m => m.CasandraPageComponent) },
   { path: 'ajjrr', data: { brand: 'ajjrr' }, loadComponent: () => import('./features/auth/login-page.component').then(m => m.LoginPageComponent) },
   { path: 'ajjrr/register', data: { brand: 'ajjrr' }, loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent) },
   { path: 'login', loadComponent: () => import('./features/auth/login-page.component').then(m => m.LoginPageComponent) },
