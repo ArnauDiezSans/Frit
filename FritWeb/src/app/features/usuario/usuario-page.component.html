@@ -21,6 +21,7 @@
 
   <section class="user-card" *ngIf="!loading() && !error() && usuario() as user">
     <a
+      *ngIf="user.nombre === 'Arnau'"
       class="utility-link casandra-link"
       style="left: 32px; bottom: 2px"
       routerLink="/casandra"
