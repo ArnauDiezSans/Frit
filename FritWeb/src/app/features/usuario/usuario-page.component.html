@@ -20,6 +20,19 @@
   </section>
 
   <section class="user-card" *ngIf="!loading() && !error() && usuario() as user">
+    <a
+      class="utility-link casandra-link"
+      style="left: 32px; bottom: 2px"
+      routerLink="/casandra"
+      aria-label="Obrir Casandra"
+      title="Casandra">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 2c3.2 2.4 5 6 5 10l3 3-4 1-1.5 4h-5L8 16l-4-1 3-3c0-4 1.8-7.6 5-10Z"></path>
+        <path d="M12 7v5"></path>
+        <path d="M10 22l2-2 2 2"></path>
+      </svg>
+    </a>
+
     <div class="user-info">
       <div>
         <span class="info-label">Nom</span>

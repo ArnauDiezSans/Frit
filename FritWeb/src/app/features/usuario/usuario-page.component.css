@@ -63,6 +63,7 @@ h1 {
   gap: 20px;
   padding: 18px 20px;
   border-left: 4px solid #2f7f7a;
+  position: relative;
 }
 
 .user-info {
