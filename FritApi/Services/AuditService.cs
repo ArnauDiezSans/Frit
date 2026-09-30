@@ -1,14 +1,38 @@
 using FritApi.Data;
 using FritApi.Dtos;
+using FritApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace FritApi.Services;
 
-public class AuditService(AppDbContext context, ICurrentTenant currentTenant)
+public class AuditService(AppDbContext context, ICurrentTenant currentTenant, IAuditContext auditContext)
 {
     public Task<bool> IsAuthorizedAsync(int usuarioId) =>
         context.AuditAuthorizedUsers.AsNoTracking().AnyAsync(item => item.UsuarioId == usuarioId);
+
+    public async Task RecordEventAsync(
+        string entidad,
+        string registroId,
+        string accion,
+        IReadOnlyDictionary<string, object?>? valores = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (auditContext.UsuarioId is not int usuarioId) return;
+
+        context.AuditEntries.Add(new AuditEntry
+        {
+            TenantId = currentTenant.TenantId ?? 0,
+            UsuarioId = usuarioId,
+            UsuarioNombre = string.IsNullOrWhiteSpace(auditContext.UsuarioNombre) ? $"Usuari {usuarioId}" : auditContext.UsuarioNombre.Trim(),
+            Ip = auditContext.Ip,
+            Entidad = entidad,
+            RegistroId = registroId,
+            Accion = accion,
+            ValoresNuevos = valores is null ? null : JsonSerializer.Serialize(valores)
+        });
+        await context.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task<AuditPageDto> GetAsync(
         int page,

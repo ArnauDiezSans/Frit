@@ -8,7 +8,8 @@ namespace FritApi.Services;
 public sealed class EncuestaService(
     AppDbContext context,
     PushNotificationService pushNotifications,
-    TelegramNotificationService? telegramNotifications = null)
+    TelegramNotificationService? telegramNotifications = null,
+    AuditService? auditService = null)
 {
     public async Task<List<EncuestaResumenDto>> GetAllAsync(int userId, bool isAdmin)
     {
@@ -105,6 +106,7 @@ public sealed class EncuestaService(
         encuesta.PublicadaAt = DateTime.UtcNow;
         encuesta.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
+        await RecordEventAsync(id, "Publicacio");
         var url = encuesta.EsVotacion
             ? $"/app/enquestes?vista=votacions&enquestaId={id}"
             : $"/app/enquestes?vista=enquestes&enquestaId={id}";
@@ -126,6 +128,7 @@ public sealed class EncuestaService(
         encuesta.Estado = EncuestaEstado.Cerrada;
         encuesta.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync();
+        await RecordEventAsync(id, "Tancament");
         return (true, null);
     }
 
@@ -179,6 +182,11 @@ public sealed class EncuestaService(
         }
         if (existing is null) context.EncuestaRespuestas.Add(response);
         await context.SaveChangesAsync();
+        await RecordEventAsync(id, existing is null ? "Resposta enviada" : "Resposta modificada", new Dictionary<string, object?>
+        {
+            ["EncuestaRespuestaId"] = response.EncuestaRespuestaId,
+            ["PreguntasRespondidas"] = response.Valores.Count
+        });
         return (true, null);
     }
 
@@ -195,6 +203,7 @@ public sealed class EncuestaService(
         var answered = encuesta.Respuestas.Select(r => r.UsuarioId).ToHashSet();
         var pending = targetIds.Where(idValue => !answered.Contains(idValue) && idValue != actorId).ToList();
         await pushNotifications.SendSurveyReminderAsync(encuesta.Titulo, $"/app/enquestes?enquestaId={id}", pending);
+        await RecordEventAsync(id, "Recordatori enviat", new Dictionary<string, object?> { ["Destinataris"] = pending.Count });
         return (true, null, pending.Count);
     }
 
@@ -351,6 +360,8 @@ public sealed class EncuestaService(
             isAdmin || e.UsuarioCreadorId == userId, canEditPublished && !e.EsVotacion);
     private Task<bool> CanEditPublishedAsync(int userId) => context.Usuarios.AsNoTracking()
         .AnyAsync(u => u.UsuarioId == userId && u.Nombre.ToLower() == "arnau");
+    private Task RecordEventAsync(int encuestaId, string accion, IReadOnlyDictionary<string, object?>? valores = null) =>
+        auditService?.RecordEventAsync("Enquesta", $"EncuestaId={encuestaId}", accion, valores) ?? Task.CompletedTask;
     private static bool IsClosed(Encuesta e) => e.Estado == EncuestaEstado.Cerrada || e.FechaCierre is not null && e.FechaCierre <= DateTime.UtcNow;
 
     private async Task<List<string>> GetPendingNamesAsync(Encuesta e)

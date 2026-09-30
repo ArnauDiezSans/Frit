@@ -48,6 +48,22 @@ public class AuditTests
         Assert.Contains("Anna Maria", audit.ValoresNuevos);
     }
 
+    [Fact]
+    public async Task RecordEvent_CreatesNamedAuditEvent()
+    {
+        await using var context = CreateContext();
+        var auditService = new AuditService(context, new TestTenant(), new TestAuditContext());
+
+        await auditService.RecordEventAsync("Enquesta", "EncuestaId=14", "Recordatori enviat",
+            new Dictionary<string, object?> { ["Destinataris"] = 11 });
+
+        var audit = Assert.Single(await context.AuditEntries.ToListAsync());
+        Assert.Equal("Recordatori enviat", audit.Accion);
+        Assert.Equal("Enquesta", audit.Entidad);
+        Assert.Equal("EncuestaId=14", audit.RegistroId);
+        Assert.Contains("11", audit.ValoresNuevos);
+    }
+
     private static AppDbContext CreateContext(bool audit = true, string? databaseName = null)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
