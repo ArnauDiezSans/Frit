@@ -79,7 +79,7 @@ const DEFAULT_VISIBLE_COLUMNS: VisibleColumns = {
   tipo: true,
   pvp: true,
   dificultadBgg: true,
-  puntosFritparty: true,
+  puntosFritparty: false,
   fechaAdquisicion: false
 };
 
