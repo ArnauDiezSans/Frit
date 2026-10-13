@@ -32,17 +32,13 @@
     <ol class="standings" aria-label="Classificació Fritparty">
       <li *ngFor="let player of edition.jugadores">
         <details><summary><span class="place">{{ player.posicion }}</span>
-          <span class="player">
-            <button type="button" class="player-games medal-games-trigger" [attr.aria-label]="'Veure els jocs puntuats de ' + player.nombre"
-              (click)="$event.preventDefault(); $event.stopPropagation(); gamesPlayer.set(player)">
-              <strong>{{ player.nombre }}</strong>
-              <span class="medal-games-tooltip" aria-hidden="true">
-                <strong>Jocs puntuats de {{ player.nombre }}</strong>
-                <span *ngFor="let game of player.partidas">{{ game.juego }} · {{ game.puntos | number:'1.2-3' }} punts</span>
-              </span>
-            </button>
-          </span>
-          <span class="count">{{ player.partidas.length }}/10 jocs · {{ player.partidasTotales }} jugades</span><strong>{{ player.puntos | number:'1.2-3' }} punts</strong></summary>
+          <strong class="player">{{ player.nombre }}</strong>
+          <span class="count">{{ player.partidasTotales }} jugades</span>
+          <button type="button" class="player-games" [attr.aria-label]="'Veure els jocs puntuats de ' + player.nombre"
+            (click)="$event.preventDefault(); $event.stopPropagation(); gamesPlayer.set(player)">
+            {{ player.partidas.length }}/10 jocs puntuats
+          </button>
+          <strong>{{ player.puntos | number:'1.2-3' }} punts</strong></summary>
           <div class="table-scroll"><table><thead><tr><th>Data</th><th>Joc</th><th>Posició</th><th>Pes BGG</th><th>Multiplicador</th><th>Punts</th></tr></thead><tbody><tr *ngFor="let game of player.partidas"><td>{{ game.fecha | date:'dd/MM/yyyy' }}</td><td>{{ game.juego }}</td><td>{{ game.posicion }}</td><td>{{ game.peso | number:'1.2-3' }}</td><td>×{{ game.multiplicador }}</td><td>{{ game.puntos | number:'1.2-3' }}</td></tr></tbody></table></div>
         </details>
       </li>
@@ -51,6 +47,7 @@
   <div class="games-modal-backdrop" *ngIf="gamesPlayer() as player" (click)="gamesPlayer.set(null)" (keydown.escape)="gamesPlayer.set(null)">
     <section class="games-modal-card" role="dialog" aria-modal="true" [attr.aria-label]="'Jocs puntuats de ' + player.nombre" (click)="$event.stopPropagation()">
       <div class="games-modal-header"><div><h3>{{ player.nombre }}</h3><p>{{ player.puntos | number:'1.2-3' }} punts</p></div><button type="button" class="secondary" (click)="gamesPlayer.set(null)">Tancar</button></div>
+      <p class="player-games-intro">Aquests són els {{ player.partidas.length }} jocs que compten per a la classificació.</p>
       <ul class="player-games-list"><li *ngFor="let game of player.partidas"><span>{{ game.juego }}</span><strong>{{ game.puntos | number:'1.2-3' }} punts</strong></li></ul>
     </section>
   </div>
