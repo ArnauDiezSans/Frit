@@ -13,6 +13,7 @@ export interface AuthUser {
   usuarioId: number;
   nombre: string;
   esAdmin: boolean;
+  esGestorPrincipal: boolean;
   potVeureAuditoria: boolean;
   potVeureEconomia: boolean;
   tenantId: number;

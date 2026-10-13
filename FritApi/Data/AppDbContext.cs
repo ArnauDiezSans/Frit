@@ -146,6 +146,9 @@ public class AppDbContext : DbContext
             entity.Property(e => e.EsAdmin)
                 .HasDefaultValue(false);
 
+            entity.Property(e => e.EsGestorPrincipal)
+                .HasDefaultValue(false);
+
             entity.Property(e => e.EsUsuarioExterno)
                 .HasDefaultValue(false);
 

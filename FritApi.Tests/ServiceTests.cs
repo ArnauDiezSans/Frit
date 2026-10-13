@@ -1321,10 +1321,10 @@ public class ServiceTests
     }
 
     [Fact]
-    public async Task EncuestaService_AllowsOnlyArnauToEditPublishedSurveysAndPreservesAnswers()
+    public async Task EncuestaService_AllowsOnlyPrimaryManagerToEditPublishedSurveysAndPreservesAnswers()
     {
         await using var context = CreateContext();
-        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash", EsAdmin = true };
+        var arnau = new Usuario { Nombre = "Arnau", PasswordHash = "hash", EsAdmin = true, EsGestorPrincipal = true };
         var otherAdmin = new Usuario { Nombre = "Altra admin", PasswordHash = "hash", EsAdmin = true };
         var member = new Usuario { Nombre = "Membre", PasswordHash = "hash" };
         context.Usuarios.AddRange(arnau, otherAdmin, member);

@@ -118,7 +118,8 @@ public class AuthController : ControllerBase
             new(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
             new(TenantClaims.TenantId, usuario.TenantId.ToString()),
             new(ClaimTypes.Name, usuario.Nombre),
-            new(ClaimTypes.Role, usuario.EsAdmin ? "Admin" : "User")
+            new(ClaimTypes.Role, usuario.EsAdmin ? "Admin" : "User"),
+            new(PrimaryManagerAccess.ClaimType, usuario.EsGestorPrincipal ? "true" : "false")
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -132,8 +133,9 @@ public class AuthController : ControllerBase
         UsuarioId = usuario.UsuarioId,
         Nombre = usuario.Nombre,
         EsAdmin = usuario.EsAdmin,
+        EsGestorPrincipal = usuario.EsGestorPrincipal,
         PotVeureAuditoria = await _auditService.IsAuthorizedAsync(usuario.UsuarioId),
-        PotVeureEconomia = string.Equals(usuario.Nombre.Trim(), "Arnau", StringComparison.OrdinalIgnoreCase),
+        PotVeureEconomia = usuario.EsGestorPrincipal,
         TenantId = usuario.TenantId,
         TenantCodi = usuario.Tenant.Codi,
         TenantNom = usuario.Tenant.Nom

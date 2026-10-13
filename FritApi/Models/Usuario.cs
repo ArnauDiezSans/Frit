@@ -25,6 +25,7 @@ public class Usuario : ITenantEntity
     public string PasswordHash { get; set; } = string.Empty;
 
     public bool EsAdmin { get; set; }
+    public bool EsGestorPrincipal { get; set; }
     public bool EsUsuarioExterno { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

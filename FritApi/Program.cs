@@ -72,7 +72,7 @@ builder.Services
                 .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Where(row => row.UsuarioId == userId && row.TenantId == tenantId)
-                .Select(row => new { row.UsuarioId, row.TenantId, row.Nombre, row.EsAdmin })
+                .Select(row => new { row.UsuarioId, row.TenantId, row.Nombre, row.EsAdmin, row.EsGestorPrincipal })
                 .FirstOrDefaultAsync();
 
             if (user is null)
@@ -87,7 +87,8 @@ builder.Services
                 new Claim(ClaimTypes.NameIdentifier, user.UsuarioId.ToString()),
                 new Claim(TenantClaims.TenantId, user.TenantId.ToString()),
                 new Claim(ClaimTypes.Name, user.Nombre),
-                new Claim(ClaimTypes.Role, user.EsAdmin ? "Admin" : "User")
+                new Claim(ClaimTypes.Role, user.EsAdmin ? "Admin" : "User"),
+                new Claim(PrimaryManagerAccess.ClaimType, user.EsGestorPrincipal ? "true" : "false")
             ], CookieAuthenticationDefaults.AuthenticationScheme);
 
             context.ReplacePrincipal(new ClaimsPrincipal(identity));

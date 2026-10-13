@@ -1363,6 +1363,11 @@ namespace FritApi.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("EsGestorPrincipal")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("EsUsuarioExterno")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")

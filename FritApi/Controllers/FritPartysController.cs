@@ -11,7 +11,7 @@ namespace FritApi.Controllers;
 [ApiController, Authorize, Route("api/fritpartys")]
 public class FritPartysController(AppDbContext db, FritPartyService service) : ControllerBase
 {
-    private bool CanEdit => string.Equals(User.Identity?.Name?.Trim(), "Arnau", StringComparison.OrdinalIgnoreCase);
+    private bool CanEdit => PrimaryManagerAccess.IsAuthorized(User);
     [HttpGet]
     public async Task<IActionResult> List()
     {
@@ -41,7 +41,7 @@ public class FritPartysController(AppDbContext db, FritPartyService service) : C
         if (party == null) return NotFound();
         var error = await service.Validate(request, party.Inicio != request.Inicio || party.Fin != request.Fin);
         if (error != null) return BadRequest(new { message = error });
-        // Changing dates is an explicit correction by Arnau, reopening and rebuilding the edition.
+        // Changing dates is an explicit correction by the primary manager, reopening and rebuilding the edition.
         if (party.Inicio != request.Inicio || party.Fin != request.Fin)
         {
             party.Snapshot = null;

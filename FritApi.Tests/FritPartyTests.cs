@@ -187,7 +187,7 @@ public class FritPartyTests
     }
 
     [Fact]
-    public async Task AnyUserCanCreateAndArnauCanRenameOrDeleteFrozenEdition()
+    public async Task AnyUserCanCreateAndOnlyThePrimaryManagerCanRenameOrDeleteFrozenEdition()
     {
         await using var db = Context();
         var request = new FritPartyRequest { Nombre = "Fritparty prova", Inicio = new(2099, 10, 1), Fin = new(2099, 10, 31) };
@@ -196,10 +196,11 @@ public class FritPartyTests
         party.Snapshot = "[]"; party.FrozenAt = DateTime.UtcNow; await db.SaveChangesAsync();
         db.Juegos.Add(new Juego { Nombre = "Sense pes" }); await db.SaveChangesAsync();
         request.Nombre = "Nom corregit";
-        Assert.IsType<NoContentResult>(await Controller(db, "Arnau").Update(party.FritPartyId, request));
+        Assert.IsType<ForbidResult>(await Controller(db, "Arnau").Update(party.FritPartyId, request));
+        Assert.IsType<NoContentResult>(await Controller(db, "Arnau", primaryManager: true).Update(party.FritPartyId, request));
         Assert.Equal("[]", party.Snapshot);
         Assert.Equal("Nom corregit", party.Nombre);
-        Assert.IsType<NoContentResult>(await Controller(db, "Arnau").Delete(party.FritPartyId));
+        Assert.IsType<NoContentResult>(await Controller(db, "Arnau", primaryManager: true).Delete(party.FritPartyId));
         Assert.Empty(await db.FritPartys.ToListAsync());
     }
 
@@ -216,13 +217,17 @@ public class FritPartyTests
         public override DateTimeOffset GetUtcNow() => now;
     }
 
-    private static FritPartysController Controller(AppDbContext db, string name) => new(db, new(db, TimeProvider.System))
+    private static FritPartysController Controller(AppDbContext db, string name, bool primaryManager = false) => new(db, new(db, TimeProvider.System))
     {
         ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
             {
-                User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, name), new Claim(ClaimTypes.Role, "Admin")], "test"))
+                User = new ClaimsPrincipal(new ClaimsIdentity([
+                    new Claim(ClaimTypes.Name, name),
+                    new Claim(ClaimTypes.Role, "Admin"),
+                    new Claim(PrimaryManagerAccess.ClaimType, primaryManager ? "true" : "false")
+                ], "test"))
             }
         }
     };

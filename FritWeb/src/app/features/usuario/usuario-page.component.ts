@@ -81,6 +81,10 @@ export class UsuarioPageComponent {
 
   readonly profileColors = ['#0F766E', '#2563EB', '#7C3AED', '#DB2777', '#DC2626', '#EA580C', '#CA8A04', '#16A34A'];
 
+  canOpenCasandra(): boolean {
+    return this.authService.currentUser?.esGestorPrincipal === true;
+  }
+
   ngOnInit(): void {
     this.cargarDatos();
     this.loadNotificationStatus();

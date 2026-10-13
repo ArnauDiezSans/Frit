@@ -77,7 +77,7 @@ public sealed class EncuestaService(
         if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
         var editingPublished = encuesta.Estado == EncuestaEstado.Publicada;
         if (encuesta.Estado != EncuestaEstado.Borrador && (!editingPublished || !await CanEditPublishedAsync(actorId)))
-            return (false, "Només l'Arnau pot editar una enquesta publicada.");
+            return (false, "Només el gestor principal pot editar una enquesta publicada.");
         var error = await ValidateAsync(dto);
         if (error is not null) return (false, error);
         context.EncuestaDestinatarios.RemoveRange(encuesta.Destinatarios);
@@ -310,7 +310,7 @@ public sealed class EncuestaService(
     }
 
     // Published surveys can already have answers. Matching questions and options by their
-    // stable order lets Arnau correct them without replacing their IDs and losing those answers.
+    // stable order lets the primary manager correct them without replacing their IDs and losing those answers.
     private void ApplyPublishedUpdate(Encuesta encuesta, EncuestaWriteDto dto)
     {
         encuesta.Titulo = dto.Titulo.Trim(); encuesta.Descripcion = dto.Descripcion?.Trim(); encuesta.EsAnonima = dto.EsAnonima;
@@ -359,7 +359,7 @@ public sealed class EncuestaService(
             e.Respuestas.Count, e.Destinatarios.Count == 0 ? allUsers : e.Destinatarios.Count,
             isAdmin || e.UsuarioCreadorId == userId, canEditPublished && !e.EsVotacion);
     private Task<bool> CanEditPublishedAsync(int userId) => context.Usuarios.AsNoTracking()
-        .AnyAsync(u => u.UsuarioId == userId && u.Nombre.ToLower() == "arnau");
+        .AnyAsync(u => u.UsuarioId == userId && u.EsGestorPrincipal);
     private Task RecordEventAsync(int encuestaId, string accion, IReadOnlyDictionary<string, object?>? valores = null) =>
         auditService?.RecordEventAsync("Enquesta", $"EncuestaId={encuestaId}", accion, valores) ?? Task.CompletedTask;
     private static bool IsClosed(Encuesta e) => e.Estado == EncuestaEstado.Cerrada || e.FechaCierre is not null && e.FechaCierre <= DateTime.UtcNow;

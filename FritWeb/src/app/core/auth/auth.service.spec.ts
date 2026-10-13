@@ -18,7 +18,7 @@ describe('AuthService', () => {
     expect(service.isAdmin()).toBeFalse();
 
     service.currentUser = {
-      usuarioId: 1, nombre: 'Usuari', esAdmin: true,
+      usuarioId: 1, nombre: 'Usuari', esAdmin: true, esGestorPrincipal: false,
       potVeureAuditoria: false,
       potVeureEconomia: false,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
@@ -36,7 +36,7 @@ describe('AuthService', () => {
 
   it('enables all initial features for frit14', () => {
     service.currentUser = {
-      usuarioId: 1, nombre: 'Usuari', esAdmin: false,
+      usuarioId: 1, nombre: 'Usuari', esAdmin: false, esGestorPrincipal: false,
       potVeureAuditoria: false,
       potVeureEconomia: false,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
@@ -48,7 +48,7 @@ describe('AuthService', () => {
 
   it('hides la llista and assistencia for ajjrr26', () => {
     service.currentUser = {
-      usuarioId: 2, nombre: 'Kiderak', esAdmin: true,
+      usuarioId: 2, nombre: 'Kiderak', esAdmin: true, esGestorPrincipal: false,
       potVeureAuditoria: true,
       potVeureEconomia: false,
       tenantId: 3, tenantCodi: 'ajjrr26', tenantNom: 'AJJRR'
@@ -60,7 +60,7 @@ describe('AuthService', () => {
 
   it('exposes economy only from the server capability', () => {
     service.currentUser = {
-      usuarioId: 16, nombre: 'Arnau', esAdmin: false,
+      usuarioId: 16, nombre: 'Arnau', esAdmin: false, esGestorPrincipal: true,
       potVeureAuditoria: false, potVeureEconomia: true,
       tenantId: 1, tenantCodi: 'frit14', tenantNom: 'Frit14'
     };

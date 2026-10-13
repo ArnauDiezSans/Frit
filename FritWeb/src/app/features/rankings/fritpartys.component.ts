@@ -21,7 +21,7 @@ export class FritPartysComponent implements OnInit {
   missing = signal<string[]>([]);
   selectedId = signal<number>(0);
   selected = computed(() => this.editions().find(e => e.fritPartyId === this.selectedId()));
-  canEdit = computed(() => this.auth.currentUserSignal()?.nombre.trim().toLowerCase() === 'arnau');
+  canEdit = computed(() => this.auth.currentUserSignal()?.esGestorPrincipal === true);
   loading = signal(false);
   saving = signal(false);
   error = signal('');
