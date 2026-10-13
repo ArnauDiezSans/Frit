@@ -31,6 +31,7 @@ public class AppDbContext : DbContext
 
     public int CurrentTenantId => _currentTenant is null ? 1 : _currentTenant.TenantId ?? 0;
 
+    public DbSet<FritParty> FritPartys => Set<FritParty>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<Juego> Juegos => Set<Juego>();
@@ -67,6 +68,12 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<FritParty>(entity =>
+        {
+            entity.HasKey(p => p.FritPartyId);
+            entity.Property(p => p.Nombre).IsRequired().HasMaxLength(200);
+            entity.HasIndex(p => new { p.TenantId, p.Fin });
+        });
 
         modelBuilder.Entity<EconomiaMoviment>(entity =>
         {
@@ -621,6 +628,8 @@ public class AppDbContext : DbContext
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
+        if (NeedsFritPartyFreeze())
+            new FritPartyService(this, TimeProvider.System).FreezeDue().GetAwaiter().GetResult();
         ApplyTenantRules();
         var pending = CapturePendingAudits();
         if (pending.Count == 0)
@@ -642,6 +651,8 @@ public class AppDbContext : DbContext
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
+        if (NeedsFritPartyFreeze())
+            await new FritPartyService(this, TimeProvider.System).FreezeDue();
         ApplyTenantRules();
         var pending = CapturePendingAudits();
         if (pending.Count == 0)
@@ -662,6 +673,11 @@ public class AppDbContext : DbContext
 
         return result;
     }
+
+    private bool NeedsFritPartyFreeze() => Database.IsNpgsql() && Database.CurrentTransaction is null &&
+        ChangeTracker.Entries().Any(entry =>
+            entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted &&
+            entry.Entity is Partida or PartidaJugador or Juego or Usuario);
 
     private void ConfigureTenantFilter<TEntity>(ModelBuilder modelBuilder)
         where TEntity : class, ITenantEntity

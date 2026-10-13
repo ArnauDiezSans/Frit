@@ -18,5 +18,7 @@ public class PartidaJugadorDto
     [Range(1, int.MaxValue)]
     public int Posicion { get; set; }
 
+    public int? Equipo { get; set; }
+
     public decimal? Puntos { get; set; }
 }

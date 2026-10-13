@@ -112,6 +112,11 @@
             </label>
 
             <label class="column-option">
+              <input type="checkbox" [checked]="visibleColumns().puntosFritparty" (change)="toggleColumn('puntosFritparty')" />
+              <span>Punts Fritparty</span>
+            </label>
+
+            <label class="column-option">
               <input
                 type="checkbox"
                 [checked]="visibleColumns().fechaAdquisicion"
@@ -231,6 +236,7 @@
           <col *ngIf="visibleColumns().tipo" class="col-type" />
           <col *ngIf="visibleColumns().pvp" class="col-price" />
           <col *ngIf="visibleColumns().dificultadBgg" class="col-weight" />
+          <col *ngIf="visibleColumns().puntosFritparty" class="col-fritparty" />
           <col *ngIf="visibleColumns().fechaAdquisicion" class="col-date" />
           <col class="col-actions" />
         </colgroup>
@@ -284,6 +290,10 @@
               class="sortable"
               (click)="ordenarPor('dificultadBgg')">
               <span>Pes BGG{{ getSortIndicator('dificultadBgg') }}</span>
+            </th>
+            <th *ngIf="visibleColumns().puntosFritparty" class="sortable" (click)="ordenarPor('puntosFritparty')"
+              title="Punts per guanyar amb el nombre de jugadors màxim. Cooperatius ×1, solitaris ×1,5 i equips ×2. Límit ×10.">
+              <span>Punts Fritparty{{ getSortIndicator('puntosFritparty') }}</span>
             </th>
             <th
               *ngIf="visibleColumns().fechaAdquisicion"
@@ -367,6 +377,7 @@
                 [value]="filters().dificultadBgg"
                 (input)="updateFilter('dificultadBgg', $any($event.target).value)" />
             </th>
+            <th *ngIf="visibleColumns().puntosFritparty"></th>
             <th *ngIf="visibleColumns().fechaAdquisicion"></th>
             <th></th>
           </tr>
@@ -403,6 +414,9 @@
 
             <td *ngIf="visibleColumns().dificultadBgg" data-label="Pes BGG">
               <span class="cell-value">{{ formatDificultadBgg(juego.dificultadBgg) }}</span>
+            </td>
+            <td *ngIf="visibleColumns().puntosFritparty" data-label="Punts Fritparty">
+              <span class="cell-value">{{ getPuntosFritparty(juego) === null ? '-' : (getPuntosFritparty(juego) | number:'1.2-3') }}</span>
             </td>
             <td *ngIf="visibleColumns().fechaAdquisicion" data-label="Adquisició">
               <span class="cell-value">{{ juego.fechaAdquisicion ? formatFecha(juego.fechaAdquisicion) : '-' }}</span>

@@ -19,5 +19,7 @@ public class PartidaJugador : ITenantEntity
 
     public int Posicion { get; set; }
 
+    public int? Equipo { get; set; }
+
     public decimal? Puntos { get; set; }
 }

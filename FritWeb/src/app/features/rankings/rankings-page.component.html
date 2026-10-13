@@ -1,4 +1,4 @@
-﻿<section class="dashboard-page">
+<section class="dashboard-page">
   <header class="dashboard-header">
     <div>
       <p class="eyebrow">Frit</p>
@@ -21,7 +21,7 @@
   </section>
 
   <ng-container *ngIf="!loading() && !error() && rankings() as data">
-    <section class="stats-grid" *ngIf="activeRankingView() !== 'hallOfFame'">
+    <section class="stats-grid" *ngIf="activeRankingView() !== 'hallOfFame' && activeRankingView() !== 'fritpartys'">
       <article class="stat-card">
         <span class="stat-label">Joc més jugat</span>
         <strong class="stat-value stat-value-text">{{ topGameByActivity()?.nombre || '-' }}</strong>
@@ -76,6 +76,10 @@
         (click)="selectRankingView('charts')">
         Gràfiques
       </button>
+      <button type="button" role="tab" class="ranking-view-option"
+        [attr.aria-selected]="activeRankingView() === 'fritpartys'"
+        [class.ranking-view-option-active]="activeRankingView() === 'fritpartys'"
+        (click)="selectRankingView('fritpartys')">FritPartys</button>
       <button
         type="button"
         role="tab"
@@ -87,6 +91,8 @@
         Saló de la fama
       </button>
     </div>
+
+    <app-fritpartys *ngIf="activeRankingView() === 'fritpartys'" />
 
     <section class="content-card" *ngIf="activeRankingView() === 'game'">
       <div class="section-heading">

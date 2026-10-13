@@ -50,6 +50,7 @@ type FormJugador = {
   usuarioSearch: string;
   nombreMostrado: string;
   equipoColor: string;
+  equipo?: number | null;
   posicion: number;
   puntos: number | null;
   nivelIds: number[];
@@ -686,7 +687,7 @@ export class PartidasPageComponent implements OnInit, OnDestroy {
       fecha: partida.fecha,
       duracionMinutos: partida.duracionMinutos ?? null,
       numeroJugadores: partida.numeroJugadores,
-      perEquips: false,
+      perEquips: jugadores.some(j => j.equipo != null),
       nivelIdsTodos: [],
       observaciones: partida.observaciones ?? ''
     });
@@ -703,6 +704,11 @@ export class PartidasPageComponent implements OnInit, OnDestroy {
       this.syncJugadoresWithNumero(partida.numeroJugadores);
     }
 
+    if (jugadores.some(j => j.equipo != null)) {
+      const teams = new Map<number, PartidaJugador[]>();
+      jugadores.forEach(j => { const key = j.equipo ?? j.posicion; teams.set(key, [...(teams.get(key) ?? []), j]); });
+      [...teams.values()].forEach(team => this.equiposArray.push(this.createEquipoGroup(team[0].posicion, team.length, team)));
+    }
     this.filteredJuegos.set(this.juegos());
     this.filteredUsuarios.set(this.usuarios());
     this.formError.set('');
@@ -1051,7 +1057,7 @@ export class PartidasPageComponent implements OnInit, OnDestroy {
     }
 
     const rawJugadores = raw.perEquips
-      ? (raw.equipos ?? []).flatMap(equipo => equipo.jugadores ?? [])
+      ? (raw.equipos ?? []).flatMap((equipo, index) => (equipo.jugadores ?? []).map(jugador => ({ ...jugador, equipo: index + 1 })))
       : (raw.jugadores ?? []);
     const globalLevelIds = raw.nivelIdsTodos ?? [];
 
@@ -1062,6 +1068,7 @@ export class PartidasPageComponent implements OnInit, OnDestroy {
         usuarioId: jugador.usuarioId ?? null,
         nombreMostrado: (jugador.usuarioSearch ?? '').trim(),
         posicion: Number(jugador.posicion) || index + 1,
+        equipo: raw.perEquips ? jugador.equipo ?? null : null,
         puntos: jugador.puntos ?? null
       })
     );

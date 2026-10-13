@@ -663,6 +663,43 @@ namespace FritApi.Migrations
                     b.ToTable("EncuestaRespuestaValores");
                 });
 
+            modelBuilder.Entity("FritApi.Models.FritParty", b =>
+                {
+                    b.Property<int>("FritPartyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FritPartyId"));
+
+                    b.Property<DateOnly>("Fin")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("FrozenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Inicio")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Snapshot")
+                        .HasColumnType("text");
+
+                    b.Property<int>("TenantId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("FritPartyId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Fin");
+
+                    b.ToTable("FritPartys");
+                });
+
             modelBuilder.Entity("FritApi.Models.Juego", b =>
                 {
                     b.Property<int>("JuegoId")
@@ -1017,6 +1054,9 @@ namespace FritApi.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PartidaJugadorId"));
+
+                    b.Property<int?>("Equipo")
+                        .HasColumnType("integer");
 
                     b.Property<string>("NombreMostrado")
                         .IsRequired()
@@ -1662,6 +1702,15 @@ namespace FritApi.Migrations
                     b.Navigation("Pregunta");
 
                     b.Navigation("Respuesta");
+                });
+
+            modelBuilder.Entity("FritApi.Models.FritParty", b =>
+                {
+                    b.HasOne("FritApi.Models.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("FritApi.Models.Juego", b =>

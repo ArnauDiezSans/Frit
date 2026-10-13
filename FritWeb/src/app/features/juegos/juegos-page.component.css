@@ -736,3 +736,5 @@ h1 {
 .checkbox-field input[type="checkbox"],
 .game-mode-field input[type="checkbox"] { width:19px;height:19px;accent-color:#0f766e }
 .game-mode-options { display:flex;flex-wrap:wrap;gap:4px 18px;min-height:42px }
+
+.col-fritparty { width: 130px; }

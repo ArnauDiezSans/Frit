@@ -31,6 +31,7 @@ type SortColumn =
   | 'propietario'
   | 'tipo'
   | 'pvp'
+  | 'puntosFritparty'
   | 'dificultadBgg'
   | 'fechaAdquisicion';
 
@@ -54,6 +55,7 @@ interface VisibleColumns {
   propietario: boolean;
   tipo: boolean;
   pvp: boolean;
+  puntosFritparty: boolean;
   dificultadBgg: boolean;
   fechaAdquisicion: boolean;
 }
@@ -77,6 +79,7 @@ const DEFAULT_VISIBLE_COLUMNS: VisibleColumns = {
   tipo: true,
   pvp: true,
   dificultadBgg: true,
+  puntosFritparty: true,
   fechaAdquisicion: false
 };
 
@@ -88,6 +91,7 @@ const SORT_COLUMNS: SortColumn[] = [
   'tipo',
   'pvp',
   'dificultadBgg',
+  'puntosFritparty',
   'fechaAdquisicion'
 ];
 
@@ -103,6 +107,7 @@ function normalizeVisibleColumns(value: Partial<VisibleColumns>): VisibleColumns
     propietario: value.propietario ?? DEFAULT_VISIBLE_COLUMNS.propietario,
     tipo: value.tipo ?? DEFAULT_VISIBLE_COLUMNS.tipo,
     pvp: value.pvp ?? DEFAULT_VISIBLE_COLUMNS.pvp,
+    puntosFritparty: value.puntosFritparty ?? DEFAULT_VISIBLE_COLUMNS.puntosFritparty,
     dificultadBgg: value.dificultadBgg ?? DEFAULT_VISIBLE_COLUMNS.dificultadBgg,
     fechaAdquisicion: value.fechaAdquisicion ?? DEFAULT_VISIBLE_COLUMNS.fechaAdquisicion
   };
@@ -279,6 +284,9 @@ export class JuegosPageComponent implements OnInit {
         case 'pvp':
           return ((a.pvp ?? 0) - (b.pvp ?? 0)) * direction;
 
+        case 'puntosFritparty':
+          return ((this.getPuntosFritparty(a) ?? 0) - (this.getPuntosFritparty(b) ?? 0)) * direction;
+
         case 'dificultadBgg':
           return ((a.dificultadBgg ?? 0) - (b.dificultadBgg ?? 0)) * direction;
 
@@ -440,6 +448,7 @@ export class JuegosPageComponent implements OnInit {
       tipo: nextValue,
       pvp: nextValue,
       dificultadBgg: nextValue,
+      puntosFritparty: nextValue,
       fechaAdquisicion: nextValue
     });
   }
@@ -510,6 +519,14 @@ export class JuegosPageComponent implements OnInit {
     return juego.esPropiedadTenant
       ? (this.authService.currentUser?.tenantNom ?? 'Grup')
       : this.getNombrePropietario(juego.propietarioId);
+  }
+
+  getPuntosFritparty(juego: Juego): number | null {
+    if (juego.dificultadBgg == null || juego.dificultadBgg <= 0) return null;
+    const multiplier = juego.esCooperativo ? 1
+      : juego.numeroJugadoresMax === 1 ? 1.5
+      : juego.esPorEquipos ? 2 : Math.min(juego.numeroJugadoresMax, 10);
+    return juego.dificultadBgg * multiplier;
   }
 
   formatDificultadBgg(value: number | null | undefined): string {

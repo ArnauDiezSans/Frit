@@ -15,6 +15,7 @@ export interface PartidaJugador {
   usuarioId?: number | null;
   nombreMostrado: string;
   posicion: number;
+  equipo?: number | null;
   puntos?: number | null;
 }
 

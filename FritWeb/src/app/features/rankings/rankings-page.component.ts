@@ -1,3 +1,4 @@
+import { FritPartysComponent } from './fritpartys.component';
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
@@ -23,7 +24,7 @@ type GameSortColumn = 'nombre' | 'partidas' | 'horas' | 'mitjana' | 'preuPerPart
 type UserSortColumn = 'usuario' | 'joc' | 'partidas' | 'horas' | 'victorias' | 'posicionRelativa' | 'pesBggMig' | 'porcentaje' | 'ultima';
 type GameDetailSortColumn = 'usuario' | 'partidas' | 'victorias' | 'posicionRelativa' | 'porcentaje';
 type SortDirection = 'asc' | 'desc';
-type ActiveRankingView = 'game' | 'user' | 'charts' | 'hallOfFame';
+type ActiveRankingView = 'game' | 'user' | 'charts' | 'hallOfFame' | 'fritpartys';
 
 interface GameRankingRow {
   juegoId: number;
@@ -217,7 +218,7 @@ const LINE_CHART_PADDING = {
 @Component({
   selector: 'app-rankings-page',
   standalone: true,
-  imports: [CommonModule, MenuComponent, HallOfFamePageComponent, GameTypeFilterComponent],
+  imports: [FritPartysComponent, CommonModule, MenuComponent, HallOfFamePageComponent, GameTypeFilterComponent],
   templateUrl: './rankings-page.component.html',
   styleUrl: './rankings-page.component.css'
 })

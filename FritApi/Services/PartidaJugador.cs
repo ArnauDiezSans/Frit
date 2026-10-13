@@ -27,6 +27,7 @@ public class PartidaJugadorService
                 UsuarioId = pj.UsuarioId,
                 NombreMostrado = pj.NombreMostrado,
                 Posicion = pj.Posicion,
+                Equipo = pj.Equipo,
                 Puntos = pj.Puntos
             })
             .ToListAsync();
@@ -43,6 +44,7 @@ public class PartidaJugadorService
                 UsuarioId = pj.UsuarioId,
                 NombreMostrado = pj.NombreMostrado,
                 Posicion = pj.Posicion,
+                Equipo = pj.Equipo,
                 Puntos = pj.Puntos
             })
             .FirstOrDefaultAsync();
@@ -79,6 +81,7 @@ public class PartidaJugadorService
             UsuarioId = dto.UsuarioId,
             NombreMostrado = dto.NombreMostrado.Trim(),
             Posicion = dto.Posicion,
+            Equipo = dto.Equipo,
             Puntos = dto.Puntos
         };
 
@@ -92,6 +95,7 @@ public class PartidaJugadorService
             UsuarioId = item.UsuarioId,
             NombreMostrado = item.NombreMostrado,
             Posicion = item.Posicion,
+            Equipo = item.Equipo,
             Puntos = item.Puntos
         });
     }
@@ -136,6 +140,7 @@ public class PartidaJugadorService
         item.UsuarioId = dto.UsuarioId;
         item.NombreMostrado = dto.NombreMostrado.Trim();
         item.Posicion = dto.Posicion;
+        item.Equipo = dto.Equipo;
         item.Puntos = dto.Puntos;
 
         await _context.SaveChangesAsync();
@@ -147,6 +152,7 @@ public class PartidaJugadorService
             UsuarioId = item.UsuarioId,
             NombreMostrado = item.NombreMostrado,
             Posicion = item.Posicion,
+            Equipo = item.Equipo,
             Puntos = item.Puntos
         });
     }

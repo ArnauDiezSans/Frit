@@ -135,6 +135,8 @@ builder.Services.AddScoped<CsopaService>();
 builder.Services.AddScoped<AQueJuguemService>();
 builder.Services.AddScoped<LaLlistaService>();
 builder.Services.AddScoped<RankingsService>();
+builder.Services.AddScoped<FritPartyService>();
+builder.Services.AddHostedService<FritPartyWorker>();
 builder.Services.AddScoped<HallOfFameService>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<EconomiaService>();
@@ -169,6 +171,13 @@ app.UseForwardedHeaders();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+// Freeze completed editions before an API request can change matches or BGG weights.
+app.Use(async (http, next) =>
+{
+    if (http.Request.Path.StartsWithSegments("/api") && http.User.Identity?.IsAuthenticated == true)
+        await http.RequestServices.GetRequiredService<FritPartyService>().FreezeDue();
+    await next(http);
+});
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

@@ -1,0 +1,64 @@
+<section class="party-card">
+  <div class="party-heading">
+    <h2>FritPartys</h2>
+    <div class="edition-toolbar">
+      <label class="edition-select" *ngIf="editions().length">Edició
+        <select [ngModel]="selectedId()" (ngModelChange)="selectedId.set(+$event); pending = null">
+          <option *ngFor="let edition of editions()" [ngValue]="edition.fritPartyId">{{ edition.nombre }}</option>
+        </select>
+      </label>
+      <button type="button" (click)="open()" [disabled]="loading() || saving() || missing().length > 0">Nova edició</button>
+    </div>
+  </div>
+  <p *ngIf="loading()" role="status">Carregant FritPartys…</p>
+  <div class="warning" *ngIf="missing().length"><strong>Cal completar els pesos BGG per iniciar una Fritparty.</strong><p>{{ missing().join(', ') }}</p></div>
+  <div class="error" *ngIf="error()" role="alert">{{ error() }} <button type="button" *ngIf="!formOpen()" (click)="load()">Tornar-ho a provar</button></div>
+  <form *ngIf="formOpen()" (ngSubmit)="save()" class="edition-form">
+    <h3>{{ editingId ? 'Editar edició' : 'Nova edició' }}</h3>
+    <label>Nom <input name="nombre" [(ngModel)]="form.nombre" required maxlength="200" /></label>
+    <label>Data d’inici <input name="inicio" type="date" [(ngModel)]="form.inicio" required /></label>
+    <label>Data de final <input name="fin" type="date" [(ngModel)]="form.fin" [min]="form.inicio" required /></label>
+    <p *ngIf="editingId">Si canvies les dates, es recalcularan els resultats. Si l’edició ja ha acabat, es tornaran a congelar.</p>
+    <div class="actions"><button type="submit" [disabled]="saving()">{{ saving() ? 'Desant…' : 'Desar' }}</button><button type="button" class="secondary" [disabled]="saving()" (click)="formOpen.set(false)">Cancel·lar</button></div>
+  </form>
+  <p *ngIf="!loading() && !editions().length">Encara no hi ha cap edició. Crea la primera Fritparty.</p>
+  <ng-container *ngIf="selected() as edition">
+    <div class="party-heading"><div><h3>{{ edition.nombre }}</h3><p>{{ edition.inicio | date:'dd/MM/yyyy' }} – {{ edition.fin | date:'dd/MM/yyyy' }} · {{ edition.frozenAt ? 'Resultats congelats' : 'Resultats provisionals' }}</p></div>
+      <div class="actions" *ngIf="canEdit()"><button type="button" class="secondary" [disabled]="saving()" (click)="open(edition)">Editar</button><button type="button" class="secondary" *ngIf="edition.frozenAt" [disabled]="saving()" (click)="pending = 'recalculate'">Recalcular</button><button type="button" class="danger" [disabled]="saving()" (click)="pending = 'delete'">Eliminar</button></div>
+    </div>
+    <div class="warning" *ngIf="pending"><p>{{ pending === 'delete' ? 'Vols eliminar aquesta edició i els seus resultats?' : 'Vols substituir els resultats congelats amb les dades actuals de les partides?' }}</p><div class="actions"><button type="button" [disabled]="saving()" (click)="confirmAction()">Confirmar</button><button type="button" class="secondary" [disabled]="saving()" (click)="pending = null">Cancel·lar</button></div></div>
+    <p class="warning" *ngFor="let message of edition.errores">{{ message }}</p>
+    <p *ngIf="!edition.jugadores.length">No hi ha partides registrades dins d’aquestes dates.</p>
+    <ol class="standings" aria-label="Classificació Fritparty">
+      <li *ngFor="let player of edition.jugadores">
+        <details><summary><span class="place">{{ player.posicion }}</span>
+          <span class="player">
+            <button type="button" class="player-games medal-games-trigger" [attr.aria-label]="'Veure els jocs puntuats de ' + player.nombre"
+              (click)="$event.preventDefault(); $event.stopPropagation(); gamesPlayer.set(player)">
+              <strong>{{ player.nombre }}</strong>
+              <span class="medal-games-tooltip" aria-hidden="true">
+                <strong>Jocs puntuats de {{ player.nombre }}</strong>
+                <span *ngFor="let game of player.partidas">{{ game.juego }} · {{ game.puntos | number:'1.2-3' }} punts</span>
+              </span>
+            </button>
+          </span>
+          <span class="count">{{ player.partidas.length }}/10 jocs · {{ player.partidasTotales }} jugades</span><strong>{{ player.puntos | number:'1.2-3' }} punts</strong></summary>
+          <div class="table-scroll"><table><thead><tr><th>Data</th><th>Joc</th><th>Posició</th><th>Pes BGG</th><th>Multiplicador</th><th>Punts</th></tr></thead><tbody><tr *ngFor="let game of player.partidas"><td>{{ game.fecha | date:'dd/MM/yyyy' }}</td><td>{{ game.juego }}</td><td>{{ game.posicion }}</td><td>{{ game.peso | number:'1.2-3' }}</td><td>×{{ game.multiplicador }}</td><td>{{ game.puntos | number:'1.2-3' }}</td></tr></tbody></table></div>
+        </details>
+      </li>
+    </ol>
+  </ng-container>
+  <div class="games-modal-backdrop" *ngIf="gamesPlayer() as player" (click)="gamesPlayer.set(null)" (keydown.escape)="gamesPlayer.set(null)">
+    <section class="games-modal-card" role="dialog" aria-modal="true" [attr.aria-label]="'Jocs puntuats de ' + player.nombre" (click)="$event.stopPropagation()">
+      <div class="games-modal-header"><div><h3>{{ player.nombre }}</h3><p>{{ player.puntos | number:'1.2-3' }} punts</p></div><button type="button" class="secondary" (click)="gamesPlayer.set(null)">Tancar</button></div>
+      <ul class="player-games-list"><li *ngFor="let game of player.partidas"><span>{{ game.juego }}</span><strong>{{ game.puntos | number:'1.2-3' }} punts</strong></li></ul>
+    </section>
+  </div>
+  <details class="rules">
+    <summary>Com es calculen els punts?</summary>
+    <p>De cada joc només compta la partida que dona més punts a cada jugador. Se sumen les 10 millors puntuacions de jocs diferents dins de les dates de l’edició, inclosos el dia inicial i el final. Amb menys de 10 jocs, se sumen totes les puntuacions disponibles.</p>
+    <p>Pes BGG × (rivals superats, amb un mínim de 0,5, +1 per victòria). El multiplicador màxim és 10. Els rivals empatats no compten com a superats. Per equips es compten els equips superats: amb dos equips, els guanyadors multipliquen per 2 i els perdedors per 0,5.</p>
+    <p>En cooperatius: ×1 per victòria i ×0,5 per derrota. En solitaris: ×1,5 per victòria i ×0,5 per derrota.</p>
+    <p>Els empats comparteixen posició. Els resultats es desen en acabar l’edició i només Arnau pot corregir-los.</p>
+  </details>
+</section>

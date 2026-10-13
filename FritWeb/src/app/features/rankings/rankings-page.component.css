@@ -1,4 +1,4 @@
-﻿.dashboard-page {
+.dashboard-page {
   min-height: 100vh;
   padding: 24px;
   background: #f5f6f8;
@@ -51,7 +51,7 @@ h1 {
   margin: 0 auto 18px;
   padding: 4px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 4px;
   border: 1px solid #d0d5dd;
   border-radius: 14px;
@@ -60,7 +60,7 @@ h1 {
 }
 
 .ranking-view-switch-with-hall {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 .ranking-view-option {
