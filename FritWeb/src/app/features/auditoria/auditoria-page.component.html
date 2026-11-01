@@ -21,7 +21,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of items()">
+          <tr *ngFor="let item of items()" data-detail-row tabindex="0" role="button" [attr.data-detail-title]="objectLabel(item)">
             <td data-label="Quan">{{ item.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td><td data-label="Usuari">{{ item.usuarioNombre }}</td><td data-label="IP"><code>{{ item.ip || '—' }}</code></td>
             <td data-label="Acció"><span class="action-badge" [attr.data-action]="item.accion">{{ item.accion }}</span></td><td data-label="Entitat">{{ item.entidad }}</td>
             <td data-label="Objecte"><strong>{{ objectLabel(item) }}</strong><small *ngIf="item.registroNombre">{{ item.registroId }}</small></td>

@@ -251,7 +251,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of gameRows(); let i = index; trackBy: trackByGameRow">
+            <tr *ngFor="let item of gameRows(); let i = index; trackBy: trackByGameRow"
+              class="ranking-row-action" tabindex="0" role="button"
+              [attr.aria-label]="'Veure el detall de ' + item.nombre"
+              (click)="openGameDetail(item, i + 1)"
+              (keydown.enter)="openGameDetail(item, i + 1)"
+              (keydown.space)="$event.preventDefault(); openGameDetail(item, i + 1)">
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="gameColumns().nombre" data-label="Joc"><span class="cell-title">{{ item.nombre }}</span></td>
               <td *ngIf="gameColumns().partidas" data-label="Partides">{{ item.numeroPartidas }}</td>
@@ -278,7 +283,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of selectedGameRows(); let i = index; trackBy: trackByUserRow">
+            <tr *ngFor="let item of selectedGameRows(); let i = index; trackBy: trackByUserRow"
+              class="ranking-row-action" tabindex="0" role="button"
+              [attr.aria-label]="'Veure el detall de ' + item.usuarioNombre"
+              (click)="openUserDetail(item, i + 1)"
+              (keydown.enter)="openUserDetail(item, i + 1)"
+              (keydown.space)="$event.preventDefault(); openUserDetail(item, i + 1)">
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="detailColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
               <td *ngIf="detailColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
@@ -432,7 +442,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of userRows(); let i = index; trackBy: trackByUserRow">
+            <tr *ngFor="let item of userRows(); let i = index; trackBy: trackByUserRow"
+              class="ranking-row-action" tabindex="0" role="button"
+              [attr.aria-label]="'Veure el detall de ' + item.usuarioNombre"
+              (click)="openUserDetail(item, i + 1)"
+              (keydown.enter)="openUserDetail(item, i + 1)"
+              (keydown.space)="$event.preventDefault(); openUserDetail(item, i + 1)">
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="userColumns().usuario" data-label="Usuari"><span class="cell-title">{{ item.usuarioNombre }}</span></td>
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
@@ -462,7 +477,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of selectedUserGameRows(); let i = index; trackBy: trackByUserGameRow">
+            <tr *ngFor="let item of selectedUserGameRows(); let i = index; trackBy: trackByUserGameRow"
+              class="ranking-row-action" tabindex="0" role="button"
+              [attr.aria-label]="'Veure el detall de ' + item.juegoNombre"
+              (click)="openUserGameDetail(item, i + 1)"
+              (keydown.enter)="openUserGameDetail(item, i + 1)"
+              (keydown.space)="$event.preventDefault(); openUserGameDetail(item, i + 1)">
               <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
               <td *ngIf="userColumns().joc" data-label="Joc"><span class="cell-title">{{ item.juegoNombre }}</span></td>
               <td *ngIf="userColumns().partidas" data-label="Partides">{{ item.partidasTotales }}</td>
@@ -742,3 +762,21 @@
     <app-hall-of-fame-page *ngIf="activeRankingView() === 'hallOfFame'" [embedded]="true"></app-hall-of-fame-page>
   </ng-container>
 </section>
+
+<div class="ranking-detail-backdrop" *ngIf="selectedRankingDetail() as detail" (click)="closeRankingDetail()">
+  <section class="ranking-detail-dialog" role="dialog" aria-modal="true" [attr.aria-label]="'Detall de ' + detail.title" (click)="$event.stopPropagation()">
+    <div class="ranking-detail-header">
+      <div>
+        <span class="ranking-detail-position">Posició {{ detail.position }}</span>
+        <h2>{{ detail.title }}</h2>
+      </div>
+      <button type="button" class="ranking-detail-close" aria-label="Tancar el detall" (click)="closeRankingDetail()">×</button>
+    </div>
+    <dl class="ranking-detail-list">
+      <div *ngFor="let entry of detail.entries">
+        <dt>{{ entry.label }}</dt>
+        <dd>{{ entry.value }}</dd>
+      </div>
+    </dl>
+  </section>
+</div>

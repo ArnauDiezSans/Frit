@@ -1,1 +1,16 @@
 <router-outlet></router-outlet>
+
+<div class="app-detail-backdrop" *ngIf="detailDialog() as detail" (click)="closeDetailDialog()">
+  <section class="app-detail-dialog" role="dialog" aria-modal="true" [attr.aria-label]="'Detall de ' + detail.title" (click)="$event.stopPropagation()">
+    <header>
+      <h2>{{ detail.title }}</h2>
+      <button type="button" aria-label="Tancar el detall" (click)="closeDetailDialog()">×</button>
+    </header>
+    <dl>
+      <div *ngFor="let entry of detail.entries">
+        <dt>{{ entry.label }}</dt>
+        <dd>{{ entry.value }}</dd>
+      </div>
+    </dl>
+  </section>
+</div>

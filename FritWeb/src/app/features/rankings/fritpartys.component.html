@@ -39,7 +39,7 @@
             {{ player.partidas.length }}/10 jocs puntuats
           </button>
           <strong>{{ player.puntos | number:'1.2-3' }} punts</strong></summary>
-          <div class="table-scroll"><table><thead><tr><th>Data</th><th>Joc</th><th>Posició</th><th>Pes BGG</th><th>Multiplicador</th><th>Punts</th></tr></thead><tbody><tr *ngFor="let game of player.partidas"><td>{{ game.fecha | date:'dd/MM/yyyy' }}</td><td>{{ game.juego }}</td><td>{{ game.posicion }}</td><td>{{ game.peso | number:'1.2-3' }}</td><td>×{{ game.multiplicador }}</td><td>{{ game.puntos | number:'1.2-3' }}</td></tr></tbody></table></div>
+          <div class="table-scroll"><table><thead><tr><th>Data</th><th>Joc</th><th>Posició</th><th>Pes BGG</th><th>Multiplicador</th><th>Punts</th></tr></thead><tbody><tr *ngFor="let game of player.partidas" data-detail-row tabindex="0" role="button" [attr.data-detail-title]="game.juego"><td>{{ game.fecha | date:'dd/MM/yyyy' }}</td><td>{{ game.juego }}</td><td>{{ game.posicion }}</td><td>{{ game.peso | number:'1.2-3' }}</td><td>×{{ game.multiplicador }}</td><td>{{ game.puntos | number:'1.2-3' }}</td></tr></tbody></table></div>
         </details>
       </li>
     </ol>

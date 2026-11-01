@@ -131,7 +131,7 @@
         </thead>
 
         <tbody>
-          <tr *ngFor="let juego of filteredRecommendations(); let i = index; trackBy: trackByJuegoId">
+          <tr *ngFor="let juego of filteredRecommendations(); let i = index; trackBy: trackByJuegoId" data-detail-row tabindex="0" role="button" [attr.data-detail-title]="juego.nombre">
             <td class="row-number-cell" data-label="#">{{ i + 1 }}</td>
             <td data-label="Nom">
               <span class="cell-title">{{ juego.nombre }}</span>

@@ -60,6 +60,12 @@ interface UserGameRankingRow {
   ultimaPartida: string | null;
 }
 
+interface RankingDetail {
+  title: string;
+  position: number;
+  entries: { label: string; value: string }[];
+}
+
 interface GameFilters {
   juegoId: string;
   fechaDesde: string;
@@ -239,6 +245,7 @@ export class RankingsPageComponent {
   error = signal('');
   rankings = signal<Rankings | null>(null);
   activeRankingView = signal<ActiveRankingView>('game');
+  selectedRankingDetail = signal<RankingDetail | null>(null);
 
   gameFilters = signal<GameFilters>({ ...EMPTY_GAME_FILTERS });
   userFilters = signal<UserFilters>({ ...EMPTY_USER_FILTERS });
@@ -720,6 +727,11 @@ export class RankingsPageComponent {
     this.updateResponsiveState();
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.closeRankingDetail();
+  }
+
   cargarRankings(): void {
     this.loading.set(true);
     this.error.set('');
@@ -1010,6 +1022,56 @@ export class RankingsPageComponent {
       next: () => this.router.navigateByUrl('/login'),
       error: () => this.router.navigateByUrl('/login')
     });
+  }
+
+  openGameDetail(item: GameRankingRow, position: number): void {
+    this.selectedRankingDetail.set({
+      title: item.nombre,
+      position,
+      entries: [
+        { label: 'Partides', value: String(item.numeroPartidas) },
+        { label: 'Hores jugades', value: this.formatHours(item.duracionTotalMinutos) },
+        { label: 'Durada mitjana', value: this.formatMinutes(item.duracionMediaMinutos) },
+        { label: 'Preu per partida', value: this.formatCurrency(item.precioPorPartida) },
+        { label: 'Preu per jugador i partida', value: this.formatCurrency(item.precioPorJugadorPartida) },
+        { label: 'Última partida', value: this.formatDate(item.ultimaPartida) }
+      ]
+    });
+  }
+
+  openUserDetail(item: UserRankingRow, position: number): void {
+    this.selectedRankingDetail.set({
+      title: item.usuarioNombre,
+      position,
+      entries: [
+        { label: 'Partides', value: String(item.partidasTotales) },
+        { label: 'Hores jugades', value: this.formatHours(item.duracionTotalMinutos) },
+        { label: 'Victòries', value: String(item.victorias) },
+        { label: 'Posició relativa', value: String(item.posicionRelativa) },
+        { label: 'Pes BGG mitjà', value: this.formatBggWeight(item.pesBggMig) },
+        { label: 'Percentatge de victòries', value: this.formatPercent(item.porcentajeVictoria) }
+      ]
+    });
+  }
+
+  openUserGameDetail(item: UserGameRankingRow, position: number): void {
+    this.selectedRankingDetail.set({
+      title: item.juegoNombre,
+      position,
+      entries: [
+        { label: 'Partides', value: String(item.partidasTotales) },
+        { label: 'Hores jugades', value: this.formatHours(item.duracionTotalMinutos) },
+        { label: 'Victòries', value: String(item.victorias) },
+        { label: 'Posició relativa', value: String(item.posicionRelativa) },
+        { label: 'Pes BGG mitjà', value: this.formatBggWeight(item.pesBggMig) },
+        { label: 'Percentatge de victòries', value: this.formatPercent(item.porcentajeVictoria) },
+        { label: 'Última partida', value: this.formatDate(item.ultimaPartida) }
+      ]
+    });
+  }
+
+  closeRankingDetail(): void {
+    this.selectedRankingDetail.set(null);
   }
 
   trackByGameRow(_: number, item: GameRankingRow): number {

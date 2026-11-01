@@ -169,7 +169,7 @@
 
         <tbody>
           <ng-container *ngFor="let row of filteredRows(); let i = index; trackBy: trackByRowKey">
-            <tr [class.row-highlight]="highlightedKey() === row.key">
+            <tr [class.row-highlight]="highlightedKey() === row.key" data-detail-row tabindex="0" role="button" [attr.data-detail-title]="row.titol">
               <td class="activity-type-cell" aria-label="Tipus">
                 <i
                   *ngIf="row.tipusIcon"
