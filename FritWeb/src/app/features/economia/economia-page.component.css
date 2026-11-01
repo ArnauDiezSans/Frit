@@ -9,3 +9,32 @@
 .category-cell select{width:100%;padding:7px 28px 7px 9px;border:1px solid #cbd5df;border-radius:7px;background:#fff;color:#172033;font:inherit;cursor:pointer}.category-cell select:disabled{opacity:.6;cursor:wait}
 .quota-value{display:inline-flex;align-items:center;gap:5px}.quota-amount{position:relative;display:inline-block}.quota-date{position:absolute;top:100%;right:0;color:#667085;font-size:6px;font-weight:600;line-height:6px;white-space:nowrap;pointer-events:none}.delete-inherited{width:17px;height:17px;padding:0;border:0;border-radius:50%;background:#fee4e2;color:#b42318;font:700 14px/17px Arial,sans-serif;cursor:pointer}.delete-inherited:hover{background:#fecdca;color:#912018}.delete-inherited:focus-visible{outline:2px solid #b42318;outline-offset:2px}
 .total-card{position:relative}.total-card.negative-total strong{color:#b42318}.total-operator{position:absolute;left:-14px;top:50%;z-index:1;width:16px;transform:translate(-50%,-50%);color:#475467;background:#f5f7f8;font-size:1.1rem;line-height:24px;text-align:center;pointer-events:none}
+
+/* Economy is data dense, but on a phone each movement remains independently
+   editable instead of asking the user to pan a five-column spreadsheet. */
+@media(max-width:700px){
+  .economy-page{padding:14px 12px calc(20px + env(safe-area-inset-bottom))}
+  .page-header{gap:12px;margin-bottom:16px}
+  .page-header h1{font-size:1.7rem}
+  .section-switch{position:sticky;top:8px;z-index:15;margin-bottom:14px;box-shadow:0 8px 20px rgba(23,32,51,.12)}
+  .section-switch button{min-height:44px}
+  .panel{margin-bottom:14px;padding:14px 12px;border-radius:14px}
+  .totals-grid{gap:8px;margin-bottom:14px}
+  .total-card{padding:12px 10px}
+  .total-card span{font-size:.72rem}
+  .total-card strong{font-size:1rem;overflow-wrap:anywhere}
+  .total-operator{display:none}
+  .economy-filter{justify-content:stretch}.economy-filter label,.economy-filter select{width:100%}.economy-filter select{min-height:44px}
+  .year-panel{overflow:hidden}.year-panel .table-wrap{margin:0 -12px -14px;padding:0 12px 10px}.year-panel table{min-width:720px}
+  .movements-heading{gap:12px}.movement-tools{gap:8px}.movement-tools label,.movement-tools input{width:100%}
+  .movement-table,.movement-table tbody,.movement-table tr,.movement-table td{display:block;width:100%;min-width:0;table-layout:auto}
+  .movement-table thead{display:none}
+  .movement-table tr{margin-bottom:10px;padding:12px;border:1px solid #e4e7ec;border-radius:12px;background:#fff;box-shadow:0 3px 10px rgba(23,32,51,.04)}
+  .movement-table td{padding:5px 0;border:0;text-align:left!important}
+  .movement-table td::before{display:block;margin-bottom:3px;color:#667085;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+  .movement-table td:nth-child(1)::before{content:'Data'}.movement-table td:nth-child(2)::before{content:'Descriptor'}.movement-table td:nth-child(3)::before{content:'Import'}.movement-table td:nth-child(4)::before{content:'Categoria'}.movement-table td:nth-child(5)::before{content:'Accions'}
+  .movement-table .movement-date,.movement-table .descriptor-button{min-height:44px;text-align:left}.movement-table .descriptor-button{width:100%}
+  .movement-table .amount-cell{font-size:1.05rem;font-weight:800}.movement-table .category-cell select{min-height:44px}.movement-table .row-actions{display:flex;gap:8px;justify-content:stretch}.movement-table .row-actions button{flex:1;min-height:44px}.row-actions button+button{margin-left:0}
+  .descriptor-editor{display:grid;grid-template-columns:1fr 1fr}.descriptor-editor input{grid-column:1/-1;min-height:44px}.descriptor-editor button{min-height:44px}
+  .assignment-modal{align-items:flex-end;padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom))}.assignment-modal section{width:100%;padding:18px;border-radius:18px 18px 12px 12px}.assignment-modal section>div button{min-height:44px;flex:1}
+}

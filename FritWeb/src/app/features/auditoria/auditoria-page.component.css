@@ -1,4 +1,10 @@
 :host { display: block; min-height: 100vh; }
+.dashboard-page { min-height: 100vh; padding: 24px; background: #f5f6f8; color: #1f2937; }
+.dashboard-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; max-width: 1100px; margin: 0 auto 24px; }
+.dashboard-header h1 { margin: 0 0 6px; font-size: 2rem; line-height: 1.12; }
+.eyebrow { margin: 0 0 8px; color: #0f766e; font-size: .8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.subtitle { margin: 0; color: #667085; line-height: 1.45; }
+.content-card { max-width: 1100px; margin: 0 auto 18px; padding: 20px; border: 1px solid #e4e7ec; border-radius: 16px; background: #fff; box-shadow: 0 10px 30px rgba(15, 23, 42, .06); }
 .table-wrapper { overflow: auto; max-height: calc(100vh - 260px); border: 1px solid #e5e7eb; border-radius: 10px; }
 table { width: 100%; border-collapse: collapse; font-size: .86rem; }
 th, td { padding: 11px 9px; border-bottom: 1px solid #e5e7eb; text-align: left; vertical-align: top; }
@@ -9,6 +15,10 @@ th { color: #4b5563; white-space: nowrap; }
 input, select { width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 7px; padding: 8px; background: #fff; color: #111827; font-size: .8rem; }
 .date-filters { display: grid; gap: 5px; min-width: 135px; }
 .grid-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; color: #6b7280; }
+.primary-button, .secondary-button { min-height: 40px; padding: 8px 13px; border-radius: 9px; font: inherit; font-weight: 700; cursor: pointer; }
+.primary-button { border: 1px solid #0f766e; background: #0f766e; color: #fff; }
+.secondary-button { border: 1px solid #0f766e; background: #fff; color: #0f766e; }
+.primary-button:disabled, .secondary-button:disabled { opacity: .55; cursor: not-allowed; }
 .filter-button { width: 100%; }
 code { font-size: .78rem; }
 td small { display: block; margin-top: 4px; color: #6b7280; font-family: monospace; }
@@ -25,13 +35,35 @@ details summary { cursor: pointer; color: #2563eb; font-weight: 700; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 18px; }
 .empty-state { color: #6b7280; text-align: center; padding: 24px; }
 @media (max-width: 760px) {
+  .dashboard-page { padding: 12px 12px calc(20px + env(safe-area-inset-bottom)); }
+  .dashboard-header { gap: 12px; margin-bottom: 14px; }
+  .dashboard-header h1 { margin-bottom: 2px; font-size: 1.7rem; }
+  .eyebrow { margin-bottom: 4px; font-size: .72rem; }
+  .subtitle { display: none; }
+  .content-card { margin-bottom: 12px; padding: 14px 12px; border-radius: 14px; }
+  .grid-toolbar { align-items: stretch; flex-direction: column; }
+  .grid-toolbar .secondary-button, .pagination button { min-height: 44px; }
   .table-wrapper { max-height: none; border: 0; }
   .audit-grid, .audit-grid > tbody, .audit-grid > tbody > tr, .audit-grid > tbody > tr > td { display: block; }
   .audit-grid > thead { display: block; position: static; }
   .audit-grid > thead > tr:first-child { display: none; }
   .filter-row { display: grid; gap: 6px; }
+  .filter-row th { padding: 0; }
+  .filter-row input, .filter-row select, .filter-row button { min-height: 44px; }
   .filter-row th:empty { display: none; }
   .audit-grid > tbody > tr { padding: 10px 0; border-bottom: 1px solid #d1d5db; }
   .audit-grid > tbody > tr > td { display: grid; grid-template-columns: 95px minmax(0, 1fr); border: 0; padding: 6px 0; }
   .audit-grid > tbody > tr > td::before { content: attr(data-label); font-weight: 700; color: #6b7280; }
+  .changes-table { min-width: 0; box-shadow: none; }
+  .changes-table, .changes-table tbody, .changes-table tr, .changes-table th, .changes-table td { display: block; width: 100%; }
+  .changes-table thead { display: none; }
+  .changes-table tr { padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+  .changes-table tbody th { width: auto; padding: 0 0 4px; background: transparent; }
+  .changes-table td { padding: 3px 0; overflow-wrap: anywhere; }
+  .changes-table td::before { display: block; color: #6b7280; font-size: .72rem; font-weight: 700; }
+  .changes-table td:nth-child(2)::before { content: 'Abans'; }
+  .changes-table td:nth-child(3)::before { content: 'Després'; }
+  .pagination { flex-wrap: wrap; gap: 10px; }
+  .pagination span { width: 100%; text-align: center; }
+  .pagination button { flex: 1; }
 }

@@ -163,8 +163,8 @@
   }
 
   .menu-toggle {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     padding: 0;
     border: 1px solid #0f766e;
     border-radius: 12px;
@@ -191,7 +191,7 @@
     right: 0;
     z-index: 50;
     display: none;
-    width: min(92vw, 560px);
+    width: min(calc(100vw - 24px), 560px);
     max-width: none;
     padding: 10px;
     border: 1px solid #e4e7ec;
@@ -212,7 +212,7 @@
 
   .menu-button {
     width: 100%;
-    min-height: 38px;
+    min-height: 44px;
     padding: 0 12px;
     justify-content: center;
     border-radius: 10px;
@@ -220,7 +220,7 @@
 
   .session-actions {
     display: grid;
-    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr);
     grid-column: span 5;
     gap: 8px;
     order: 10;
@@ -246,7 +246,7 @@
     order: 5;
   }
 
-  .menu-randomizer { display: inline-flex; order: 1; grid-column: 9 / 11; width: 100%; min-width: 38px; height: 38px; min-height: 38px; padding: 0; }
+  .menu-randomizer { display: inline-flex; order: 1; grid-column: 9 / 11; width: 100%; min-width: 44px; height: 44px; min-height: 44px; padding: 0; }
   .menu-randomizer svg { width: 18px; height: 18px; stroke-width: 2; }
 
   .menu-assistencia {
@@ -289,9 +289,9 @@
   }
 
   .refresh-icon-button {
-    width: 38px;
-    height: 38px;
-    min-height: 38px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
     aspect-ratio: 1;
     padding: 0;
   }
