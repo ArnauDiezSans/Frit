@@ -9,17 +9,24 @@
 
   <p class="notice success" *ngIf="message()">{{ message() }}</p>
   <p class="notice error" *ngIf="error()">{{ error() }}</p>
-  <section class="survey-list" *ngIf="!loading(); else loadingTpl">
-    <button class="survey-card" *ngFor="let survey of visibleSurveys()" (click)="open(survey.encuestaId)">
+  <section *ngIf="!loading(); else loadingTpl">
+    <section class="survey-list" *ngIf="pendingSurveys().length">
+    <button class="survey-card" *ngFor="let survey of pendingSurveys()" (click)="open(survey.encuestaId)">
       <span class="card-chips">
         <span class="status" [class.open]="survey.estado === Estado.Publicada">{{ statusLabel(survey.estado) }}</span>
         <span class="created-at">{{ survey.createdAt | date:'dd/MM/yy' }}</span>
       </span>
       <span class="survey-title">{{ survey.titulo }}</span><span class="survey-description" *ngIf="!survey.esVotacion">{{ survey.descripcion || 'Sense descripció' }}</span><span class="survey-countdown" *ngIf="!survey.esVotacion && survey.estado === Estado.Publicada && survey.fechaCierre">{{ closingCountdown(survey) }}</span><span class="poll-countdown" *ngIf="survey.esVotacion && survey.estado === Estado.Publicada">⏱ {{ countdown(survey) }}</span>
       <span class="survey-meta"><b>{{ survey.respuestas }}/{{ survey.destinatarios }}</b> respostes · {{ survey.esAnonima ? 'Anònima' : 'Identificada' }}</span>
-      <span class="pending" *ngIf="survey.estado === Estado.Publicada && survey.esDestinatario && !survey.haRespondido">Pendent de respondre</span>
-      <span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span>
+      <span class="pending">Pendent de respondre</span>
     </button>
+    </section>
+    <section class="survey-history" *ngIf="archivedSurveys().length">
+      <header><div><p class="eyebrow">Historial</p><h2>Contestades i tancades</h2></div><p>Consulta'n tots els detalls en mode lectura.</p></header>
+      <button class="survey-row" *ngFor="let survey of archivedSurveys()" (click)="open(survey.encuestaId)">
+        <span class="row-title">{{ survey.titulo }}</span><span class="status" [class.open]="survey.estado === Estado.Publicada">{{ statusLabel(survey.estado) }}</span><span class="row-meta">{{ survey.createdAt | date:'dd/MM/yy' }} · {{ survey.respuestas }}/{{ survey.destinatarios }} respostes</span><span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span><span class="row-open" aria-hidden="true">Veure ›</span>
+      </button>
+    </section>
     <div class="empty" *ngIf="visibleSurveys().length === 0"><h2>Encara no hi ha {{ activeView() }}</h2><p>Crea la primera proposta del grup.</p></div>
   </section>
   <ng-template #loadingTpl><p class="loading">Carregant enquestes...</p></ng-template>
@@ -30,7 +37,7 @@
     <header class="dialog-header"><div><span class="status" [class.open]="d.resumen.estado === Estado.Publicada">{{ statusLabel(d.resumen.estado) }}</span><h2>{{ d.resumen.titulo }}</h2><p>{{ d.resumen.descripcion }}</p></div><button class="icon" (click)="closeDetail()" aria-label="Tancar">×</button></header>
     <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.esVotacion">⏱ {{ countdown(d.resumen) }}</span><span *ngIf="d.resumen.fechaCierre && !d.resumen.esVotacion">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
 
-    <section *ngIf="d.resumen.esDestinatario && d.resumen.estado === Estado.Publicada && (!d.resumen.haRespondido || d.permiteEditarRespuesta)" class="questions">
+    <section *ngIf="canAnswer(d)" class="questions">
       <div class="question" *ngFor="let q of d.preguntas; let i = index" [hidden]="!isQuestionVisible(q)">
         <h3 *ngIf="!d.resumen.esVotacion">{{ i + 1 }}. {{ q.texto }} <small *ngIf="!q.obligatoria">Opcional</small></h3><p *ngIf="q.ayuda">{{ q.ayuda }}</p>
         <label class="choice" [class.poll-choice]="d.resumen.esVotacion" *ngFor="let option of q.opciones">
@@ -47,6 +54,12 @@
         <div class="scale" *ngIf="q.tipo === PreguntaTipo.Escala"><label *ngFor="let n of [].constructor((q.maximo || 5) - (q.minimo || 1) + 1); let x = index"><input type="radio" [name]="'q'+q.encuestaPreguntaId" [checked]="answers[q.encuestaPreguntaId].numero === x + (q.minimo || 1)" (change)="answers[q.encuestaPreguntaId].numero = x + (q.minimo || 1)"><span>{{ x + (q.minimo || 1) }}</span></label></div>
       </div>
       <button class="primary" [disabled]="busy()" (click)="submit()">{{ d.resumen.esVotacion ? (d.resumen.haRespondido ? 'Actualitzar vot' : 'Votar') : (d.resumen.haRespondido ? 'Actualitzar resposta' : 'Enviar resposta') }}</button>
+    </section>
+    <section class="questions read-only-questions" *ngIf="isReadOnly(d)">
+      <div class="question" *ngFor="let q of d.preguntas; let i = index"><h3 *ngIf="!d.resumen.esVotacion">{{ i + 1 }}. {{ q.texto }} <small *ngIf="!q.obligatoria">Opcional</small></h3><p *ngIf="q.ayuda">{{ q.ayuda }}</p>
+        <ng-container *ngIf="q.tipo === PreguntaTipo.OpcionUnica || q.tipo === PreguntaTipo.OpcionMultiple"><div class="choice read-only-choice" *ngFor="let option of q.opciones" [class.selected]="optionSelected(d, q.encuestaPreguntaId, option.encuestaOpcionId)"><span class="choice-mark">{{ optionSelected(d, q.encuestaPreguntaId, option.encuestaOpcionId) ? '✓' : '' }}</span><span>{{ option.texto }}</span></div><p class="read-only-answer" *ngIf="answerFor(d, q.encuestaPreguntaId)?.nuevasOpciones?.length">{{ answerFor(d, q.encuestaPreguntaId)?.nuevasOpciones?.join(', ') }}</p></ng-container>
+        <p class="read-only-answer" *ngIf="q.tipo === PreguntaTipo.TextoCorto || q.tipo === PreguntaTipo.TextoLargo">{{ answerFor(d, q.encuestaPreguntaId)?.texto || 'Sense resposta' }}</p><p class="read-only-answer" *ngIf="q.tipo === PreguntaTipo.Escala">{{ answerFor(d, q.encuestaPreguntaId)?.numero ?? 'Sense resposta' }}</p>
+      </div>
     </section>
     <p class="locked" *ngIf="d.resumen.estado === Estado.Cerrada">Aquesta {{ d.resumen.esVotacion ? 'votació' : 'enquesta' }} està tancada.</p>
     <p class="locked" *ngIf="d.resumen.haRespondido && !d.permiteEditarRespuesta">La teva resposta ja està registrada i no es pot editar.</p>

@@ -35,6 +35,13 @@ export class EnquestesPageComponent implements OnDestroy {
   closeDetail(): void { this.detail.set(null); this.router.navigate([], { queryParams: { enquestaId: null }, queryParamsHandling: 'merge' }); }
   setView(view: 'enquestes' | 'votacions'): void { this.activeView.set(view); this.detail.set(null); this.router.navigate([], { queryParams: { vista: view, enquestaId: null }, queryParamsHandling: 'merge' }); }
   visibleSurveys(): EncuestaResumen[] { return this.surveys().filter(item => item.esVotacion === (this.activeView() === 'votacions')); }
+  pendingSurveys(): EncuestaResumen[] { return this.visibleSurveys().filter(survey => this.needsResponse(survey)); }
+  archivedSurveys(): EncuestaResumen[] { return this.visibleSurveys().filter(survey => !this.needsResponse(survey)); }
+  needsResponse(survey: EncuestaResumen): boolean { return survey.estado === EncuestaEstado.Publicada && survey.esDestinatario && !survey.haRespondido; }
+  canAnswer(detail: EncuestaDetalle): boolean { return this.needsResponse(detail.resumen); }
+  isReadOnly(detail: EncuestaDetalle): boolean { return !this.canAnswer(detail); }
+  answerFor(detail: EncuestaDetalle, questionId: number): RespuestaValor | undefined { return detail.miRespuesta?.find(answer => answer.encuestaPreguntaId === questionId); }
+  optionSelected(detail: EncuestaDetalle, questionId: number, optionId: number): boolean { return this.answerFor(detail, questionId)?.opcionIds.includes(optionId) ?? false; }
 
   newSurvey(): void { this.editingId.set(null); this.draft = this.emptyDraft(); this.editorOpen.set(true); }
   newPoll(): void { this.pollDraft = this.emptyPoll(); this.pollEditorOpen.set(true); }
