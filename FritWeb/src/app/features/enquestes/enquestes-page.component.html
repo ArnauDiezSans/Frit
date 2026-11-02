@@ -22,7 +22,7 @@
     </button>
     </section>
     <section class="survey-history" *ngIf="archivedSurveys().length">
-      <header><div><p class="eyebrow">Historial</p><h2>Contestades i tancades</h2></div><p>Consulta'n tots els detalls en mode lectura.</p></header>
+      <header><div><p class="eyebrow">Historial</p><h2>Contestades i tancades</h2></div></header>
       <button class="survey-row" *ngFor="let survey of archivedSurveys()" (click)="open(survey.encuestaId)">
         <span class="row-title">{{ survey.titulo }}</span><span class="status" [class.open]="survey.estado === Estado.Publicada">{{ statusLabel(survey.estado) }}</span><span class="row-meta">{{ survey.createdAt | date:'dd/MM/yy' }} · {{ survey.respuestas }}/{{ survey.destinatarios }} respostes</span><span class="answered" *ngIf="survey.haRespondido">Resposta enviada</span><span class="row-open" aria-hidden="true">Veure ›</span>
       </button>
