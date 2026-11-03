@@ -26,6 +26,7 @@ export class EnquestesService {
   update(id: number, value: EncuestaWrite): Observable<void> { return this.http.put<void>(`${this.baseUrl}/${id}`, value, { withCredentials: true }); }
   publish(id: number): Observable<void> { return this.http.post<void>(`${this.baseUrl}/${id}/publicar`, {}, { withCredentials: true }); }
   close(id: number): Observable<void> { return this.http.post<void>(`${this.baseUrl}/${id}/cerrar`, {}, { withCredentials: true }); }
+  activate(id: number): Observable<void> { return this.http.post<void>(`${this.baseUrl}/${id}/activar`, {}, { withCredentials: true }); }
   remind(id: number): Observable<{ destinatarios: number }> { return this.http.post<{ destinatarios: number }>(`${this.baseUrl}/${id}/recordar`, {}, { withCredentials: true }); }
   submit(id: number, respuestas: RespuestaValor[]): Observable<void> { return this.http.post<void>(`${this.baseUrl}/${id}/respuestas`, { respuestas }, { withCredentials: true }); }
   delete(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}`, { withCredentials: true }); }

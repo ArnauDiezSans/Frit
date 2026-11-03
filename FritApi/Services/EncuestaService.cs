@@ -132,6 +132,20 @@ public sealed class EncuestaService(
         return (true, null);
     }
 
+    public async Task<(bool Success, string? Error)> ReopenAsync(int id, int actorId, bool isAdmin)
+    {
+        var encuesta = await context.Encuestas.FirstOrDefaultAsync(e => e.EncuestaId == id);
+        if (encuesta is null) return (false, "Enquesta no trobada.");
+        if (!isAdmin && encuesta.UsuarioCreadorId != actorId) return (false, "No pots gestionar una enquesta creada per un altre usuari.");
+        if (encuesta.Estado != EncuestaEstado.Cerrada) return (false, "L’enquesta no està tancada.");
+        if (encuesta.FechaCierre is not null && encuesta.FechaCierre <= DateTime.UtcNow) return (false, "No es pot reactivar una enquesta que ja ha arribat a la data de tancament.");
+        encuesta.Estado = EncuestaEstado.Publicada;
+        encuesta.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+        await RecordEventAsync(id, "Reobertura");
+        return (true, null);
+    }
+
     public async Task<(bool Success, string? Error)> DeleteAsync(int id, int actorId, bool isAdmin)
     {
         var encuesta = await context.Encuestas.Include(e => e.Respuestas).FirstOrDefaultAsync(e => e.EncuestaId == id);

@@ -48,6 +48,13 @@ public sealed class EncuestasController(EncuestaService service) : ControllerBas
         return result.Success ? NoContent() : BadRequest(new { message = result.Error });
     }
 
+    [HttpPost("{id:int}/activar")]
+    public async Task<IActionResult> Activate(int id)
+    {
+        var result = await service.ReopenAsync(id, UserId, User.IsInRole("Admin"));
+        return result.Success ? NoContent() : BadRequest(new { message = result.Error });
+    }
+
     [HttpPost("{id:int}/recordar")]
     public async Task<IActionResult> Remind(int id)
     {

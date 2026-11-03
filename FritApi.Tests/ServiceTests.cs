@@ -1312,6 +1312,8 @@ public class ServiceTests
         Assert.Null((await service.GetAsync(afterClose.SurveyId, member.UsuarioId, false))!.Resultados);
         Assert.True((await service.CloseAsync(afterClose.SurveyId, creator.UsuarioId, false)).Success);
         Assert.NotNull((await service.GetAsync(afterClose.SurveyId, member.UsuarioId, false))!.Resultados);
+        Assert.True((await service.ReopenAsync(afterClose.SurveyId, creator.UsuarioId, false)).Success);
+        Assert.Null((await service.GetAsync(afterClose.SurveyId, member.UsuarioId, false))!.Resultados);
 
         var managersOnly = await CreateSurvey(EncuestaVisibilidadResultados.Administradores);
         Assert.True((await service.SubmitAsync(managersOnly.SurveyId, member.UsuarioId,

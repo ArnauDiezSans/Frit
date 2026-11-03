@@ -35,7 +35,7 @@
 <div class="backdrop" *ngIf="detail() as d" (click)="closeDetail()">
   <article class="dialog detail-dialog" (click)="$event.stopPropagation()">
     <header class="dialog-header"><div><span class="status" [class.open]="d.resumen.estado === Estado.Publicada">{{ statusLabel(d.resumen.estado) }}</span><h2>{{ d.resumen.titulo }}</h2><p>{{ d.resumen.descripcion }}</p></div><button class="icon" (click)="closeDetail()" aria-label="Tancar">×</button></header>
-    <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.esVotacion">⏱ {{ countdown(d.resumen) }}</span><span *ngIf="d.resumen.fechaCierre && !d.resumen.esVotacion">Tanca {{ d.resumen.fechaCierre | date:'short' }}</span></div>
+    <div class="detail-meta"><span>{{ d.resumen.respuestas }}/{{ d.resumen.destinatarios }} respostes</span><span>{{ d.resumen.esAnonima ? 'Respostes anònimes' : 'Respostes identificades' }}</span><span *ngIf="d.resumen.esVotacion">⏱ {{ countdown(d.resumen) }}</span><span *ngIf="d.resumen.fechaCierre && !d.resumen.esVotacion">Tanca {{ d.resumen.fechaCierre | date:'dd/MM/yy, HH:mm' }}</span></div>
 
     <section *ngIf="canAnswer(d)" class="questions">
       <div class="question" *ngFor="let q of d.preguntas; let i = index" [hidden]="!isQuestionVisible(q)">
@@ -74,7 +74,7 @@
 
     <section class="admin-panel" *ngIf="d.resumen.puedeGestionar"><h3>Gestió</h3><p *ngIf="d.pendientes?.length"><b>Pendents:</b> {{ d.pendientes?.join(', ') }}</p><div class="actions">
       <button *ngIf="d.resumen.estado === Estado.Borrador || d.resumen.puedeEditarPublicada" (click)="editDraft()">Editar</button><button class="primary" *ngIf="d.resumen.estado === Estado.Borrador" (click)="manage('publish')">Publicar i notificar</button>
-      <button *ngIf="d.resumen.estado === Estado.Publicada && !d.resumen.esVotacion" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Tancar</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador || (d.resumen.esVotacion && d.resumen.respuestas === 0)" (click)="manage('delete')">Eliminar</button>
+      <button *ngIf="d.resumen.estado === Estado.Publicada && !d.resumen.esVotacion" (click)="manage('remind')">Recordar als pendents</button><button *ngIf="d.resumen.estado === Estado.Publicada" (click)="manage('close')">Desactivar Enquesta</button><button *ngIf="d.resumen.estado === Estado.Cerrada" (click)="manage('activate')">Activar Enquesta</button><button class="danger" *ngIf="d.resumen.estado === Estado.Borrador || (d.resumen.esVotacion && d.resumen.respuestas === 0)" (click)="manage('delete')">Eliminar</button>
     </div></section>
   </article>
 </div>
